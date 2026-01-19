@@ -148,13 +148,15 @@ After running the setup commands, add these secrets to your GitHub repository:
 
 **Repository → Settings → Secrets and variables → Actions → Repository secrets**
 
-| Secret Name                    | Value                                                                                                |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `GCP_PROJECT_ID`               | `vendin-store`                                                                                       |
-| `GCP_ARTIFACT_REGISTRY_DOMAIN` | `southamerica-east1-docker.pkg.dev`                                                                  |
-| `GCP_ARTIFACT_REGISTRY_REPO`   | `containers`                                                                                         |
-| `GCP_WIF_PROVIDER`             | `projects/vendin-store/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
-| `GCP_WIF_SERVICE_ACCOUNT`      | `[SERVICE_ACCOUNT_EMAIL from step 2]`                                                                |
+| Secret Name                    | Value                                                                                                    |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `GCP_PROJECT_ID`               | `vendin-store`                                                                                           |
+| `GCP_ARTIFACT_REGISTRY_DOMAIN` | `southamerica-east1-docker.pkg.dev`                                                                      |
+| `GCP_ARTIFACT_REGISTRY_REPO`   | `containers`                                                                                             |
+| `GCP_WIF_PROVIDER`             | `projects/[PROJECT_NUMBER]/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
+| `GCP_WIF_SERVICE_ACCOUNT`      | `github-actions-sa@vendin-store.iam.gserviceaccount.com`                                                 |
+
+**Note**: The `GCP_WIF_PROVIDER` value will contain your GCP **Project Number** (e.g., `110781160918`) instead of the Project ID. This is normal and recommended.
 
 ## GitHub Variables Configuration (if using Gemini features)
 
