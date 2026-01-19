@@ -1,2 +1,5 @@
 # Run staged linters and checks
 bun x lint-staged
+
+# Run typecheck on affected packages (only checks packages with staged changes)
+bun run typecheck --filter='[HEAD^1]'

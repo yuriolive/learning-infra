@@ -13,8 +13,12 @@ type DatabaseTenant = typeof tenants.$inferSelect;
 
 function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
   return {
-    ...databaseTenant,
+    id: databaseTenant.id,
+    name: databaseTenant.name,
     domain: databaseTenant.domain ?? undefined,
+    status: databaseTenant.status,
+    createdAt: databaseTenant.createdAt,
+    updatedAt: databaseTenant.updatedAt,
     deletedAt: databaseTenant.deletedAt ?? undefined,
     metadata: databaseTenant.metadata ?? undefined,
   };
