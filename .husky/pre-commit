@@ -1,0 +1,2 @@
+# Run staged linters and checks
+bun x lint-staged

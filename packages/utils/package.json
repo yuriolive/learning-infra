@@ -1,0 +1,26 @@
+{
+  "name": "@learning-infra/utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./logger": "./src/logger.ts"
+  },
+  "scripts": {
+    "lint": "bun x eslint .",
+    "lint:fix": "bun x eslint . --fix",
+    "typecheck": "bun x tsc --noEmit"
+  },
+  "dependencies": {
+    "pino": "^10.1.0"
+  },
+  "devDependencies": {
+    "@learning-infra/config": "workspace:*",
+    "@types/bun": "^1.1.10",
+    "eslint": "^9.37.0",
+    "pino-pretty": "^13.1.2",
+    "typescript": "^5.9.3"
+  }
+}

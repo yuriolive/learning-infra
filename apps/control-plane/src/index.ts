@@ -1,18 +1,25 @@
+import { createLogger } from "@learning-infra/utils/logger";
 import { serve } from "bun";
 
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 
+const nodeEnvironment = process.env.NODE_ENV ?? "development";
+const logger = createLogger({
+  logLevel: process.env.LOG_LEVEL,
+  nodeEnv: nodeEnvironment,
+});
+
 const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 
 const tenantRepository = new TenantRepository();
 const tenantService = new TenantService(tenantRepository);
-const tenantRoutes = createTenantRoutes({ tenantService });
+const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
 const server = serve({
   error(error: unknown) {
-    console.error("Unhandled error:", error);
+    logger.error({ error }, "Unhandled error in server");
     return new Response("Internal server error", { status: 500 });
   },
   async fetch(request: Request): Promise<Response> {
@@ -51,4 +58,4 @@ const server = serve({
   port,
 });
 
-console.log(`Control Plane API listening on http://localhost:${server.port}`);
+logger.info(`Control Plane API listening on http://localhost:${server.port}`);

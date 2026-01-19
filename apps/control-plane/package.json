@@ -20,6 +20,7 @@
     "db:studio": "bun x drizzle-kit studio"
   },
   "dependencies": {
+    "@learning-infra/utils": "workspace:*",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.8",
     "zod": "^3.25.76"

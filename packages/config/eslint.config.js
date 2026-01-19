@@ -13,15 +13,7 @@ import vitest from "eslint-plugin-vitest";
 export default [
   // Ignore patterns
   {
-    ignores: [
-      ".cursor/",
-      "node_modules/",
-      "dist/",
-      "build/",
-      "coverage/",
-      "**/*.d.ts",
-      "scripts/",
-    ],
+    ignores: [".cursor/", "node_modules/", "dist/", "build/", "coverage/", "**/*.d.ts", "scripts/"],
   },
 
   // Base ESLint recommended rules
@@ -93,7 +85,7 @@ export default [
       "import/no-unresolved": "warn",
       "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
       "max-lines-per-function": ["warn", { max: 100, skipBlankLines: true, skipComments: true }],
-      "no-console": "warn",
+      "no-console": "error",
       "no-debugger": "error",
       "no-return-await": "error",
       "no-var": "error",

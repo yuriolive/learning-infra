@@ -8,13 +8,15 @@ import {
 
 import type { TenantService } from "./tenant.service";
 import type { CreateTenantInput, UpdateTenantInput } from "./tenant.types";
+import type { Logger } from "@learning-infra/utils/logger";
 
 export interface RouteContext {
+  logger: Logger;
   tenantService: TenantService;
 }
 
 export function createTenantRoutes(context: RouteContext) {
-  const { tenantService } = context;
+  const { logger, tenantService } = context;
 
   return {
     async handleRequest(request: Request): Promise<Response> {
@@ -27,10 +29,10 @@ export function createTenantRoutes(context: RouteContext) {
         pathParts[1] === "tenants"
       ) {
         if (request.method === "POST") {
-          return handleCreateTenant(request, tenantService);
+          return handleCreateTenant(request, tenantService, logger);
         }
         if (request.method === "GET") {
-          return handleListTenants(tenantService);
+          return handleListTenants(tenantService, logger);
         }
       }
 
@@ -45,13 +47,13 @@ export function createTenantRoutes(context: RouteContext) {
         }
 
         if (request.method === "GET") {
-          return handleGetTenant(tenantId, tenantService);
+          return handleGetTenant(tenantId, tenantService, logger);
         }
         if (request.method === "DELETE") {
-          return handleDeleteTenant(tenantId, tenantService);
+          return handleDeleteTenant(tenantId, tenantService, logger);
         }
         if (request.method === "PATCH" || request.method === "PUT") {
-          return handleUpdateTenant(tenantId, request, tenantService);
+          return handleUpdateTenant(tenantId, request, tenantService, logger);
         }
       }
 
@@ -63,6 +65,7 @@ export function createTenantRoutes(context: RouteContext) {
 async function handleCreateTenant(
   request: Request,
   service: TenantService,
+  logger: Logger,
 ): Promise<Response> {
   try {
     const body = await request.json();
@@ -78,13 +81,14 @@ async function handleCreateTenant(
       },
     });
   } catch (error) {
-    return handleError(error);
+    return handleError(error, logger);
   }
 }
 
 async function handleGetTenant(
   tenantId: string,
   service: TenantService,
+  logger: Logger,
 ): Promise<Response> {
   try {
     tenantIdSchema.parse({ tenantId });
@@ -99,11 +103,14 @@ async function handleGetTenant(
       },
     });
   } catch (error) {
-    return handleError(error);
+    return handleError(error, logger);
   }
 }
 
-async function handleListTenants(service: TenantService): Promise<Response> {
+async function handleListTenants(
+  service: TenantService,
+  logger: Logger,
+): Promise<Response> {
   try {
     const tenants = await service.listTenants();
 
@@ -115,7 +122,7 @@ async function handleListTenants(service: TenantService): Promise<Response> {
       },
     });
   } catch (error) {
-    return handleError(error);
+    return handleError(error, logger);
   }
 }
 
@@ -123,6 +130,7 @@ async function handleUpdateTenant(
   tenantId: string,
   request: Request,
   service: TenantService,
+  logger: Logger,
 ): Promise<Response> {
   try {
     tenantIdSchema.parse({ tenantId });
@@ -143,13 +151,14 @@ async function handleUpdateTenant(
       },
     });
   } catch (error) {
-    return handleError(error);
+    return handleError(error, logger);
   }
 }
 
 async function handleDeleteTenant(
   tenantId: string,
   service: TenantService,
+  logger: Logger,
 ): Promise<Response> {
   try {
     tenantIdSchema.parse({ tenantId });
@@ -164,11 +173,11 @@ async function handleDeleteTenant(
       },
     });
   } catch (error) {
-    return handleError(error);
+    return handleError(error, logger);
   }
 }
 
-function handleError(error: unknown): Response {
+function handleError(error: unknown, logger: Logger): Response {
   if (error instanceof ZodError) {
     return new Response(
       JSON.stringify({
@@ -206,7 +215,7 @@ function handleError(error: unknown): Response {
     }
   }
 
-  console.error("Unhandled error:", error);
+  logger.error({ error }, "Unhandled error in tenant routes");
   return new Response(JSON.stringify({ error: "Internal server error" }), {
     status: 500,
     headers: {

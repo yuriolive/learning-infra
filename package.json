@@ -13,10 +13,20 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "prepare": "husky",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "typecheck": "turbo run typecheck",
     "deploy:control-plane": "turbo run build --filter=@learning-infra/control-plane && gcloud run deploy control-plane --source . --region southamerica-east1 --min-instances 0"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "bun x eslint --fix",
+      "bun x prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "bun x prettier --write"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
@@ -33,6 +43,8 @@
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-unicorn": "^61.0.2",
     "eslint-plugin-vitest": "^0.5.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.4.2",
     "turbo": "^2.6.1",
     "typescript": "^5.9.3"
