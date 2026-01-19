@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "echo 'Config package has no build step'"
+  },
   "exports": {
     "./eslint.config.js": "./eslint.config.js",
     "./tsconfig.base.json": "./tsconfig.base.json",
