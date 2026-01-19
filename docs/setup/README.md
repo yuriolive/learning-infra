@@ -44,9 +44,21 @@ Follow these steps in sequence for a complete infrastructure setup:
 
 **Time: 15-30 minutes**
 
-- CDN, DNS management, and security
-- WAF, rate limiting, SSL optimization
-- **Optional** but recommended for production
+- Storefront deployment (Cloudflare Pages)
+- Cloudflare for SaaS setup (custom domains)
+- DNS, SSL automation, and security
+- WAF, rate limiting
+- **Required** for storefront and custom domain support
+
+### 6. **Tenant Provisioning** (`TENANT_PROVISIONING_SETUP.md`)
+
+**Time: Read-only (implementation guide)**
+
+- End-to-end provisioning workflow
+- Database and compute resource creation
+- Custom domain management
+- Error handling and rollback
+- **Reference** for Control Plane implementation
 
 ## Quick Start
 
@@ -102,6 +114,8 @@ And these GitHub variables (for Gemini features):
 
 ## Architecture
 
+### Infrastructure Components
+
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   GitHub Actions │───▶│ Workload Identity │───▶│   GCP Services   │
@@ -120,6 +134,57 @@ And these GitHub variables (for Gemini features):
 │   (CDN/Security) │    │   (DNS/SSL)      │    │   (Access)      │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
+
+### Multi-Tenant Request Flow
+
+```
+Customer Request:
+┌──────────────┐
+│   Customer   │
+│  (Browser)   │
+└──────┬───────┘
+       │
+       │ shop.merchant.com or merchant.platform.com
+       ▼
+┌─────────────────┐
+│ Cloudflare      │  (DNS + SSL + CDN)
+│ for SaaS        │
+└──────┬──────────┘
+       │
+       ▼
+┌─────────────────┐
+│ Storefront      │  (Cloudflare Pages - Next.js)
+│ (Routes by      │  (Resolves tenant from hostname)
+│  hostname)      │
+└──────┬──────────┘
+       │
+       │ Routes to tenant-{id}
+       ▼
+┌─────────────────┐
+│ Tenant Instance │  (Cloud Run - MedusaJS)
+│ tenant-{id}      │  (Serves /admin and /store APIs)
+└──────┬──────────┘
+       │
+       ▼
+┌─────────────────┐
+│ Tenant Database │  (Neon PostgreSQL)
+│ (Isolated)      │  (One per tenant)
+└─────────────────┘
+```
+
+### Service Architecture
+
+**Shared Services:**
+
+- **Control Plane** (Cloud Run): Single shared service managing all tenants
+- **Storefront** (Cloudflare Pages): Single Next.js app routing to tenants
+- **Redis** (Upstash): Shared instance with tenant namespacing
+
+**Per-Tenant Services:**
+
+- **Tenant Instance** (Cloud Run): One MedusaJS instance per tenant (`tenant-{id}`)
+- **Database** (Neon): One PostgreSQL database per tenant
+- **Custom Domain** (Cloudflare): Optional custom hostname per tenant
 
 ## Cost Estimation
 
@@ -213,13 +278,14 @@ gcloud run services list --project=vendin-store --region=southamerica-east1
 ```
 docs/
 └── setup/
-    ├── README.md                    # This file - main guide
-    ├── GCP_INFRASTRUCTURE_SETUP.md  # Quick reference for experts
-    ├── WIF_SETUP.md                 # Workload Identity Federation
-    ├── ARTIFACT_REGISTRY_SETUP.md   # Container registry
-    ├── SECRET_MANAGER_SETUP.md      # Secret management
-    ├── CLOUD_RUN_SETUP.md           # Container deployment
-    └── CLOUDFLARE_SETUP.md          # CDN and security
+    ├── README.md                      # This file - main guide
+    ├── GCP_INFRASTRUCTURE_SETUP.md    # Quick reference for experts
+    ├── WIF_SETUP.md                   # Workload Identity Federation
+    ├── ARTIFACT_REGISTRY_SETUP.md     # Container registry
+    ├── SECRET_MANAGER_SETUP.md        # Secret management
+    ├── CLOUD_RUN_SETUP.md             # Container deployment (Control Plane + Tenant Instances)
+    ├── CLOUDFLARE_SETUP.md            # Storefront + Cloudflare for SaaS
+    └── TENANT_PROVISIONING_SETUP.md   # End-to-end provisioning workflow
 ```
 
 ## Support
@@ -233,9 +299,11 @@ For issues with this setup:
 
 ## Next Steps
 
-1. Run all setup commands in order
+1. Run all setup commands in order (Steps 1-5)
 2. Configure GitHub secrets and variables
 3. Update database URL secret with real credentials
-4. Test deployment workflow
-5. Set up monitoring and alerts
-6. Configure backup and failover if needed
+4. Test Control Plane deployment
+5. Test Storefront deployment to Cloudflare Pages
+6. Review Tenant Provisioning guide for implementation reference
+7. Set up monitoring and alerts
+8. Test end-to-end tenant provisioning flow

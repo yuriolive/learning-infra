@@ -1,345 +1,422 @@
-# Cloudflare Setup for Learning Infrastructure
+# Cloudflare Setup for Multi-Tenant SaaS
 
 ## Overview
 
-This document provides step-by-step instructions for configuring Cloudflare to work with your Google Cloud Run deployments, including DNS management, CDN, and security features.
+This document provides step-by-step instructions for configuring Cloudflare for your multi-tenant e-commerce platform. This includes:
+
+1. **Storefront Deployment** (Cloudflare Pages) - Customer-facing Next.js application
+2. **Cloudflare for SaaS** - Custom domain management per tenant
+3. **DNS and SSL Automation** - Automatic SSL provisioning for merchant domains
+
+## Architecture
+
+```
+Customer Request Flow:
+┌─────────────────┐
+│  Customer       │
+│  (Browser)      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Custom Domain  │  (e.g., shop.merchant.com)
+│  or Subdomain   │  (e.g., merchant.platform.com)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Cloudflare      │  (DNS + SSL + CDN)
+│ for SaaS        │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Storefront      │  (Cloudflare Pages - Next.js)
+│ (Routes by      │  (Resolves tenant from hostname)
+│  hostname)      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Tenant Instance │  (Cloud Run - MedusaJS)
+│ tenant-{id}     │  (Serves /admin and /store APIs)
+└─────────────────┘
+```
 
 ## Prerequisites
 
-- Cloudflare account
-- Domain registered and accessible
-- Cloud Run service deployed and accessible
-- Basic understanding of DNS and CDN concepts
+- Cloudflare account (Free tier works for MVP)
+- Domain registered for your platform (e.g., `vendin.store`)
+- Control Plane deployed and accessible
+- Tenant instance container image built and ready
 
-## Step 1: Add Domain to Cloudflare
+## Part A: Storefront Deployment (Cloudflare Pages)
+
+### Step 1: Prepare Storefront for Deployment
+
+Your Next.js storefront should be configured for Cloudflare Pages:
 
 ```bash
-# This is done through the Cloudflare dashboard
-# 1. Go to https://dash.cloudflare.com
-# 2. Click "Add a Site"
-# 3. Enter your domain (e.g., vendin.store)
-# 4. Choose your plan (Free is fine for starters)
-# 5. Update your domain's nameservers at your registrar
+# In your storefront project
+# Ensure next.config.js is configured for Cloudflare Pages
+# Use edge runtime for optimal performance
 ```
 
-## Step 2: Configure DNS Records
-
-### Point Domain to Cloud Run
-
-After adding your domain to Cloudflare, configure DNS:
+### Step 2: Deploy to Cloudflare Pages
 
 ```bash
-# These are configured in Cloudflare DNS settings
-# Go to: Domain → DNS → Records
+# Option 1: Via Cloudflare Dashboard
+# 1. Go to Cloudflare Dashboard → Pages
+# 2. Click "Create a project"
+# 3. Connect your GitHub repository
+# 4. Select the storefront directory
+# 5. Configure build settings:
+#    - Build command: npm run build (or bun run build)
+#    - Build output directory: .next
+#    - Root directory: apps/storefront
 
-# For API subdomain (Cloud Run)
-Type: CNAME
-Name: api
-Target: ghs.googlehosted.com
-TTL: Auto
-Proxy status: DNS only (gray cloud)
-
-# For main domain (if using website)
-Type: CNAME
-Name: @
-Target: ghs.googlehosted.com
-TTL: Auto
-Proxy status: DNS only (gray cloud)
+# Option 2: Via Wrangler CLI
+npm install -g wrangler
+wrangler pages deploy apps/storefront/.next --project-name=storefront
 ```
 
-### Alternative: Direct CNAME to Cloud Run
+### Step 3: Configure Environment Variables
+
+In Cloudflare Pages dashboard:
 
 ```bash
-# If you want to use Cloudflare's CDN and features
+# Required environment variables:
+CONTROL_PLANE_API_URL=https://api.vendin.store
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_API_TOKEN=your-api-token
+NODE_ENV=production
+```
+
+### Step 4: Set Up Custom Domain for Storefront
+
+```bash
+# In Cloudflare Pages → Custom domains
+# Add your platform domain: vendin.store
+# Cloudflare will automatically provision SSL
+```
+
+## Part B: Cloudflare for SaaS Setup
+
+Cloudflare for SaaS enables automatic SSL provisioning for custom domains per tenant.
+
+### Step 1: Enable Cloudflare for SaaS
+
+```bash
+# In Cloudflare Dashboard:
+# 1. Go to SSL/TLS → Custom Hostnames
+# 2. Click "Get Started" or "Enable Cloudflare for SaaS"
+# 3. Note your Account ID (you'll need this for API calls)
+```
+
+### Step 2: Configure Fallback Origin
+
+The fallback origin is where requests go when a custom hostname doesn't match any tenant:
+
+```bash
+# In Cloudflare Dashboard → SSL/TLS → Custom Hostnames
+# Set Fallback Origin to your storefront URL:
+# Example: storefront.pages.dev or vendin.store
+
+# Or via API:
+curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames/fallback_origin" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"origin":"storefront.pages.dev"}'
+```
+
+### Step 3: Configure SSL/TLS Settings
+
+```bash
+# In Cloudflare Dashboard → SSL/TLS → Custom Hostnames
+# SSL/TLS encryption mode: Full (strict)
+# Minimum TLS Version: 1.2
+# Always Use HTTPS: On
+# Automatic HTTPS Rewrites: On
+```
+
+### Step 4: Set Up API Credentials
+
+Your Control Plane needs API access to manage custom hostnames:
+
+```bash
+# 1. Go to Cloudflare Dashboard → My Profile → API Tokens
+# 2. Create API Token with these permissions:
+#    - Zone: Zone Settings:Read
+#    - Zone: SSL and Certificates:Edit
+#    - Account: Cloudflare for SaaS:Edit
+# 3. Save the token securely (add to Secret Manager)
+```
+
+### Step 5: Add API Token to Secret Manager
+
+```bash
+# Store Cloudflare API token in GCP Secret Manager
+echo -n "your-cloudflare-api-token" | \
+  gcloud secrets create cloudflare-api-token \
+    --project=vendin-store \
+    --data-file=-
+
+# Grant Control Plane access
+gcloud secrets add-iam-policy-binding cloudflare-api-token \
+  --project=vendin-store \
+  --member="serviceAccount:cloud-run-sa@vendin-store.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
+
+## Part C: Custom Hostname Management (API Integration)
+
+The Control Plane will use Cloudflare's API to add custom hostnames for each tenant.
+
+### API Endpoints
+
+**Add Custom Hostname:**
+
+```bash
+POST https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames
+Authorization: Bearer {api_token}
+Content-Type: application/json
+
+{
+  "hostname": "shop.merchant.com",
+  "ssl": {
+    "method": "http",
+    "type": "dv"
+  }
+}
+```
+
+**Check SSL Status:**
+
+```bash
+GET https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames/{hostname_id}
+Authorization: Bearer {api_token}
+```
+
+**List Custom Hostnames:**
+
+```bash
+GET https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames
+Authorization: Bearer {api_token}
+```
+
+### DNS Requirements for Merchants
+
+When a merchant adds a custom domain, they need to create a CNAME record:
+
+```bash
+# Merchant DNS Configuration:
 Type: CNAME
-Name: api
-Target: [your-cloud-run-url].a.run.app
+Name: shop (or @ for apex domain)
+Target: {zone_name}.cdn.cloudflare.net
+TTL: Auto
+```
+
+**Note**: For apex domains (e.g., `merchant.com`), Cloudflare provides specific instructions. Some registrars support CNAME flattening.
+
+## Part D: Subdomain Routing Setup
+
+### Wildcard DNS for Default Subdomains
+
+For default tenant subdomains (e.g., `merchant-name.platform.com`):
+
+```bash
+# In Cloudflare DNS → Records
+# Add wildcard CNAME:
+Type: CNAME
+Name: *
+Target: storefront.pages.dev (or your storefront URL)
 TTL: Auto
 Proxy status: Proxied (orange cloud)
 ```
 
-## Step 3: Configure Cloud Run Domain Mapping
+### Storefront Routing Logic
 
-```bash
-# Map your custom domain to Cloud Run service
-gcloud run domain-mappings create \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --service=control-plane \
-  --domain=api.vendin.store
+Your Next.js storefront should resolve tenants from hostname:
 
-# Verify the mapping
-gcloud run domain-mappings describe \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --domain=api.vendin.store
+```typescript
+// Example: apps/storefront/src/middleware.ts
+export async function middleware(request: NextRequest) {
+  const hostname = request.headers.get("host") || "";
+
+  // Extract tenant identifier from subdomain or custom domain
+  const tenantId = await resolveTenantFromHostname(hostname);
+
+  if (!tenantId) {
+    return NextResponse.redirect("https://vendin.store");
+  }
+
+  // Route to tenant instance
+  const tenantUrl = `https://tenant-${tenantId}-xxx.a.run.app`;
+  // ... route request to tenant
+}
 ```
 
-## Step 4: Set Up SSL/TLS
-
-### Cloudflare SSL Configuration
-
-```bash
-# In Cloudflare dashboard:
-# SSL/TLS → Overview
-# Set SSL/TLS encryption mode to: Full (strict)
-
-# Edge Certificates:
-# - Always Use HTTPS: On
-# - Automatic HTTPS Rewrites: On
-# - Opportunistic Encryption: On
-```
-
-### Cloud Run SSL Certificate
-
-Cloud Run automatically provisions SSL certificates for custom domains. No additional configuration needed.
-
-## Step 5: Configure Security Features
+## Part E: Security Configuration
 
 ### WAF (Web Application Firewall)
 
 ```bash
-# In Cloudflare dashboard:
-# Security → WAF
-# Enable: OWASP Core Ruleset
-# Enable: Cloudflare Specials
-# Enable: Cloudflare Managed Ruleset
+# In Cloudflare Dashboard → Security → WAF
+# Enable for your zone:
+# - OWASP Core Ruleset
+# - Cloudflare Managed Ruleset
+# - Rate limiting rules
 ```
 
 ### Rate Limiting
 
 ```bash
 # Security → Rate limiting
-# Create new rule:
-# - URL Pattern: *api.vendin.store*
-# - Request Threshold: 100 requests per minute
-# - Action: Block
-# - Duration: 60 seconds
+# Create rules for:
+# - API endpoints: 1000 requests/minute per IP
+# - Admin endpoints: 100 requests/minute per IP
+# - Storefront: 5000 requests/minute per IP
 ```
 
 ### Bot Management
 
 ```bash
 # Security → Bots
-# Enable: Bot Fight Mode
-# Enable: Super Bot Fight Mode (if on paid plan)
+# Enable: Bot Fight Mode (Free)
+# Or: Super Bot Fight Mode (Paid plans)
 ```
 
-## Step 6: Set Up CDN and Caching
+## Part F: Monitoring and Analytics
 
-### Page Rules for API
+### Custom Hostname Status Monitoring
+
+Monitor SSL certificate provisioning status:
 
 ```bash
-# Rules → Page Rules
-# Create rule for API:
-# URL: api.vendin.store/*
-# Setting: Cache Level - Bypass
-# Setting: Disable Security (optional for API)
+# Check custom hostname status via API
+curl -X GET \
+  "https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames/{hostname_id}" \
+  -H "Authorization: Bearer {api_token}"
+
+# Response includes SSL status:
+# - pending: Certificate provisioning in progress
+# - active: Certificate issued and active
+# - failed: Certificate provisioning failed
 ```
 
-### Browser Cache Settings
+### Analytics
 
-```bash
-# Caching → Browser Cache TTL
-# Respect Existing Headers: On
-# Default: 4 hours
-```
+Monitor in Cloudflare Dashboard:
 
-## Step 7: Configure Origin Rules (For API)
+- Analytics → Traffic (overall platform traffic)
+- Analytics → Web Analytics (per-page performance)
+- Security → Events (WAF blocks, rate limits)
 
-```bash
-# Rules → Origin Rules
-# Create rule:
-# Rule name: API Origin
-# When incoming requests match: Hostname equals api.vendin.store
-# Then:
-# - Set Origin: [your-cloud-run-url].a.run.app
-# - Override Hostname: On
-# - Hostname: [your-cloud-run-url].a.run.app
-```
-
-## Step 8: Set Up Monitoring and Analytics
-
-### Real User Monitoring (RUM)
-
-```bash
-# Analytics & Logs → Web Analytics
-# Enable: Web Analytics
-# Copy the tracking code for your website (if applicable)
-```
-
-### Load Balancing (Optional)
-
-If you need to set up load balancing across multiple regions:
-
-```bash
-# Traffic → Load Balancing
-# Create load balancer
-# Add pools for different Cloud Run regions
-# Configure health checks
-```
-
-## Step 9: Configure Environment-Specific Domains
-
-```bash
-# DNS Records for different environments
-Type: CNAME
-Name: staging-api
-Target: ghs.googlehosted.com
-TTL: Auto
-
-Type: CNAME
-Name: dev-api
-Target: ghs.googlehosted.com
-TTL: Auto
-```
-
-## Cloud Run Domain Mappings for Environments
-
-```bash
-# Staging environment
-gcloud run domain-mappings create \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --service=control-plane-staging \
-  --domain=staging-api.vendin.store
-
-# Development environment
-gcloud run domain-mappings create \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --service=control-plane-dev \
-  --domain=dev-api.vendin.store
-```
-
-## Step 10: Set Up Workers (Optional)
-
-If you need edge computing or API transformations:
-
-```javascript
-// Example Cloudflare Worker for API routing
-addEventListener("fetch", (event) => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
-  const url = new URL(request.url);
-
-  // Route API calls
-  if (url.pathname.startsWith("/api/")) {
-    return fetch(
-      `https://api.vendin.store${url.pathname}${url.search}`,
-      request,
-    );
-  }
-
-  // Handle other routes
-  return fetch(request);
-}
-```
-
-## Security Best Practices
-
-### API Security Headers
-
-Configure Transform Rules to add security headers:
-
-```bash
-# Rules → Transform Rules → HTTP Response Header Modification
-# Create rule:
-# When: Hostname equals api.vendin.store
-# Then add headers:
-# - X-Content-Type-Options: nosniff
-# - X-Frame-Options: DENY
-# - X-XSS-Protection: 1; mode=block
-# - Referrer-Policy: strict-origin-when-cross-origin
-```
-
-### CORS Configuration
-
-```bash
-# If your API needs CORS headers, configure in Transform Rules
-# Or handle in your application code
-```
-
-## Monitoring and Troubleshooting
-
-### Check DNS Propagation
-
-```bash
-# Check if DNS is pointing correctly
-dig api.vendin.store
-nslookup api.vendin.store
-```
-
-### Cloudflare Analytics
-
-Monitor in Cloudflare dashboard:
-
-- Analytics → Traffic
-- Security → Events
-- Firewall → Events
+## Troubleshooting
 
 ### Common Issues
 
-1. **SSL Errors**: Wait for certificate provisioning (can take up to 24 hours)
-2. **DNS Not Propagating**: Check nameserver updates at registrar
-3. **CORS Issues**: Configure CORS headers in your application
-4. **Rate Limiting**: Adjust rate limiting rules based on your needs
+1. **SSL Certificate Not Provisioning**
+   - Verify DNS CNAME is correctly configured
+   - Check custom hostname status via API
+   - Wait up to 24 hours for certificate issuance
+   - Verify fallback origin is accessible
 
-## Cost Optimization
+2. **Custom Domain Not Routing**
+   - Verify CNAME record at merchant's DNS
+   - Check custom hostname is active in Cloudflare
+   - Verify storefront routing logic handles the domain
 
-### Free Tier Usage
+3. **Storefront Not Resolving Tenant**
+   - Check hostname extraction logic
+   - Verify tenant exists in Control Plane database
+   - Check tenant instance is running and accessible
 
-- DNS management: Free
-- Basic security: Free
-- CDN for static assets: Free
-- Rate limiting: 10,000 requests/month free
+4. **Rate Limiting Too Aggressive**
+   - Adjust rate limiting rules in Security settings
+   - Consider per-tenant rate limits vs global limits
 
-### Paid Features
+### Diagnostic Commands
+
+```bash
+# Check DNS resolution
+dig shop.merchant.com
+nslookup shop.merchant.com
+
+# Test SSL certificate
+openssl s_client -connect shop.merchant.com:443 -servername shop.merchant.com
+
+# Check Cloudflare API connectivity
+curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+  -H "Authorization: Bearer {api_token}"
+
+# List all custom hostnames
+curl -X GET \
+  "https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostnames" \
+  -H "Authorization: Bearer {api_token}"
+```
+
+## Cost Considerations
+
+### Free Tier
+
+- Cloudflare Pages: Free (with limits)
+- Custom Hostnames: 100 free per month
+- SSL Certificates: Free (unlimited)
+- Basic WAF: Free
+
+### Paid Plans
 
 Consider upgrading for:
 
+- More custom hostnames (1000+)
 - Advanced WAF rules
-- Higher rate limits
-- Workers functions
-- Advanced analytics
+- Super Bot Fight Mode
+- Enhanced analytics
+- Workers (for advanced routing)
 
-## Cleanup Commands
+## Integration with Control Plane
 
-### Remove Domain from Cloudflare
+The Control Plane should implement these API calls when provisioning tenants:
 
-```bash
-# This is done through Cloudflare dashboard
-# Domain → Overview → Remove site
-# Note: This will delete all configurations
-```
+```typescript
+// Example: Adding custom hostname during tenant provisioning
+async function addCustomHostname(tenantId: string, domain: string) {
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/custom_hostnames`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        hostname: domain,
+        ssl: {
+          method: "http",
+          type: "dv",
+        },
+      }),
+    },
+  );
 
-### Remove Cloud Run Domain Mappings
-
-```bash
-gcloud run domain-mappings delete \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --domain=api.vendin.store
-```
-
-## Integration with GitHub Actions
-
-You can automate Cloudflare deployments using:
-
-```yaml
-# In your workflow
-- name: Purge Cloudflare Cache
-  uses: jakejarvis/cloudflare-purge-action@v0.3.0
-  env:
-    CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-    CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+  // Poll for SSL status
+  await waitForSSLProvisioning(hostnameId);
+}
 ```
 
 ## Next Steps
 
-1. Test your domain configuration
-2. Set up monitoring alerts
-3. Configure backup and failover if needed
-4. Consider setting up Cloudflare Access for internal tools
+1. Deploy storefront to Cloudflare Pages
+2. Configure Cloudflare for SaaS
+3. Test custom hostname addition via API
+4. Implement tenant resolution in storefront
+5. Set up monitoring and alerts
+6. Document merchant DNS setup process
+
+## References
+
+- [Cloudflare for SaaS Documentation](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/)
+- [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
+- [Cloudflare API Reference](https://developers.cloudflare.com/api/)
+- [Custom Hostnames API](https://developers.cloudflare.com/api/operations/custom-hostname-for-a-zone-list-custom-hostnames)
