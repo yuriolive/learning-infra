@@ -1,6 +1,6 @@
 # Cursor Rules Organization
 
-This directory contains Cursor AI rules that guide development practices for the Learning Infrastructure multi-tenant e-commerce platform.
+This directory contains Cursor AI rules that guide development practices for the Vendin multi-tenant e-commerce platform.
 
 ## Directory Structure
 
