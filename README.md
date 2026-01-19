@@ -22,6 +22,29 @@ This project uses a **monorepo architecture** with Turborepo and Bun workspaces 
 - **Bun** >= 1.2.20 (package manager and runtime)
 - Node.js >= 24.0.0
 
+## Local Development
+
+This project uses Docker Compose to run a local PostgreSQL instance for the Control Plane.
+
+```bash
+# Start local infrastructure
+docker-compose up -d
+
+# Stop local infrastructure
+docker-compose down
+```
+
+### Database Setup (Control Plane)
+
+1. Copy `.env.example` to `.env` in `apps/control-plane`:
+   ```bash
+   cp apps/control-plane/.env.example apps/control-plane/.env
+   ```
+2. Apply migrations:
+   ```bash
+   bun run db:push --filter=@learning-infra/control-plane
+   ```
+
 ## Quick Start
 
 ```bash
