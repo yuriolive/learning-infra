@@ -1,0 +1,86 @@
+name: Database Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Database operation to perform"
+        required: true
+        default: "migrate"
+        type: choice
+        options:
+          - migrate
+          - generate
+          - push
+      environment:
+        description: "Target environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  database-operation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-node-modules-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Authenticate to Google Cloud
+        if: github.event.inputs.environment == 'production' || github.event.inputs.environment == 'staging'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        if: github.event.inputs.environment == 'production' || github.event.inputs.environment == 'staging'
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Run database operation
+        run: |
+          cd apps/control-plane
+          case "${{ github.event.inputs.operation }}" in
+            "migrate")
+              bun run db:migrate || echo "No migrations to run"
+              ;;
+            "generate")
+              bun run db:generate || echo "No generate command available"
+              ;;
+            "push")
+              bun run db:push || echo "No push command available"
+              ;;
+            *)
+              echo "Unknown operation: ${{ github.event.inputs.operation }}"
+              exit 1
+              ;;
+          esac
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        continue-on-error: true

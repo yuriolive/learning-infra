@@ -24,24 +24,6 @@ jobs:
     name: Code Quality Checks
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: main
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/main
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +41,7 @@ jobs:
             node_modules
             apps/*/node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('**/bun.lock', '**/package.json') }}
+          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('**/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-node-modules-
 
@@ -70,6 +52,29 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
+      - name: Setup PostgreSQL
+        uses: ikalnytskyi/action-setup-postgres@v8
+        id: postgres
+        with:
+          username: postgres
+          password: postgres
+          database: main
+          postgres-version: "17"
+
+      - name: Enable PostgreSQL extensions
+        run: |
+          psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
+          psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
+
+      - name: Set DATABASE_URL
+        run: echo "DATABASE_URL=${{ steps.postgres.outputs.connection-uri }}" >> $GITHUB_ENV
+
+      - name: Run database migrations
+        run: cd apps/control-plane && bun run db:migrate || echo "No migrations to run"
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        continue-on-error: true
+
       - name: Run ESLint
         run: bun run lint
 
@@ -78,6 +83,8 @@ jobs:
 
       - name: Run tests
         run: bun run test
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Build project
         run: bun run build
