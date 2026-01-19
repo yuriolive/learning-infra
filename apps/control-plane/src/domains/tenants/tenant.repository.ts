@@ -47,7 +47,10 @@ export class TenantRepository {
 
     const updated: Tenant = {
       ...tenant,
-      ...input,
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.domain !== undefined && { domain: input.domain }),
+      ...(input.status !== undefined && { status: input.status }),
+      ...(input.metadata !== undefined && { metadata: input.metadata }),
       updatedAt: new Date(),
     };
 

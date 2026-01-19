@@ -1,46 +1,104 @@
-# Multi-Tenant E-commerce Platform (Medusify)
+# Learning Infrastructure - Multi-Tenant E-commerce Platform
 
-A highly scalable, serverless SaaS e-commerce platform built with **MedusaJS 2.0**. This platform uses a **Multi-Instance Provisioning model**, ensuring 100% physical database isolation for every merchant.
+Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisioning. Each merchant gets a dedicated backend and database.
 
-## 🚀 Key Features
+## Overview
 
-- **True Tenant Isolation**: Dedicated Neon PostgreSQL database and isolated Google Cloud Run compute per merchant.
-- **Serverless-First Architecture**: Scale-to-zero compute (Google Cloud Run), serverless DB (Neon), and serverless cache (Upstash Redis).
-- **Rapid Onboarding**: Automated provisioning of a full store instance in less than 2 minutes.
-- **Custom Domains**: Seamless custom domain connection with automated SSL via Cloudflare for SaaS.
+This project uses a **monorepo architecture** with Turborepo and Bun workspaces to manage multiple applications and shared packages.
 
-## 🏗️ Architecture Overview
+## Monorepo Structure
 
-The platform is split into three primary layers:
+```
+/
+├── apps/
+│   └── control-plane/      # Orchestrator API (tenant provisioning)
+├── packages/
+│   └── config/             # Shared config (ESLint, TS, Prettier)
+└── infrastructure/         # Infrastructure as Code
+```
 
-1.  **Control Plane (Orchestrator)**: Manages merchant signups, database provisioning, and instance orchestration.
-2.  **Tenant Instances**: Isolated MedusaJS 2.0 backends tailored for each merchant.
-3.  **Storefront**: A multi-tenant Next.js application that routes traffic based on hostname/subdomain.
+## Prerequisites
 
-For a detailed deep-dive, see [PRD.md](PRD.md).
+- **Bun** >= 1.2.20 (package manager and runtime)
+- Node.js >= 24.0.0
 
-## 🛠️ Technology Stack
+## Quick Start
 
-- **Backend**: MedusaJS 2.0 (TypeScript)
-- **Frontend**: Next.js on Cloudflare Pages
-- **Database**: Neon Serverless PostgreSQL
-- **Cache**: Upstash Redis
-- **Networking**: Cloudflare for SaaS & Cloudflare R2 (Assets)
-- **Compute**: Google Cloud Run
+```bash
+# Install dependencies
+bun install
 
-## 🤖 AI-Native Development
+# Run all apps in development mode
+bun run dev
 
-This repository is optimized for AI-assisted development with specific rules and skills:
+# Build all apps and packages
+bun run build
 
-- **Modular Cursor Rules**: Found in [.cursor/rules/](.cursor/rules/), defining standards for infrastructure, backend, and project automation.
-- **GitHub Automation**: The `github-automation.mdc` rule ensures that tasks and issues are proactively tracked based on chat context.
-- **Custom Claude Skills**: Shared skills for project management are located in [.claude/skills/shared/](.claude/skills/shared/).
+# Run all tests
+bun run test
 
-## 📖 Documentation
+# Type check all apps and packages
+bun run typecheck
 
-- [PRD.md](PRD.md): Product Requirements Document and Technical Specifications.
-- [ROADMAP.md](ROADMAP.md): Development roadmap organized by phases and components.
-- [AGENTS.md](AGENTS.md): Architecture and guidelines for AI agents.
+# Lint all apps and packages
+bun run lint
 
----
-*Built with speed, security, and scalability in mind.*
+# Auto-fix linting issues
+bun run lint:fix
+```
+
+## Commands
+
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `bun run dev`       | Start all apps in development mode   |
+| `bun run build`     | Build all apps and packages          |
+| `bun run lint`      | Lint all apps and packages           |
+| `bun run lint:fix`  | Auto-fix lint issues                 |
+| `bun run test`      | Run all tests                        |
+| `bun run typecheck` | Type check all apps and packages     |
+
+## Applications
+
+### Control Plane (`apps/control-plane/`)
+
+Orchestrator API for managing tenant provisioning in the multi-tenant e-commerce platform.
+
+- RESTful API with tenant provisioning endpoints
+- Domain-driven design structure
+- In-memory storage (will be replaced with PostgreSQL)
+- Comprehensive unit test suite (96% coverage)
+
+See [`apps/control-plane/README.md`](apps/control-plane/README.md) for details.
+
+## Packages
+
+### Config (`packages/config/`)
+
+Shared configuration for all apps and packages:
+
+- ESLint configuration
+- TypeScript base configuration
+- Prettier configuration
+
+## Technology Stack
+
+- **Package Manager**: Bun
+- **Monorepo**: Turborepo
+- **Language**: TypeScript (strict mode)
+- **Testing**: Vitest
+- **Linting**: ESLint + Prettier
+
+## Development Guidelines
+
+- All backend code must be TypeScript (strict mode)
+- Follow domain-driven design patterns
+- Maintain strict tenant isolation (non-negotiable)
+- Use serverless-first infrastructure
+- See [AGENTS.md](AGENTS.md) for detailed architecture
+
+## Documentation
+
+- **Architecture**: See [AGENTS.md](AGENTS.md)
+- **Requirements**: See [PRD.md](PRD.md)
+- **Roadmap**: See [ROADMAP.md](ROADMAP.md)
