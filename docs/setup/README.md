@@ -70,7 +70,7 @@ Before starting:
 
 3. **GitHub Repository Access**:
    - Admin access to configure secrets and variables
-   - Repository: `your-org/learning-infra`
+   - Repository: `yuriolive/learning-infra`
 
 4. **Domain** (for Cloudflare setup):
    - Registered domain name
@@ -156,7 +156,7 @@ After completing all steps:
 ### Common Issues
 
 1. **WIF Authentication fails**
-   - Check GitHub org/username in step 8 of WIF setup
+   - Check GitHub org/username in step 8 of WIF setup (should be `yuriolive`)
    - Verify service account email in GitHub secrets
 
 2. **Artifact Registry push fails**

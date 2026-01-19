@@ -53,7 +53,7 @@ gcloud projects add-iam-policy-binding vendin-store \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/iam.workloadIdentityUser"
 
-# 4. Create Workload Identity Pool
+# 4. Create Workload Identity Pool and Provider
 gcloud iam workload-identity-pools create "github-pool" \
   --project="vendin-store" \
   --location="global" \
@@ -72,12 +72,13 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --display-name="GitHub provider" \
   --description="OIDC provider for GitHub Actions" \
   --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository_owner == 'yuriolive'"
 
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT_EMAIL" \
   --project="vendin-store" \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/your-org/learning-infra"
+  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/yuriolive/learning-infra"
 
 # 5. Create Artifact Registry
 gcloud artifacts repositories create containers \

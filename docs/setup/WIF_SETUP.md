@@ -8,7 +8,7 @@ This document contains the complete setup commands for configuring Workload Iden
 
 - Google Cloud CLI (`gcloud`) installed and authenticated
 - Access to the `vendin-store` GCP project with appropriate permissions
-- GitHub repository: `your-org/learning-infra` (replace `your-org` with your actual organization)
+- GitHub repository: `yuriolive/learning-infra`
 
 ## Setup Commands
 
@@ -76,7 +76,7 @@ echo "Workload Identity Pool ID: $POOL_ID"
 
 ### Step 6: Create OIDC Provider
 
-First, try the basic provider creation:
+Run this single command to create the OIDC provider with necessary attribute mappings and conditions:
 
 ```bash
 gcloud iam workload-identity-pools providers create-oidc "github-provider" \
@@ -85,21 +85,10 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --workload-identity-pool="github-pool" \
   --display-name="GitHub provider" \
   --description="OIDC provider for GitHub Actions" \
-  --issuer-uri="https://token.actions.githubusercontent.com"
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository_owner == 'yuriolive'"
 ```
-
-If that works, then update it with attribute mappings:
-
-```bash
-gcloud iam workload-identity-pools providers update-oidc "github-provider" \
-  --project="vendin-store" \
-  --location="global" \
-  --workload-identity-pool="github-pool" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-  --attribute-condition="assertion.repository_owner == 'your-org'"
-```
-
-**Note**: Replace `your-org` with your actual GitHub organization/username in the attribute condition.
 
 ### Step 7: Get Provider Name
 
@@ -115,13 +104,11 @@ echo "Workload Identity Provider Name: $PROVIDER_NAME"
 
 ### Step 8: Create IAM Policy Binding
 
-**⚠️ IMPORTANT**: Replace `your-org` with your actual GitHub organization or username
-
 ```bash
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT_EMAIL" \
   --project="vendin-store" \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/your-org/learning-infra"
+  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/yuriolive/learning-infra"
 ```
 
 ### Step 9: Create Artifact Registry Repository
@@ -214,7 +201,7 @@ gcloud secrets describe control-plane-db-url --project=vendin-store
 
 1. **Execute commands in order** - later steps depend on resources created in earlier steps
 2. **Save the service account email** from step 2 - you'll need it for GitHub secrets
-3. **Replace `your-org`** in step 8 with your actual GitHub organization or username
+3. **Verify yuriolive** in step 8 with your actual GitHub organization or username
 4. **Update the database URL** in step 11 with your real database connection string before deploying
 5. **Test the setup** by triggering your deployment workflow after configuration
 6. **For Gemini features**: Create a GitHub App and configure the additional variables listed above
@@ -224,7 +211,7 @@ gcloud secrets describe control-plane-db-url --project=vendin-store
 ### Common Issues
 
 1. **Permission denied**: Ensure you have the necessary permissions in the GCP project
-2. **Repository not found**: Verify your GitHub organization/username in step 8
+2. **Repository not found**: Verify your GitHub organization/username in step 8 (should be `yuriolive`)
 3. **Deployment fails**: Check that all GitHub secrets are set correctly
 4. **Database connection fails**: Verify the database URL secret is correctly formatted
 
