@@ -76,6 +76,8 @@ echo "Workload Identity Pool ID: $POOL_ID"
 
 ### Step 6: Create OIDC Provider
 
+First, try the basic provider creation:
+
 ```bash
 gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --project="vendin-store" \
@@ -83,9 +85,21 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --workload-identity-pool="github-pool" \
   --display-name="GitHub provider" \
   --description="OIDC provider for GitHub Actions" \
-  --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
+  --issuer-uri="https://token.actions.githubusercontent.com"
 ```
+
+If that works, then update it with attribute mappings:
+
+```bash
+gcloud iam workload-identity-pools providers update-oidc "github-provider" \
+  --project="vendin-store" \
+  --location="global" \
+  --workload-identity-pool="github-pool" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+  --attribute-condition="assertion.repository_owner == 'your-org'"
+```
+
+**Note**: Replace `your-org` with your actual GitHub organization/username in the attribute condition.
 
 ### Step 7: Get Provider Name
 
