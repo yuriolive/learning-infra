@@ -1,4 +1,4 @@
-import { createLogger } from "@learning-infra/utils/logger";
+import { createLogger } from "@vendin/utils/logger";
 import { serve } from "bun";
 
 import { TenantRepository } from "./domains/tenants/tenant.repository";

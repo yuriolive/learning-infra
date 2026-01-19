@@ -1,5 +1,5 @@
 {
-  "name": "@learning-infra/control-plane",
+  "name": "@vendin/control-plane",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "db:studio": "bun x drizzle-kit studio"
   },
   "dependencies": {
-    "@learning-infra/utils": "workspace:*",
+    "@vendin/utils": "workspace:*",
     "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.8",
@@ -28,7 +28,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@learning-infra/config": "workspace:*",
+    "@vendin/config": "workspace:*",
     "@types/bun": "^1.1.10",
     "@types/node": "^24.7.1",
     "@types/ws": "^8.18.1",

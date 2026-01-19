@@ -8,7 +8,7 @@ import {
 
 import type { TenantService } from "./tenant.service";
 import type { CreateTenantInput, UpdateTenantInput } from "./tenant.types";
-import type { Logger } from "@learning-infra/utils/logger";
+import type { Logger } from "@vendin/utils/logger";
 
 export interface RouteContext {
   logger: Logger;

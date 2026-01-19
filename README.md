@@ -1,4 +1,4 @@
-# Learning Infrastructure - Multi-Tenant E-commerce Platform
+# Vendin - Multi-Tenant E-commerce Platform
 
 Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisioning. Each merchant gets a dedicated backend and database.
 
@@ -42,7 +42,7 @@ docker-compose down
    ```
 2. Apply migrations:
    ```bash
-   bun run db:push --filter=@learning-infra/control-plane
+   bun run db:push --filter=@vendin/control-plane
    ```
 
 ## Quick Start
@@ -72,14 +72,14 @@ bun run lint:fix
 
 ## Commands
 
-| Command             | Description                          |
-| ------------------- | ------------------------------------ |
-| `bun run dev`       | Start all apps in development mode   |
-| `bun run build`     | Build all apps and packages          |
-| `bun run lint`      | Lint all apps and packages           |
-| `bun run lint:fix`  | Auto-fix lint issues                 |
-| `bun run test`      | Run all tests                        |
-| `bun run typecheck` | Type check all apps and packages     |
+| Command             | Description                        |
+| ------------------- | ---------------------------------- |
+| `bun run dev`       | Start all apps in development mode |
+| `bun run build`     | Build all apps and packages        |
+| `bun run lint`      | Lint all apps and packages         |
+| `bun run lint:fix`  | Auto-fix lint issues               |
+| `bun run test`      | Run all tests                      |
+| `bun run typecheck` | Type check all apps and packages   |
 
 ## Applications
 

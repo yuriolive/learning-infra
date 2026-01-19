@@ -8,13 +8,13 @@
 
 ## Required GitHub Secrets
 
-| Secret | Description |
-| --- | --- |
-| `GCP_PROJECT_ID` | ID of the Google Cloud project that owns the Artifact Registry repository and Cloud Run service. |
-| `GCP_WIF_PROVIDER` | Full identifier of the Workload Identity Provider (e.g., `projects/123/locations/global/workloadIdentityPools/pool/providers/github`). |
-| `GCP_WIF_SERVICE_ACCOUNT` | Email of the service account the workflow impersonates (e.g., `control-plane-deployer@project-id.iam.gserviceaccount.com`). |
-| `GCP_ARTIFACT_REGISTRY_DOMAIN` | Artifact Registry domain for the region, e.g., `southamerica-east1-docker.pkg.dev`. |
-| `GCP_ARTIFACT_REGISTRY_REPO` | Artifact Registry repository name (e.g., `control-plane`). |
+| Secret                         | Description                                                                                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `GCP_PROJECT_ID`               | ID of the Google Cloud project that owns the Artifact Registry repository and Cloud Run service.                                       |
+| `GCP_WIF_PROVIDER`             | Full identifier of the Workload Identity Provider (e.g., `projects/123/locations/global/workloadIdentityPools/pool/providers/github`). |
+| `GCP_WIF_SERVICE_ACCOUNT`      | Email of the service account the workflow impersonates (e.g., `control-plane-deployer@project-id.iam.gserviceaccount.com`).            |
+| `GCP_ARTIFACT_REGISTRY_DOMAIN` | Artifact Registry domain for the region, e.g., `southamerica-east1-docker.pkg.dev`.                                                    |
+| `GCP_ARTIFACT_REGISTRY_REPO`   | Artifact Registry repository name (e.g., `control-plane`).                                                                             |
 
 ## Service Account Requirements
 
@@ -26,7 +26,7 @@
 The root `package.json` exposes:
 
 ```json
-"deploy:control-plane": "turbo run build --filter=@learning-infra/control-plane && gcloud run deploy control-plane --source . --region southamerica-east1 --min-instances 0"
+"deploy:control-plane": "turbo run build --filter=@vendin/control-plane && gcloud run deploy control-plane --source . --region southamerica-east1 --min-instances 0"
 ```
 
 Ensure `gcloud` is authenticated with the same project and service account before running locally. The script expects the `Control Plane` workspace to compile via `bun x tsc` and uses `gcloud run deploy` to upload the source bundle from the repo root.
