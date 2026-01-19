@@ -1,25 +1,25 @@
 export interface Tenant {
   id: string;
   name: string;
-  domain?: string;
+  domain?: string | undefined;
   status: TenantStatus;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date;
-  metadata?: Record<string, unknown>;
+  deletedAt?: Date | undefined;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 export type TenantStatus = "active" | "suspended" | "deleted";
 
 export interface CreateTenantInput {
   name: string;
-  domain?: string;
-  metadata?: Record<string, unknown>;
+  domain?: string | undefined;
+  metadata?: Record<string, unknown> | undefined;
 }
 
 export interface UpdateTenantInput {
-  name?: string;
-  domain?: string;
-  status?: TenantStatus;
-  metadata?: Record<string, unknown>;
+  name?: string | undefined;
+  domain?: string | undefined;
+  status?: TenantStatus | undefined;
+  metadata?: Record<string, unknown> | undefined;
 }

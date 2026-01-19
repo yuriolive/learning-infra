@@ -28,6 +28,9 @@ export function createTenantRoutes(context: RouteContext) {
 
       if (pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "tenants") {
         const tenantId = pathParts[2];
+        if (!tenantId) {
+          return new Response("Not found", { status: 404 });
+        }
 
         if (request.method === "GET") {
           return handleGetTenant(tenantId, tenantService);

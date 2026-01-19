@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+coverage
+.bun
+.cursor
+.git
+*.lock
+*.log
