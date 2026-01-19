@@ -47,23 +47,22 @@ Create `policy.json` with cleanup rules (must be a JSON array):
 [
   {
     "name": "delete_old_images",
+    "action": {
+      "type": "DELETE"
+    },
     "condition": {
       "olderThan": "30d",
       "tagState": "UNTAGGED"
-    },
-    "action": {
-      "type": "DELETE"
     }
   },
   {
     "name": "keep_recent_versions",
-    "condition": {
-      "packageNamePrefixes": ["control-plane"],
-      "tagPrefixes": ["v"],
-      "versions": ">5"
-    },
     "action": {
       "type": "KEEP"
+    },
+    "mostRecentVersions": {
+      "packageNamePrefixes": ["control-plane"],
+      "keepCount": 5
     }
   }
 ]
