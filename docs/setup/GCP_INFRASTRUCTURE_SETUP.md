@@ -186,7 +186,7 @@ DEBUG = false
 
 - **Purpose**: CDN, DNS, security, and performance
 - **Features**: WAF, rate limiting, SSL termination
-- **Domain**: `api.vendin.store` → Cloud Run
+- **Domain**: `control.vendin.store` → Cloud Run
 
 ## Cost Estimation
 

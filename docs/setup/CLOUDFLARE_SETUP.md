@@ -8,6 +8,27 @@ This document provides step-by-step instructions for configuring Cloudflare for 
 2. **Cloudflare for SaaS** - Custom domain management per tenant
 3. **DNS and SSL Automation** - Automatic SSL provisioning for merchant domains
 
+## Subdomain Structure
+
+Based on Shopify pattern (`.myshopify.com`), here's the subdomain structure:
+
+```
+vendin.store                    → Landing page & Signup (root domain)
+www.vendin.store                → Redirects to root or alternative storefront
+control.vendin.store            → Control Plane API
+admin.vendin.store              → Platform admin dashboard (optional)
+*.my.vendin.store               → Tenant stores (wildcard)
+  ├─ awesome-store.my.vendin.store → Merchant storefront
+  └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
+```
+
+**Custom Domains (Optional):**
+
+```
+shop.merchant.com               → Routes to tenant store
+admin.merchant.com              → Routes to tenant admin
+```
+
 ## Architecture
 
 ```
@@ -17,12 +38,9 @@ Customer Request Flow:
 │  (Browser)      │
 └────────┬────────┘
          │
-         ▼
-┌─────────────────┐
-│  Custom Domain  │  (e.g., shop.merchant.com)
-│  or Subdomain   │  (e.g., merchant.platform.com)
-└────────┬────────┘
-         │
+         │ vendin.store (signup) OR
+         │ merchant-name.my.vendin.store (store) OR
+         │ shop.merchant.com (custom domain)
          ▼
 ┌─────────────────┐
 │ Cloudflare      │  (DNS + SSL + CDN)
@@ -32,8 +50,9 @@ Customer Request Flow:
          ▼
 ┌─────────────────┐
 │ Storefront      │  (Cloudflare Pages - Next.js)
-│ (Routes by      │  (Resolves tenant from hostname)
-│  hostname)      │
+│ (Routes by      │  - Root: Landing/signup page
+│  hostname)      │  - Tenant subdomain: Resolves tenant
+│                 │  - Custom domain: Resolves tenant
 └────────┬────────┘
          │
          ▼
@@ -86,7 +105,7 @@ In Cloudflare Pages dashboard:
 
 ```bash
 # Required environment variables:
-CONTROL_PLANE_API_URL=https://api.vendin.store
+CONTROL_PLANE_API_URL=https://control.vendin.store
 CLOUDFLARE_ACCOUNT_ID=your-account-id
 CLOUDFLARE_API_TOKEN=your-api-token
 NODE_ENV=production
@@ -96,8 +115,15 @@ NODE_ENV=production
 
 ```bash
 # In Cloudflare Pages → Custom domains
-# Add your platform domain: vendin.store
+# Add your platform domain: vendin.store (root domain)
+# Add www.vendin.store (optional, can redirect to root)
 # Cloudflare will automatically provision SSL
+
+# Root domain (vendin.store) serves:
+# - Landing page
+# - Signup page
+# - Marketing content
+# - Platform information
 ```
 
 ## Part B: Cloudflare for SaaS Setup
@@ -220,39 +246,109 @@ TTL: Auto
 
 ## Part D: Subdomain Routing Setup
 
-### Wildcard DNS for Default Subdomains
+### Wildcard DNS for Tenant Subdomains
 
-For default tenant subdomains (e.g., `merchant-name.platform.com`):
+For default tenant subdomains (e.g., `merchant-name.my.vendin.store`):
 
 ```bash
 # In Cloudflare DNS → Records
-# Add wildcard CNAME:
+# Add wildcard CNAME for tenant subdomains:
 Type: CNAME
-Name: *
+Name: *.my
 Target: storefront.pages.dev (or your storefront URL)
 TTL: Auto
 Proxy status: Proxied (orange cloud)
+
+# Note: This wildcard will match:
+# - awesome-store.my.vendin.store
+# - any-merchant.my.vendin.store
+# But NOT reserved subdomains (api, admin, www) which should have explicit records
+# The .my. separator provides clear separation from platform services
+```
+
+**Explicit DNS Records for Platform Services:**
+
+```bash
+# Root domain (landing/signup)
+Type: A or CNAME
+Name: @
+Target: storefront.pages.dev
+Proxy status: Proxied
+
+# Control Plane API
+Type: CNAME
+Name: control
+Target: ghs.googlehosted.com (Cloud Run domain mapping)
+Proxy status: DNS only (gray cloud)
+
+# Platform Admin (optional)
+Type: CNAME
+Name: admin
+Target: storefront.pages.dev
+Proxy status: Proxied
 ```
 
 ### Storefront Routing Logic
 
-Your Next.js storefront should resolve tenants from hostname:
+Your Next.js storefront should handle different hostname patterns:
 
 ```typescript
 // Example: apps/storefront/src/middleware.ts
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
 
-  // Extract tenant identifier from subdomain or custom domain
+  // Root domain: Landing page and signup
+  if (hostname === "vendin.store" || hostname === "www.vendin.store") {
+    // Serve landing page, signup form, marketing content
+    return NextResponse.next();
+  }
+
+  // Control Plane API: Route to control.vendin.store
+  if (hostname === "control.vendin.store") {
+    // This should be handled by Cloud Run domain mapping, not storefront
+    return NextResponse.redirect("https://control.vendin.store");
+  }
+
+  // Platform admin: Route to admin.vendin.store
+  if (hostname === "admin.vendin.store") {
+    // Serve platform admin dashboard
+    return NextResponse.next();
+  }
+
+  // Tenant subdomain pattern: {store}.my.vendin.store or custom domain
   const tenantId = await resolveTenantFromHostname(hostname);
 
   if (!tenantId) {
+    // Unknown hostname, redirect to landing page
     return NextResponse.redirect("https://vendin.store");
   }
 
   // Route to tenant instance
   const tenantUrl = `https://tenant-${tenantId}-xxx.a.run.app`;
   // ... route request to tenant
+}
+```
+
+**Hostname Resolution Logic:**
+
+```typescript
+async function resolveTenantFromHostname(
+  hostname: string,
+): Promise<string | null> {
+  // Check if it's a tenant subdomain pattern: {store}.my.vendin.store
+  if (hostname.endsWith(".my.vendin.store")) {
+    // Extract store name (e.g., "awesome-store" from "awesome-store.my.vendin.store")
+    const storeName = hostname.replace(".my.vendin.store", "");
+
+    // Query Control Plane to find tenant by subdomain
+    const tenant = await controlPlaneClient.findTenantBySubdomain(storeName);
+    return tenant?.id || null;
+  }
+
+  // Check if it's a custom domain
+  // Query Control Plane to find tenant by custom domain
+  const tenant = await controlPlaneClient.findTenantByCustomDomain(hostname);
+  return tenant?.id || null;
 }
 ```
 

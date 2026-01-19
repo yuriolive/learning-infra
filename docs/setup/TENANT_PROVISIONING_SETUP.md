@@ -174,15 +174,40 @@ gcloud run services create tenant-${TENANT_ID} \
   --set-secrets=DATABASE_URL=tenant-${TENANT_ID}-db-url:latest
 ```
 
-### Step 4: Configure Default Subdomain (Optional)
+### Step 4: Configure Default Subdomain
 
-If using default subdomain pattern (e.g., `merchant-name.platform.com`):
+Each tenant gets a default subdomain following the Shopify-style pattern: `{merchant-name}.my.vendin.store`
 
-```bash
-# No additional Cloudflare configuration needed
-# Wildcard DNS already configured in Cloudflare setup
-# Storefront will route based on hostname
+**Subdomain Assignment:**
+
+```typescript
+// Control Plane assigns subdomain
+const subdomain = generateSubdomain(storeName); // e.g., "awesome-store"
+const tenantSubdomain = `${subdomain}.my.vendin.store`;
+
+// Store in tenant record
+UPDATE tenants
+SET
+  subdomain = '${subdomain}',
+  default_url = 'https://${tenantSubdomain}'
+WHERE id = '${TENANT_ID}'
 ```
+
+**No additional Cloudflare DNS configuration needed:**
+
+- Wildcard DNS (`*.my.vendin.store`) already configured
+- Storefront will route based on hostname pattern
+- Tenant can access store at: `https://${subdomain}.my.vendin.store`
+- Admin accessible at: `https://${subdomain}.my.vendin.store/admin`
+
+**Benefits of `.my.` pattern:**
+
+- Clear separation from platform services (api, admin, www)
+- Familiar pattern (similar to Shopify's `.myshopify.com`)
+- Easy DNS management (wildcard only for `*.my.vendin.store`)
+- No conflicts with reserved subdomains
+
+````
 
 ### Step 5: Add Custom Hostname (If Provided)
 
@@ -201,7 +226,7 @@ Content-Type: application/json
     "type": "dv"
   }
 }
-```
+````
 
 **Response includes:**
 
@@ -435,7 +460,7 @@ WHERE id = '${TENANT_ID}'
 
 ```bash
 # 1. Create test tenant via Control Plane API
-curl -X POST https://api.vendin.store/api/tenants \
+curl -X POST https://control.vendin.store/api/tenants \
   -H "Content-Type: application/json" \
   -d '{
     "merchantEmail": "test@example.com",
@@ -444,7 +469,7 @@ curl -X POST https://api.vendin.store/api/tenants \
   }'
 
 # 2. Monitor provisioning status
-curl https://api.vendin.store/api/tenants/${TENANT_ID}
+curl https://control.vendin.store/api/tenants/${TENANT_ID}
 
 # 3. Verify tenant instance is running
 curl https://tenant-${TENANT_ID}-xxx.a.run.app/health

@@ -77,7 +77,7 @@ gcloud run domain-mappings create \
   --project=vendin-store \
   --region=southamerica-east1 \
   --service=control-plane \
-  --domain=api.vendin.store
+  --domain=control.vendin.store
 
 # Verify domain mapping
 gcloud run domain-mappings list \
@@ -436,7 +436,7 @@ gcloud run services list --project=vendin-store --region=southamerica-east1 \
 gcloud run domain-mappings delete \
   --project=vendin-store \
   --region=southamerica-east1 \
-  --domain=api.vendin.store
+  --domain=control.vendin.store
 
 # Delete VPC connector (if created)
 gcloud compute networks vpc-access connectors delete connector \
