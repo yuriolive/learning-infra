@@ -21,12 +21,12 @@ All apps and packages extend from this base configuration:
 ```json
 // tsconfig.json
 {
-  "extends": "@learning-infra/config/tsconfig.base.json"
+  "extends": "@vendin/config/tsconfig.base.json"
 }
 ```
 
 ```javascript
 // eslint.config.js
-import baseConfig from '@learning-infra/config/eslint.config.js';
+import baseConfig from '@vendin/config/eslint.config.js';
 export default baseConfig;
 ```

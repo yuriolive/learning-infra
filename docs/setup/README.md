@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains comprehensive step-by-step guides for setting up Google Cloud Platform infrastructure for the learning infrastructure project. All configurations are tailored for the **vendin-store** project.
+This directory contains comprehensive step-by-step guides for setting up Google Cloud Platform infrastructure for the Vendin project. All configurations are tailored for the **vendin-store** project.
 
 ## Setup Order
 
@@ -82,7 +82,7 @@ Before starting:
 
 3. **GitHub Repository Access**:
    - Admin access to configure secrets and variables
-   - Repository: `yuriolive/learning-infra`
+   - Repository: `yuriolive/vendin`
 
 4. **Domain** (for Cloudflare setup):
    - Registered domain name

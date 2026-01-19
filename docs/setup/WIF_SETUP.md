@@ -8,7 +8,7 @@ This document contains the complete setup commands for configuring Workload Iden
 
 - Google Cloud CLI (`gcloud`) installed and authenticated
 - Access to the `vendin-store` GCP project with appropriate permissions
-- GitHub repository: `yuriolive/learning-infra`
+- GitHub repository: `yuriolive/vendin`
 
 ## Setup Commands
 
@@ -108,7 +108,7 @@ echo "Workload Identity Provider Name: $PROVIDER_NAME"
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT_EMAIL" \
   --project="vendin-store" \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/yuriolive/learning-infra"
+  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/yuriolive/vendin"
 ```
 
 ### Step 9: Create Artifact Registry Repository
@@ -118,7 +118,7 @@ gcloud artifacts repositories create containers \
   --project="vendin-store" \
   --repository-format=docker \
   --location=southamerica-east1 \
-  --description="Container images for learning infrastructure"
+  --description="Container images for Vendin"
 ```
 
 ### Step 10: Grant Artifact Registry Access

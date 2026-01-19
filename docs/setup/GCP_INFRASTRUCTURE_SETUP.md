@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the main setup guide for the learning infrastructure project. It provides a complete overview of all GCP components needed for deployment.
+This is the main setup guide for the Vendin project. It provides a complete overview of all GCP components needed for deployment.
 
 ## Setup Order
 
@@ -78,14 +78,14 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT_EMAIL" \
   --project="vendin-store" \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/yuriolive/learning-infra"
+  --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/yuriolive/vendin"
 
 # 5. Create Artifact Registry
 gcloud artifacts repositories create containers \
   --project="vendin-store" \
   --repository-format=docker \
   --location=southamerica-east1 \
-  --description="Container images for learning infrastructure"
+  --description="Container images for Vendin"
 
 gcloud artifacts repositories add-iam-policy-binding containers \
   --project="vendin-store" \
@@ -281,7 +281,7 @@ For issues with this setup:
 ## File Structure
 
 ```
-learning-infra/
+vendin/
 ├── GCP_INFRASTRUCTURE_SETUP.md     # This file - main overview
 ├── WIF_SETUP.md                     # Workload Identity Federation
 ├── ARTIFACT_REGISTRY_SETUP.md       # Container registry

@@ -17,7 +17,7 @@ Shared utilities used across apps and packages.
 ## Usage
 
 ```typescript
-import { logger } from '@learning-infra/utils';
+import { logger } from '@vendin/utils';
 
 logger.info('Tenant provisioned', { tenantId });
 ```

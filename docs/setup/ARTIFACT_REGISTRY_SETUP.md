@@ -28,7 +28,7 @@ gcloud artifacts repositories create containers \
   --project=vendin-store \
   --repository-format=docker \
   --location=southamerica-east1 \
-  --description="Container images for learning infrastructure applications"
+  --description="Container images for Vendin applications"
 ```
 
 ## Step 3: Configure Repository Settings
