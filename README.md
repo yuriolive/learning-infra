@@ -39,6 +39,7 @@ This repository is optimized for AI-assisted development with specific rules and
 ## 📖 Documentation
 
 - [PRD.md](PRD.md): Product Requirements Document and Technical Specifications.
+- [ROADMAP.md](ROADMAP.md): Development roadmap organized by phases and components.
 - [AGENTS.md](AGENTS.md): Architecture and guidelines for AI agents.
 
 ---
