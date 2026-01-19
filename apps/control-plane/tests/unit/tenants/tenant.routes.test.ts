@@ -15,6 +15,8 @@ vi.mock("../../../src/database/database", () => ({
   },
 }));
 
+import { createLogger } from "@vendin/utils/logger";
+
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { createTenantRoutes } from "../../../src/domains/tenants/tenant.routes";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
@@ -23,11 +25,13 @@ describe("TenantRoutes", () => {
   let routes: ReturnType<typeof createTenantRoutes>;
   let service: TenantService;
   let repository: TenantRepository;
+  let logger: ReturnType<typeof createLogger>;
 
   beforeEach(() => {
     repository = new TenantRepository();
     service = new TenantService(repository);
-    routes = createTenantRoutes({ tenantService: service });
+    logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
+    routes = createTenantRoutes({ tenantService: service, logger });
   });
 
   describe("POST /api/tenants", () => {

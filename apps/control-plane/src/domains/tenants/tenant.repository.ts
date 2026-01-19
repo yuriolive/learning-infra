@@ -9,6 +9,17 @@ import type {
   UpdateTenantInput,
 } from "./tenant.types";
 
+type DatabaseTenant = typeof tenants.$inferSelect;
+
+function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
+  return {
+    ...databaseTenant,
+    domain: databaseTenant.domain ?? undefined,
+    deletedAt: databaseTenant.deletedAt ?? undefined,
+    metadata: databaseTenant.metadata ?? undefined,
+  };
+}
+
 export class TenantRepository {
   async create(input: CreateTenantInput): Promise<Tenant> {
     const [tenant] = await database
@@ -20,7 +31,11 @@ export class TenantRepository {
       })
       .returning();
 
-    return tenant;
+    if (!tenant) {
+      throw new Error("Failed to create tenant");
+    }
+
+    return mapToTenant(tenant);
   }
 
   async findById(id: string): Promise<Tenant | null> {
@@ -29,11 +44,16 @@ export class TenantRepository {
       .from(tenants)
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")));
 
-    return tenant || null;
+    return tenant ? mapToTenant(tenant) : null;
   }
 
   async findAll(): Promise<Tenant[]> {
-    return database.select().from(tenants).where(ne(tenants.status, "deleted"));
+    const results = await database
+      .select()
+      .from(tenants)
+      .where(ne(tenants.status, "deleted"));
+
+    return results.map((result) => mapToTenant(result));
   }
 
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
@@ -49,7 +69,7 @@ export class TenantRepository {
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))
       .returning();
 
-    return updated || null;
+    return updated ? mapToTenant(updated) : null;
   }
 
   async softDelete(id: string): Promise<boolean> {
@@ -72,6 +92,6 @@ export class TenantRepository {
       .from(tenants)
       .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));
 
-    return tenant || null;
+    return tenant ? mapToTenant(tenant) : null;
   }
 }
