@@ -191,6 +191,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ## Notes for AI Assistants
 
+- Proactively manage GitHub project tasks and issues.
 - Always maintain tenant isolation as the highest priority
 - Prefer serverless solutions over traditional infrastructure
 - Use TypeScript for all backend code
