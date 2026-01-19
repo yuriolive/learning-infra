@@ -1,0 +1,33 @@
+---
+description: Rules for serverless infrastructure, Google Cloud Run, Neon DB, and Cloudflare.
+globs: infrastructure/**/*, control-plane/**/*
+---
+# Infrastructure Rules
+
+## Serverless Priority
+- **ALWAYS** use serverless infrastructure.
+- **NEVER** use non-serverless infrastructure without justification.
+- Configure Cloud Run with \`min-instances: 0\` to support scale-to-zero.
+
+## Database Isolation
+- Each tenant **MUST** have a unique \`DATABASE_URL\` (never shared).
+- Maintain 100% physical database isolation per merchant.
+- programmatically create Neon databases for new tenants.
+
+## Performance Requirements
+- Store provisioningEnd-to-end: < 2 minutes.
+- Optimize cold starts for Cloud Run.
+
+## Common Patterns
+### Database Provisioning (Control Plane)
+\`\`\`typescript
+// Create new Neon database for tenant
+const database = await neonApi.createDatabase({
+  name: \`tenant-\${tenantId}\`,
+  region: 'us-east-1'
+});
+\`\`\`
+
+## Networking
+- Use Cloudflare for SaaS for dynamic SSL and custom domain routing.
+- Assets stored in Cloudflare R2.
