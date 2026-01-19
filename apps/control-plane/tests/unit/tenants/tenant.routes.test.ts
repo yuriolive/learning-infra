@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the database before any imports
-vi.mock("../../../src/database/db", () => ({
-  db: {
+vi.mock("../../../src/database/database", () => ({
+  database: {
     insert: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),

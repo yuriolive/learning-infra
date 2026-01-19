@@ -1,7 +1,8 @@
 import { and, eq, ne } from "drizzle-orm";
 
-import { db } from "../../database/db";
+import { database } from "../../database/database";
 import { tenants } from "../../database/schema";
+
 import type {
   CreateTenantInput,
   Tenant,
@@ -10,7 +11,7 @@ import type {
 
 export class TenantRepository {
   async create(input: CreateTenantInput): Promise<Tenant> {
-    const [tenant] = await db
+    const [tenant] = await database
       .insert(tenants)
       .values({
         name: input.name,
@@ -23,7 +24,7 @@ export class TenantRepository {
   }
 
   async findById(id: string): Promise<Tenant | null> {
-    const [tenant] = await db
+    const [tenant] = await database
       .select()
       .from(tenants)
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")));
@@ -32,14 +33,11 @@ export class TenantRepository {
   }
 
   async findAll(): Promise<Tenant[]> {
-    return db
-      .select()
-      .from(tenants)
-      .where(ne(tenants.status, "deleted"));
+    return database.select().from(tenants).where(ne(tenants.status, "deleted"));
   }
 
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
-    const [updated] = await db
+    const [updated] = await database
       .update(tenants)
       .set({
         ...(input.name !== undefined && { name: input.name }),
@@ -55,7 +53,7 @@ export class TenantRepository {
   }
 
   async softDelete(id: string): Promise<boolean> {
-    const [deleted] = await db
+    const [deleted] = await database
       .update(tenants)
       .set({
         status: "deleted",
@@ -69,7 +67,7 @@ export class TenantRepository {
   }
 
   async findByDomain(domain: string): Promise<Tenant | null> {
-    const [tenant] = await db
+    const [tenant] = await database
       .select()
       .from(tenants)
       .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));

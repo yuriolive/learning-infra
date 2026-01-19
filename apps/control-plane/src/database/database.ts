@@ -6,7 +6,7 @@ import ws from "ws";
 
 import * as schema from "./schema";
 
-let connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set");
@@ -38,8 +38,9 @@ neonConfig.webSocketConstructor = ws;
  * to minimize cold starts and avoid WebSocket overhead.
  */
 const useNeonHttp =
-  connectionString.includes("neon.tech") || process.env.NODE_ENV === "production";
+  connectionString.includes("neon.tech") ||
+  process.env.NODE_ENV === "production";
 
-export const db = useNeonHttp
+export const database = useNeonHttp
   ? drizzleHttp(neon(connectionString), { schema })
   : drizzlePg(postgres(connectionString), { schema });

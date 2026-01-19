@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the database before any imports
-vi.mock("../../../src/database/db", () => ({
-  db: {
+vi.mock("../../../src/database/database", () => ({
+  database: {
     insert: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
@@ -16,7 +16,6 @@ vi.mock("../../../src/database/db", () => ({
 }));
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
-import { db } from "../../../src/database/db";
 
 import type { CreateTenantInput } from "../../../src/domains/tenants/tenant.types";
 
