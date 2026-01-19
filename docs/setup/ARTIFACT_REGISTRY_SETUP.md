@@ -41,34 +41,32 @@ gcloud artifacts repositories set-cleanup-policies containers \
   --policy=policy.json
 ```
 
-Create `policy.json` with cleanup rules:
+Create `policy.json` with cleanup rules (must be a JSON array):
 
 ```json
-{
-  "rules": [
-    {
-      "name": "delete_old_images",
-      "condition": {
-        "olderThan": "30d",
-        "tagState": "UNTAGGED"
-      },
-      "action": {
-        "type": "DELETE"
-      }
+[
+  {
+    "name": "delete_old_images",
+    "condition": {
+      "olderThan": "30d",
+      "tagState": "UNTAGGED"
     },
-    {
-      "name": "keep_recent_versions",
-      "condition": {
-        "packageNamePrefixes": ["control-plane"],
-        "tagPrefixes": ["v"],
-        "versions": ">5"
-      },
-      "action": {
-        "type": "KEEP"
-      }
+    "action": {
+      "type": "DELETE"
     }
-  ]
-}
+  },
+  {
+    "name": "keep_recent_versions",
+    "condition": {
+      "packageNamePrefixes": ["control-plane"],
+      "tagPrefixes": ["v"],
+      "versions": ">5"
+    },
+    "action": {
+      "type": "KEEP"
+    }
+  }
+]
 ```
 
 ## Step 4: Grant Access to Service Account
