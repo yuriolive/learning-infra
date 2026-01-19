@@ -1,0 +1,60 @@
+---
+description: Testing patterns, TDD workflows, and coverage requirements.
+globs: **/*
+---
+# Testing Strategy
+
+## Testing Principles
+
+- Write tests for all critical paths
+- Maintain tenant isolation in tests
+- Test provisioning workflows end-to-end
+- Verify scale-to-zero behavior
+- Test hostname routing logic
+
+## Test Organization
+
+```
+apps/control-plane/tests/
+├── unit/              # Unit tests for services, repositories
+├── integration/       # Integration tests for API endpoints
+└── e2e/              # End-to-end provisioning tests
+```
+
+## Coverage Requirements
+
+- **Control Plane**: Minimum 80% coverage
+- **Critical paths**: 100% coverage (provisioning, tenant isolation)
+- **API endpoints**: All endpoints must have tests
+
+## Testing Patterns
+
+### Tenant Isolation Testing
+
+```typescript
+it('should maintain database isolation between tenants', async () => {
+  const tenant1 = await createTenant({ name: 'Store 1' });
+  const tenant2 = await createTenant({ name: 'Store 2' });
+  
+  // Verify different databases
+  expect(tenant1.databaseUrl).not.toBe(tenant2.databaseUrl);
+  
+  // Verify data isolation
+  await createProduct(tenant1.id, { name: 'Product 1' });
+  const products = await getProducts(tenant2.id);
+  expect(products).not.toContainEqual(expect.objectContaining({ name: 'Product 1' }));
+});
+```
+
+### Provisioning Performance Testing
+
+```typescript
+it('should provision tenant in under 2 minutes', async () => {
+  const startTime = Date.now();
+  const tenant = await provisionTenant({ merchantEmail: 'test@example.com' });
+  const duration = Date.now() - startTime;
+  
+  expect(duration).toBeLessThan(120000); // 2 minutes
+  expect(tenant.status).toBe('active');
+});
+```

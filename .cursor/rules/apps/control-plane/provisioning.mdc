@@ -1,0 +1,71 @@
+---
+description: Tenant provisioning workflow patterns and best practices.
+globs: apps/control-plane/**/*
+---
+# Tenant Provisioning Patterns
+
+## Provisioning Workflow
+
+The Control Plane orchestrates complete tenant provisioning:
+
+1. **Merchant Signup** → Receive tenant creation request
+2. **Create Neon Database** → Via Neon API
+3. **Store Database URL** → In GCP Secret Manager
+4. **Create Cloud Run Service** → Deploy tenant instance (`tenant-{id}`)
+5. **Configure Secrets** → Database URL, Redis namespace, tenant ID
+6. **Add Subdomain** → Assign `{store}.my.vendin.store`
+7. **Add Custom Hostname** → Via Cloudflare SaaS API (if provided)
+8. **Wait for SSL** → Poll Cloudflare API for certificate status
+9. **Initialize MedusaJS** → Bootstrap tenant database
+10. **Health Check** → Verify tenant instance is responding
+11. **Update Status** → Mark tenant as `active`
+
+## Provisioning Time Target
+
+- **Target**: < 2 minutes end-to-end
+- **Acceptable**: < 3 minutes
+- **Critical**: Must not exceed 3 minutes
+
+## Error Handling and Rollback
+
+**On any failure, rollback all created resources:**
+
+```typescript
+async function rollbackTenantProvisioning(tenantId: string) {
+  // 1. Delete Cloud Run service (if created)
+  await deleteCloudRunService(tenantId);
+  
+  // 2. Delete database (if created)
+  await deleteNeonDatabase(tenantId);
+  
+  // 3. Delete secrets (if created)
+  await deleteSecrets(tenantId);
+  
+  // 4. Remove custom hostname (if added)
+  await removeCustomHostname(tenantId);
+  
+  // 5. Update tenant status to 'failed'
+  await updateTenantStatus(tenantId, 'failed');
+}
+```
+
+## Subdomain Assignment
+
+- **Pattern**: `{store-name}.my.vendin.store`
+- **Generation**: Sanitize store name (lowercase, hyphens, no special chars)
+- **Uniqueness**: Check against existing subdomains
+- **Reserved**: Never use reserved subdomains (`www`, `control`, `admin`)
+
+## Service Naming
+
+- **Pattern**: `tenant-{tenantId}`
+- **Example**: `tenant-abc123`, `tenant-xyz789`
+- **Uniqueness**: Tenant ID ensures uniqueness
+
+## Monitoring
+
+Track provisioning metrics:
+- Provisioning time (by step)
+- Success rate
+- Failure rate by step
+- Rollback rate

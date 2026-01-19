@@ -1,0 +1,46 @@
+---
+description: Git commit conventions and branching strategies following Conventional Commits specification.
+globs: **/*
+---
+# Git Conventions
+
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages.
+
+## Commit Message Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Types
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+- `perf`: Performance improvements
+- `ci`: CI/CD changes
+- `build`: Build system changes
+
+### Examples
+
+```
+feat(control-plane): add tenant provisioning endpoint
+
+Implements POST /api/tenants endpoint with Neon database creation
+and Cloud Run service provisioning.
+
+Closes #123
+```
+
+```
+fix(infrastructure): correct Cloud Run service naming pattern
+
+Tenant services should use tenant-{id} format, not tenant_{id}.
