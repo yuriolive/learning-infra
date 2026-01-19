@@ -1,0 +1,74 @@
+name: Deploy Control Plane to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/control-plane/**"
+      - "packages/**"
+      - "Dockerfile"
+      - ".github/workflows/deploy.yml"
+      - "package.json"
+      - "bun.lock"
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: southamerica-east1
+  SERVICE_NAME: control-plane
+  ARTIFACT_REGISTRY_DOMAIN: ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}
+  ARTIFACT_REGISTRY_REPO: ${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}
+
+jobs:
+  deploy:
+    name: Build and Deploy Control Plane
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker authentication
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY_DOMAIN }} --quiet
+
+      - name: Build and push container
+        run: |
+          IMAGE_BASE="${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}"
+          IMAGE_SHA="$IMAGE_BASE:${{ github.sha }}"
+          IMAGE_LATEST="$IMAGE_BASE:latest"
+
+          docker build -t $IMAGE_SHA -t $IMAGE_LATEST .
+          docker push $IMAGE_SHA
+          docker push $IMAGE_LATEST
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          flags: |
+            --min-instances=0
+            --max-instances=10
+            --cpu=1
+            --memory=512Mi
+            --allow-unauthenticated
+          env_vars: |
+            NODE_ENV=production
+            PORT=3000
