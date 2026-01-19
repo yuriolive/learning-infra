@@ -1,0 +1,30 @@
+---
+description: Utils package patterns for shared utilities and logger.
+globs: packages/utils/**/*
+---
+# Utils Package Rules
+
+## Purpose
+
+Shared utilities used across apps and packages.
+
+## Contents
+
+- Logger utilities
+- Common helper functions
+- Type definitions
+
+## Usage
+
+```typescript
+import { logger } from '@learning-infra/utils';
+
+logger.info('Tenant provisioned', { tenantId });
+```
+
+## Patterns
+
+- Keep utilities pure and stateless
+- Avoid app-specific logic
+- Export well-typed interfaces
+- Document all exported functions
