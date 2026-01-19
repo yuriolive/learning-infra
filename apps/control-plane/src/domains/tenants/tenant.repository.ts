@@ -1,5 +1,7 @@
-import { randomUUID } from "node:crypto";
+import { and, eq, ne } from "drizzle-orm";
 
+import { db } from "../../database/db";
+import { tenants } from "../../database/schema";
 import type {
   CreateTenantInput,
   Tenant,
@@ -7,80 +9,71 @@ import type {
 } from "./tenant.types";
 
 export class TenantRepository {
-  private tenants: Map<string, Tenant> = new Map();
-
   async create(input: CreateTenantInput): Promise<Tenant> {
-    const now = new Date();
-    const tenant: Tenant = {
-      id: randomUUID(),
-      name: input.name,
-      domain: input.domain,
-      status: "active",
-      createdAt: now,
-      updatedAt: now,
-      metadata: input.metadata,
-    };
+    const [tenant] = await db
+      .insert(tenants)
+      .values({
+        name: input.name,
+        domain: input.domain,
+        metadata: input.metadata,
+      })
+      .returning();
 
-    this.tenants.set(tenant.id, tenant);
     return tenant;
   }
 
   async findById(id: string): Promise<Tenant | null> {
-    const tenant = this.tenants.get(id);
-    if (!tenant || tenant.status === "deleted") {
-      return null;
-    }
-    return tenant;
+    const [tenant] = await db
+      .select()
+      .from(tenants)
+      .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")));
+
+    return tenant || null;
   }
 
   async findAll(): Promise<Tenant[]> {
-    return [...this.tenants.values()].filter(
-      (tenant) => tenant.status !== "deleted",
-    );
+    return db
+      .select()
+      .from(tenants)
+      .where(ne(tenants.status, "deleted"));
   }
 
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
-    const tenant = this.tenants.get(id);
-    if (!tenant || tenant.status === "deleted") {
-      return null;
-    }
+    const [updated] = await db
+      .update(tenants)
+      .set({
+        ...(input.name !== undefined && { name: input.name }),
+        ...(input.domain !== undefined && { domain: input.domain }),
+        ...(input.status !== undefined && { status: input.status }),
+        ...(input.metadata !== undefined && { metadata: input.metadata }),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))
+      .returning();
 
-    const updated: Tenant = {
-      ...tenant,
-      ...(input.name !== undefined && { name: input.name }),
-      ...(input.domain !== undefined && { domain: input.domain }),
-      ...(input.status !== undefined && { status: input.status }),
-      ...(input.metadata !== undefined && { metadata: input.metadata }),
-      updatedAt: new Date(),
-    };
-
-    this.tenants.set(id, updated);
-    return updated;
+    return updated || null;
   }
 
   async softDelete(id: string): Promise<boolean> {
-    const tenant = this.tenants.get(id);
-    if (!tenant || tenant.status === "deleted") {
-      return false;
-    }
+    const [deleted] = await db
+      .update(tenants)
+      .set({
+        status: "deleted",
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))
+      .returning();
 
-    const deleted: Tenant = {
-      ...tenant,
-      status: "deleted",
-      deletedAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    this.tenants.set(id, deleted);
-    return true;
+    return !!deleted;
   }
 
   async findByDomain(domain: string): Promise<Tenant | null> {
-    for (const tenant of this.tenants.values()) {
-      if (tenant.domain === domain && tenant.status !== "deleted") {
-        return tenant;
-      }
-    }
-    return null;
+    const [tenant] = await db
+      .select()
+      .from(tenants)
+      .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));
+
+    return tenant || null;
   }
 }

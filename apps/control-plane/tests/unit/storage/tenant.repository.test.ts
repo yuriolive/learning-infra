@@ -1,6 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
+
+// Mock the database
+vi.mock("../../../src/database/db", () => ({
+  db: {
+    insert: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    returning: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+  },
+}));
+
+import { db } from "../../../src/database/db";
 
 import type { CreateTenantInput } from "../../../src/domains/tenants/tenant.types";
 

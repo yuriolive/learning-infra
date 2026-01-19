@@ -13,9 +13,15 @@
     "test": "bun x vitest run",
     "test:watch": "bun x vitest",
     "test:coverage": "bun x vitest --coverage",
-    "typecheck": "bun x tsc --noEmit"
+    "typecheck": "bun x tsc --noEmit",
+    "db:generate": "bun x drizzle-kit generate",
+    "db:migrate": "bun x drizzle-kit migrate",
+    "db:push": "bun x drizzle-kit push",
+    "db:studio": "bun x drizzle-kit studio"
   },
   "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "postgres": "^3.4.8",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -25,10 +31,11 @@
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
     "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-perfectionist": "^4.15.1",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-promise": "^7.2.1",

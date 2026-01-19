@@ -62,6 +62,10 @@ DELETE /api/tenants/{tenantId}
 
 ### Prerequisites
 - Bun runtime installed
+- PostgreSQL database (or Neon connection string)
+
+### Environment Variables
+- `DATABASE_URL` - PostgreSQL connection string
 
 ### Running the Server
 ```bash
@@ -69,6 +73,21 @@ bun dev
 ```
 
 The server will start on `http://localhost:3000` (or the port specified in `PORT` environment variable).
+
+### Database Operations
+```bash
+# Generate migration files
+bun run db:generate
+
+# Apply migrations to database
+bun run db:migrate
+
+# Push schema changes directly (for development)
+bun run db:push
+
+# Open Drizzle Studio
+bun run db:studio
+```
 
 ### Building
 ```bash
@@ -100,9 +119,12 @@ The codebase follows a domain-driven design structure:
   - **`tenants/`** - Tenant management domain
     - `tenant.types.ts` - TypeScript type definitions
     - `tenant.schemas.ts` - Request validation schemas (Zod)
-    - `tenant.repository.ts` - Data storage layer (currently in-memory, will be replaced with PostgreSQL)
+    - `tenant.repository.ts` - Data storage layer using Drizzle ORM
     - `tenant.service.ts` - Business logic layer
     - `tenant.routes.ts` - API route handlers
+- **`src/database/`** - Database configuration and schema
+  - `db.ts` - Drizzle client initialization
+  - `schema.ts` - Drizzle schema definitions
 - **`src/index.ts`** - Application entry point and server setup
 
 ## Testing
@@ -130,9 +152,9 @@ bun run test:coverage
 
 ## Notes
 
-- Currently uses in-memory storage for tenant metadata
-- Database tooling will be added in the next phase to persist data to PostgreSQL
+- Uses PostgreSQL for tenant metadata via Drizzle ORM
+- Physical database isolation is handled per tenant as part of provisioning
 - All endpoints include CORS headers for development
 - Request validation is handled via Zod schemas
 - Error handling returns appropriate HTTP status codes
-- Comprehensive unit test suite with 96% code coverage
+- Comprehensive unit test suite (note: tests currently require DATABASE_URL or mocking)
