@@ -26,23 +26,23 @@
       },
     },
     "apps/control-plane": {
-      "name": "@learning-infra/control-plane",
+      "name": "@vendin/control-plane",
       "version": "0.1.0",
       "dependencies": {
-        "@learning-infra/utils": "workspace:*",
         "@neondatabase/serverless": "^1.0.2",
+        "@vendin/utils": "workspace:*",
         "drizzle-orm": "^0.45.1",
         "postgres": "^3.4.8",
         "ws": "^8.19.0",
         "zod": "^3.25.76",
       },
       "devDependencies": {
-        "@learning-infra/config": "workspace:*",
         "@types/bun": "^1.1.10",
         "@types/node": "^24.7.1",
         "@types/ws": "^8.18.1",
         "@typescript-eslint/eslint-plugin": "^8.46.0",
         "@typescript-eslint/parser": "^8.46.0",
+        "@vendin/config": "workspace:*",
         "@vitest/coverage-v8": "^3.2.4",
         "drizzle-kit": "^0.31.8",
         "eslint": "^9.37.0",
@@ -63,18 +63,18 @@
       },
     },
     "packages/config": {
-      "name": "@learning-infra/config",
+      "name": "@vendin/config",
       "version": "0.1.0",
     },
     "packages/utils": {
-      "name": "@learning-infra/utils",
+      "name": "@vendin/utils",
       "version": "0.1.0",
       "dependencies": {
         "pino": "^10.1.0",
       },
       "devDependencies": {
-        "@learning-infra/config": "workspace:*",
         "@types/bun": "^1.1.10",
+        "@vendin/config": "workspace:*",
         "eslint": "^9.37.0",
         "pino-pretty": "^13.1.2",
         "typescript": "^5.9.3",
@@ -198,12 +198,6 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
-
-    "@learning-infra/config": ["@learning-infra/config@workspace:packages/config"],
-
-    "@learning-infra/control-plane": ["@learning-infra/control-plane@workspace:apps/control-plane"],
-
-    "@learning-infra/utils": ["@learning-infra/utils@workspace:packages/utils"],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@0.2.12", "", { "dependencies": { "@emnapi/core": "^1.4.3", "@emnapi/runtime": "^1.4.3", "@tybys/wasm-util": "^0.10.0" } }, "sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ=="],
 
@@ -350,6 +344,12 @@
     "@unrs/resolver-binding-win32-ia32-msvc": ["@unrs/resolver-binding-win32-ia32-msvc@1.11.1", "", { "os": "win32", "cpu": "ia32" }, "sha512-DCEI6t5i1NmAZp6pFonpD5m7i6aFrpofcp4LA2i8IIq60Jyo28hamKBxNrZcyOwVOZkgsRp9O2sXWBWP8MnvIQ=="],
 
     "@unrs/resolver-binding-win32-x64-msvc": ["@unrs/resolver-binding-win32-x64-msvc@1.11.1", "", { "os": "win32", "cpu": "x64" }, "sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g=="],
+
+    "@vendin/config": ["@vendin/config@workspace:packages/config"],
+
+    "@vendin/control-plane": ["@vendin/control-plane@workspace:apps/control-plane"],
+
+    "@vendin/utils": ["@vendin/utils@workspace:packages/utils"],
 
     "@vitest/coverage-v8": ["@vitest/coverage-v8@3.2.4", "", { "dependencies": { "@ampproject/remapping": "^2.3.0", "@bcoe/v8-coverage": "^1.0.2", "ast-v8-to-istanbul": "^0.3.3", "debug": "^4.4.1", "istanbul-lib-coverage": "^3.2.2", "istanbul-lib-report": "^3.0.1", "istanbul-lib-source-maps": "^5.0.6", "istanbul-reports": "^3.1.7", "magic-string": "^0.30.17", "magicast": "^0.3.5", "std-env": "^3.9.0", "test-exclude": "^7.0.1", "tinyrainbow": "^2.0.0" }, "peerDependencies": { "@vitest/browser": "3.2.4", "vitest": "3.2.4" }, "optionalPeers": ["@vitest/browser"] }, "sha512-EyF9SXU6kS5Ku/U82E259WSnvg6c8KTjppUncuNdm5QHpe17mwREHnjDzozC8x9MZ0xfBUFSaLkRv4TMA75ALQ=="],
 
