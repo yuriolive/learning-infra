@@ -9,5 +9,13 @@ export default [
         project: "./tsconfig.eslint.json",
       },
     },
+    settings: {
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+          project: "./tsconfig.eslint.json",
+        },
+      },
+    },
   },
 ];

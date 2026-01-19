@@ -1,8 +1,12 @@
 import { ZodError } from "zod";
 
-import { createTenantSchema, tenantIdSchema, updateTenantSchema } from "./tenant.schemas";
-import { TenantService } from "./tenant.service";
+import {
+  createTenantSchema,
+  tenantIdSchema,
+  updateTenantSchema,
+} from "./tenant.schemas";
 
+import type { TenantService } from "./tenant.service";
 import type { CreateTenantInput, UpdateTenantInput } from "./tenant.types";
 
 export interface RouteContext {
@@ -17,7 +21,11 @@ export function createTenantRoutes(context: RouteContext) {
       const url = new URL(request.url);
       const pathParts = url.pathname.split("/").filter(Boolean);
 
-      if (pathParts.length === 2 && pathParts[0] === "api" && pathParts[1] === "tenants") {
+      if (
+        pathParts.length === 2 &&
+        pathParts[0] === "api" &&
+        pathParts[1] === "tenants"
+      ) {
         if (request.method === "POST") {
           return handleCreateTenant(request, tenantService);
         }
@@ -26,7 +34,11 @@ export function createTenantRoutes(context: RouteContext) {
         }
       }
 
-      if (pathParts.length === 3 && pathParts[0] === "api" && pathParts[1] === "tenants") {
+      if (
+        pathParts.length === 3 &&
+        pathParts[0] === "api" &&
+        pathParts[1] === "tenants"
+      ) {
         const tenantId = pathParts[2];
         if (!tenantId) {
           return new Response("Not found", { status: 404 });
@@ -48,7 +60,10 @@ export function createTenantRoutes(context: RouteContext) {
   };
 }
 
-async function handleCreateTenant(request: Request, service: TenantService): Promise<Response> {
+async function handleCreateTenant(
+  request: Request,
+  service: TenantService,
+): Promise<Response> {
   try {
     const body = await request.json();
     const validated = createTenantSchema.parse(body);
@@ -67,7 +82,10 @@ async function handleCreateTenant(request: Request, service: TenantService): Pro
   }
 }
 
-async function handleGetTenant(tenantId: string, service: TenantService): Promise<Response> {
+async function handleGetTenant(
+  tenantId: string,
+  service: TenantService,
+): Promise<Response> {
   try {
     tenantIdSchema.parse({ tenantId });
 
@@ -104,7 +122,7 @@ async function handleListTenants(service: TenantService): Promise<Response> {
 async function handleUpdateTenant(
   tenantId: string,
   request: Request,
-  service: TenantService
+  service: TenantService,
 ): Promise<Response> {
   try {
     tenantIdSchema.parse({ tenantId });
@@ -112,7 +130,10 @@ async function handleUpdateTenant(
     const body = await request.json();
     const validated = updateTenantSchema.parse(body);
 
-    const tenant = await service.updateTenant(tenantId, validated as UpdateTenantInput);
+    const tenant = await service.updateTenant(
+      tenantId,
+      validated as UpdateTenantInput,
+    );
 
     return new Response(JSON.stringify(tenant), {
       status: 200,
@@ -126,7 +147,10 @@ async function handleUpdateTenant(
   }
 }
 
-async function handleDeleteTenant(tenantId: string, service: TenantService): Promise<Response> {
+async function handleDeleteTenant(
+  tenantId: string,
+  service: TenantService,
+): Promise<Response> {
   try {
     tenantIdSchema.parse({ tenantId });
 
@@ -157,7 +181,7 @@ function handleError(error: unknown): Response {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         },
-      }
+      },
     );
   }
 

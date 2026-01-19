@@ -1,8 +1,8 @@
 import { serve } from "bun";
 
+import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
-import { TenantRepository } from "./domains/tenants/tenant.repository";
 
 const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 
@@ -30,7 +30,7 @@ const server = serve({
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
           },
-        }
+        },
       );
     }
 
@@ -39,7 +39,8 @@ const server = serve({
         status: 204,
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, PATCH, DELETE, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type",
         },
       });

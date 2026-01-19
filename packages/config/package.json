@@ -2,5 +2,10 @@
   "name": "@learning-infra/config",
   "version": "0.1.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./eslint.config.js": "./eslint.config.js",
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./prettier.config.js": "./prettier.config.js"
+  }
 }

@@ -94,7 +94,7 @@ describe("TenantRepository", () => {
       const tenants = await repository.findAll();
 
       expect(tenants).toHaveLength(2);
-      expect(tenants.map(t => t.name)).toEqual(["Store 1", "Store 2"]);
+      expect(tenants.map((t) => t.name)).toEqual(["Store 1", "Store 2"]);
     });
 
     it("should return empty array when no tenants exist", async () => {
@@ -117,11 +117,15 @@ describe("TenantRepository", () => {
       expect(updated?.name).toBe("Updated Name");
       expect(updated?.status).toBe("suspended");
       expect(updated?.id).toBe(created.id);
-      expect(updated?.updatedAt.getTime()).toBeGreaterThanOrEqual(created.updatedAt.getTime());
+      expect(updated?.updatedAt.getTime()).toBeGreaterThanOrEqual(
+        created.updatedAt.getTime(),
+      );
     });
 
     it("should return null when tenant not found", async () => {
-      const updated = await repository.update("non-existent-id", { name: "New Name" });
+      const updated = await repository.update("non-existent-id", {
+        name: "New Name",
+      });
 
       expect(updated).toBeNull();
     });

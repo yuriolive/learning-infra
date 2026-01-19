@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 
-import type { CreateTenantInput, Tenant, UpdateTenantInput } from "./tenant.types";
+import type {
+  CreateTenantInput,
+  Tenant,
+  UpdateTenantInput,
+} from "./tenant.types";
 
 export class TenantRepository {
   private tenants: Map<string, Tenant> = new Map();
@@ -30,7 +34,9 @@ export class TenantRepository {
   }
 
   async findAll(): Promise<Tenant[]> {
-    return Array.from(this.tenants.values()).filter(tenant => tenant.status !== "deleted");
+    return [...this.tenants.values()].filter(
+      (tenant) => tenant.status !== "deleted",
+    );
   }
 
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {

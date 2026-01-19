@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { TenantService } from "../../../src/domains/tenants/tenant.service";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
+import { TenantService } from "../../../src/domains/tenants/tenant.service";
 
-import type { CreateTenantInput, UpdateTenantInput } from "../../../src/domains/tenants/tenant.types";
+import type {
+  CreateTenantInput,
+  UpdateTenantInput,
+} from "../../../src/domains/tenants/tenant.types";
 
 describe("TenantService", () => {
   let service: TenantService;
@@ -37,7 +40,9 @@ describe("TenantService", () => {
 
       await service.createTenant(input);
 
-      await expect(service.createTenant(input)).rejects.toThrow("Domain already in use");
+      await expect(service.createTenant(input)).rejects.toThrow(
+        "Domain already in use",
+      );
     });
 
     it("should allow creating tenant without domain", async () => {
@@ -64,7 +69,9 @@ describe("TenantService", () => {
     });
 
     it("should throw error when tenant not found", async () => {
-      await expect(service.getTenant("non-existent-id")).rejects.toThrow("Tenant not found");
+      await expect(service.getTenant("non-existent-id")).rejects.toThrow(
+        "Tenant not found",
+      );
     });
   });
 
@@ -89,24 +96,32 @@ describe("TenantService", () => {
         name: "Updated Name",
       };
 
-      await expect(service.updateTenant("non-existent-id", input)).rejects.toThrow(
-        "Tenant not found"
-      );
+      await expect(
+        service.updateTenant("non-existent-id", input),
+      ).rejects.toThrow("Tenant not found");
     });
 
     it("should throw error when updating to existing domain", async () => {
       await service.createTenant({ name: "Store 1", domain: "store1" });
-      const store2 = await service.createTenant({ name: "Store 2", domain: "store2" });
+      const store2 = await service.createTenant({
+        name: "Store 2",
+        domain: "store2",
+      });
 
       const input: UpdateTenantInput = {
         domain: "store1",
       };
 
-      await expect(service.updateTenant(store2.id, input)).rejects.toThrow("Domain already in use");
+      await expect(service.updateTenant(store2.id, input)).rejects.toThrow(
+        "Domain already in use",
+      );
     });
 
     it("should allow updating to same domain for same tenant", async () => {
-      const created = await service.createTenant({ name: "Test Store", domain: "teststore" });
+      const created = await service.createTenant({
+        name: "Test Store",
+        domain: "teststore",
+      });
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
@@ -126,11 +141,15 @@ describe("TenantService", () => {
 
       await expect(service.deleteTenant(created.id)).resolves.toBeUndefined();
 
-      await expect(service.getTenant(created.id)).rejects.toThrow("Tenant not found");
+      await expect(service.getTenant(created.id)).rejects.toThrow(
+        "Tenant not found",
+      );
     });
 
     it("should throw error when tenant not found", async () => {
-      await expect(service.deleteTenant("non-existent-id")).rejects.toThrow("Tenant not found");
+      await expect(service.deleteTenant("non-existent-id")).rejects.toThrow(
+        "Tenant not found",
+      );
     });
   });
 
@@ -143,7 +162,11 @@ describe("TenantService", () => {
       const tenants = await service.listTenants();
 
       expect(tenants).toHaveLength(3);
-      expect(tenants.map(t => t.name)).toEqual(["Store 1", "Store 2", "Store 3"]);
+      expect(tenants.map((t) => t.name)).toEqual([
+        "Store 1",
+        "Store 2",
+        "Store 3",
+      ]);
     });
 
     it("should return empty array when no tenants exist", async () => {

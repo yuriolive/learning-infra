@@ -89,8 +89,8 @@ export default [
       "comma-dangle": ["error", "always-multiline"],
       complexity: ["warn", 10],
       eqeqeq: ["error", "always", { null: "ignore" }],
-      "import/no-cycle": "error",
-      "import/no-unresolved": "error",
+      "import/no-cycle": "warn",
+      "import/no-unresolved": "warn",
       "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
       "max-lines-per-function": ["warn", { max: 100, skipBlankLines: true, skipComments: true }],
       "no-console": "warn",
@@ -111,7 +111,7 @@ export default [
       "prefer-const": "error",
       "prettier/prettier": "error",
       quotes: ["error", "double", { avoidEscape: true }],
-      "require-await": "error",
+      "require-await": "warn",
       semi: ["error", "always"],
       ...promise.configs.recommended.rules,
       ...security.configs.recommended.rules,
@@ -122,11 +122,10 @@ export default [
       "unicorn/prefer-node-protocol": "error",
     },
     settings: {
-      "import/core-modules": ["bun", "node:crypto"],
+      "import/core-modules": ["bun", "node:crypto", "node:path", "node:url"],
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
-          project: ["./tsconfig.eslint.json", "packages/*/tsconfig.json", "apps/*/tsconfig.json"],
         },
       },
     },

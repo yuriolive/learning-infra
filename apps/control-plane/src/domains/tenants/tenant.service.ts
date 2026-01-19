@@ -1,6 +1,9 @@
-import { TenantRepository } from "./tenant.repository";
-
-import type { CreateTenantInput, Tenant, UpdateTenantInput } from "./tenant.types";
+import type { TenantRepository } from "./tenant.repository";
+import type {
+  CreateTenantInput,
+  Tenant,
+  UpdateTenantInput,
+} from "./tenant.types";
 
 export class TenantService {
   constructor(private repository: TenantRepository) {}

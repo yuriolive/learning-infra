@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { createTenantRoutes } from "../../../src/domains/tenants/tenant.routes";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
-import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 
 describe("TenantRoutes", () => {
   let routes: ReturnType<typeof createTenantRoutes>;
@@ -54,7 +54,10 @@ describe("TenantRoutes", () => {
     });
 
     it("should return 409 for duplicate domain", async () => {
-      await service.createTenant({ name: "Existing Store", domain: "teststore" });
+      await service.createTenant({
+        name: "Existing Store",
+        domain: "teststore",
+      });
 
       const request = new Request("http://localhost:3000/api/tenants", {
         method: "POST",
@@ -107,9 +110,12 @@ describe("TenantRoutes", () => {
     it("should return tenant when found", async () => {
       const created = await service.createTenant({ name: "Test Store" });
 
-      const request = new Request(`http://localhost:3000/api/tenants/${created.id}`, {
-        method: "GET",
-      });
+      const request = new Request(
+        `http://localhost:3000/api/tenants/${created.id}`,
+        {
+          method: "GET",
+        },
+      );
 
       const response = await routes.handleRequest(request);
       const data = await response.json();
@@ -124,7 +130,7 @@ describe("TenantRoutes", () => {
         "http://localhost:3000/api/tenants/550e8400-e29b-41d4-a716-446655440000",
         {
           method: "GET",
-        }
+        },
       );
 
       const response = await routes.handleRequest(request);
@@ -135,9 +141,12 @@ describe("TenantRoutes", () => {
     });
 
     it("should return 400 for invalid tenant ID format", async () => {
-      const request = new Request("http://localhost:3000/api/tenants/invalid-id", {
-        method: "GET",
-      });
+      const request = new Request(
+        "http://localhost:3000/api/tenants/invalid-id",
+        {
+          method: "GET",
+        },
+      );
 
       const response = await routes.handleRequest(request);
       const data = await response.json();
@@ -151,14 +160,17 @@ describe("TenantRoutes", () => {
     it("should update tenant successfully", async () => {
       const created = await service.createTenant({ name: "Original Name" });
 
-      const request = new Request(`http://localhost:3000/api/tenants/${created.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: "Updated Name",
-          status: "suspended",
-        }),
-      });
+      const request = new Request(
+        `http://localhost:3000/api/tenants/${created.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: "Updated Name",
+            status: "suspended",
+          }),
+        },
+      );
 
       const response = await routes.handleRequest(request);
       const data = await response.json();
@@ -176,7 +188,7 @@ describe("TenantRoutes", () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: "Updated Name" }),
-        }
+        },
       );
 
       const response = await routes.handleRequest(request);
@@ -191,9 +203,12 @@ describe("TenantRoutes", () => {
     it("should delete tenant successfully", async () => {
       const created = await service.createTenant({ name: "Test Store" });
 
-      const request = new Request(`http://localhost:3000/api/tenants/${created.id}`, {
-        method: "DELETE",
-      });
+      const request = new Request(
+        `http://localhost:3000/api/tenants/${created.id}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const response = await routes.handleRequest(request);
       const data = await response.json();
@@ -207,7 +222,7 @@ describe("TenantRoutes", () => {
         "http://localhost:3000/api/tenants/550e8400-e29b-41d4-a716-446655440000",
         {
           method: "DELETE",
-        }
+        },
       );
 
       const response = await routes.handleRequest(request);
