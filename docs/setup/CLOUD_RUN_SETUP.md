@@ -29,34 +29,22 @@ gcloud iam service-accounts create cloud-run-sa \
   --display-name="Cloud Run SA"
 ```
 
-## Step 3: Grant Database Access to Cloud Run
+## Step 3: Grant Secret Access to Cloud Run
+
+Cloud Run needs permission to access the secrets stored in Secret Manager (like `DATABASE_URL`).
 
 ```bash
-# Grant Cloud Run service account access to database (if using Cloud SQL)
-# For Neon or external databases, this step may not be needed
-
-# If using Cloud SQL:
+# Grant Cloud Run service account access to Secret Manager
 CLOUD_RUN_SA_EMAIL="cloud-run-sa@vendin-store.iam.gserviceaccount.com"
 
 gcloud projects add-iam-policy-binding vendin-store \
   --member="serviceAccount:$CLOUD_RUN_SA_EMAIL" \
-  --role="roles/cloudsql.client"
+  --role="roles/secretmanager.secretAccessor"
 ```
 
-## Step 4: Configure VPC Network (Optional)
+## Step 4: Configure Networking (Optional)
 
-If you need VPC access for Cloud SQL or other internal services:
-
-```bash
-# Create VPC connector for Cloud Run (if needed for Cloud SQL)
-gcloud compute networks vpc-access connectors create connector \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --network=default \
-  --range=10.8.0.0/28 \
-  --min-instances=2 \
-  --max-instances=10
-```
+By default, Cloud Run services have direct internet access. If you need to restrict traffic or use a static outbound IP, you can configure a VPC connector. For most Neon/external database setups, this is not required.
 
 ## Step 5: Deploy Initial Service (Manual)
 
@@ -202,8 +190,10 @@ gcloud projects add-iam-policy-binding vendin-store \
 
 ### Network Security
 
+If you configured a VPC connector in Step 4:
+
 ```bash
-# Configure VPC egress (if using VPC connector)
+# Configure VPC egress
 gcloud run services update control-plane \
   --project=vendin-store \
   --region=southamerica-east1 \
@@ -305,7 +295,7 @@ gcloud run domain-mappings delete \
   --region=southamerica-east1 \
   --domain=api.vendin.store
 
-# Delete VPC connector
+# Delete VPC connector (if created)
 gcloud compute networks vpc-access connectors delete connector \
   --project=vendin-store \
   --region=southamerica-east1
