@@ -36,12 +36,12 @@ export function createTenantRoutes(context: RouteContext) {
         pathParts[0] === "api" &&
         pathParts[1] === "tenants"
       ) {
-        if (request.method === "POST") {
-          return handleCreateTenant(request, tenantService, logger);
-        }
-        if (request.method === "GET") {
-          return handleListTenants(tenantService, logger);
-        }
+        const response = await handleCollectionRequest(
+          request,
+          tenantService,
+          logger,
+        );
+        return response;
       }
 
       if (
@@ -49,25 +49,60 @@ export function createTenantRoutes(context: RouteContext) {
         pathParts[0] === "api" &&
         pathParts[1] === "tenants"
       ) {
-        const tenantId = pathParts[2];
-        if (!tenantId) {
-          return new Response("Not found", { status: 404 });
-        }
-
-        if (request.method === "GET") {
-          return handleGetTenant(tenantId, tenantService, logger);
-        }
-        if (request.method === "DELETE") {
-          return handleDeleteTenant(tenantId, tenantService, logger);
-        }
-        if (request.method === "PATCH" || request.method === "PUT") {
-          return handleUpdateTenant(tenantId, request, tenantService, logger);
-        }
+        const response = await handleResourceRequest(
+          request,
+          pathParts[2]!,
+          tenantService,
+          logger,
+        );
+        return response;
       }
 
       return new Response("Not found", { status: 404 });
     },
   };
+}
+
+async function handleCollectionRequest(
+  request: Request,
+  service: TenantService,
+  logger: Logger,
+): Promise<Response> {
+  if (request.method === "POST") {
+    const response = await handleCreateTenant(request, service, logger);
+    return response;
+  }
+  if (request.method === "GET") {
+    const response = await handleListTenants(service, logger);
+    return response;
+  }
+  return new Response("Not found", { status: 404 });
+}
+
+async function handleResourceRequest(
+  request: Request,
+  tenantId: string,
+  service: TenantService,
+  logger: Logger,
+): Promise<Response> {
+  if (request.method === "GET") {
+    const response = await handleGetTenant(tenantId, service, logger);
+    return response;
+  }
+  if (request.method === "DELETE") {
+    const response = await handleDeleteTenant(tenantId, service, logger);
+    return response;
+  }
+  if (request.method === "PATCH" || request.method === "PUT") {
+    const response = await handleUpdateTenant(
+      tenantId,
+      request,
+      service,
+      logger,
+    );
+    return response;
+  }
+  return new Response("Not found", { status: 404 });
 }
 
 /**

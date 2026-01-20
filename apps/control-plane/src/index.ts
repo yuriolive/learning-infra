@@ -106,7 +106,8 @@ const server = serve({
       });
     }
 
-    return tenantRoutes.handleRequest(request);
+    const response = await tenantRoutes.handleRequest(request);
+    return response;
   },
   port,
 });
