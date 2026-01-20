@@ -18,7 +18,7 @@ globs: apps/**/*, infrastructure/**/*
   - `port: 3000`
 
 ### Tenant Instance Services
-- **Service Naming**: `tenant-{tenantId}` (e.g., `tenant-abc123`)
+- **Service Naming**: See [@references.mdc](../shared/references.mdc)
 - **Type**: Separate service per tenant (dynamically provisioned)
 - **Purpose**: Isolated MedusaJS 2.0 backend per tenant
 - **Configuration**:
@@ -32,39 +32,13 @@ globs: apps/**/*, infrastructure/**/*
 
 ### Control Plane Deployment
 
-```bash
-gcloud run deploy control-plane \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --image=southamerica-east1-docker.pkg.dev/vendin-store/containers/control-plane:latest \
-  --min-instances=0 \
-  --max-instances=10 \
-  --cpu=1 \
-  --memory=512Mi \
-  --set-secrets=DATABASE_URL=control-plane-db-url:latest
-```
+See [docs/examples/cloud-run-deployment.sh](../../docs/examples/cloud-run-deployment.sh) for deployment commands.
 
 ### Tenant Instance Deployment (Programmatic)
 
-The Control Plane creates tenant instances using Cloud Run Admin API:
+The Control Plane creates tenant instances using Cloud Run Admin API.
 
-```typescript
-// Pattern: Create tenant instance
-const serviceName = `tenant-${tenantId}`;
-await cloudRunApi.createService({
-  name: serviceName,
-  image: 'southamerica-east1-docker.pkg.dev/vendin-store/containers/tenant-instance:latest',
-  minInstances: 0,
-  maxInstances: 10,
-  secrets: {
-    DATABASE_URL: `tenant-${tenantId}-db-url:latest`
-  },
-  env: {
-    TENANT_ID: tenantId,
-    REDIS_NAMESPACE: `tenant-${tenantId}`
-  }
-});
-```
+See [docs/examples/cloud-run-tenant-deployment.ts](../../docs/examples/cloud-run-tenant-deployment.ts) for programmatic deployment pattern.
 
 ## Scale-to-Zero Configuration
 
@@ -89,10 +63,10 @@ All Cloud Run services use the same service account:
 
 ## Cleanup
 
-When deleting a tenant:
-```bash
-gcloud run services delete tenant-${TENANT_ID} \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --quiet
-```
+When deleting a tenant, delete the Cloud Run service. See [docs/examples/cloud-run-tenant-deployment.ts](../../docs/examples/cloud-run-tenant-deployment.ts) for cleanup patterns.
+
+## References
+
+- **Service naming**: See [@references.mdc](../shared/references.mdc)
+- **Provisioning workflow**: See [@provisioning.mdc](../apps/control-plane/provisioning.mdc)
+- **Code examples**: See [docs/examples/](../../docs/examples/)

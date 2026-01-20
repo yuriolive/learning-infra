@@ -28,8 +28,6 @@ Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisio
 
 ## Subdomain Structure
 
-The platform uses the following subdomain structure (Shopify-style pattern):
-
 ```
 vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root
@@ -110,19 +108,11 @@ Customer → {store}.my.vendin.store OR shop.merchant.com
         → Tenant Database (Neon PostgreSQL)
 ```
 
-## References
-
-- **Detailed docs**: See `AGENTS.md` for agent architecture, responsibilities, deployment workflow.
-- **Requirements**: See `PRD.md` for project requirements.
-- **Setup Guides**: See `docs/setup/` for infrastructure setup documentation.
-- **External docs**: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS (see `AGENTS.md` Resources section).
-
 ## Documentation Structure
 
 All documentation lives in `docs/` with consistent organization:
 
 ### Pattern
-
 ```
 docs/
 ├── {topic}/
@@ -133,27 +123,22 @@ docs/
 ```
 
 ### Naming Conventions
-
 - **Directories**: lowercase with hyphens (`test/`, `deployment/`)
 - **README files**: `README.md` (always present)
 - **State files**: `CURRENT_STATE.md`, `PLANNED_IMPROVEMENTS.md`
 - **Component files**: `UPPERCASE_WITH_UNDERSCORES.md` (e.g., `CONTROL_PLANE.md`)
 
-### Examples
-
-- `docs/test/` - Test architecture and strategy
-  - `README.md` - Quick reference
-  - `CURRENT_STATE.md` - Current PGLite implementation
-  - `PLANNED_IMPROVEMENTS.md` - Future test refactoring
-
-- `docs/deployment/` - Deployment and CD/CI
-  - `README.md` - Deployment overview
-  - `CONTROL_PLANE.md` - Cloud Run deployment guide
-
 ### Rules
-
 1. Never create standalone docs in `docs/` root (use subdirectories)
 2. Always create `README.md` with quick reference
 3. Use UPPERCASE_WITH_UNDERSCORES for component-specific docs
 4. Keep docs DRY - reference detailed content, don't duplicate
 5. Include "Related Documentation" section with links
+
+## References
+
+- **Architecture**: See [AGENTS.md](../../../AGENTS.md) for detailed architecture, responsibilities, deployment workflow.
+- **Requirements**: See `PRD.md` for project requirements.
+- **Setup Guides**: See `docs/setup/` for infrastructure setup documentation.
+- **External docs**: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS (see `AGENTS.md` Resources section).
+- **Service naming**: See [@references.mdc](../references.mdc)

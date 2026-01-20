@@ -16,39 +16,7 @@ Shared utilities used across apps and packages.
 
 ## Logger Usage
 
-### Basic Usage
-
-```typescript
-import { logger } from '@vendin/utils/logger';
-
-logger.info('Operation completed');
-logger.error({ error }, 'Operation failed');
-```
-
-### Custom Logger Instance
-
-```typescript
-import { createLogger } from '@vendin/utils/logger';
-
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: process.env.NODE_ENV ?? 'development',
-});
-```
-
-### Structured Logging
-
-Always include relevant context:
-
-```typescript
-// ✅ Good: Structured logging with context
-logger.info({ tenantId, userId, duration: 1234 }, 'Tenant provisioned');
-logger.error({ error, tenantId, operation: 'provision' }, 'Provisioning failed');
-
-// ❌ Bad: Plain strings without context
-logger.info('Tenant provisioned');
-logger.error('Provisioning failed');
-```
+See [docs/examples/logger-usage.ts](../../docs/examples/logger-usage.ts) for usage examples.
 
 ### Log Levels
 
@@ -84,3 +52,8 @@ See `packages/utils/src/logger.ts` for implementation details.
 - Avoid app-specific logic
 - Export well-typed interfaces
 - Document all exported functions
+
+## References
+
+- **Code examples**: See [docs/examples/logger-usage.ts](../../docs/examples/logger-usage.ts)
+- **Coding standards**: See [@coding-standards.mdc](../shared/quality/coding-standards.mdc)

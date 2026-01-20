@@ -24,53 +24,15 @@ apps/control-plane/src/
 ## Domain Patterns
 
 ### Repository Pattern
-
-```typescript
-// tenant.repository.ts
-export class TenantRepository {
-  async create(data: CreateTenantInput): Promise<Tenant> {
-    // Database operations
-  }
-  
-  async findById(id: string): Promise<Tenant | null> {
-    // Database query
-  }
-  
-  async findBySubdomain(subdomain: string): Promise<Tenant | null> {
-    // Database query
-  }
-}
-```
+Handles data access and database operations.
 
 ### Service Pattern
-
-```typescript
-// tenant.service.ts
-export class TenantService {
-  constructor(
-    private repository: TenantRepository,
-    private neonApi: NeonApi,
-    private cloudRunApi: CloudRunApi,
-    private cloudflareApi: CloudflareApi
-  ) {}
-  
-  async provisionTenant(input: CreateTenantInput): Promise<Tenant> {
-    // Orchestrate provisioning workflow
-  }
-}
-```
+Orchestrates business logic and coordinates between repositories and external APIs.
 
 ### Route Pattern
+Handles HTTP concerns and delegates to services.
 
-```typescript
-// tenant.routes.ts
-export const tenantRoutes = {
-  'POST /api/tenants': async (req, res) => {
-    const tenant = await tenantService.provisionTenant(req.body);
-    return res.json(tenant);
-  }
-};
-```
+See [docs/examples/domain-patterns.ts](../../../docs/examples/domain-patterns.ts) for implementation examples.
 
 ## Domain Isolation
 
@@ -78,3 +40,8 @@ export const tenantRoutes = {
 - Domain services handle business logic
 - Repositories handle data access
 - Routes handle HTTP concerns
+
+## References
+
+- **Code examples**: See [docs/examples/domain-patterns.ts](../../../docs/examples/domain-patterns.ts)
+- **API patterns**: See [@api-development.mdc](./api-development.mdc)

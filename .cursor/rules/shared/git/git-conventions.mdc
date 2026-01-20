@@ -44,6 +44,7 @@ Closes #123
 fix(infrastructure): correct Cloud Run service naming pattern
 
 Tenant services should use tenant-{id} format, not tenant_{id}.
+```
 
 ## Pre-Commit Verification
 
@@ -79,3 +80,7 @@ bun run lint && bun run typecheck
 3. Fix any errors or warnings
 4. Stage and commit changes
 5. Husky will run the same checks automatically
+
+## References
+
+- **General coding standards**: See [@coding-standards.mdc](../quality/coding-standards.mdc)

@@ -32,44 +32,18 @@ This directory contains Cursor AI rules that guide development practices for the
     │   └── project-overview.mdc # Overview, tech stack, subdomain structure
     ├── quality/              # Code quality rules
     │   └── coding-standards.mdc # Coding standards and guidelines
+    ├── references.mdc        # Common patterns and naming conventions
     └── testing/              # Testing rules
         └── testing-strategy.mdc # Testing patterns and strategies
 ```
 
-## Subdomain Structure
+## Project Overview
 
-The platform uses the following subdomain structure (Shopify-style pattern):
+For subdomain structure, service roles, technology stack, and core principles, see [@project-overview.mdc](shared/project/project-overview.mdc).
 
-```
-vendin.store                    → Landing page & Signup (root domain)
-www.vendin.store                → Redirects to root
-control.vendin.store            → Control Plane API
-admin.vendin.store              → Platform admin dashboard (optional)
-*.my.vendin.store               → Tenant stores (wildcard)
-  ├─ {store}.my.vendin.store → Merchant storefront
-  └─ {store}.my.vendin.store/admin → Merchant admin (MedusaJS)
-```
+## Code Examples
 
-## Service Roles
-
-**Control Plane** (Cloud Run):
-- Single shared service managing all tenants
-- Handles tenant provisioning, database creation, compute allocation
-- API: control.vendin.store
-- Location: apps/control-plane/
-
-**Storefront** (Cloudflare Pages):
-- Single shared Next.js application
-- Routes requests to correct tenant based on hostname
-- Handles landing page on root domain
-- Location: apps/storefront/ (future)
-
-**Tenant Instances** (Cloud Run):
-- Separate Cloud Run service per tenant (tenant-{id})
-- Each runs MedusaJS 2.0
-- Serves /admin and /store APIs
-- Scale-to-zero when idle
-- Location: apps/tenant-instance/ (template, future)
+Code examples are maintained separately in `docs/examples/` to keep rules concise. See [docs/examples/README.md](../../docs/examples/README.md) for available examples.
 
 ## Usage
 
@@ -88,8 +62,9 @@ When adding new rules:
 2. **Choose appropriate folder**: Place in apps/, infrastructure/, packages/, or shared/
 3. **Use consistent naming**: Follow the .mdc extension and descriptive naming
 4. **Set glob patterns**: Use appropriate glob patterns in frontmatter for scoping
-5. **Reference other rules**: Use "Project Documentation References" section (DRY principles)
-6. **Update this README**: Document new rules in this README
+5. **Reference other rules**: Use "References" section (DRY principles)
+6. **Extract examples**: Place code examples in `docs/examples/` and reference them
+7. **Update this README**: Document new rules in this README
 
 ## Rule Priority
 
@@ -105,9 +80,12 @@ When rules conflict:
 - Remove outdated rules that no longer apply
 - Add new rules for emerging patterns and technologies
 - Ensure all cross-references remain valid when reorganizing
+- Keep rules concise by extracting examples to `docs/examples/`
 
 ## References
 
-- **Architecture**: See AGENTS.md for detailed architecture
-- **Requirements**: See PRD.md for project requirements
-- **Setup Guides**: See docs/setup/ for infrastructure setup documentation
+- **Architecture**: See [AGENTS.md](../../AGENTS.md) for detailed architecture
+- **Project overview**: See [@project-overview.mdc](shared/project/project-overview.mdc)
+- **Requirements**: See [PRD.md](../../PRD.md) for project requirements
+- **Setup Guides**: See [docs/setup/](../../docs/setup/) for infrastructure setup documentation
+- **Code examples**: See [docs/examples/](../../docs/examples/)

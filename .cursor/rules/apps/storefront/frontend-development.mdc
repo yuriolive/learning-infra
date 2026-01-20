@@ -44,3 +44,8 @@ globs: apps/storefront/**/*
 - Configure build settings in Pages dashboard
 - Set up custom domain: `vendin.store`
 - Configure environment variables in Pages
+
+## References
+
+- **Hostname routing**: See [@routing.mdc](./routing.mdc)
+- **Subdomain structure**: See [@project-overview.mdc](../../shared/project/project-overview.mdc)

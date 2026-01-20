@@ -12,23 +12,9 @@ globs: apps/control-plane/**/*
 
 ## Database Provisioning Pattern
 
-The Control Plane creates databases programmatically via Neon API:
+The Control Plane creates databases programmatically via Neon API.
 
-```typescript
-// Create new Neon database for tenant
-const database = await neonApi.createDatabase({
-  projectId: NEON_PROJECT_ID,
-  branch: {
-    name: `tenant-${tenantId}`
-  }
-});
-
-// Store connection string in Secret Manager
-await secretManager.createSecret({
-  name: `tenant-${tenantId}-db-url`,
-  value: database.connectionString
-});
-```
+See [docs/examples/database-provisioning.ts](../../docs/examples/database-provisioning.ts) for provisioning patterns.
 
 ## Connection String Management
 
@@ -47,24 +33,14 @@ await secretManager.createSecret({
 
 ## Connection Pattern
 
-Tenant instances connect to their isolated database:
-
-```typescript
-// In tenant instance
-const databaseUrl = process.env.DATABASE_URL; // From Secret Manager
-const db = drizzle(neon(databaseUrl), { schema });
-```
+Tenant instances connect to their isolated database. See [docs/examples/database-provisioning.ts](../../docs/examples/database-provisioning.ts) for connection patterns.
 
 ## Cleanup
 
-When deleting a tenant:
-```typescript
-// Delete database via Neon API
-await neonApi.deleteDatabase({
-  projectId: NEON_PROJECT_ID,
-  branchId: tenantDatabase.branchId
-});
+When deleting a tenant, delete database via Neon API and remove secrets. See [docs/examples/database-provisioning.ts](../../docs/examples/database-provisioning.ts) for cleanup patterns.
 
-// Delete secret
-await secretManager.deleteSecret(`tenant-${tenantId}-db-url`);
-```
+## References
+
+- **Tenant isolation**: See [AGENTS.md](../../AGENTS.md#key-constraints)
+- **Secret management**: See [@secrets.mdc](./secrets.mdc)
+- **Code examples**: See [docs/examples/](../../docs/examples/)

@@ -14,7 +14,16 @@ import vitest from "eslint-plugin-vitest";
 export default [
   // Ignore patterns
   {
-    ignores: [".cursor/", "node_modules/", "dist/", "build/", "coverage/", "**/*.d.ts", "scripts/"],
+    ignores: [
+      ".cursor/",
+      "node_modules/",
+      "dist/",
+      "build/",
+      "coverage/",
+      "**/*.d.ts",
+      "scripts/",
+      "docs/examples/**",
+    ],
   },
 
   // Base ESLint recommended rules

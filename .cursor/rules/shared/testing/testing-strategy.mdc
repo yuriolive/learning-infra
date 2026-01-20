@@ -31,33 +31,11 @@ apps/control-plane/tests/
 
 ### Tenant Isolation Testing
 
-```typescript
-it('should maintain database isolation between tenants', async () => {
-  const tenant1 = await createTenant({ name: 'Store 1' });
-  const tenant2 = await createTenant({ name: 'Store 2' });
-  
-  // Verify different databases
-  expect(tenant1.databaseUrl).not.toBe(tenant2.databaseUrl);
-  
-  // Verify data isolation
-  await createProduct(tenant1.id, { name: 'Product 1' });
-  const products = await getProducts(tenant2.id);
-  expect(products).not.toContainEqual(expect.objectContaining({ name: 'Product 1' }));
-});
-```
+See [docs/examples/tenant-isolation-test.ts](../../../docs/examples/tenant-isolation-test.ts) for implementation examples.
 
 ### Provisioning Performance Testing
 
-```typescript
-it('should provision tenant in under 2 minutes', async () => {
-  const startTime = Date.now();
-  const tenant = await provisionTenant({ merchantEmail: 'test@example.com' });
-  const duration = Date.now() - startTime;
-  
-  expect(duration).toBeLessThan(120000); // 2 minutes
-  expect(tenant.status).toBe('active');
-});
-```
+See [docs/examples/provisioning-performance-test.ts](../../../docs/examples/provisioning-performance-test.ts) for implementation examples.
 
 ## Database Testing with PGLite
 
@@ -75,45 +53,11 @@ it('should provision tenant in under 2 minutes', async () => {
 
 ### PGLite Setup Pattern
 
-```typescript
-import { createMockDatabase } from "../../utils/mock-database";
-
-describe("TenantRepository", () => {
-  let repository: TenantRepository;
-
-  beforeEach(async () => {
-    const db = await createMockDatabase(); // Fresh isolated instance
-    repository = new TenantRepository(db);
-  });
-
-  it("should create tenant", async () => {
-    const tenant = await repository.create({ name: "Store 1" });
-    expect(tenant.id).toBeDefined();
-  });
-});
-```
+See [docs/examples/testing-pglite-setup.ts](../../../docs/examples/testing-pglite-setup.ts) for setup pattern.
 
 ### Dependency Injection Pattern
 
-Repositories should accept an optional database instance:
-
-```typescript
-export class TenantRepository {
-  private db: typeof database;
-
-  constructor(db?: typeof database) {
-    this.db = db ?? database; // Use injected for tests, global for production
-  }
-
-  async create(input: CreateTenantInput): Promise<Tenant> {
-    const [tenant] = await this.db
-      .insert(tenants)
-      .values(input)
-      .returning();
-    return tenant;
-  }
-}
-```
+Repositories should accept an optional database instance for testing. See [docs/examples/domain-patterns.ts](../../../docs/examples/domain-patterns.ts) for dependency injection pattern.
 
 ### UUID Validation in Tests
 
@@ -137,3 +81,8 @@ See detailed documentation in `docs/test/`:
 - [CURRENT_STATE.md](../../../docs/test/CURRENT_STATE.md) - Current implementation with PGLite
 - [PLANNED_IMPROVEMENTS.md](../../../docs/test/PLANNED_IMPROVEMENTS.md) - Future test architecture
 - [README.md](../../../docs/test/README.md) - Quick reference and commands
+
+## References
+
+- **Project overview**: See [@project-overview.mdc](../project/project-overview.mdc)
+- **Code examples**: See [docs/examples/](../../../docs/examples/)

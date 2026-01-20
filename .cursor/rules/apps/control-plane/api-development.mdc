@@ -49,3 +49,8 @@ All route handlers must include TSDoc with:
 - Use `@asteasolutions/zod-to-openapi@^7.3.4` (Zod v3 compatibility).
 - Use `OpenApiGeneratorV3` for spec generation.
 - Error handling: Use structured responses and log with tenant context.
+
+## References
+
+- **Domain patterns**: See [@domain-structure.mdc](./domain-structure.mdc)
+- **Logging**: See [@coding-standards.mdc](../../shared/quality/coding-standards.mdc)

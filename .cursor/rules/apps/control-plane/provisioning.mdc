@@ -28,39 +28,20 @@ The Control Plane orchestrates complete tenant provisioning:
 
 ## Error Handling and Rollback
 
-**On any failure, rollback all created resources:**
+**On any failure, rollback all created resources.**
 
-```typescript
-async function rollbackTenantProvisioning(tenantId: string) {
-  // 1. Delete Cloud Run service (if created)
-  await deleteCloudRunService(tenantId);
-  
-  // 2. Delete database (if created)
-  await deleteNeonDatabase(tenantId);
-  
-  // 3. Delete secrets (if created)
-  await deleteSecrets(tenantId);
-  
-  // 4. Remove custom hostname (if added)
-  await removeCustomHostname(tenantId);
-  
-  // 5. Update tenant status to 'failed'
-  await updateTenantStatus(tenantId, 'failed');
-}
-```
+See [docs/examples/provisioning-workflow.ts](../../../docs/examples/provisioning-workflow.ts) for rollback pattern.
 
 ## Subdomain Assignment
 
 - **Pattern**: `{store-name}.my.vendin.store`
 - **Generation**: Sanitize store name (lowercase, hyphens, no special chars)
 - **Uniqueness**: Check against existing subdomains
-- **Reserved**: Never use reserved subdomains (`www`, `control`, `admin`)
+- **Reserved**: Never use reserved subdomains (see [@references.mdc](../../shared/references.mdc))
 
 ## Service Naming
 
-- **Pattern**: `tenant-{tenantId}`
-- **Example**: `tenant-abc123`, `tenant-xyz789`
-- **Uniqueness**: Tenant ID ensures uniqueness
+See [@references.mdc](../../shared/references.mdc) for service naming conventions.
 
 ## Monitoring
 
@@ -69,3 +50,10 @@ Track provisioning metrics:
 - Success rate
 - Failure rate by step
 - Rollback rate
+
+## References
+
+- **Service naming**: See [@references.mdc](../../shared/references.mdc)
+- **Code examples**: See [docs/examples/provisioning-workflow.ts](../../../docs/examples/provisioning-workflow.ts)
+- **Database provisioning**: See [@database.mdc](../../infrastructure/database.mdc)
+- **Cloud Run deployment**: See [@cloud-run.mdc](../../infrastructure/cloud-run.mdc)

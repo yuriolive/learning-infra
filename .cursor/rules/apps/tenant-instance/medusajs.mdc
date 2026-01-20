@@ -38,3 +38,8 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 - Customers access store via storefront routing
 - Storefront proxies requests to tenant instance
 - Tenant instance serves `/store` API endpoints
+
+## References
+
+- **Database isolation**: See [AGENTS.md](../../../AGENTS.md#key-constraints)
+- **Secret management**: See [@secrets.mdc](../../infrastructure/secrets.mdc)

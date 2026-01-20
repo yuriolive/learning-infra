@@ -11,6 +11,7 @@ export default [
       "**/.turbo/**",
       "**/.bun/**",
       "**/drizzle/**",
+      "docs/examples/**",
     ],
   },
 ];
