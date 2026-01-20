@@ -10,6 +10,7 @@ globs: apps/storefront/**/*
 - **Runtime**: Edge runtime (Cloudflare Pages)
 - **Deployment**: Cloudflare Pages
 - **Styling**: Tailwind CSS (recommended)
+- **UI Components**: HeroUI (Required for new UI components)
 
 ## Routing
 
