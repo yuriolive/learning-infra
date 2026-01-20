@@ -70,10 +70,9 @@ jobs:
         run: echo "DATABASE_URL=${{ steps.postgres.outputs.connection-uri }}" >> $GITHUB_ENV
 
       - name: Run database migrations
-        run: cd apps/control-plane && bun run db:migrate || echo "No migrations to run"
+        run: cd apps/control-plane && bun run db:migrate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
-        continue-on-error: true
 
       - name: Run ESLint
         run: bun run lint

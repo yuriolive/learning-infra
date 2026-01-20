@@ -21,6 +21,8 @@ const isLocal =
   connectionString.includes("db.localtest.me");
 
 // Configuring Neon for local development via Neon Proxy
+// This redirects Neon's SDK to the local proxy endpoint (usually running on port 4444)
+// to allow testing Neon-specific features locally.
 if (isLocal && connectionString.includes("db.localtest.me")) {
   neonConfig.fetchEndpoint = (host) => {
     const [protocol, port] =
@@ -37,8 +39,11 @@ if (isLocal && connectionString.includes("db.localtest.me")) {
 neonConfig.webSocketConstructor = ws;
 
 /**
- * For the control plane, we use Neon HTTP in production/cloud environments
- * to minimize cold starts and avoid WebSocket overhead.
+ * For the control plane, we switch between drivers based on the environment:
+ * - Neon HTTP (drizzleHttp): Used in production/cloud environments to minimize
+ *   cold starts and avoid WebSocket overhead for serverless functions.
+ * - Postgres-JS (drizzlePg): Used for local development and CI to provide
+ *   a standard TCP connection to local PostgreSQL instances.
  */
 const useNeonHttp =
   connectionString.includes("neon.tech") ||
