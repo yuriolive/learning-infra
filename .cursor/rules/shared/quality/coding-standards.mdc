@@ -4,6 +4,11 @@ globs: **/*
 ---
 # Coding Standards & Guidelines
 
+## Core Principles
+✅ **DRY (Don't Repeat Yourself)**: Extract common logic into shared utilities or components.
+✅ **Succinctness**: Keep code and documentation direct and concise. Avoid wordiness.
+✅ **Isolation**: Always maintain physical database isolation per tenant.
+
 ## What NOT to Do
 ❌ **NEVER** share databases between tenants.
 ❌ **NEVER** use shared-database multi-tenancy patterns.
@@ -54,8 +59,7 @@ logger.error({ error, tenantId }, 'Operation failed');
 - [ ] Secrets handled securely?
 - [ ] Error handling implemented?
 - [ ] Tests added/updated?
-- [ ] Performance requirements met?
-- [ ] Documentation updated?
+- [ ] Code is DRY and succinct?
 - [ ] Pino logger used (no console.log)?
 
 ## Pre-Commit Verification
@@ -66,11 +70,3 @@ After making code changes, run:
 ```bash
 bun run lint && bun run typecheck
 ```
-
-This ensures:
-- ESLint rules pass (including TSDoc validation)
-- Code is properly formatted (Prettier)
-- TypeScript types are valid
-- No breaking changes are introduced
-
-See [git-conventions.mdc](../../shared/git/git-conventions.mdc) for detailed Husky workflow.
