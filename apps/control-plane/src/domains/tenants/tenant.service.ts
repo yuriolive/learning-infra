@@ -50,6 +50,7 @@ export class TenantService {
   }
 
   async listTenants(): Promise<Tenant[]> {
-    return this.repository.findAll();
+    const tenants = await this.repository.findAll();
+    return tenants;
   }
 }
