@@ -4,7 +4,7 @@ import { Button, Card, CardBody, Navbar, NavbarBrand, NavbarContent, NavbarItem,
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-8 pb-20 sm:p-20">
       <Navbar className="bg-background/70 backdrop-blur-md">
         <NavbarBrand>
           <p className="font-bold text-inherit">VENDIN</p>
