@@ -96,7 +96,7 @@ describe("TenantService", () => {
       // Since listTenants filters out deleted, we might need to query repository directly or use listTenants if it shows provisioning_failed
       // By default listTenants shows all non-deleted.
       expect(tenants).toHaveLength(1);
-      expect(tenants[0].status).toBe("provisioning_failed");
+      expect(tenants[0]?.status).toBe("provisioning_failed");
     });
 
     it("should throw error when domain already exists", async () => {
