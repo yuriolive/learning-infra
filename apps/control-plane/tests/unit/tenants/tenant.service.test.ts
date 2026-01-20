@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
 
 import type {
@@ -11,11 +12,25 @@ import type {
   UpdateTenantInput,
 } from "../../../src/domains/tenants/tenant.types";
 
+// Mock NeonProvider
+vi.mock("../../../src/providers/neon/neon.client", () => {
+  return {
+    NeonProvider: vi.fn().mockImplementation(() => ({
+      createTenantDatabase: vi.fn().mockResolvedValue("postgres://mock-db-url"),
+    })),
+  };
+});
+
 describe("TenantService", () => {
   let service: TenantService;
   let repository: TenantRepository;
 
   beforeEach(async () => {
+    // Reset mocks and env vars
+    vi.clearAllMocks();
+    process.env.NEON_API_KEY = "mock-key";
+    process.env.NEON_PROJECT_ID = "mock-project";
+
     const database = await createMockDatabase();
     repository = new TenantRepository(database);
     service = new TenantService(repository);
@@ -35,6 +50,53 @@ describe("TenantService", () => {
       expect(tenant.name).toBe("Test Store");
       expect(tenant.domain).toBe("teststore");
       expect(tenant.status).toBe("provisioning");
+    });
+
+    it("should provision database if Neon credentials are present", async () => {
+      const input: CreateTenantInput = {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        domain: "teststore",
+      };
+
+      const tenant = await service.createTenant(input);
+
+      // Verify that databaseUrl was updated
+      const updatedTenant = await service.getTenant(tenant.id);
+      expect(updatedTenant.databaseUrl).toBe("postgres://mock-db-url");
+    });
+
+    it("should set status to provisioning_failed if database provisioning fails", async () => {
+      // Mock failure
+      const mockCreateTenantDatabase = vi
+        .fn()
+        .mockRejectedValue(new Error("Provisioning failed"));
+      // @ts-expect-error Mocking for test purposes
+      NeonProvider.mockImplementationOnce(() => ({
+        createTenantDatabase: mockCreateTenantDatabase,
+      }));
+
+      // Re-initialize service with failed provider
+      const database = await createMockDatabase();
+      repository = new TenantRepository(database);
+      service = new TenantService(repository);
+
+      const input: CreateTenantInput = {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        domain: "teststore",
+      };
+
+      await expect(service.createTenant(input)).rejects.toThrow(
+        "Failed to provision database resource",
+      );
+
+      // Verify status is provisioning_failed
+      const tenants = await service.listTenants();
+      // Since listTenants filters out deleted, we might need to query repository directly or use listTenants if it shows provisioning_failed
+      // By default listTenants shows all non-deleted.
+      expect(tenants).toHaveLength(1);
+      expect(tenants[0].status).toBe("provisioning_failed");
     });
 
     it("should throw error when domain already exists", async () => {

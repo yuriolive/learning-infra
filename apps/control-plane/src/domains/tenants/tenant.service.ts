@@ -83,8 +83,10 @@ export class TenantService {
           { error, tenantId: tenant.id },
           "Failed to provision database",
         );
-        // Rollback: Mark as deleted or suspended
-        await this.repository.update(tenant.id, { status: "suspended" });
+        // Rollback: Mark as provisioning_failed
+        await this.repository.update(tenant.id, {
+          status: "provisioning_failed",
+        });
         throw new Error("Failed to provision database resource");
       }
     }

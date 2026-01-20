@@ -23,7 +23,15 @@ export const updateTenantSchema = z.object({
       "Invalid domain format",
     )
     .optional(),
-  status: z.enum(["provisioning", "active", "suspended", "deleted"]).optional(),
+  status: z
+    .enum([
+      "provisioning",
+      "active",
+      "suspended",
+      "deleted",
+      "provisioning_failed",
+    ])
+    .optional(),
   plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
   databaseUrl: z.string().optional(),
   apiUrl: z.string().optional(),

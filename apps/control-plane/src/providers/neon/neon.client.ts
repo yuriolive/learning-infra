@@ -116,7 +116,7 @@ export class NeonProvider {
           throw new Error("Failed to obtain password for tenant role");
         }
         // Use the password from reset
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         const resetPassword = resetData.role.password!;
         const databaseName = "neondb"; // Default database name
         const hostname = endpoint.host;
@@ -147,6 +147,4 @@ export class NeonProvider {
       throw error;
     }
   }
-
-  // Helper to generate password removed as we use Neon's generated password
 }

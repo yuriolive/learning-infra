@@ -13,7 +13,12 @@ export interface Tenant {
   metadata: Record<string, unknown> | null;
 }
 
-export type TenantStatus = "provisioning" | "active" | "suspended" | "deleted";
+export type TenantStatus =
+  | "provisioning"
+  | "active"
+  | "suspended"
+  | "deleted"
+  | "provisioning_failed";
 
 export type TenantPlan = "free" | "starter" | "professional" | "enterprise";
 

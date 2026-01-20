@@ -15,6 +15,13 @@
       "when": 1768910673168,
       "tag": "0001_dashing_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768913162017,
+      "tag": "0002_remarkable_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

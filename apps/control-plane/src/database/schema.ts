@@ -12,6 +12,7 @@ export const tenantStatusEnum = pgEnum("tenant_status", [
   "active",
   "suspended",
   "deleted",
+  "provisioning_failed",
 ]);
 
 export const tenantPlanEnum = pgEnum("tenant_plan", [
