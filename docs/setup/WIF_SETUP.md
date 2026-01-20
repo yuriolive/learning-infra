@@ -8,9 +8,18 @@ This document contains the complete setup commands for configuring Workload Iden
 
 - Google Cloud CLI (`gcloud`) installed and authenticated
 - Access to the `vendin-store` GCP project with appropriate permissions
+- **IAM Service Account Credentials API enabled** in the GCP project
 - GitHub repository: `yuriolive/vendin`
 
 ## Setup Commands
+
+### Step 0: Enable Required APIs
+
+Before creating the service account, enable the necessary Google Cloud APIs:
+
+```bash
+gcloud services enable iamcredentials.googleapis.com --project=vendin-store
+```
 
 ### Step 1: Create Service Account
 
@@ -180,6 +189,9 @@ After running the setup commands, add these secrets to your GitHub repository:
 Use these commands to verify your setup:
 
 ```bash
+# Verify required APIs are enabled
+gcloud services list --project=vendin-store --filter="name:(iamcredentials.googleapis.com OR artifactregistry.googleapis.com OR secretmanager.googleapis.com OR run.googleapis.com)" --format="value(name)"
+
 # Verify service account
 gcloud iam service-accounts describe $SERVICE_ACCOUNT_EMAIL --project=vendin-store
 
@@ -202,20 +214,22 @@ gcloud secrets describe control-plane-db-url --project=vendin-store
 ## Important Notes
 
 1. **Execute commands in order** - later steps depend on resources created in earlier steps
-2. **Save the service account email** from step 2 - you'll need it for GitHub secrets
-3. **Verify yuriolive** in step 8 with your actual GitHub organization or username
-4. **Update the database URL** in step 11 with your real database connection string before deploying
-5. **Test the setup** by triggering your deployment workflow after configuration
-6. **For Gemini features**: Create a GitHub App and configure the additional variables listed above
+2. **Enable required APIs first** (Step 0) - WIF cannot work without the IAM Credentials API
+3. **Save the service account email** from step 2 - you'll need it for GitHub secrets
+4. **Verify yuriolive** in step 8 with your actual GitHub organization or username
+5. **Update the database URL** in step 11 with your real database connection string before deploying
+6. **Test the setup** by triggering your deployment workflow after configuration
+7. **For Gemini features**: Create a GitHub App and configure the additional variables listed above
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Permission denied**: Ensure you have the necessary permissions in the GCP project
-2. **Repository not found**: Verify your GitHub organization/username in step 8 (should be `yuriolive`)
-3. **Deployment fails**: Check that all GitHub secrets are set correctly
-4. **Database connection fails**: Verify the database URL secret is correctly formatted
+1. **"IAM Service Account Credentials API has not been used...or it is disabled"**: Enable the API with `gcloud services enable iamcredentials.googleapis.com --project=vendin-store`
+2. **Permission denied**: Ensure you have the necessary permissions in the GCP project
+3. **Repository not found**: Verify your GitHub organization/username in step 8 (should be `yuriolive`)
+4. **Deployment fails**: Check that all GitHub secrets are set correctly
+5. **Database connection fails**: Verify the database URL secret is correctly formatted
 
 ### Cleanup Commands (if needed)
 
