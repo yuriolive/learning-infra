@@ -57,3 +57,20 @@ logger.error({ error, tenantId }, 'Operation failed');
 - [ ] Performance requirements met?
 - [ ] Documentation updated?
 - [ ] Pino logger used (no console.log)?
+
+## Pre-Commit Verification
+
+✅ **ALWAYS** verify changes pass Husky pre-commit hooks before committing.
+
+After making code changes, run:
+```bash
+bun run lint && bun run typecheck
+```
+
+This ensures:
+- ESLint rules pass (including TSDoc validation)
+- Code is properly formatted (Prettier)
+- TypeScript types are valid
+- No breaking changes are introduced
+
+See [git-conventions.mdc](../../shared/git/git-conventions.mdc) for detailed Husky workflow.

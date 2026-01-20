@@ -15,6 +15,14 @@ export interface RouteContext {
   tenantService: TenantService;
 }
 
+/**
+ * Creates tenant route handlers.
+ * Factory function that creates a route handler object for tenant management endpoints.
+ * Handles routing for POST /api/tenants, GET /api/tenants, GET /api/tenants/:id,
+ * PATCH /api/tenants/:id, and DELETE /api/tenants/:id.
+ * @param context - Route context containing logger and tenant service
+ * @returns Object with handleRequest method for processing HTTP requests
+ */
 export function createTenantRoutes(context: RouteContext) {
   const { logger, tenantService } = context;
 
@@ -62,6 +70,25 @@ export function createTenantRoutes(context: RouteContext) {
   };
 }
 
+/**
+ * Creates a new tenant in the system.
+ * Creates a tenant with the provided name, domain, and optional metadata.
+ * Validates input using Zod schema and returns the created tenant with generated ID and timestamps.
+ * @param request - HTTP request containing tenant data in JSON body
+ * @param service - Tenant service instance for business logic
+ * @param logger - Logger instance for error tracking
+ * @returns HTTP response with created tenant (201) or error (400/409/500)
+ * @throws ZodError when validation fails (returns 400)
+ * @example
+ * ```json
+ * POST /api/tenants
+ * {
+ *   "name": "My Store",
+ *   "domain": "mystore",
+ *   "metadata": { "customField": "value" }
+ * }
+ * ```
+ */
 async function handleCreateTenant(
   request: Request,
   service: TenantService,
@@ -85,6 +112,20 @@ async function handleCreateTenant(
   }
 }
 
+/**
+ * Retrieves a specific tenant by ID.
+ * Fetches tenant details including status, metadata, and timestamps.
+ * Validates tenant ID format (UUID) before querying the database.
+ * @param tenantId - UUID of the tenant to retrieve
+ * @param service - Tenant service instance for data access
+ * @param logger - Logger instance for error tracking
+ * @returns HTTP response with tenant data (200) or error (400/404/500)
+ * @throws ZodError when tenant ID format is invalid (returns 400)
+ * @example
+ * ```bash
+ * GET /api/tenants/123e4567-e89b-12d3-a456-426614174000
+ * ```
+ */
 async function handleGetTenant(
   tenantId: string,
   service: TenantService,
@@ -107,6 +148,18 @@ async function handleGetTenant(
   }
 }
 
+/**
+ * Lists all tenants in the system.
+ * Retrieves a list of all tenants, including active, suspended, and soft-deleted tenants.
+ * Returns an array of tenant objects with their complete details.
+ * @param service - Tenant service instance for data access
+ * @param logger - Logger instance for error tracking
+ * @returns HTTP response with array of tenants (200) or error (500)
+ * @example
+ * ```bash
+ * GET /api/tenants
+ * ```
+ */
 async function handleListTenants(
   service: TenantService,
   logger: Logger,
@@ -126,6 +179,25 @@ async function handleListTenants(
   }
 }
 
+/**
+ * Updates an existing tenant.
+ * Performs a partial update of tenant properties. Supports updating name, domain, status, and metadata.
+ * Validates both tenant ID format and update payload before processing.
+ * @param tenantId - UUID of the tenant to update
+ * @param request - HTTP request containing update data in JSON body
+ * @param service - Tenant service instance for business logic
+ * @param logger - Logger instance for error tracking
+ * @returns HTTP response with updated tenant (200) or error (400/404/409/500)
+ * @throws ZodError when validation fails (returns 400)
+ * @example
+ * ```json
+ * PATCH /api/tenants/123e4567-e89b-12d3-a456-426614174000
+ * {
+ *   "name": "Updated Store Name",
+ *   "status": "suspended"
+ * }
+ * ```
+ */
 async function handleUpdateTenant(
   tenantId: string,
   request: Request,
@@ -155,6 +227,20 @@ async function handleUpdateTenant(
   }
 }
 
+/**
+ * Soft deletes a tenant.
+ * Marks a tenant as deleted and performs cleanup operations. This is a soft delete,
+ * meaning the tenant record remains in the database but is marked with a deletion timestamp.
+ * @param tenantId - UUID of the tenant to delete
+ * @param service - Tenant service instance for business logic
+ * @param logger - Logger instance for error tracking
+ * @returns HTTP response with success status (200) or error (400/404/500)
+ * @throws ZodError when tenant ID format is invalid (returns 400)
+ * @example
+ * ```bash
+ * DELETE /api/tenants/123e4567-e89b-12d3-a456-426614174000
+ * ```
+ */
 async function handleDeleteTenant(
   tenantId: string,
   service: TenantService,
@@ -177,6 +263,14 @@ async function handleDeleteTenant(
   }
 }
 
+/**
+ * Handles errors from route handlers.
+ * Centralized error handling that converts different error types into appropriate HTTP responses.
+ * Handles validation errors (ZodError), not found errors, conflict errors, and generic errors.
+ * @param error - The error to handle (can be ZodError, Error, or unknown)
+ * @param logger - Logger instance for logging unhandled errors
+ * @returns HTTP response with appropriate status code and error message
+ */
 function handleError(error: unknown, logger: Logger): Response {
   if (error instanceof ZodError) {
     return new Response(

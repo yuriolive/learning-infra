@@ -77,3 +77,83 @@ POST /api/tenants
 - Provisioning endpoints: 10 requests/minute per IP
 - Read endpoints: 100 requests/minute per IP
 - Implement exponential backoff for retries
+
+## API Documentation
+
+### TSDoc Requirements
+
+All route handler functions must include comprehensive TSDoc comments:
+
+- **Description**: Clear explanation of what the endpoint does
+- **Parameters**: Document all function parameters with `@param`
+- **Return Values**: Document return type with `@returns`
+- **Error Conditions**: Document possible errors with `@throws`
+- **Examples**: Include usage examples with `@example`
+
+Example format:
+
+```typescript
+/**
+ * Creates a new tenant in the system.
+ * @description Creates a tenant with the provided name, domain, and optional metadata.
+ * @param request - HTTP request containing tenant data in JSON body
+ * @param service - Tenant service instance for business logic
+ * @param logger - Logger instance for error tracking
+ * @returns HTTP response with created tenant (201) or error (400/409/500)
+ * @throws ZodError when validation fails (returns 400)
+ * @example
+ * ```json
+ * POST /api/tenants
+ * {
+ *   "name": "My Store",
+ *   "domain": "mystore",
+ *   "metadata": { "customField": "value" }
+ * }
+ * ```
+ */
+```
+
+### OpenAPI Specification
+
+- All endpoints are automatically documented via OpenAPI spec generated from Zod schemas
+- OpenAPI spec is available at `/openapi.json`
+- Interactive documentation is available at `/docs` (Scalar UI)
+- All Zod schemas must be registered in `apps/control-plane/src/openapi/generator.ts`
+- Request/response schemas are automatically converted from Zod using `@asteasolutions/zod-to-openapi`
+
+**Important**: Use `@asteasolutions/zod-to-openapi@^7.3.4` (not `zod-to-openapi`) for Zod v3 compatibility.
+
+### Documentation Standards
+
+- TSDoc comments must match OpenAPI spec descriptions
+- Parameter names in TSDoc must match OpenAPI schema properties
+- Examples in TSDoc should reflect actual API usage
+- ESLint rule `tsdoc/syntax` is set to `warn` level for validation
+- All public API functions must pass TSDoc validation
+
+### Documentation Endpoints
+
+- `GET /` - Root endpoint listing available endpoints including `/docs` and `/openapi.json`
+- `GET /docs` - Interactive API documentation (Scalar UI)
+- `GET /openapi.json` - OpenAPI 3.1.0 specification in JSON format
+
+### Implementation Details
+
+**OpenAPI Generator Location**: `apps/control-plane/src/openapi/generator.ts`
+
+**Dependencies Required**:
+- `@asteasolutions/zod-to-openapi@^7.3.4` - For Zod v3 compatibility
+- `@scalar/api-reference@^1.28.0` - For interactive documentation UI
+- `eslint-plugin-tsdoc@^0.4.0` - For TSDoc validation (in root package.json)
+
+**Scalar UI Integration**:
+- Served via `/docs` endpoint as standalone HTML
+- Uses CDN: `https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js`
+- Theme: `purple`, Layout: `modern`
+- OpenAPI spec is embedded directly in the HTML response
+
+**OpenAPI Spec Generation**:
+- Uses `OpenAPIRegistry` and `OpenAPIGenerator` from `@asteasolutions/zod-to-openapi`
+- All schemas must be registered using `registry.register()` or `registry.registerPath()`
+- Server URL is dynamically determined from request origin
+- Tags are used for grouping endpoints (e.g., "Tenants", "Health")

@@ -44,3 +44,38 @@ Closes #123
 fix(infrastructure): correct Cloud Run service naming pattern
 
 Tenant services should use tenant-{id} format, not tenant_{id}.
+
+## Pre-Commit Verification
+
+**ALWAYS verify changes pass Husky pre-commit hooks before committing.**
+
+After making any code changes, run the following to ensure Husky checks will pass:
+
+```bash
+# Run linting (ESLint + Prettier)
+bun run lint
+
+# Run type checking
+bun run typecheck
+
+# Or run all checks that Husky will run
+bun run lint && bun run typecheck
+```
+
+**Husky Pre-Commit Hooks**:
+- ESLint with auto-fix (`bun x eslint --fix`)
+- Prettier formatting (`bun x prettier --write`)
+- TypeScript type checking (`bun x tsc --noEmit --project tsconfig.ci.json`)
+
+**Why this matters**:
+- Prevents failed commits due to linting/formatting errors
+- Ensures code quality standards are maintained
+- Avoids blocking other developers with failing CI checks
+- Saves time by catching issues before commit
+
+**Workflow**:
+1. Make code changes
+2. Run `bun run lint && bun run typecheck` locally
+3. Fix any errors or warnings
+4. Stage and commit changes
+5. Husky will run the same checks automatically

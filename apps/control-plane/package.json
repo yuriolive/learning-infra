@@ -20,6 +20,8 @@
     "db:studio": "bun x drizzle-kit studio"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.4",
+    "@scalar/api-reference": "^1.28.0",
     "@vendin/utils": "workspace:*",
     "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.45.1",

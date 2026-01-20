@@ -4,6 +4,7 @@ import { serve } from "bun";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
+import { generateOpenAPISpec } from "./openapi/generator";
 
 const nodeEnvironment = process.env.NODE_ENV ?? "development";
 const logger = createLogger({
@@ -24,12 +25,19 @@ const server = serve({
   },
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    const origin = `${url.protocol}//${url.host}`;
 
     if (url.pathname === "/health" || url.pathname === "/") {
       return new Response(
         JSON.stringify({
           status: "ok",
           timestamp: new Date().toISOString(),
+          endpoints: {
+            docs: "/docs",
+            health: "/health",
+            openapi: "/openapi.json",
+            tenants: "/api/tenants",
+          },
         }),
         {
           status: 200,
@@ -39,6 +47,51 @@ const server = serve({
           },
         },
       );
+    }
+
+    if (url.pathname === "/openapi.json") {
+      const spec = generateOpenAPISpec(origin);
+      return new Response(JSON.stringify(spec), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    if (url.pathname === "/docs") {
+      const spec = generateOpenAPISpec(origin);
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendin Control Plane API - Documentation</title>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js"></script>
+</head>
+<body>
+  <script id="api-reference" data-configuration='{"theme": "purple"}'></script>
+  <script>
+    var configuration = {
+      spec: ${JSON.stringify(spec)},
+      theme: "purple",
+      layout: "modern",
+    };
+    var apiReference = document.getElementById("api-reference");
+    if (apiReference && window.Scalar) {
+      window.Scalar.apiReference(apiReference, configuration);
+    }
+  </script>
+</body>
+</html>`;
+      return new Response(html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
     if (request.method === "OPTIONS") {

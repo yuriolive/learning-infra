@@ -7,6 +7,7 @@ import perfectionist from "eslint-plugin-perfectionist";
 import prettier from "eslint-plugin-prettier";
 import promise from "eslint-plugin-promise";
 import security from "eslint-plugin-security";
+import tsdoc from "eslint-plugin-tsdoc";
 import unicorn from "eslint-plugin-unicorn";
 import vitest from "eslint-plugin-vitest";
 
@@ -39,6 +40,7 @@ export default [
     plugins: {
       "@typescript-eslint": tseslint,
       perfectionist,
+      tsdoc,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
@@ -55,6 +57,7 @@ export default [
         { argsIgnorePattern: "^_", ignoreRestSiblings: true, varsIgnorePattern: "^_" },
       ],
       "no-undef": "off",
+      "tsdoc/syntax": "warn",
     },
   },
 
