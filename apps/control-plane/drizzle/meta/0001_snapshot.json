@@ -95,9 +95,7 @@
         "tenants_domain_unique": {
           "name": "tenants_domain_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "domain"
-          ]
+          "columns": ["domain"]
         }
       },
       "policies": {},
@@ -109,22 +107,12 @@
     "public.tenant_plan": {
       "name": "tenant_plan",
       "schema": "public",
-      "values": [
-        "free",
-        "starter",
-        "professional",
-        "enterprise"
-      ]
+      "values": ["free", "starter", "professional", "enterprise"]
     },
     "public.tenant_status": {
       "name": "tenant_status",
       "schema": "public",
-      "values": [
-        "provisioning",
-        "active",
-        "suspended",
-        "deleted"
-      ]
+      "values": ["provisioning", "active", "suspended", "deleted"]
     }
   },
   "schemas": {},
