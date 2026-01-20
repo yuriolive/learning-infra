@@ -51,7 +51,7 @@ gcloud projects add-iam-policy-binding vendin-store \
 
 gcloud projects add-iam-policy-binding vendin-store \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
-  --role="roles/cloudrun.admin"
+  --role="roles/run.admin"
 
 gcloud projects add-iam-policy-binding vendin-store \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
