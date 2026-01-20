@@ -16,6 +16,7 @@ RUN bun install --frozen-lockfile
 COPY packages/config ./packages/config
 COPY packages/utils ./packages/utils
 COPY apps/control-plane ./apps/control-plane
+COPY turbo.json ./
 
 # Build the application
 RUN bun run build --filter=@vendin/control-plane
