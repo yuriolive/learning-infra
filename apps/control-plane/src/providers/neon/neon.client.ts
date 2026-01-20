@@ -88,25 +88,46 @@ export class NeonProvider {
         throw new Error("No role found for the created branch");
       }
 
-      // We need the password. Neon API `listProjectBranchRoles` returns password if `reveal_password` is not needed or if it returns it on creation?
-      // Actually `createProjectBranch` documentation says it doesn't return the password directly usually.
-      // But `listProjectBranchRoles` might not return the password.
-      // A common pattern is to reset the password or create a new role with a known password,
-      // but creating a branch from a parent preserves data. Here we are likely creating an empty branch or from main.
-      // Actually, creating a branch *does* create a compute endpoint and a role.
-      // Let's check if we can get the password.
-      // The `createProjectBranch` response might contain connection info? No.
-
-      // Strategy: Create a specific role for the tenant with a generated password.
-      const password = this.generatePassword();
+      // We need the password.
+      // The `createProjectBranchRole` response contains the password.
       const roleName = `user_${tenantId.replaceAll("-", "_")}`;
 
-      await this.client.createProjectBranchRole(this.projectId, branchId, {
-        role: {
-          name: roleName,
-          password,
+      const { data: roleData } = await this.client.createProjectBranchRole(
+        this.projectId,
+        branchId,
+        {
+          role: {
+            name: roleName,
+          },
         },
-      });
+      );
+
+      const password = roleData.role.password;
+
+      if (!password) {
+        // If creation didn't return a password, try to reset it to get a new one
+        const { data: resetData } =
+          await this.client.resetProjectBranchRolePassword(
+            this.projectId,
+            branchId,
+            roleName,
+          );
+        if (!resetData.role.password) {
+          throw new Error("Failed to obtain password for tenant role");
+        }
+        // Use the password from reset
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const resetPassword = resetData.role.password!;
+        const databaseName = "neondb"; // Default database name
+        const hostname = endpoint.host;
+        const connectionString = `postgres://${roleName}:${resetPassword}@${hostname}/${databaseName}?sslmode=require`;
+
+        logger.info(
+          { branchId, tenantId },
+          "Successfully provisioned Neon database",
+        );
+        return connectionString;
+      }
 
       const databaseName = "neondb"; // Default database name
 
@@ -127,13 +148,5 @@ export class NeonProvider {
     }
   }
 
-  private generatePassword(): string {
-    // Generate a secure random password
-    const chars =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const length = 24;
-    return [...crypto.getRandomValues(new Uint8Array(length))]
-      .map((x) => chars[x % chars.length])
-      .join("");
-  }
+  // Helper to generate password removed as we use Neon's generated password
 }
