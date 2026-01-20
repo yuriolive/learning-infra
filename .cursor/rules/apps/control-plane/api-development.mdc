@@ -153,7 +153,11 @@ Example format:
 - OpenAPI spec is embedded directly in the HTML response
 
 **OpenAPI Spec Generation**:
-- Uses `OpenAPIRegistry` and `OpenAPIGenerator` from `@asteasolutions/zod-to-openapi`
+- Uses `OpenAPIRegistry` and `OpenApiGeneratorV3` from `@asteasolutions/zod-to-openapi`
 - All schemas must be registered using `registry.register()` or `registry.registerPath()`
 - Server URL is dynamically determined from request origin
 - Tags are used for grouping endpoints (e.g., "Tenants", "Health")
+
+**Important Notes for Zod v3 Compatibility**:
+- Use `OpenApiGeneratorV3` (not `OpenAPIGenerator`) when importing from `@asteasolutions/zod-to-openapi@^7.3.4`
+- The class name differs between Zod v3 (v7.x) and Zod v4 (v8.x) versions of the library
