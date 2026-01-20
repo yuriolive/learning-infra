@@ -1,6 +1,6 @@
 import { and, eq, ne } from "drizzle-orm";
 
-import { database } from "../../database/database";
+import { database, type Database } from "../../database/database";
 import { tenants } from "../../database/schema";
 
 import type {
@@ -25,8 +25,14 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
 }
 
 export class TenantRepository {
+  private db: Database;
+
+  constructor(database_?: Database) {
+    this.db = database_ ?? (database as Database);
+  }
+
   async create(input: CreateTenantInput): Promise<Tenant> {
-    const [tenant] = await database
+    const [tenant] = await this.db
       .insert(tenants)
       .values({
         name: input.name,
@@ -43,7 +49,7 @@ export class TenantRepository {
   }
 
   async findById(id: string): Promise<Tenant | null> {
-    const [tenant] = await database
+    const [tenant] = await this.db
       .select()
       .from(tenants)
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")));
@@ -52,7 +58,7 @@ export class TenantRepository {
   }
 
   async findAll(): Promise<Tenant[]> {
-    const results = await database
+    const results = await this.db
       .select()
       .from(tenants)
       .where(ne(tenants.status, "deleted"));
@@ -61,7 +67,7 @@ export class TenantRepository {
   }
 
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
-    const [updated] = await database
+    const [updated] = await this.db
       .update(tenants)
       .set({
         ...(input.name !== undefined && { name: input.name }),
@@ -77,7 +83,7 @@ export class TenantRepository {
   }
 
   async softDelete(id: string): Promise<boolean> {
-    const [deleted] = await database
+    const [deleted] = await this.db
       .update(tenants)
       .set({
         status: "deleted",
@@ -91,7 +97,7 @@ export class TenantRepository {
   }
 
   async findByDomain(domain: string): Promise<Tenant | null> {
-    const [tenant] = await database
+    const [tenant] = await this.db
       .select()
       .from(tenants)
       .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));

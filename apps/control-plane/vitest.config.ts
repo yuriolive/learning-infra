@@ -25,6 +25,9 @@ export default defineConfig({
     environment: "node",
     exclude: ["node_modules", "dist"],
     globals: true,
+    env: {
+      DATABASE_URL: "postgres://postgres:postgres@localhost:5432/postgres",
+    },
     include: ["src/**/*.{test,spec}.{ts,js}", "tests/**/*.{test,spec}.{ts,js}"],
   },
 });

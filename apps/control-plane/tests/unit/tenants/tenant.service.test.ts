@@ -1,22 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { randomUUID } from "node:crypto";
 
-// Mock the database before any imports
-vi.mock("../../../src/database/database", () => ({
-  database: {
-    insert: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-  },
-}));
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { createMockDatabase } from "../../utils/mock-database";
 
 import type {
   CreateTenantInput,
@@ -27,8 +15,9 @@ describe("TenantService", () => {
   let service: TenantService;
   let repository: TenantRepository;
 
-  beforeEach(() => {
-    repository = new TenantRepository();
+  beforeEach(async () => {
+    const database = await createMockDatabase();
+    repository = new TenantRepository(database);
     service = new TenantService(repository);
   });
 
@@ -84,7 +73,7 @@ describe("TenantService", () => {
     });
 
     it("should throw error when tenant not found", async () => {
-      await expect(service.getTenant("non-existent-id")).rejects.toThrow(
+      await expect(service.getTenant(randomUUID())).rejects.toThrow(
         "Tenant not found",
       );
     });
@@ -111,9 +100,9 @@ describe("TenantService", () => {
         name: "Updated Name",
       };
 
-      await expect(
-        service.updateTenant("non-existent-id", input),
-      ).rejects.toThrow("Tenant not found");
+      await expect(service.updateTenant(randomUUID(), input)).rejects.toThrow(
+        "Tenant not found",
+      );
     });
 
     it("should throw error when updating to existing domain", async () => {
@@ -162,7 +151,7 @@ describe("TenantService", () => {
     });
 
     it("should throw error when tenant not found", async () => {
-      await expect(service.deleteTenant("non-existent-id")).rejects.toThrow(
+      await expect(service.deleteTenant(randomUUID())).rejects.toThrow(
         "Tenant not found",
       );
     });

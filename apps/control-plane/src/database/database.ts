@@ -1,6 +1,9 @@
 import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
+import { type NeonHttpDatabase } from "drizzle-orm/neon-http";
+import { type PgliteDatabase } from "drizzle-orm/pglite";
 import { drizzle as drizzlePg } from "drizzle-orm/postgres-js";
+import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import ws from "ws";
 
@@ -40,6 +43,11 @@ neonConfig.webSocketConstructor = ws;
 const useNeonHttp =
   connectionString.includes("neon.tech") ||
   process.env.NODE_ENV === "production";
+
+export type Database =
+  | NeonHttpDatabase<typeof schema>
+  | PostgresJsDatabase<typeof schema>
+  | PgliteDatabase<typeof schema>;
 
 export const database = useNeonHttp
   ? drizzleHttp(neon(connectionString), { schema })

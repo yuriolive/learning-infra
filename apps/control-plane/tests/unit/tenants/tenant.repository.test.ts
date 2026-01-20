@@ -1,33 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { randomUUID } from "node:crypto";
 
-// Mock the database before any imports
-vi.mock("../../../src/database/database", () => ({
-  database: {
-    insert: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-  },
-}));
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
+import { createMockDatabase } from "../../utils/mock-database";
 
 import type { CreateTenantInput } from "../../../src/domains/tenants/tenant.types";
 
 describe("TenantRepository", () => {
   let repository: TenantRepository;
 
-  beforeEach(() => {
-    repository = new TenantRepository();
-  });
-
-  afterEach(() => {
-    // Repository uses in-memory storage, so each test gets a fresh instance
+  beforeEach(async () => {
+    const database = await createMockDatabase();
+    repository = new TenantRepository(database);
   });
 
   describe("create", () => {
@@ -80,7 +65,7 @@ describe("TenantRepository", () => {
     });
 
     it("should return null when tenant not found", async () => {
-      const found = await repository.findById("non-existent-id");
+      const found = await repository.findById(randomUUID());
 
       expect(found).toBeNull();
     });
@@ -138,7 +123,7 @@ describe("TenantRepository", () => {
     });
 
     it("should return null when tenant not found", async () => {
-      const updated = await repository.update("non-existent-id", {
+      const updated = await repository.update(randomUUID(), {
         name: "New Name",
       });
 
@@ -171,7 +156,7 @@ describe("TenantRepository", () => {
     });
 
     it("should return false when tenant not found", async () => {
-      const deleted = await repository.softDelete("non-existent-id");
+      const deleted = await repository.softDelete(randomUUID());
 
       expect(deleted).toBe(false);
     });
