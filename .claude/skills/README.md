@@ -28,6 +28,14 @@ Reviews code against project standards for architecture compliance, code quality
 
 **Use when**: Reviewing code locally, reviewing specific files, or when asked to review code.
 
+### shared/create-pull-request
+
+**Location**: `.claude/skills/shared/create-pull-request/`
+
+Creates a GitHub pull request using the project's PR template and standard workflows. Handles branch pushing and PR creation via GitHub CLI.
+
+**Use when**: You have finished a task and are ready to submit changes for review.
+
 ### shared/github-project-management
 
 **Location**: `.claude/skills/shared/github-project-management/`
