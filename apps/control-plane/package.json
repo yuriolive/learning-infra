@@ -21,9 +21,11 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",
+    "@neondatabase/api-client": "^2.6.0",
+    "@neondatabase/serverless": "^1.0.2",
     "@scalar/api-reference": "^1.28.0",
     "@vendin/utils": "workspace:*",
-    "@neondatabase/serverless": "^1.0.2",
+    "axios": "^1.13.2",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.8",
     "ws": "^8.19.0",

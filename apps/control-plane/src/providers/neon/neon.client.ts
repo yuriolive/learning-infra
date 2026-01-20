@@ -1,0 +1,139 @@
+import { createApiClient } from "@neondatabase/api-client";
+import { createLogger } from "@vendin/utils/logger";
+
+import type { Api } from "@neondatabase/api-client";
+
+const logger = createLogger({
+  logLevel: process.env.LOG_LEVEL,
+  nodeEnv: process.env.NODE_ENV ?? "development",
+});
+
+export class NeonProvider {
+  private client: Api<unknown>;
+  private projectId: string;
+
+  constructor() {
+    const apiKey = process.env.NEON_API_KEY;
+    const projectId = process.env.NEON_PROJECT_ID;
+
+    if (!apiKey) {
+      throw new Error("NEON_API_KEY environment variable is not set");
+    }
+
+    if (!projectId) {
+      throw new Error("NEON_PROJECT_ID environment variable is not set");
+    }
+
+    this.client = createApiClient({
+      apiKey,
+    });
+    this.projectId = projectId;
+  }
+
+  /**
+   * Creates a new database branch for a tenant.
+   * This ensures isolation and independent scaling (serverless compute).
+   * @param tenantId - The unique identifier of the tenant
+   * @returns The connection string for the new tenant database
+   */
+  async createTenantDatabase(tenantId: string): Promise<string> {
+    try {
+      logger.info({ tenantId }, "Creating Neon database branch for tenant");
+
+      // Create a branch for the tenant
+      // We use the tenant ID as part of the branch name
+      const branchName = `tenant-${tenantId}`;
+
+      const { data: branchData } = await this.client.createProjectBranch(
+        this.projectId,
+        {
+          branch: {
+            name: branchName,
+          },
+        },
+      );
+
+      const branchId = branchData.branch.id;
+      logger.info({ branchId, tenantId }, "Created Neon branch");
+
+      // We need to wait for the branch to be ready or just get the connection string.
+      // Usually, creating a branch also creates a default role and database.
+      // We can get the connection URI with the password.
+
+      // Get the role password or connection string.
+      // The API to get connection string usually involves getting endpoints.
+
+      const { data: endpointsData } =
+        await this.client.listProjectBranchEndpoints(this.projectId, branchId);
+
+      const endpoint = endpointsData.endpoints[0];
+      if (!endpoint) {
+        throw new Error("No endpoint found for the created branch");
+      }
+
+      // We need to get the role (user) to construct the connection string.
+      // Usually the default role is 'neondb_owner' or similar, but with branches it might be different.
+      // Let's list roles for the branch.
+
+      const { data: rolesData } = await this.client.listProjectBranchRoles(
+        this.projectId,
+        branchId,
+      );
+
+      const role =
+        rolesData.roles.find((r) => r.name !== "postgres") ||
+        rolesData.roles[0];
+
+      if (!role) {
+        throw new Error("No role found for the created branch");
+      }
+
+      // We need the password. Neon API `listProjectBranchRoles` returns password if `reveal_password` is not needed or if it returns it on creation?
+      // Actually `createProjectBranch` documentation says it doesn't return the password directly usually.
+      // But `listProjectBranchRoles` might not return the password.
+      // A common pattern is to reset the password or create a new role with a known password,
+      // but creating a branch from a parent preserves data. Here we are likely creating an empty branch or from main.
+      // Actually, creating a branch *does* create a compute endpoint and a role.
+      // Let's check if we can get the password.
+      // The `createProjectBranch` response might contain connection info? No.
+
+      // Strategy: Create a specific role for the tenant with a generated password.
+      const password = this.generatePassword();
+      const roleName = `user_${tenantId.replaceAll("-", "_")}`;
+
+      await this.client.createProjectBranchRole(this.projectId, branchId, {
+        role: {
+          name: roleName,
+          password,
+        },
+      });
+
+      const databaseName = "neondb"; // Default database name
+
+      // Construct connection string
+      // postgres://user:password@hostname/dbname?sslmode=require
+      const hostname = endpoint.host;
+      const connectionString = `postgres://${roleName}:${password}@${hostname}/${databaseName}?sslmode=require`;
+
+      logger.info(
+        { branchId, tenantId },
+        "Successfully provisioned Neon database",
+      );
+
+      return connectionString;
+    } catch (error) {
+      logger.error({ error, tenantId }, "Failed to provision Neon database");
+      throw error;
+    }
+  }
+
+  private generatePassword(): string {
+    // Generate a secure random password
+    const chars =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const length = 24;
+    return [...crypto.getRandomValues(new Uint8Array(length))]
+      .map((x) => chars[x % chars.length])
+      .join("");
+  }
+}

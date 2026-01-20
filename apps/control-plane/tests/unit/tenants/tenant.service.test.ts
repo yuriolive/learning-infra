@@ -25,6 +25,7 @@ describe("TenantService", () => {
     it("should create a tenant successfully", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
+        merchantEmail: "test@example.com",
         domain: "teststore",
       };
 
@@ -33,12 +34,13 @@ describe("TenantService", () => {
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
       expect(tenant.domain).toBe("teststore");
-      expect(tenant.status).toBe("active");
+      expect(tenant.status).toBe("provisioning");
     });
 
     it("should throw error when domain already exists", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
+        merchantEmail: "test@example.com",
         domain: "teststore",
       };
 
@@ -52,19 +54,23 @@ describe("TenantService", () => {
     it("should allow creating tenant without domain", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
+        merchantEmail: "test@example.com",
       };
 
       const tenant = await service.createTenant(input);
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
-      expect(tenant.domain).toBeUndefined();
+      expect(tenant.domain).toBeNull();
     });
   });
 
   describe("getTenant", () => {
     it("should return tenant when found", async () => {
-      const created = await service.createTenant({ name: "Test Store" });
+      const created = await service.createTenant({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
 
       const tenant = await service.getTenant(created.id);
 
@@ -81,7 +87,10 @@ describe("TenantService", () => {
 
   describe("updateTenant", () => {
     it("should update tenant successfully", async () => {
-      const created = await service.createTenant({ name: "Original Name" });
+      const created = await service.createTenant({
+        name: "Original Name",
+        merchantEmail: "test@example.com",
+      });
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
@@ -106,9 +115,14 @@ describe("TenantService", () => {
     });
 
     it("should throw error when updating to existing domain", async () => {
-      await service.createTenant({ name: "Store 1", domain: "store1" });
+      await service.createTenant({
+        name: "Store 1",
+        merchantEmail: "store1@example.com",
+        domain: "store1",
+      });
       const store2 = await service.createTenant({
         name: "Store 2",
+        merchantEmail: "store2@example.com",
         domain: "store2",
       });
 
@@ -124,6 +138,7 @@ describe("TenantService", () => {
     it("should allow updating to same domain for same tenant", async () => {
       const created = await service.createTenant({
         name: "Test Store",
+        merchantEmail: "test@example.com",
         domain: "teststore",
       });
 
@@ -141,7 +156,10 @@ describe("TenantService", () => {
 
   describe("deleteTenant", () => {
     it("should delete tenant successfully", async () => {
-      const created = await service.createTenant({ name: "Test Store" });
+      const created = await service.createTenant({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
 
       await expect(service.deleteTenant(created.id)).resolves.toBeUndefined();
 
@@ -159,9 +177,18 @@ describe("TenantService", () => {
 
   describe("listTenants", () => {
     it("should return all tenants", async () => {
-      await service.createTenant({ name: "Store 1" });
-      await service.createTenant({ name: "Store 2" });
-      await service.createTenant({ name: "Store 3" });
+      await service.createTenant({
+        name: "Store 1",
+        merchantEmail: "store1@example.com",
+      });
+      await service.createTenant({
+        name: "Store 2",
+        merchantEmail: "store2@example.com",
+      });
+      await service.createTenant({
+        name: "Store 3",
+        merchantEmail: "store3@example.com",
+      });
 
       const tenants = await service.listTenants();
 
@@ -180,8 +207,14 @@ describe("TenantService", () => {
     });
 
     it("should not return deleted tenants", async () => {
-      const store1 = await service.createTenant({ name: "Store 1" });
-      await service.createTenant({ name: "Store 2" });
+      const store1 = await service.createTenant({
+        name: "Store 1",
+        merchantEmail: "store1@example.com",
+      });
+      await service.createTenant({
+        name: "Store 2",
+        merchantEmail: "store2@example.com",
+      });
       await service.deleteTenant(store1.id);
 
       const tenants = await service.listTenants();

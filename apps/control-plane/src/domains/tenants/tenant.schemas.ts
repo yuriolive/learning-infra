@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createTenantSchema = z.object({
   name: z.string().min(1).max(255),
+  merchantEmail: z.string().email(),
   domain: z
     .string()
     .regex(
@@ -9,6 +10,7 @@ export const createTenantSchema = z.object({
       "Invalid domain format",
     )
     .optional(),
+  plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -21,7 +23,10 @@ export const updateTenantSchema = z.object({
       "Invalid domain format",
     )
     .optional(),
-  status: z.enum(["active", "suspended", "deleted"]).optional(),
+  status: z.enum(["provisioning", "active", "suspended", "deleted"]).optional(),
+  plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
+  databaseUrl: z.string().optional(),
+  apiUrl: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 

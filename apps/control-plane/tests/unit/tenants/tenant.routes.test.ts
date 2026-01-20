@@ -27,6 +27,7 @@ describe("TenantRoutes", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: "Test Store",
+          merchantEmail: "test@example.com",
           domain: "teststore",
         }),
       });
@@ -38,7 +39,7 @@ describe("TenantRoutes", () => {
       expect(data.id).toBeDefined();
       expect(data.name).toBe("Test Store");
       expect(data.domain).toBe("teststore");
-      expect(data.status).toBe("active");
+      expect(data.status).toBe("provisioning");
     });
 
     it("should return 400 for invalid input", async () => {
@@ -61,6 +62,7 @@ describe("TenantRoutes", () => {
     it("should return 409 for duplicate domain", async () => {
       await service.createTenant({
         name: "Existing Store",
+        merchantEmail: "test@example.com",
         domain: "teststore",
       });
 
@@ -69,6 +71,7 @@ describe("TenantRoutes", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: "New Store",
+          merchantEmail: "new@example.com",
           domain: "teststore", // Duplicate domain
         }),
       });
@@ -83,8 +86,14 @@ describe("TenantRoutes", () => {
 
   describe("GET /api/tenants", () => {
     it("should return list of tenants", async () => {
-      await service.createTenant({ name: "Store 1" });
-      await service.createTenant({ name: "Store 2" });
+      await service.createTenant({
+        name: "Store 1",
+        merchantEmail: "store1@example.com",
+      });
+      await service.createTenant({
+        name: "Store 2",
+        merchantEmail: "store2@example.com",
+      });
 
       const request = new Request("http://localhost:3000/api/tenants", {
         method: "GET",
@@ -112,7 +121,10 @@ describe("TenantRoutes", () => {
 
   describe("GET /api/tenants/:tenantId", () => {
     it("should return tenant when found", async () => {
-      const created = await service.createTenant({ name: "Test Store" });
+      const created = await service.createTenant({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
 
       const request = new Request(
         `http://localhost:3000/api/tenants/${created.id}`,
@@ -162,7 +174,10 @@ describe("TenantRoutes", () => {
 
   describe("PATCH /api/tenants/:tenantId", () => {
     it("should update tenant successfully", async () => {
-      const created = await service.createTenant({ name: "Original Name" });
+      const created = await service.createTenant({
+        name: "Original Name",
+        merchantEmail: "test@example.com",
+      });
 
       const request = new Request(
         `http://localhost:3000/api/tenants/${created.id}`,
@@ -205,7 +220,10 @@ describe("TenantRoutes", () => {
 
   describe("DELETE /api/tenants/:tenantId", () => {
     it("should delete tenant successfully", async () => {
-      const created = await service.createTenant({ name: "Test Store" });
+      const created = await service.createTenant({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
 
       const request = new Request(
         `http://localhost:3000/api/tenants/${created.id}`,
