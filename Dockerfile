@@ -6,6 +6,7 @@ WORKDIR /app
 FROM base AS builder
 COPY package.json bun.lock ./
 COPY packages/config/package.json ./packages/config/
+COPY packages/utils/package.json ./packages/utils/
 COPY apps/control-plane/package.json ./apps/control-plane/
 
 # Install dependencies including workspaces
@@ -13,6 +14,7 @@ RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY packages/config ./packages/config
+COPY packages/utils ./packages/utils
 COPY apps/control-plane ./apps/control-plane
 
 # Build the application
