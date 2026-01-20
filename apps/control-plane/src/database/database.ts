@@ -20,9 +20,11 @@ const isLocal =
   connectionString.includes("localhost") ||
   connectionString.includes("db.localtest.me");
 
-// Configuring Neon for local development via Neon Proxy
-// This redirects Neon's SDK to the local proxy endpoint (usually running on port 4444)
-// to allow testing Neon-specific features locally.
+// For local development using the Neon proxy, this block intercepts the Neon
+// serverless driver's HTTP requests and redirects them to the local proxy
+// instance (running on port 4444). This allows us to use the same production
+// driver (`@neondatabase/serverless`) in a local environment against a
+// standard PostgreSQL database, ensuring consistency between environments.
 if (isLocal && connectionString.includes("db.localtest.me")) {
   neonConfig.fetchEndpoint = (host) => {
     const [protocol, port] =
