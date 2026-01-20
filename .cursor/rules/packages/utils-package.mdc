@@ -10,17 +10,73 @@ Shared utilities used across apps and packages.
 
 ## Contents
 
-- Logger utilities
+- **Logger utilities** (pino-based structured logging)
 - Common helper functions
 - Type definitions
 
-## Usage
+## Logger Usage
+
+### Basic Usage
 
 ```typescript
-import { logger } from '@vendin/utils';
+import { logger } from '@vendin/utils/logger';
 
-logger.info('Tenant provisioned', { tenantId });
+logger.info('Operation completed');
+logger.error({ error }, 'Operation failed');
 ```
+
+### Custom Logger Instance
+
+```typescript
+import { createLogger } from '@vendin/utils/logger';
+
+const logger = createLogger({
+  logLevel: process.env.LOG_LEVEL,
+  nodeEnv: process.env.NODE_ENV ?? 'development',
+});
+```
+
+### Structured Logging
+
+Always include relevant context:
+
+```typescript
+// ✅ Good: Structured logging with context
+logger.info({ tenantId, userId, duration: 1234 }, 'Tenant provisioned');
+logger.error({ error, tenantId, operation: 'provision' }, 'Provisioning failed');
+
+// ❌ Bad: Plain strings without context
+logger.info('Tenant provisioned');
+logger.error('Provisioning failed');
+```
+
+### Log Levels
+
+- `debug` - Detailed information for development/troubleshooting
+- `info` - General informational messages (default in production)
+- `warn` - Warning messages for non-critical issues
+- `error` - Error messages for failures
+- `fatal` - Critical errors that require immediate attention
+
+### Environment Behavior
+
+**Development:**
+- Pretty-printed output with colors
+- Single-line format
+- Human-readable timestamps
+- Default level: `debug`
+
+**Production:**
+- JSON output (optimal for log aggregation)
+- No colors or pretty-printing
+- ISO timestamps
+- Default level: `info`
+
+## Implementation
+
+Based on [pino](https://github.com/pinojs/pino) - high-performance JSON logger.
+
+See `packages/utils/src/logger.ts` for implementation details.
 
 ## Patterns
 

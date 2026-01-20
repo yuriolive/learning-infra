@@ -12,6 +12,7 @@ globs: **/*
 ❌ **NEVER** use non-serverless infrastructure without justification.
 ❌ **NEVER** write backend code in JavaScript (use TypeScript).
 ❌ **NEVER** expose tenant data to other tenants.
+❌ **NEVER** use `console.log/error/warn/info` in source code (use pino logger).
 
 ## What to Do
 ✅ **ALWAYS** maintain physical database isolation.
@@ -21,7 +22,30 @@ globs: **/*
 ✅ **ALWAYS** use serverless infrastructure.
 ✅ **ALWAYS** configure scale-to-zero for Cloud Run.
 ✅ **ALWAYS** store secrets securely.
+✅ **ALWAYS** use structured logging via `@vendin/utils/logger` (pino).
 ✅ **ALWAYS** log with tenant context when applicable.
+
+## Logging Standards
+
+Use pino logger from `@vendin/utils` for all logging:
+
+```typescript
+import { createLogger } from '@vendin/utils/logger';
+
+const logger = createLogger({
+  logLevel: process.env.LOG_LEVEL,
+  nodeEnv: process.env.NODE_ENV ?? 'development',
+});
+
+// Structured logging with context
+logger.info({ tenantId, userId }, 'User action completed');
+logger.error({ error, tenantId }, 'Operation failed');
+```
+
+**Enforcement:**
+- ESLint rule `no-console: error` prevents console usage in source code
+- Exception: Console allowed in test files for debugging
+- See [utils-package.mdc](../../packages/utils-package.mdc) for logger implementation
 
 ## Code Review Checklist
 - [ ] Tenant isolation maintained?
@@ -32,3 +56,4 @@ globs: **/*
 - [ ] Tests added/updated?
 - [ ] Performance requirements met?
 - [ ] Documentation updated?
+- [ ] Pino logger used (no console.log)?
