@@ -65,7 +65,15 @@ DELETE /api/tenants/{tenantId}
 - PostgreSQL database (or Neon connection string)
 
 ### Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string
+- `DATABASE_URL` - PostgreSQL connection string. 
+  - For local: `postgres://postgres:postgres@localhost:5432/control_plane`
+  - For production: Use a Neon connection string (uses HTTP driver automatically).
+
+### Local Database
+The project uses Docker Compose to run a local PostgreSQL instance.
+1. Run `docker-compose up -d` at the root.
+2. Ensure `DATABASE_URL` is set in `.env`.
+3. Push schema: `bun run db:push`.
 
 ### Running the Server
 ```bash

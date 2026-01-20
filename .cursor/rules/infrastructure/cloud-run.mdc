@@ -1,0 +1,98 @@
+---
+description: Google Cloud Run deployment patterns, scaling, and tenant instance management.
+globs: apps/**/*, infrastructure/**/*
+---
+# Cloud Run Infrastructure Rules
+
+## Service Types
+
+### Control Plane Service
+- **Service Name**: `control-plane`
+- **Type**: Shared service (one instance for all tenants)
+- **Purpose**: Orchestrates tenant provisioning
+- **Configuration**:
+  - `min-instances: 0` (scale-to-zero)
+  - `max-instances: 10`
+  - `cpu: 1`
+  - `memory: 512Mi`
+  - `port: 3000`
+
+### Tenant Instance Services
+- **Service Naming**: `tenant-{tenantId}` (e.g., `tenant-abc123`)
+- **Type**: Separate service per tenant (dynamically provisioned)
+- **Purpose**: Isolated MedusaJS 2.0 backend per tenant
+- **Configuration**:
+  - `min-instances: 0` (scale-to-zero, critical for cost efficiency)
+  - `max-instances: 10`
+  - `cpu: 1`
+  - `memory: 512Mi`
+  - `port: 3000`
+
+## Deployment Patterns
+
+### Control Plane Deployment
+
+```bash
+gcloud run deploy control-plane \
+  --project=vendin-store \
+  --region=southamerica-east1 \
+  --image=southamerica-east1-docker.pkg.dev/vendin-store/containers/control-plane:latest \
+  --min-instances=0 \
+  --max-instances=10 \
+  --cpu=1 \
+  --memory=512Mi \
+  --set-secrets=DATABASE_URL=control-plane-db-url:latest
+```
+
+### Tenant Instance Deployment (Programmatic)
+
+The Control Plane creates tenant instances using Cloud Run Admin API:
+
+```typescript
+// Pattern: Create tenant instance
+const serviceName = `tenant-${tenantId}`;
+await cloudRunApi.createService({
+  name: serviceName,
+  image: 'southamerica-east1-docker.pkg.dev/vendin-store/containers/tenant-instance:latest',
+  minInstances: 0,
+  maxInstances: 10,
+  secrets: {
+    DATABASE_URL: `tenant-${tenantId}-db-url:latest`
+  },
+  env: {
+    TENANT_ID: tenantId,
+    REDIS_NAMESPACE: `tenant-${tenantId}`
+  }
+});
+```
+
+## Scale-to-Zero Configuration
+
+**CRITICAL**: All services must use `min-instances: 0`:
+- Enables cost efficiency for idle tenants
+- Cold start time must remain < 2 seconds
+- Optimize container image size (< 200MB)
+
+## Service Account Configuration
+
+All Cloud Run services use the same service account:
+- **Service Account**: `cloud-run-sa@vendin-store.iam.gserviceaccount.com`
+- **Required Roles**:
+  - `roles/secretmanager.secretAccessor` (for database URLs)
+  - `roles/logging.logWriter`
+  - `roles/monitoring.metricWriter`
+
+## Domain Mapping
+
+- **Control Plane**: `control.vendin.store`
+- **Tenant Instances**: No direct domain mapping (accessed via storefront routing)
+
+## Cleanup
+
+When deleting a tenant:
+```bash
+gcloud run services delete tenant-${TENANT_ID} \
+  --project=vendin-store \
+  --region=southamerica-east1 \
+  --quiet
+```

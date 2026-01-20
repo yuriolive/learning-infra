@@ -1,5 +1,5 @@
 {
-  "name": "learning-infra",
+  "name": "vendin",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "typecheck": "turbo run typecheck",
-    "deploy:control-plane": "turbo run build --filter=@learning-infra/control-plane && gcloud run deploy control-plane --source . --region southamerica-east1 --min-instances 0"
+    "deploy:control-plane": "turbo run build --filter=@vendin/control-plane && gcloud run deploy control-plane --source . --region southamerica-east1 --min-instances 0"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [

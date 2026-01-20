@@ -1,16 +1,38 @@
 import { and, eq, ne } from "drizzle-orm";
 
-import { db } from "../../database/db";
+import { database, type Database } from "../../database/database";
 import { tenants } from "../../database/schema";
+
 import type {
   CreateTenantInput,
   Tenant,
   UpdateTenantInput,
 } from "./tenant.types";
 
+type DatabaseTenant = typeof tenants.$inferSelect;
+
+function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
+  return {
+    id: databaseTenant.id,
+    name: databaseTenant.name,
+    domain: databaseTenant.domain ?? undefined,
+    status: databaseTenant.status,
+    createdAt: databaseTenant.createdAt,
+    updatedAt: databaseTenant.updatedAt,
+    deletedAt: databaseTenant.deletedAt ?? undefined,
+    metadata: databaseTenant.metadata ?? undefined,
+  };
+}
+
 export class TenantRepository {
+  private db: Database;
+
+  constructor(database_?: Database) {
+    this.db = database_ ?? (database as Database);
+  }
+
   async create(input: CreateTenantInput): Promise<Tenant> {
-    const [tenant] = await db
+    const [tenant] = await this.db
       .insert(tenants)
       .values({
         name: input.name,
@@ -19,27 +41,33 @@ export class TenantRepository {
       })
       .returning();
 
-    return tenant;
+    if (!tenant) {
+      throw new Error("Failed to create tenant");
+    }
+
+    return mapToTenant(tenant);
   }
 
   async findById(id: string): Promise<Tenant | null> {
-    const [tenant] = await db
+    const [tenant] = await this.db
       .select()
       .from(tenants)
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")));
 
-    return tenant || null;
+    return tenant ? mapToTenant(tenant) : null;
   }
 
   async findAll(): Promise<Tenant[]> {
-    return db
+    const results = await this.db
       .select()
       .from(tenants)
       .where(ne(tenants.status, "deleted"));
+
+    return results.map((result) => mapToTenant(result));
   }
 
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
-    const [updated] = await db
+    const [updated] = await this.db
       .update(tenants)
       .set({
         ...(input.name !== undefined && { name: input.name }),
@@ -51,11 +79,11 @@ export class TenantRepository {
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))
       .returning();
 
-    return updated || null;
+    return updated ? mapToTenant(updated) : null;
   }
 
   async softDelete(id: string): Promise<boolean> {
-    const [deleted] = await db
+    const [deleted] = await this.db
       .update(tenants)
       .set({
         status: "deleted",
@@ -69,11 +97,11 @@ export class TenantRepository {
   }
 
   async findByDomain(domain: string): Promise<Tenant | null> {
-    const [tenant] = await db
+    const [tenant] = await this.db
       .select()
       .from(tenants)
       .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));
 
-    return tenant || null;
+    return tenant ? mapToTenant(tenant) : null;
   }
 }

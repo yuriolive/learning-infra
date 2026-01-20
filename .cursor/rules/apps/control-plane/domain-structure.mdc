@@ -1,0 +1,80 @@
+---
+description: Domain-driven design patterns for Control Plane.
+globs: apps/control-plane/**/*
+---
+# Control Plane Domain Structure
+
+## Domain Organization
+
+```
+apps/control-plane/src/
+├── database/           # Database schema and connection
+│   ├── schema.ts      # Drizzle schema definitions
+│   └── db.ts          # Database connection
+├── domains/           # Domain modules
+│   └── tenants/       # Tenant domain
+│       ├── tenant.repository.ts
+│       ├── tenant.service.ts
+│       ├── tenant.routes.ts
+│       ├── tenant.schemas.ts
+│       └── tenant.types.ts
+└── index.ts           # Application entry point
+```
+
+## Domain Patterns
+
+### Repository Pattern
+
+```typescript
+// tenant.repository.ts
+export class TenantRepository {
+  async create(data: CreateTenantInput): Promise<Tenant> {
+    // Database operations
+  }
+  
+  async findById(id: string): Promise<Tenant | null> {
+    // Database query
+  }
+  
+  async findBySubdomain(subdomain: string): Promise<Tenant | null> {
+    // Database query
+  }
+}
+```
+
+### Service Pattern
+
+```typescript
+// tenant.service.ts
+export class TenantService {
+  constructor(
+    private repository: TenantRepository,
+    private neonApi: NeonApi,
+    private cloudRunApi: CloudRunApi,
+    private cloudflareApi: CloudflareApi
+  ) {}
+  
+  async provisionTenant(input: CreateTenantInput): Promise<Tenant> {
+    // Orchestrate provisioning workflow
+  }
+}
+```
+
+### Route Pattern
+
+```typescript
+// tenant.routes.ts
+export const tenantRoutes = {
+  'POST /api/tenants': async (req, res) => {
+    const tenant = await tenantService.provisionTenant(req.body);
+    return res.json(tenant);
+  }
+};
+```
+
+## Domain Isolation
+
+- Each domain is self-contained
+- Domain services handle business logic
+- Repositories handle data access
+- Routes handle HTTP concerns

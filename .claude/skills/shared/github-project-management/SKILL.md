@@ -31,45 +31,53 @@ assignees: [optional array of usernames]
 ```
 
 **Example:**
+
 ```typescript
 mcp_github_issue_write({
   method: "create",
   owner: "yuriolive",
-  repo: "learning-infra",
+  repo: "vendin",
   title: "[P0] Control Plane API",
   body: "Build the central orchestration API...",
-  labels: ["P0", "backend"]
-})
+  labels: ["P0", "backend"],
+});
 ```
 
 ### Issue Structure Best Practices
 
 **Title format:**
+
 - Use prefixes for categorization: `[P0]`, `[P1]`, `[Epic]`, `[Bug]`
 - Be specific and actionable
 - Keep under 100 characters
 
 **Body structure:**
+
 ```markdown
 # [Issue Title]
 
 ## Description
+
 Clear description of what needs to be done.
 
 ## Acceptance Criteria
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 - [ ] Criterion 3
 
 ## Technical Requirements
+
 - Requirement 1
 - Requirement 2
 
 ## Dependencies
+
 - Related issue #123
 - Blocks issue #456
 
 ## Related Issues
+
 - Part of epic #789
 ```
 
@@ -78,18 +86,24 @@ Clear description of what needs to be done.
 After creating an issue, add it to a GitHub Project using `gh` CLI or GitHub API:
 
 **Using gh CLI:**
+
 ```bash
 gh project item-add <project-number> --owner <owner> --url <issue-url>
 ```
 
 **Using GitHub API (GraphQL):**
+
 ```graphql
 mutation {
-  addProjectV2ItemById(input: {
-    projectId: "PVT_..."
-    contentId: "I_..." # Issue node ID
-  }) {
-    item { id }
+  addProjectV2ItemById(
+    input: {
+      projectId: "PVT_..."
+      contentId: "I_..." # Issue node ID
+    }
+  ) {
+    item {
+      id
+    }
   }
 }
 ```
@@ -103,9 +117,10 @@ To set custom fields (like Priority) on project items:
 3. Update the field value using GraphQL mutation
 
 **Example workflow:**
+
 ```bash
 # 1. Add issue to project
-gh project item-add 3 --owner yuriolive --url https://github.com/yuriolive/learning-infra/issues/1
+gh project item-add 3 --owner yuriolive --url https://github.com/yuriolive/vendin/issues/1
 
 # 2. Get project item ID and field ID (via GraphQL)
 # 3. Update priority field
@@ -139,6 +154,7 @@ When creating multiple issues from a PRD or task list:
 4. **Set project fields** (priority, status, etc.) via GraphQL
 
 **Batch processing:**
+
 - Create issues sequentially to avoid rate limits
 - Use parallel processing only for adding to projects (safer operation)
 - Verify each issue was created before proceeding
@@ -146,12 +162,14 @@ When creating multiple issues from a PRD or task list:
 ## Error Handling
 
 **Issue creation failures:**
+
 - Check repository permissions
 - Verify owner/repo names are correct
 - Ensure labels exist in repository
 - Check for duplicate issues
 
 **Project operations failures:**
+
 - Verify project number and owner
 - Check project permissions
 - Ensure issue is accessible
@@ -172,6 +190,7 @@ When converting PRD sections to issues:
 ### Linking Related Issues
 
 Use issue references in body:
+
 - `Related to #123`
 - `Part of epic #456`
 - `Blocks #789`
@@ -185,29 +204,36 @@ For consistent structure, use this template:
 # [Title]
 
 ## Priority
+
 [P0/P1/P2]
 
 ## Description
+
 [What needs to be done]
 
 ## Acceptance Criteria
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
 ## Technical Requirements
+
 - Requirement 1
 - Requirement 2
 
 ## Dependencies
+
 - Related issue #X
 
 ## Success Criteria
+
 - [How to verify completion]
 ```
 
 ## MCP Tool Reference
 
 **Fully qualified tool names:**
+
 - `github:issue_write` - Create or update issues
 - `github:issue_read` - Get issue details
 - `github:list_issues` - List repository issues

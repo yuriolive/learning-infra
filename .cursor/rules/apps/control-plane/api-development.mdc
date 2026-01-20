@@ -1,0 +1,79 @@
+---
+description: Control Plane REST API patterns and endpoint design.
+globs: apps/control-plane/**/*
+---
+# Control Plane API Development
+
+## API Design
+
+- **Style**: RESTful
+- **Base URL**: `control.vendin.store`
+- **Authentication**: JWT-based (for platform admin)
+- **Response Format**: JSON
+
+## Endpoint Patterns
+
+### Tenant Management
+
+```
+POST   /api/tenants              # Create new tenant
+GET    /api/tenants/:id          # Get tenant details
+PATCH  /api/tenants/:id          # Update tenant
+DELETE /api/tenants/:id          # Delete tenant (soft delete)
+GET    /api/tenants              # List tenants
+```
+
+### Domain Management
+
+```
+POST   /api/tenants/:id/domains  # Add custom domain
+GET    /api/tenants/:id/domains  # List tenant domains
+DELETE /api/tenants/:id/domains/:domainId # Remove domain
+```
+
+### Metrics
+
+```
+GET    /api/tenants/:id/metrics  # Get tenant usage metrics
+```
+
+## Request/Response Patterns
+
+### Create Tenant Request
+
+```typescript
+POST /api/tenants
+{
+  "merchantEmail": "merchant@example.com",
+  "storeName": "My Awesome Store",
+  "plan": "starter",
+  "customDomain": "shop.example.com" // Optional
+}
+```
+
+### Create Tenant Response
+
+```typescript
+{
+  "id": "abc123",
+  "status": "provisioning",
+  "subdomain": "my-awesome-store",
+  "defaultUrl": "https://my-awesome-store.my.vendin.store",
+  "apiUrl": "https://tenant-abc123-xxx.a.run.app",
+  "adminUrl": "https://tenant-abc123-xxx.a.run.app/admin",
+  "createdAt": "2026-01-19T10:00:00Z"
+}
+```
+
+## Error Handling
+
+- Use proper HTTP status codes
+- Return structured error responses
+- Log errors with tenant context
+- Never expose internal errors to end users
+
+## Rate Limiting
+
+- Provisioning endpoints: 10 requests/minute per IP
+- Read endpoints: 100 requests/minute per IP
+- Implement exponential backoff for retries

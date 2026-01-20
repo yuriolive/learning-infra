@@ -15,7 +15,7 @@ Whenever relevant information appears in the chat (new requirements, task comple
 4. **Create Sub-issue**: For breaking down complex tasks into smaller, manageable units.
 
 ## Guidelines
-- Use the \`github-project-management\` skill located at \`.claude/skills/shared/github-project-management/SKILL.md\` to perform these actions.
+- Use the `github-project-management` skill located at `.claude/skills/shared/github-project-management/SKILL.md` to perform these actions.
 - Map priorities according to the PRD:
   - **P0 (Must Have)**
   - **P1 (Production Ready)**

@@ -1,4 +1,4 @@
-# Learning Infrastructure - Multi-Tenant E-commerce Platform
+# Vendin - Multi-Tenant E-commerce Platform
 
 Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisioning. Each merchant gets a dedicated backend and database.
 
@@ -21,6 +21,29 @@ This project uses a **monorepo architecture** with Turborepo and Bun workspaces 
 
 - **Bun** >= 1.2.20 (package manager and runtime)
 - Node.js >= 24.0.0
+
+## Local Development
+
+This project uses Docker Compose to run a local PostgreSQL instance for the Control Plane.
+
+```bash
+# Start local infrastructure
+docker-compose up -d
+
+# Stop local infrastructure
+docker-compose down
+```
+
+### Database Setup (Control Plane)
+
+1. Copy `.env.example` to `.env` in `apps/control-plane`:
+   ```bash
+   cp apps/control-plane/.env.example apps/control-plane/.env
+   ```
+2. Apply migrations:
+   ```bash
+   bun run db:push --filter=@vendin/control-plane
+   ```
 
 ## Quick Start
 
@@ -49,14 +72,14 @@ bun run lint:fix
 
 ## Commands
 
-| Command             | Description                          |
-| ------------------- | ------------------------------------ |
-| `bun run dev`       | Start all apps in development mode   |
-| `bun run build`     | Build all apps and packages          |
-| `bun run lint`      | Lint all apps and packages           |
-| `bun run lint:fix`  | Auto-fix lint issues                 |
-| `bun run test`      | Run all tests                        |
-| `bun run typecheck` | Type check all apps and packages     |
+| Command             | Description                        |
+| ------------------- | ---------------------------------- |
+| `bun run dev`       | Start all apps in development mode |
+| `bun run build`     | Build all apps and packages        |
+| `bun run lint`      | Lint all apps and packages         |
+| `bun run lint:fix`  | Auto-fix lint issues               |
+| `bun run test`      | Run all tests                      |
+| `bun run typecheck` | Type check all apps and packages   |
 
 ## Applications
 

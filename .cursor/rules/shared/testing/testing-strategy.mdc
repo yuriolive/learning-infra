@@ -1,0 +1,139 @@
+---
+description: Testing patterns, TDD workflows, and coverage requirements.
+globs: **/*
+---
+# Testing Strategy
+
+## Testing Principles
+
+- Write tests for all critical paths
+- Maintain tenant isolation in tests
+- Test provisioning workflows end-to-end
+- Verify scale-to-zero behavior
+- Test hostname routing logic
+
+## Test Organization
+
+```
+apps/control-plane/tests/
+├── unit/              # Unit tests for services, repositories
+├── integration/       # Integration tests for API endpoints
+└── e2e/              # End-to-end provisioning tests
+```
+
+## Coverage Requirements
+
+- **Control Plane**: Minimum 80% coverage
+- **Critical paths**: 100% coverage (provisioning, tenant isolation)
+- **API endpoints**: All endpoints must have tests
+
+## Testing Patterns
+
+### Tenant Isolation Testing
+
+```typescript
+it('should maintain database isolation between tenants', async () => {
+  const tenant1 = await createTenant({ name: 'Store 1' });
+  const tenant2 = await createTenant({ name: 'Store 2' });
+  
+  // Verify different databases
+  expect(tenant1.databaseUrl).not.toBe(tenant2.databaseUrl);
+  
+  // Verify data isolation
+  await createProduct(tenant1.id, { name: 'Product 1' });
+  const products = await getProducts(tenant2.id);
+  expect(products).not.toContainEqual(expect.objectContaining({ name: 'Product 1' }));
+});
+```
+
+### Provisioning Performance Testing
+
+```typescript
+it('should provision tenant in under 2 minutes', async () => {
+  const startTime = Date.now();
+  const tenant = await provisionTenant({ merchantEmail: 'test@example.com' });
+  const duration = Date.now() - startTime;
+  
+  expect(duration).toBeLessThan(120000); // 2 minutes
+  expect(tenant.status).toBe('active');
+});
+```
+
+## Database Testing with PGLite
+
+### When to Use PGLite
+
+✅ **Use PGLite for:**
+- Repository tests (SQL queries, constraints, transactions)
+- Integration tests (service + repository workflows)
+- API tests (route handlers with database operations)
+
+❌ **Don't Use PGLite for:**
+- Service unit tests (mock the repository instead)
+- Validator unit tests (no database needed)
+- E2E tests (use real infrastructure)
+
+### PGLite Setup Pattern
+
+```typescript
+import { createMockDatabase } from "../../utils/mock-database";
+
+describe("TenantRepository", () => {
+  let repository: TenantRepository;
+
+  beforeEach(async () => {
+    const db = await createMockDatabase(); // Fresh isolated instance
+    repository = new TenantRepository(db);
+  });
+
+  it("should create tenant", async () => {
+    const tenant = await repository.create({ name: "Store 1" });
+    expect(tenant.id).toBeDefined();
+  });
+});
+```
+
+### Dependency Injection Pattern
+
+Repositories should accept an optional database instance:
+
+```typescript
+export class TenantRepository {
+  private db: typeof database;
+
+  constructor(db?: typeof database) {
+    this.db = db ?? database; // Use injected for tests, global for production
+  }
+
+  async create(input: CreateTenantInput): Promise<Tenant> {
+    const [tenant] = await this.db
+      .insert(tenants)
+      .values(input)
+      .returning();
+    return tenant;
+  }
+}
+```
+
+### UUID Validation in Tests
+
+PGLite enforces PostgreSQL's strict UUID format. Use valid UUIDs in tests:
+
+```typescript
+import { randomUUID } from "crypto";
+
+it("should return null when tenant not found", async () => {
+  // ✅ Good: Valid UUID
+  const found = await repository.findById(randomUUID());
+  
+  // ❌ Bad: Invalid UUID (will throw PGLite error)
+  // const found = await repository.findById("non-existent-id");
+});
+```
+
+## Test Documentation
+
+See detailed documentation in `docs/test/`:
+- [CURRENT_STATE.md](../../../docs/test/CURRENT_STATE.md) - Current implementation with PGLite
+- [PLANNED_IMPROVEMENTS.md](../../../docs/test/PLANNED_IMPROVEMENTS.md) - Future test architecture
+- [README.md](../../../docs/test/README.md) - Quick reference and commands

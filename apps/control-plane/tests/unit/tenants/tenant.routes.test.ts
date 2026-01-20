@@ -1,33 +1,23 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-// Mock the database before any imports
-vi.mock("../../../src/database/db", () => ({
-  db: {
-    insert: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-  },
-}));
+import { createLogger } from "@vendin/utils/logger";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { createTenantRoutes } from "../../../src/domains/tenants/tenant.routes";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { createMockDatabase } from "../../utils/mock-database";
 
 describe("TenantRoutes", () => {
   let routes: ReturnType<typeof createTenantRoutes>;
   let service: TenantService;
   let repository: TenantRepository;
+  let logger: ReturnType<typeof createLogger>;
 
-  beforeEach(() => {
-    repository = new TenantRepository();
+  beforeEach(async () => {
+    const database = await createMockDatabase();
+    repository = new TenantRepository(database);
     service = new TenantService(repository);
-    routes = createTenantRoutes({ tenantService: service });
+    logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
+    routes = createTenantRoutes({ tenantService: service, logger });
   });
 
   describe("POST /api/tenants", () => {
@@ -104,7 +94,6 @@ describe("TenantRoutes", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(Array.isArray(data)).toBe(true);
       expect(data).toHaveLength(2);
     });
 

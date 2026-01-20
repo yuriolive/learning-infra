@@ -16,7 +16,7 @@ COPY packages/config ./packages/config
 COPY apps/control-plane ./apps/control-plane
 
 # Build the application
-RUN bun run build --filter=@learning-infra/control-plane
+RUN bun run build --filter=@vendin/control-plane
 
 # Stage 2: Production image
 FROM base AS runner

@@ -1,4 +1,4 @@
-import baseConfig from "@learning-infra/config/eslint.config.js";
+import baseConfig from "@vendin/config/eslint.config.js";
 
 export default [
   ...baseConfig,
