@@ -81,7 +81,7 @@ jobs:
             --memory=512Mi
             --allow-unauthenticated
           secrets: |
-            DATABASE_URL=projects/${{ env.PROJECT_ID }}/secrets/control-plane-db-url:latest
+            DATABASE_URL=control-plane-db-url:latest
           env_vars: |
             NODE_ENV=production
             PORT=3000
