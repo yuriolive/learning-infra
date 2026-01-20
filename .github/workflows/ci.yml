@@ -20,8 +20,8 @@ on:
     branches: [main]
 
 jobs:
-  code-quality-checks:
-    name: Code Quality Checks
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -41,9 +41,9 @@ jobs:
             node_modules
             apps/*/node_modules
             packages/*/node_modules
-          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('**/bun.lock') }}
+          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-bun-node-modules-
+            ${{ runner.os }}-bun-node_modules-
 
       - name: Setup Turbo Remote Caching
         uses: rharkor/caching-for-turbo@v2.3.5
@@ -52,38 +52,141 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
-      - name: Setup PostgreSQL
-        uses: ikalnytskyi/action-setup-postgres@v8
-        id: postgres
+      - name: Run ESLint
+        run: bun run lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          username: postgres
-          password: postgres
-          database: main
-          postgres-version: "17"
+          bun-version-file: ".bun-version"
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-node_modules-
+
+      - name: Setup Turbo Remote Caching
+        uses: rharkor/caching-for-turbo@v2.3.5
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Type check (tsc --noEmit)
+        run: bun run typecheck
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: main
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-node_modules-
+
+      - name: Setup Turbo Remote Caching
+        uses: rharkor/caching-for-turbo@v2.3.5
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Set DATABASE_URL
+        run: echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/main" >> $GITHUB_ENV
 
       - name: Enable PostgreSQL extensions
         run: |
-          psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
-          psql ${{ steps.postgres.outputs.connection-uri }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
-
-      - name: Set DATABASE_URL
-        run: echo "DATABASE_URL=${{ steps.postgres.outputs.connection-uri }}" >> $GITHUB_ENV
+          psql ${{ env.DATABASE_URL }} -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
+          psql ${{ env.DATABASE_URL }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 
       - name: Run database migrations
         run: cd apps/control-plane && bun run db:migrate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      - name: Run ESLint
-        run: bun run lint
-
-      - name: Type check (tsc --noEmit)
-        run: bun run typecheck
-
       - name: Run tests
         run: bun run test
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-node_modules-
+
+      - name: Setup Turbo Remote Caching
+        uses: rharkor/caching-for-turbo@v2.3.5
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
 
       - name: Build project
         run: bun run build
