@@ -33,7 +33,7 @@ jobs:
       id-token: write
 
     outputs:
-      image: ${{ steps.image.outputs.name }}
+      image: ${{ steps.set_image.outputs.image }}
 
     steps:
       - name: Checkout code
@@ -51,10 +51,18 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
 
       - name: Set image name
-        id: image
+        id: set_image
         run: |
+          if [ -z "${{ env.ARTIFACT_REGISTRY_DOMAIN }}" ] || [ -z "${{ env.PROJECT_ID }}" ] || [ -z "${{ env.ARTIFACT_REGISTRY_REPO }}" ]; then
+            echo "Error: One or more required environment variables are empty"
+            echo "DOMAIN: ${{ env.ARTIFACT_REGISTRY_DOMAIN }}"
+            echo "PROJECT: ${{ env.PROJECT_ID }}"
+            echo "REPO: ${{ env.ARTIFACT_REGISTRY_REPO }}"
+            exit 1
+          fi
           IMAGE_NAME="${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          echo "name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "image=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "Image name set to: $IMAGE_NAME"
 
       - name: Check if image already exists
         id: check_image
@@ -83,7 +91,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ steps.image.outputs.name }}
+            ${{ steps.set_image.outputs.image }}
             ${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}:latest
           cache-from: |
             type=registry,ref=${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}:buildcache
@@ -127,7 +135,7 @@ jobs:
         run: |
           docker run --rm \
             -e DATABASE_URL="${{ steps.get-db-url.outputs.db_url }}" \
-            ${{ needs.build.outputs.image }} \
+            "${{ needs.build.outputs.image }}" \
             bun run --cwd /app/apps/control-plane db:migrate
 
   deploy:
