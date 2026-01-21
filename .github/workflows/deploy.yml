@@ -82,6 +82,40 @@ jobs:
           cache-to: type=registry,ref=${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}:buildcache,mode=max
           platforms: linux/amd64
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-bun-node-modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-node-modules-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Get database URL from Secret Manager
+        id: get-db-url
+        run: |
+          DB_URL=$(gcloud secrets versions access latest --secret="control-plane-db-url" --project="${{ env.PROJECT_ID }}")
+          echo "::add-mask::$DB_URL"
+          echo "db_url=$DB_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Run database migrations
+        run: |
+          cd apps/control-plane
+          bun run db:migrate
+        env:
+          DATABASE_URL: ${{ steps.get-db-url.outputs.db_url }}
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
