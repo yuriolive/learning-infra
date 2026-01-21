@@ -71,17 +71,29 @@ const server = serve({
   <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js"></script>
 </head>
 <body>
-  <script id="api-reference" data-configuration='{"theme": "purple"}'></script>
+  <div id="api-reference"></div>
   <script>
-    var configuration = {
-      spec: ${JSON.stringify(spec)},
-      theme: "purple",
-      layout: "modern",
-    };
-    var apiReference = document.getElementById("api-reference");
-    if (apiReference && window.Scalar) {
-      window.Scalar.apiReference(apiReference, configuration);
-    }
+    (function() {
+      var configuration = {
+        spec: ${JSON.stringify(spec)},
+        theme: "purple",
+        layout: "modern",
+      };
+      
+      function initScalar() {
+        if (typeof Scalar !== "undefined" && Scalar.createApiReference) {
+          Scalar.createApiReference("#api-reference", configuration);
+        } else {
+          setTimeout(initScalar, 50);
+        }
+      }
+      
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initScalar);
+      } else {
+        initScalar();
+      }
+    })();
   </script>
 </body>
 </html>`;

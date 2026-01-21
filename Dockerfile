@@ -32,9 +32,14 @@ ENV NODE_ENV=production
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/control-plane/package.json ./apps/control-plane/
 COPY --from=builder /app/apps/control-plane/dist ./apps/control-plane/dist
+COPY --from=builder /app/apps/control-plane/drizzle ./apps/control-plane/drizzle
+
+# Copy utils package for workspace dependency resolution
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 
 # Expose the port the app runs on
 EXPOSE 3000
 
 # Set the entrypoint to run the compiled file
-CMD ["bun", "run", "apps/control-plane/dist/index.js"]
+CMD ["bun", "/app/apps/control-plane/dist/src/index.js"]
