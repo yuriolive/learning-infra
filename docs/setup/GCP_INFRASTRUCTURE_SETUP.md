@@ -222,8 +222,10 @@ DEBUG = false
    - Check service account has `secretmanager.secretAccessor`
 
 4. **Cloud Run deployment fails**
-   - Check image exists in registry
-   - Verify region matches (southamerica-east1)
+
+- Check image exists in registry
+- Verify region matches (southamerica-east1)
+- If you see `iam.serviceaccounts.actAs` denied, grant the GitHub Actions SA `roles/iam.serviceAccountUser` on the Cloud Run runtime service account
 
 5. **Domain not working**
    - Wait for DNS propagation (24-48 hours)
