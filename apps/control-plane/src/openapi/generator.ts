@@ -1,8 +1,11 @@
 import {
+  extendZodWithOpenApi,
   OpenAPIRegistry,
   OpenApiGeneratorV3,
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+
+extendZodWithOpenApi(z);
 
 import {
   createTenantSchema,
@@ -19,11 +22,11 @@ const tenantSchema = registry.register(
   z.object({
     id: z.string().uuid().openapi({ description: "Unique tenant identifier" }),
     name: z.string().openapi({ description: "Tenant name" }),
-    domain: z
+    subdomain: z
       .string()
       .nullable()
       .optional()
-      .openapi({ description: "Tenant domain (optional)" }),
+      .openapi({ description: "Tenant unique subdomain (optional)" }),
     status: tenantStatusSchema.openapi({ description: "Tenant status" }),
     createdAt: z
       .string()
@@ -125,7 +128,7 @@ registry.registerPath({
       },
     },
     409: {
-      description: "Domain already in use",
+      description: "Subdomain already in use",
       content: {
         "application/json": {
           schema: errorSchema,
@@ -263,7 +266,7 @@ registry.registerPath({
       },
     },
     409: {
-      description: "Domain already in use",
+      description: "Subdomain already in use",
       content: {
         "application/json": {
           schema: errorSchema,

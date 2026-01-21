@@ -19,7 +19,8 @@ describe("TenantRepository", () => {
     it("should create a tenant with all required fields", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
-        domain: "teststore",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
         metadata: { customField: "value" },
       };
 
@@ -27,26 +28,28 @@ describe("TenantRepository", () => {
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
-      expect(tenant.domain).toBe("teststore");
-      expect(tenant.status).toBe("active");
+      expect(tenant.merchantEmail).toBe("test@example.com");
+      expect(tenant.subdomain).toBe("teststore");
+      expect(tenant.status).toBe("provisioning");
       expect(tenant.metadata).toEqual({ customField: "value" });
       expect(tenant.createdAt).toBeInstanceOf(Date);
       expect(tenant.updatedAt).toBeInstanceOf(Date);
-      expect(tenant.deletedAt).toBeUndefined();
+      expect(tenant.deletedAt).toBeNull();
     });
 
     it("should create a tenant without optional fields", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
+        merchantEmail: "test@example.com",
       };
 
       const tenant = await repository.create(input);
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
-      expect(tenant.domain).toBeUndefined();
-      expect(tenant.metadata).toBeUndefined();
-      expect(tenant.status).toBe("active");
+      expect(tenant.subdomain).toBeNull();
+      expect(tenant.metadata).toBeNull();
+      expect(tenant.status).toBe("provisioning");
     });
   });
 
@@ -54,6 +57,7 @@ describe("TenantRepository", () => {
     it("should return tenant when found", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
+        merchantEmail: "test@example.com",
       };
 
       const created = await repository.create(input);
@@ -73,6 +77,7 @@ describe("TenantRepository", () => {
     it("should return null for deleted tenants", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
+        merchantEmail: "test@example.com",
       };
 
       const created = await repository.create(input);
@@ -85,9 +90,18 @@ describe("TenantRepository", () => {
 
   describe("findAll", () => {
     it("should return all non-deleted tenants", async () => {
-      await repository.create({ name: "Store 1" });
-      await repository.create({ name: "Store 2" });
-      const store3 = await repository.create({ name: "Store 3" });
+      await repository.create({
+        name: "Store 1",
+        merchantEmail: "store1@example.com",
+      });
+      await repository.create({
+        name: "Store 2",
+        merchantEmail: "store2@example.com",
+      });
+      const store3 = await repository.create({
+        name: "Store 3",
+        merchantEmail: "store3@example.com",
+      });
 
       await repository.softDelete(store3.id);
 
@@ -106,7 +120,10 @@ describe("TenantRepository", () => {
 
   describe("update", () => {
     it("should update tenant fields", async () => {
-      const created = await repository.create({ name: "Original Name" });
+      const created = await repository.create({
+        name: "Original Name",
+        merchantEmail: "test@example.com",
+      });
 
       const updated = await repository.update(created.id, {
         name: "Updated Name",
@@ -131,7 +148,10 @@ describe("TenantRepository", () => {
     });
 
     it("should return null for deleted tenants", async () => {
-      const created = await repository.create({ name: "Test Store" });
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
       await repository.softDelete(created.id);
 
       const updated = await repository.update(created.id, { name: "New Name" });
@@ -142,7 +162,10 @@ describe("TenantRepository", () => {
 
   describe("softDelete", () => {
     it("should mark tenant as deleted", async () => {
-      const created = await repository.create({ name: "Test Store" });
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
 
       const deleted = await repository.softDelete(created.id);
 
@@ -162,7 +185,10 @@ describe("TenantRepository", () => {
     });
 
     it("should return false when tenant already deleted", async () => {
-      const created = await repository.create({ name: "Test Store" });
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
       await repository.softDelete(created.id);
 
       const deleted = await repository.softDelete(created.id);
@@ -171,22 +197,23 @@ describe("TenantRepository", () => {
     });
   });
 
-  describe("findByDomain", () => {
-    it("should return tenant when domain matches", async () => {
+  describe("findBySubdomain", () => {
+    it("should return tenant when subdomain matches", async () => {
       const created = await repository.create({
         name: "Test Store",
-        domain: "teststore",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
       });
 
-      const found = await repository.findByDomain("teststore");
+      const found = await repository.findBySubdomain("teststore");
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(created.id);
-      expect(found?.domain).toBe("teststore");
+      expect(found?.subdomain).toBe("teststore");
     });
 
-    it("should return null when domain not found", async () => {
-      const found = await repository.findByDomain("nonexistent");
+    it("should return null when subdomain not found", async () => {
+      const found = await repository.findBySubdomain("nonexistent");
 
       expect(found).toBeNull();
     });
@@ -194,12 +221,13 @@ describe("TenantRepository", () => {
     it("should return null for deleted tenants", async () => {
       const created = await repository.create({
         name: "Test Store",
-        domain: "teststore",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
       });
 
       await repository.softDelete(created.id);
 
-      const found = await repository.findByDomain("teststore");
+      const found = await repository.findBySubdomain("teststore");
 
       expect(found).toBeNull();
     });

@@ -16,6 +16,7 @@ This directory contains code examples referenced by cursor rules. Examples are o
 - **hostname-routing.ts** - Hostname-based tenant routing patterns
 - **domain-patterns.ts** - Domain-driven design patterns (Repository, Service, Route)
 - **logger-usage.ts** - Structured logging patterns
+- **medusa-plugin-package.json** - Standard private MedusaJS plugin package.json structure
 
 ## Usage
 

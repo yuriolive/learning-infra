@@ -23,6 +23,7 @@ This directory contains Cursor AI rules that guide development practices for the
 │   └── secrets.mdc           # GCP Secret Manager patterns
 ├── packages/                  # Package-specific rules
 │   ├── config-package.mdc    # Config package patterns
+│   ├── medusa-plugins.mdc    # MedusaJS plugin development patterns
 │   └── utils-package.mdc     # Utils package patterns
 └── shared/                   # Rules applicable to all parts of the project
     ├── git/                  # Version control rules

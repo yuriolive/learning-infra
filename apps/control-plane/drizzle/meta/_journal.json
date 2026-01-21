@@ -5,8 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1768830355528,
-      "tag": "0000_init_tenants",
+      "when": 1769036659647,
+      "tag": "0000_initial_schema",
       "breakpoints": true
     }
   ]

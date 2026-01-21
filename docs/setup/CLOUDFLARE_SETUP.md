@@ -171,10 +171,11 @@ Your Control Plane needs API access to manage custom hostnames:
 
 ```bash
 # 1. Go to Cloudflare Dashboard → My Profile → API Tokens
-# 2. Create API Token with these permissions:
-#    - Zone: Zone Settings:Read
-#    - Zone: SSL and Certificates:Edit
-#    - Account: Cloudflare for SaaS:Edit
+# 2. Create API Token with these Zone-level permissions:
+#    - Zone: Zone Settings:Read (optional, for reading zone configuration)
+#    - Zone: SSL and Certificates:Read (for listing/reading custom hostnames)
+#    - Zone: SSL and Certificates:Write (for creating/editing/deleting custom hostnames)
+#    Note: SSL and Certificates Write typically includes read access
 # 3. Save the token securely (add to Secret Manager)
 ```
 

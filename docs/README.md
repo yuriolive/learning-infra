@@ -12,6 +12,10 @@ docs/
 │
 ├── setup/              # Infrastructure setup guides
 │
+├── medusa/            # MedusaJS 2.0 guides
+│   ├── README.md
+│   └── PRIVATE_PLUGINS.md
+│
 └── test/               # Testing strategy and architecture
     ├── README.md
     ├── CURRENT_STATE.md
@@ -29,6 +33,10 @@ docs/
 - [Test Architecture Overview](./test/README.md) - Testing strategy and commands
 - [Current Test Implementation](./test/CURRENT_STATE.md) - PGLite setup and patterns
 - [Planned Test Improvements](./test/PLANNED_IMPROVEMENTS.md) - Future refactoring plans
+
+### MedusaJS
+
+- [Private Plugin Development](./medusa/PRIVATE_PLUGINS.md) - Guide for creating and linking plugins
 
 ### Setup
 
