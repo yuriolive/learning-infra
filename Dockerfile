@@ -41,4 +41,4 @@ COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
 EXPOSE 3000
 
 # Set the entrypoint to run the compiled file
-CMD ["bun", "run", "apps/control-plane/dist/src/index.js"]
+CMD ["bun", "/app/apps/control-plane/dist/src/index.js"]
