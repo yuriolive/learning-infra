@@ -20,6 +20,15 @@ const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
 const openApiSpecs = new Map<string, ReturnType<typeof generateOpenAPISpec>>();
 
+const getOpenAPISpec = (origin: string) => {
+  let spec = openApiSpecs.get(origin);
+  if (!spec) {
+    spec = generateOpenAPISpec(origin);
+    openApiSpecs.set(origin, spec);
+  }
+  return spec;
+};
+
 const server = serve({
   error(error: unknown) {
     logger.error({ error }, "Unhandled error in server");
@@ -52,11 +61,7 @@ const server = serve({
     }
 
     if (url.pathname === "/openapi.json") {
-      let spec = openApiSpecs.get(origin);
-      if (!spec) {
-        spec = generateOpenAPISpec(origin);
-        openApiSpecs.set(origin, spec);
-      }
+      const spec = getOpenAPISpec(origin);
       return new Response(JSON.stringify(spec), {
         status: 200,
         headers: {
@@ -67,11 +72,7 @@ const server = serve({
     }
 
     if (url.pathname === "/docs") {
-      let spec = openApiSpecs.get(origin);
-      if (!spec) {
-        spec = generateOpenAPISpec(origin);
-        openApiSpecs.set(origin, spec);
-      }
+      const spec = getOpenAPISpec(origin);
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
