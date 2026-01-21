@@ -1,0 +1,32 @@
+{
+  "name": "@vendin/tenant-instance",
+  "version": "0.0.1",
+  "description": "MedusaJS Tenant Instance Template",
+  "author": "",
+  "license": "MIT",
+  "keywords": [
+    "medusa",
+    "medusa-store",
+    "ecommerce",
+    "headless",
+    "typescript"
+  ],
+  "scripts": {
+    "build": "../../node_modules/.bin/medusa build",
+    "start": "../../node_modules/.bin/medusa start",
+    "dev": "TS_NODE_PROJECT=tsconfig.json ../../node_modules/.bin/medusa develop"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "^2.12.5",
+    "@medusajs/framework": "^2.12.5",
+    "@medusajs/medusa": "^2.12.5"
+  },
+  "devDependencies": {
+    "@medusajs/cli": "^2.12.5",
+    "@medusajs/test-utils": "^2.12.5",
+    "@types/node": "^25.0.9",
+    "typescript": "^5.9.3",
+    "ts-node": "^10.9.2",
+    "ajv": "^8.17.1"
+  }
+}
