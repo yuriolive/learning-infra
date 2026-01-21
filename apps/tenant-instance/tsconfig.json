@@ -10,15 +10,9 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "baseUrl": "."
   },
-  "include": [
-    "src",
-    "medusa-config.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".medusa"
-  ]
+  "include": ["src", "medusa-config.ts"],
+  "exclude": ["node_modules", "dist", ".medusa"]
 }
