@@ -11,6 +11,7 @@ const logger = createLogger({
 export class NeonProvider {
   private client: Api<unknown>;
   private projectId: string;
+  private defaultDatabase: string;
 
   constructor() {
     const apiKey = process.env.NEON_API_KEY;
@@ -28,6 +29,7 @@ export class NeonProvider {
       apiKey,
     });
     this.projectId = projectId;
+    this.defaultDatabase = this.inferDefaultDatabase();
   }
 
   /**
@@ -90,7 +92,7 @@ export class NeonProvider {
 
       // We need the password.
       // The `createProjectBranchRole` response contains the password.
-      const roleName = `user_${tenantId.replaceAll("-", "_")}`;
+      const roleName = this.getRoleNameForTenant(tenantId);
 
       const { data: roleData } = await this.client.createProjectBranchRole(
         this.projectId,
@@ -118,7 +120,7 @@ export class NeonProvider {
         // Use the password from reset
 
         const resetPassword = resetData.role.password!;
-        const databaseName = "neondb"; // Default database name
+        const databaseName = this.defaultDatabase;
         const hostname = endpoint.host;
         const connectionString = `postgres://${roleName}:${resetPassword}@${hostname}/${databaseName}?sslmode=require`;
 
@@ -129,7 +131,7 @@ export class NeonProvider {
         return connectionString;
       }
 
-      const databaseName = "neondb"; // Default database name
+      const databaseName = this.defaultDatabase;
 
       // Construct connection string
       // postgres://user:password@hostname/dbname?sslmode=require
@@ -146,5 +148,43 @@ export class NeonProvider {
       logger.error({ error, tenantId }, "Failed to provision Neon database");
       throw error;
     }
+  }
+
+  /**
+   * Infers the default database name from environment variables.
+   * Priority: NEON_DEFAULT_DB > DATABASE_URL > "neondb"
+   */
+  private inferDefaultDatabase(): string {
+    if (process.env.NEON_DEFAULT_DB) {
+      return process.env.NEON_DEFAULT_DB;
+    }
+
+    if (process.env.DATABASE_URL) {
+      try {
+        const url = new URL(process.env.DATABASE_URL);
+        const databaseName = url.pathname.slice(1);
+        if (databaseName) {
+          return databaseName;
+        }
+      } catch {
+        // Ignore invalid URL
+        logger.warn(
+          { tenantId: "default" },
+          "Failed to infer default database name from DATABASE_URL",
+        );
+      }
+    }
+
+    return "neondb";
+  }
+
+  /**
+   * Generates a consistent role name for a tenant.
+   * Centralizing this logic ensures consistency across different environments.
+   * @param tenantId - The unique identifier of the tenant
+   * @returns The generated role name
+   */
+  private getRoleNameForTenant(tenantId: string): string {
+    return `user_${tenantId.replaceAll("-", "_")}`;
   }
 }
