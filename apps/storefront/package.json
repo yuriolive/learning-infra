@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pages:build": "bun x @cloudflare/next-on-pages"
+    "pages:build": "mkdir -p node_modules && ln -sf ../../node_modules/next node_modules/next && bun x @cloudflare/next-on-pages"
   },
   "dependencies": {
     "@heroui/react": "^2.8.7",
