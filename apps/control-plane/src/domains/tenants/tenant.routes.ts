@@ -73,7 +73,7 @@ async function handleCollectionRequest(
     return response;
   }
   if (request.method === "GET") {
-    const response = await handleListTenants(service, logger);
+    const response = await handleListTenants(request, service, logger);
     return response;
   }
   return new Response("Not found", { status: 404 });
@@ -196,11 +196,33 @@ async function handleGetTenant(
  * ```
  */
 async function handleListTenants(
+  request: Request,
   service: TenantService,
   logger: Logger,
 ): Promise<Response> {
   try {
-    const tenants = await service.listTenants();
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get("limit");
+    const offsetParam = url.searchParams.get("offset");
+
+    const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined;
+    const offset = offsetParam ? Number.parseInt(offsetParam, 10) : undefined;
+
+    // Validate that limit and offset are numbers if they were provided
+    if (limit !== undefined && Number.isNaN(limit)) {
+      // ignore invalid limit or default
+    }
+    if (offset !== undefined && Number.isNaN(offset)) {
+      // ignore invalid offset or default
+    }
+
+    // Pass validated (or undefined if NaN check failed, though logic above is just a comment, let's make it real)
+    const validLimit =
+      limit !== undefined && !Number.isNaN(limit) ? limit : undefined;
+    const validOffset =
+      offset !== undefined && !Number.isNaN(offset) ? offset : undefined;
+
+    const tenants = await service.listTenants(validLimit, validOffset);
 
     return new Response(JSON.stringify(tenants), {
       status: 200,

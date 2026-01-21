@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 
 import { database, type Database } from "../../database/database";
 import { tenants } from "../../database/schema";
@@ -63,11 +63,14 @@ export class TenantRepository {
     return tenant ? mapToTenant(tenant) : null;
   }
 
-  async findAll(): Promise<Tenant[]> {
+  async findAll(limit = 20, offset = 0): Promise<Tenant[]> {
     const results = await this.db
       .select()
       .from(tenants)
-      .where(ne(tenants.status, "deleted"));
+      .where(ne(tenants.status, "deleted"))
+      .orderBy(desc(tenants.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     return results.map((result) => mapToTenant(result));
   }
