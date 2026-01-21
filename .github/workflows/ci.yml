@@ -91,6 +91,7 @@ jobs:
         run: bun run typecheck
 
   test:
+    needs: [build]
     name: Tests
     runs-on: ubuntu-latest
 
