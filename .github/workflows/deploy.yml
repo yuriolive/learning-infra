@@ -93,6 +93,7 @@ jobs:
             --max-instances=10
             --cpu=0.08
             --memory=128Mi
+            --concurrency=1 # 1 concurrent request is required for vCPU < 1
             --allow-unauthenticated
             --service-account=cloud-run-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           secrets: |
