@@ -121,14 +121,11 @@ jobs:
 
       - name: Run migrations using Docker image
         run: |
-          if [ -z "${{ env.IMAGE_NAME }}" ]; then
-            echo "Error: IMAGE_NAME is empty"
-            exit 1
-          fi
           docker run --rm \
             -e DATABASE_URL="${{ steps.get-db-url.outputs.db_url }}" \
+            -w /app/apps/control-plane \
             "${{ env.IMAGE_NAME }}" \
-            bun run --cwd /app/apps/control-plane db:migrate
+            bun dist/src/database/migrate.js
 
   deploy:
     name: Deploy to Cloud Run
