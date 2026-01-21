@@ -33,6 +33,10 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/control-plane/package.json ./apps/control-plane/
 COPY --from=builder /app/apps/control-plane/dist ./apps/control-plane/dist
 
+# Copy utils package for workspace dependency resolution
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+
 # Expose the port the app runs on
 EXPOSE 3000
 

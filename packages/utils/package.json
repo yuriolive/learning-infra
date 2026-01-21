@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./logger": "./src/logger.ts"
+    ".": "./dist/index.js",
+    "./logger": "./dist/logger.js"
   },
   "scripts": {
+    "build": "bun x tsc",
     "lint": "bun x eslint .",
     "lint:fix": "bun x eslint . --fix",
     "typecheck": "bun x tsc --noEmit"
