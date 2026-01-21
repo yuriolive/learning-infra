@@ -56,6 +56,8 @@ Configure these secrets in GitHub repository settings:
 | `GCP_ARTIFACT_REGISTRY_DOMAIN` | Artifact Registry domain for region                                  | `southamerica-east1-docker.pkg.dev`                                     |
 | `GCP_ARTIFACT_REGISTRY_REPO`   | Artifact Registry repository name                                    | `control-plane`                                                         |
 | `DATABASE_URL`                 | Neon PostgreSQL connection string for Control Plane metadata storage | `postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/control_plane`   |
+| `NEON_API_KEY`                 | Neon API key for tenant database provisioning                        | `neon_api_key_xxx`                                                      |
+| `NEON_PROJECT_ID`              | Neon Project ID for tenant database provisioning                     | `lucky-shape-123456`                                                    |
 
 ## Service Account Permissions
 
@@ -165,8 +167,11 @@ graph LR
 The workflow automatically injects:
 
 - `DATABASE_URL` - From GitHub secrets
+- `NEON_API_KEY` - From GitHub secrets
+- `NEON_PROJECT_ID` - From GitHub secrets
 - `NODE_ENV=production`
 - `PORT=3000`
+- `NEON_DEFAULT_DB=neondb` (configurable via `deploy.yml`)
 
 ### Health Checks
 

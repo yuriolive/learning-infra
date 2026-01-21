@@ -15,12 +15,16 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
   return {
     id: databaseTenant.id,
     name: databaseTenant.name,
-    domain: databaseTenant.domain ?? undefined,
+    merchantEmail: databaseTenant.merchantEmail,
+    subdomain: databaseTenant.subdomain ?? null,
+    databaseUrl: databaseTenant.databaseUrl ?? null,
+    apiUrl: databaseTenant.apiUrl ?? null,
     status: databaseTenant.status,
+    plan: databaseTenant.plan,
     createdAt: databaseTenant.createdAt,
     updatedAt: databaseTenant.updatedAt,
-    deletedAt: databaseTenant.deletedAt ?? undefined,
-    metadata: databaseTenant.metadata ?? undefined,
+    deletedAt: databaseTenant.deletedAt ?? null,
+    metadata: databaseTenant.metadata ?? null,
   };
 }
 
@@ -36,7 +40,9 @@ export class TenantRepository {
       .insert(tenants)
       .values({
         name: input.name,
-        domain: input.domain,
+        merchantEmail: input.merchantEmail,
+        subdomain: input.subdomain,
+        plan: input.plan,
         metadata: input.metadata,
       })
       .returning();
@@ -71,8 +77,13 @@ export class TenantRepository {
       .update(tenants)
       .set({
         ...(input.name !== undefined && { name: input.name }),
-        ...(input.domain !== undefined && { domain: input.domain }),
+        ...(input.subdomain !== undefined && { subdomain: input.subdomain }),
         ...(input.status !== undefined && { status: input.status }),
+        ...(input.plan !== undefined && { plan: input.plan }),
+        ...(input.databaseUrl !== undefined && {
+          databaseUrl: input.databaseUrl,
+        }),
+        ...(input.apiUrl !== undefined && { apiUrl: input.apiUrl }),
         ...(input.metadata !== undefined && { metadata: input.metadata }),
         updatedAt: new Date(),
       })
@@ -96,11 +107,13 @@ export class TenantRepository {
     return !!deleted;
   }
 
-  async findByDomain(domain: string): Promise<Tenant | null> {
+  async findBySubdomain(subdomain: string): Promise<Tenant | null> {
     const [tenant] = await this.db
       .select()
       .from(tenants)
-      .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));
+      .where(
+        and(eq(tenants.subdomain, subdomain), ne(tenants.status, "deleted")),
+      );
 
     return tenant ? mapToTenant(tenant) : null;
   }

@@ -99,6 +99,8 @@ After setup, you'll need these GitHub secrets:
 | `GCP_ARTIFACT_REGISTRY_REPO`   | `containers`                                                                                             |
 | `GCP_WIF_PROVIDER`             | `projects/[PROJECT_NUMBER]/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
 | `GCP_WIF_SERVICE_ACCOUNT`      | `github-actions-sa@vendin-store.iam.gserviceaccount.com`                                                 |
+| `NEON_API_KEY`                 | Your Neon API Key (stored in Secret Manager as `neon-api-key`)                                           |
+| `NEON_PROJECT_ID`              | Your Neon Project ID (stored in Secret Manager as `neon-project-id`)                                     |
 
 **Note**: The provider value will contain your GCP **Project Number** (e.g., `110781160918`) instead of the Project ID. This is normal.
 

@@ -2,26 +2,39 @@ import { z } from "zod";
 
 export const createTenantSchema = z.object({
   name: z.string().min(1).max(255),
-  domain: z
+  merchantEmail: z.string().email(),
+  subdomain: z
     .string()
     .regex(
       /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/,
       "Invalid domain format",
     )
     .optional(),
+  plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
 export const updateTenantSchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  domain: z
+  subdomain: z
     .string()
     .regex(
       /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/,
       "Invalid domain format",
     )
     .optional(),
-  status: z.enum(["active", "suspended", "deleted"]).optional(),
+  status: z
+    .enum([
+      "provisioning",
+      "active",
+      "suspended",
+      "deleted",
+      "provisioning_failed",
+    ])
+    .optional(),
+  plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
+  databaseUrl: z.string().optional(),
+  apiUrl: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 

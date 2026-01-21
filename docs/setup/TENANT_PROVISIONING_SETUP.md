@@ -32,10 +32,10 @@ Provisioning Flow:
 Before provisioning tenants, ensure all infrastructure is set up:
 
 - [ ] Control Plane deployed and accessible
-- [ ] Neon API credentials configured
+- [ ] Neon API credentials configured (`NEON_API_KEY`, `NEON_PROJECT_ID`)
 - [ ] Google Cloud Run API enabled
 - [ ] Cloudflare for SaaS configured
-- [ ] Secret Manager access configured
+- [ ] Secret Manager access configured (including `neon-api-key` and `neon-project-id`)
 - [ ] Tenant instance container image built and pushed
 
 ## Provisioning Workflow

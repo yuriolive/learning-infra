@@ -160,5 +160,7 @@ jobs:
             --service-account=cloud-run-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           secrets: |
             DATABASE_URL=control-plane-db-url:latest
+            NEON_API_KEY=neon-api-key:latest
+            NEON_PROJECT_ID=neon-project-id:latest
           env_vars: |
             NODE_ENV=production

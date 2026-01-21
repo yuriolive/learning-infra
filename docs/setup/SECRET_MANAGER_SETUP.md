@@ -29,6 +29,20 @@ echo -n "$DATABASE_URL" | \
     --project=vendin-store \
     --data-file=- \
     --labels=environment=production,service=control-plane
+
+# Create Neon API Key secret
+echo -n "your-neon-api-key" | \
+  gcloud secrets create neon-api-key \
+    --project=vendin-store \
+    --data-file=- \
+    --labels=environment=production,service=control-plane
+
+# Create Neon Project ID secret
+echo -n "your-neon-project-id" | \
+  gcloud secrets create neon-project-id \
+    --project=vendin-store \
+    --data-file=- \
+    --labels=environment=production,service=control-plane
 ```
 
 ## Step 3: Grant Access to Service Account
@@ -38,6 +52,16 @@ echo -n "$DATABASE_URL" | \
 SERVICE_ACCOUNT_EMAIL="github-actions-sa@vendin-store.iam.gserviceaccount.com"
 
 gcloud secrets add-iam-policy-binding control-plane-db-url \
+  --project=vendin-store \
+  --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding neon-api-key \
+  --project=vendin-store \
+  --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding neon-project-id \
   --project=vendin-store \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/secretmanager.secretAccessor"
