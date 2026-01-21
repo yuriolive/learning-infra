@@ -91,8 +91,8 @@ jobs:
           flags: |
             --min-instances=0
             --max-instances=10
-            --cpu=1
-            --memory=512Mi
+            --cpu=0.08
+            --memory=128Mi
             --allow-unauthenticated
             --service-account=cloud-run-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           secrets: |
