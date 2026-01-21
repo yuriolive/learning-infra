@@ -1,5 +1,5 @@
 {
-  "id": "cbd016f0-61f1-42db-949f-dfee4c8873a3",
+  "id": "2dbd3669-6197-4cce-991c-306670b9df21",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -21,8 +21,26 @@
           "primaryKey": false,
           "notNull": true
         },
-        "domain": {
-          "name": "domain",
+        "merchant_email": {
+          "name": "merchant_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subdomain": {
+          "name": "subdomain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "database_url": {
+          "name": "database_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "api_url": {
+          "name": "api_url",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -33,7 +51,15 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'active'"
+          "default": "'provisioning'"
+        },
+        "plan": {
+          "name": "plan",
+          "type": "tenant_plan",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'free'"
         },
         "created_at": {
           "name": "created_at",
@@ -66,12 +92,10 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "tenants_domain_unique": {
-          "name": "tenants_domain_unique",
+        "tenants_subdomain_unique": {
+          "name": "tenants_subdomain_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "domain"
-          ]
+          "columns": ["subdomain"]
         }
       },
       "policies": {},
@@ -80,13 +104,20 @@
     }
   },
   "enums": {
+    "public.tenant_plan": {
+      "name": "tenant_plan",
+      "schema": "public",
+      "values": ["free", "starter", "professional", "enterprise"]
+    },
     "public.tenant_status": {
       "name": "tenant_status",
       "schema": "public",
       "values": [
+        "provisioning",
         "active",
         "suspended",
-        "deleted"
+        "deleted",
+        "provisioning_failed"
       ]
     }
   },

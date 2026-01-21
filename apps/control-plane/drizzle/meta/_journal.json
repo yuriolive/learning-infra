@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1768830355528,
-      "tag": "0000_init_tenants",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1768910673168,
-      "tag": "0001_dashing_thaddeus_ross",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1768913162017,
-      "tag": "0002_remarkable_golden_guardian",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1769032500000,
-      "tag": "0003_rename_domain_to_subdomain",
+      "when": 1769036659647,
+      "tag": "0000_initial_schema",
       "breakpoints": true
     }
   ]
