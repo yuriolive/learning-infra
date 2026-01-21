@@ -88,12 +88,13 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.ARTIFACT_REGISTRY_DOMAIN }}/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY_REPO }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          # 1 concurrent request is required for vCPU < 1
           flags: |
             --min-instances=0
             --max-instances=10
             --cpu=0.08
             --memory=128Mi
-            --concurrency=1 # 1 concurrent request is required for vCPU < 1
+            --concurrency=1
             --allow-unauthenticated
             --service-account=cloud-run-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           secrets: |
