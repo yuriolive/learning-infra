@@ -29,7 +29,22 @@ gcloud iam service-accounts create cloud-run-sa \
   --display-name="Cloud Run SA"
 ```
 
-## Step 3: Grant Secret Access to Cloud Run
+## Step 3: Allow GitHub Actions to Use Cloud Run Service Account
+
+If you deploy with GitHub Actions and set `--service-account=cloud-run-sa@...`, the GitHub Actions service account must be allowed to impersonate the Cloud Run runtime service account.
+
+```bash
+# Allow GitHub Actions SA to act as Cloud Run SA
+export GITHUB_ACTIONS_SA_EMAIL="github-actions-sa@vendin-store.iam.gserviceaccount.com"
+export CLOUD_RUN_SA_EMAIL="cloud-run-sa@vendin-store.iam.gserviceaccount.com"
+
+gcloud iam service-accounts add-iam-policy-binding $CLOUD_RUN_SA_EMAIL \
+  --project=vendin-store \
+  --role="roles/iam.serviceAccountUser" \
+  --member="serviceAccount:$GITHUB_ACTIONS_SA_EMAIL"
+```
+
+## Step 4: Grant Secret Access to Cloud Run
 
 Cloud Run needs permission to access the secrets stored in Secret Manager (like `DATABASE_URL`).
 
@@ -42,11 +57,11 @@ gcloud projects add-iam-policy-binding vendin-store \
   --role="roles/secretmanager.secretAccessor"
 ```
 
-## Step 4: Configure Networking (Optional)
+## Step 5: Configure Networking (Optional)
 
 By default, Cloud Run services have direct internet access. If you need to restrict traffic or use a static outbound IP, you can configure a VPC connector. For most Neon/external database setups, this is not required.
 
-## Step 5: Deploy Control Plane Service (Manual)
+## Step 6: Deploy Control Plane Service (Manual)
 
 The Control Plane is a **shared service** that orchestrates tenant provisioning. Before using GitHub Actions, test manual deployment:
 
@@ -69,7 +84,7 @@ gcloud run deploy control-plane \
 
 **Note**: This is a single shared service that manages all tenants. It handles merchant signup, database creation, and tenant instance provisioning.
 
-## Step 6: Configure Custom Domain (Optional)
+## Step 7: Configure Custom Domain (Optional)
 
 ```bash
 # Map custom domain to Cloud Run service
@@ -85,7 +100,7 @@ gcloud run domain-mappings list \
   --region=southamerica-east1
 ```
 
-## Step 7: Set Up Monitoring and Logging
+## Step 8: Set Up Monitoring and Logging
 
 ```bash
 # Enable Cloud Run observability
@@ -96,7 +111,7 @@ gcloud run services update control-plane \
   --execution-environment=gen2
 ```
 
-## Step 8: Configure Health Checks (Optional)
+## Step 9: Configure Health Checks (Optional)
 
 If your application has custom health check endpoints:
 
@@ -111,7 +126,7 @@ gcloud run services update control-plane \
   --health-check-timeout=5
 ```
 
-## Step 9: Set Up Traffic Management
+## Step 10: Set Up Traffic Management
 
 ```bash
 # Configure traffic splitting (for gradual rollouts)
