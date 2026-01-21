@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "bun x tsc",
     "dev": "bun --watch src/index.ts",
-    "start": "bun run build && bun dist/index.js",
+    "start": "bun run build && bun dist/src/index.js",
     "lint": "bun x eslint .",
     "lint:fix": "bun x eslint . --fix",
     "test": "bun x vitest run",
