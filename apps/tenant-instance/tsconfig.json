@@ -10,7 +10,8 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "baseUrl": "."
   },
   "include": [
     "src",
