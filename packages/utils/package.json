@@ -6,16 +6,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "bun": "./src/index.ts",
-      "default": "./dist/index.js"
-    },
-    "./logger": {
-      "import": "./dist/logger.js",
-      "bun": "./src/logger.ts",
-      "default": "./dist/logger.js"
-    }
+    ".": "./dist/index.js",
+    "./logger": "./dist/logger.js"
   },
   "scripts": {
     "build": "bun x tsc",

@@ -146,6 +146,9 @@ jobs:
           psql ${{ env.DATABASE_URL }} -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
           psql ${{ env.DATABASE_URL }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 
+      - name: Build utils package
+        run: bun run build --filter=@vendin/utils
+
       - name: Run database migrations
         run: cd apps/control-plane && bun run db:migrate
         env:
