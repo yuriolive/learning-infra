@@ -1,0 +1,31 @@
+{
+    "name": "@vendin/medusa-plugin-custom",
+    "version": "1.0.0",
+    "description": "Standard private MedusaJS plugin structure",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./package.json": "./package.json",
+        "./workflows": "./dist/workflows/index.js",
+        "./modules/*": "./dist/modules/*/index.js",
+        "./admin": {
+            "import": "./dist/admin/index.mjs",
+            "require": "./dist/admin/index.js",
+            "default": "./dist/admin/index.js"
+        },
+        "./*": "./dist/*.js"
+    },
+    "scripts": {
+        "build": "medusa-plugin build",
+        "watch": "medusa-plugin build --watch",
+        "test": "vitest"
+    },
+    "peerDependencies": {
+        "@medusajs/medusa": "^2.0.0"
+    },
+    "devDependencies": {
+        "@medusajs/medusa": "^2.0.0",
+        "typescript": "^5.0.0",
+        "vitest": "^3.0.0"
+    }
+}

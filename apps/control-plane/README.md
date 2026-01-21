@@ -9,6 +9,7 @@ The Control Plane API provides RESTful endpoints for tenant management, includin
 ## API Endpoints
 
 ### Health Check
+
 - `GET /health` - Health check endpoint
 - `GET /` - Health check endpoint (alias)
 
@@ -24,13 +25,14 @@ The Control Plane API provides RESTful endpoints for tenant management, includin
 ## Request/Response Examples
 
 ### Create Tenant
+
 ```bash
 POST /api/tenants
 Content-Type: application/json
 
 {
   "name": "My Store",
-  "domain": "mystore",
+  "subdomain": "mystore",
   "metadata": {
     "customField": "value"
   }
@@ -38,11 +40,13 @@ Content-Type: application/json
 ```
 
 ### Get Tenant
+
 ```bash
 GET /api/tenants/{tenantId}
 ```
 
 ### Update Tenant
+
 ```bash
 PATCH /api/tenants/{tenantId}
 Content-Type: application/json
@@ -54,6 +58,7 @@ Content-Type: application/json
 ```
 
 ### Delete Tenant
+
 ```bash
 DELETE /api/tenants/{tenantId}
 ```
@@ -61,21 +66,26 @@ DELETE /api/tenants/{tenantId}
 ## Development
 
 ### Prerequisites
+
 - Bun runtime installed
 - PostgreSQL database (or Neon connection string)
 
 ### Environment Variables
-- `DATABASE_URL` - PostgreSQL connection string. 
+
+- `DATABASE_URL` - PostgreSQL connection string.
   - For local: `postgres://postgres:postgres@localhost:5432/control_plane`
   - For production: Use a Neon connection string (uses HTTP driver automatically).
 
 ### Local Database
+
 The project uses Docker Compose to run a local PostgreSQL instance.
+
 1. Run `docker-compose up -d` at the root.
 2. Ensure `DATABASE_URL` is set in `.env`.
 3. Push schema: `bun run db:push`.
 
 ### Running the Server
+
 ```bash
 bun dev
 ```
@@ -83,6 +93,7 @@ bun dev
 The server will start on `http://localhost:3000` (or the port specified in `PORT` environment variable).
 
 ### Database Operations
+
 ```bash
 # Generate migration files
 bun run db:generate
@@ -98,16 +109,19 @@ bun run db:studio
 ```
 
 ### Building
+
 ```bash
 bun run build
 ```
 
 ### Type Checking
+
 ```bash
 bun run typecheck
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 bun run test

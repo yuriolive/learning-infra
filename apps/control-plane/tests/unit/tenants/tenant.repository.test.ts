@@ -20,7 +20,7 @@ describe("TenantRepository", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
         metadata: { customField: "value" },
       };
 
@@ -29,7 +29,7 @@ describe("TenantRepository", () => {
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
       expect(tenant.merchantEmail).toBe("test@example.com");
-      expect(tenant.domain).toBe("teststore");
+      expect(tenant.subdomain).toBe("teststore");
       expect(tenant.status).toBe("provisioning");
       expect(tenant.metadata).toEqual({ customField: "value" });
       expect(tenant.createdAt).toBeInstanceOf(Date);
@@ -47,7 +47,7 @@ describe("TenantRepository", () => {
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
-      expect(tenant.domain).toBeNull();
+      expect(tenant.subdomain).toBeNull();
       expect(tenant.metadata).toBeNull();
       expect(tenant.status).toBe("provisioning");
     });
@@ -197,23 +197,23 @@ describe("TenantRepository", () => {
     });
   });
 
-  describe("findByDomain", () => {
-    it("should return tenant when domain matches", async () => {
+  describe("findBySubdomain", () => {
+    it("should return tenant when subdomain matches", async () => {
       const created = await repository.create({
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       });
 
-      const found = await repository.findByDomain("teststore");
+      const found = await repository.findBySubdomain("teststore");
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(created.id);
-      expect(found?.domain).toBe("teststore");
+      expect(found?.subdomain).toBe("teststore");
     });
 
-    it("should return null when domain not found", async () => {
-      const found = await repository.findByDomain("nonexistent");
+    it("should return null when subdomain not found", async () => {
+      const found = await repository.findBySubdomain("nonexistent");
 
       expect(found).toBeNull();
     });
@@ -222,12 +222,12 @@ describe("TenantRepository", () => {
       const created = await repository.create({
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       });
 
       await repository.softDelete(created.id);
 
-      const found = await repository.findByDomain("teststore");
+      const found = await repository.findBySubdomain("teststore");
 
       expect(found).toBeNull();
     });

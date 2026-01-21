@@ -16,7 +16,7 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     id: databaseTenant.id,
     name: databaseTenant.name,
     merchantEmail: databaseTenant.merchantEmail,
-    domain: databaseTenant.domain ?? null,
+    subdomain: databaseTenant.subdomain ?? null,
     databaseUrl: databaseTenant.databaseUrl ?? null,
     apiUrl: databaseTenant.apiUrl ?? null,
     status: databaseTenant.status,
@@ -41,7 +41,7 @@ export class TenantRepository {
       .values({
         name: input.name,
         merchantEmail: input.merchantEmail,
-        domain: input.domain,
+        subdomain: input.subdomain,
         plan: input.plan,
         metadata: input.metadata,
       })
@@ -77,7 +77,7 @@ export class TenantRepository {
       .update(tenants)
       .set({
         ...(input.name !== undefined && { name: input.name }),
-        ...(input.domain !== undefined && { domain: input.domain }),
+        ...(input.subdomain !== undefined && { subdomain: input.subdomain }),
         ...(input.status !== undefined && { status: input.status }),
         ...(input.plan !== undefined && { plan: input.plan }),
         ...(input.databaseUrl !== undefined && {
@@ -107,11 +107,13 @@ export class TenantRepository {
     return !!deleted;
   }
 
-  async findByDomain(domain: string): Promise<Tenant | null> {
+  async findBySubdomain(subdomain: string): Promise<Tenant | null> {
     const [tenant] = await this.db
       .select()
       .from(tenants)
-      .where(and(eq(tenants.domain, domain), ne(tenants.status, "deleted")));
+      .where(
+        and(eq(tenants.subdomain, subdomain), ne(tenants.status, "deleted")),
+      );
 
     return tenant ? mapToTenant(tenant) : null;
   }

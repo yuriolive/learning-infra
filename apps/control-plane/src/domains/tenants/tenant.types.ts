@@ -2,7 +2,7 @@ export interface Tenant {
   id: string;
   name: string;
   merchantEmail: string;
-  domain: string | null;
+  subdomain: string | null;
   databaseUrl: string | null;
   apiUrl: string | null;
   status: TenantStatus;
@@ -25,14 +25,14 @@ export type TenantPlan = "free" | "starter" | "professional" | "enterprise";
 export interface CreateTenantInput {
   name: string;
   merchantEmail: string;
-  domain?: string | undefined;
+  subdomain?: string | undefined;
   plan?: TenantPlan | undefined;
   metadata?: Record<string, unknown> | undefined;
 }
 
 export interface UpdateTenantInput {
   name?: string | undefined;
-  domain?: string | undefined;
+  subdomain?: string | undefined;
   status?: TenantStatus | undefined;
   plan?: TenantPlan | undefined;
   databaseUrl?: string | undefined;

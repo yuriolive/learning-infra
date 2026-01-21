@@ -34,10 +34,10 @@ export class TenantService {
   }
 
   async createTenant(input: CreateTenantInput): Promise<Tenant> {
-    if (input.domain) {
-      const existing = await this.repository.findByDomain(input.domain);
+    if (input.subdomain) {
+      const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing) {
-        throw new Error("Domain already in use");
+        throw new Error("Subdomain already in use");
       }
     }
 
@@ -103,10 +103,10 @@ export class TenantService {
   }
 
   async updateTenant(id: string, input: UpdateTenantInput): Promise<Tenant> {
-    if (input.domain) {
-      const existing = await this.repository.findByDomain(input.domain);
+    if (input.subdomain) {
+      const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing && existing.id !== id) {
-        throw new Error("Domain already in use");
+        throw new Error("Subdomain already in use");
       }
     }
 

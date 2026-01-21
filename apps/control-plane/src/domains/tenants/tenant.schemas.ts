@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createTenantSchema = z.object({
   name: z.string().min(1).max(255),
   merchantEmail: z.string().email(),
-  domain: z
+  subdomain: z
     .string()
     .regex(
       /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/,
@@ -16,7 +16,7 @@ export const createTenantSchema = z.object({
 
 export const updateTenantSchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  domain: z
+  subdomain: z
     .string()
     .regex(
       /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/,

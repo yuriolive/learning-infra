@@ -28,7 +28,7 @@ describe("TenantRoutes", () => {
         body: JSON.stringify({
           name: "Test Store",
           merchantEmail: "test@example.com",
-          domain: "teststore",
+          subdomain: "teststore",
         }),
       });
 
@@ -38,7 +38,7 @@ describe("TenantRoutes", () => {
       expect(response.status).toBe(201);
       expect(data.id).toBeDefined();
       expect(data.name).toBe("Test Store");
-      expect(data.domain).toBe("teststore");
+      expect(data.subdomain).toBe("teststore");
       expect(data.status).toBe("provisioning");
     });
 
@@ -63,7 +63,7 @@ describe("TenantRoutes", () => {
       await service.createTenant({
         name: "Existing Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       });
 
       const request = new Request("http://localhost:3000/api/tenants", {
@@ -72,7 +72,7 @@ describe("TenantRoutes", () => {
         body: JSON.stringify({
           name: "New Store",
           merchantEmail: "new@example.com",
-          domain: "teststore", // Duplicate domain
+          subdomain: "teststore", // Duplicate domain
         }),
       });
 
@@ -80,7 +80,7 @@ describe("TenantRoutes", () => {
       const data = await response.json();
 
       expect(response.status).toBe(409);
-      expect(data.error).toBe("Domain already in use");
+      expect(data.error).toBe("Subdomain already in use");
     });
   });
 

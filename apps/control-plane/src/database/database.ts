@@ -9,7 +9,9 @@ import ws from "ws";
 
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString =
+  process.env.DATABASE_URL ??
+  (process.env.NODE_ENV === "test" ? "postgres://mock" : "");
 
 if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set");

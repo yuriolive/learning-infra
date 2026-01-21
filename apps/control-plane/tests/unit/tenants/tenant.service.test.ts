@@ -2,6 +2,15 @@ import { randomUUID } from "node:crypto";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Mock NeonProvider
+vi.mock("../../../src/providers/neon/neon.client", () => {
+  return {
+    NeonProvider: vi.fn().mockImplementation(() => ({
+      createTenantDatabase: vi.fn().mockResolvedValue("postgres://mock-db-url"),
+    })),
+  };
+});
+
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
@@ -11,15 +20,6 @@ import type {
   CreateTenantInput,
   UpdateTenantInput,
 } from "../../../src/domains/tenants/tenant.types";
-
-// Mock NeonProvider
-vi.mock("../../../src/providers/neon/neon.client", () => {
-  return {
-    NeonProvider: vi.fn().mockImplementation(() => ({
-      createTenantDatabase: vi.fn().mockResolvedValue("postgres://mock-db-url"),
-    })),
-  };
-});
 
 describe("TenantService", () => {
   let service: TenantService;
@@ -41,14 +41,14 @@ describe("TenantService", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       };
 
       const tenant = await service.createTenant(input);
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
-      expect(tenant.domain).toBe("teststore");
+      expect(tenant.subdomain).toBe("teststore");
       expect(tenant.status).toBe("provisioning");
     });
 
@@ -56,7 +56,7 @@ describe("TenantService", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       };
 
       const tenant = await service.createTenant(input);
@@ -84,7 +84,7 @@ describe("TenantService", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       };
 
       await expect(service.createTenant(input)).rejects.toThrow(
@@ -103,13 +103,13 @@ describe("TenantService", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       };
 
       await service.createTenant(input);
 
       await expect(service.createTenant(input)).rejects.toThrow(
-        "Domain already in use",
+        "Subdomain already in use",
       );
     });
 
@@ -123,7 +123,7 @@ describe("TenantService", () => {
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
-      expect(tenant.domain).toBeNull();
+      expect(tenant.subdomain).toBeNull();
     });
   });
 
@@ -180,20 +180,20 @@ describe("TenantService", () => {
       await service.createTenant({
         name: "Store 1",
         merchantEmail: "store1@example.com",
-        domain: "store1",
+        subdomain: "store1",
       });
       const store2 = await service.createTenant({
         name: "Store 2",
         merchantEmail: "store2@example.com",
-        domain: "store2",
+        subdomain: "store2",
       });
 
       const input: UpdateTenantInput = {
-        domain: "store1",
+        subdomain: "store1",
       };
 
       await expect(service.updateTenant(store2.id, input)).rejects.toThrow(
-        "Domain already in use",
+        "Subdomain already in use",
       );
     });
 
@@ -201,18 +201,18 @@ describe("TenantService", () => {
       const created = await service.createTenant({
         name: "Test Store",
         merchantEmail: "test@example.com",
-        domain: "teststore",
+        subdomain: "teststore",
       });
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
-        domain: "teststore", // Same domain
+        subdomain: "teststore", // Same domain
       };
 
       const updated = await service.updateTenant(created.id, input);
 
       expect(updated.name).toBe("Updated Name");
-      expect(updated.domain).toBe("teststore");
+      expect(updated.subdomain).toBe("teststore");
     });
   });
 

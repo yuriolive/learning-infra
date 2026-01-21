@@ -107,7 +107,7 @@ async function handleResourceRequest(
 
 /**
  * Creates a new tenant in the system.
- * Creates a tenant with the provided name, domain, and optional metadata.
+ * Creates a tenant with the provided name, subdomain, and optional metadata.
  * Validates input using Zod schema and returns the created tenant with generated ID and timestamps.
  * @param request - HTTP request containing tenant data in JSON body
  * @param service - Tenant service instance for business logic
@@ -119,7 +119,7 @@ async function handleResourceRequest(
  * POST /api/tenants
  * {
  *   "name": "My Store",
- *   "domain": "mystore",
+ *   "subdomain": "mystore",
  *   "metadata": { "customField": "value" }
  * }
  * ```
@@ -216,7 +216,7 @@ async function handleListTenants(
 
 /**
  * Updates an existing tenant.
- * Performs a partial update of tenant properties. Supports updating name, domain, status, and metadata.
+ * Performs a partial update of tenant properties. Supports updating name, subdomain, status, and metadata.
  * Validates both tenant ID format and update payload before processing.
  * @param tenantId - UUID of the tenant to update
  * @param request - HTTP request containing update data in JSON body
@@ -333,7 +333,7 @@ function handleError(error: unknown, logger: Logger): Response {
         },
       });
     }
-    if (error.message === "Domain already in use") {
+    if (error.message === "Subdomain already in use") {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 409,
         headers: {

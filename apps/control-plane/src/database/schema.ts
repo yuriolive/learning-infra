@@ -26,7 +26,7 @@ export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   merchantEmail: text("merchant_email").notNull(),
-  domain: text("domain").unique(), // This is the subdomain
+  subdomain: text("subdomain").unique(), // This is the tenant's unique subdomain (e.g., "my-store")
   databaseUrl: text("database_url"),
   apiUrl: text("api_url"),
   status: tenantStatusEnum("status").notNull().default("provisioning"),
