@@ -80,6 +80,7 @@ jobs:
             --cpu=1
             --memory=512Mi
             --allow-unauthenticated
+            --service-account=cloud-run-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           secrets: |
             DATABASE_URL=control-plane-db-url:latest
           env_vars: |

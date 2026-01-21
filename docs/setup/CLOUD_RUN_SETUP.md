@@ -35,7 +35,7 @@ Cloud Run needs permission to access the secrets stored in Secret Manager (like 
 
 ```bash
 # Grant Cloud Run service account access to Secret Manager
-CLOUD_RUN_SA_EMAIL="cloud-run-sa@vendin-store.iam.gserviceaccount.com"
+export CLOUD_RUN_SA_EMAIL="cloud-run-sa@vendin-store.iam.gserviceaccount.com"
 
 gcloud projects add-iam-policy-binding vendin-store \
   --member="serviceAccount:$CLOUD_RUN_SA_EMAIL" \
@@ -137,7 +137,7 @@ Before implementing automated provisioning, you can test tenant instance deploym
 
 ```bash
 # Example: Deploy a test tenant instance
-TENANT_ID="test-tenant-001"
+export TENANT_ID="test-tenant-001"
 
 gcloud run deploy tenant-${TENANT_ID} \
   --project=vendin-store \
@@ -220,7 +220,7 @@ Your deployment workflow should look like this:
       --memory=512Mi
       --allow-unauthenticated
     secrets: |
-      DATABASE_URL=projects/vendin-store/secrets/control-plane-db-url/versions/latest:ref
+      DATABASE_URL=control-plane-db-url:latest
     env_vars: |
       NODE_ENV=production
       PORT=3000
