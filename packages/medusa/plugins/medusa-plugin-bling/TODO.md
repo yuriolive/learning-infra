@@ -56,6 +56,30 @@ async handleOAuthCallback(code: string): Promise<BlingConfig>
 
 Create a separate `retrieve-order-step` before `syncOrderToBlingStep` for better modularity and testability.
 
+### Use Transform in Sync Order Workflow
+
+**Priority: Low**  
+**File:** `src/workflows/sync-order.ts`
+
+Use `transform` to explicitly map the output of `syncOrderToBlingStep` to the input of `updateOrderMetadataStep` for better data flow clarity and decoupling:
+
+```typescript
+import { transform } from "@medusajs/framework/workflows-sdk";
+
+const metadataInput = transform(
+  { orderId: input.orderId, syncResult: syncResult },
+  (data) => ({
+    orderId: data.orderId,
+    blingId: data.syncResult.blingId,
+    payload: data.syncResult.payload,
+    response: data.syncResult.response,
+    warnings: data.syncResult.warnings,
+  }),
+);
+
+updateOrderMetadataStep(metadataInput);
+```
+
 ## 🌐 Internationalization
 
 ### Dynamic Currency Conversion
@@ -72,6 +96,8 @@ const divisor = getCurrencyDivisor(order.currency_code); // 100 for BRL, 1 for J
 const finalUnitPrice = unitPrice / divisor;
 ```
 
+**Note:** Currently has TODO comment explaining the conversion. Consider adding a more detailed comment explaining that Medusa stores amounts in cents (smallest unit) while Bling API expects float values in BRL.
+
 ## 📦 Workflows
 
 ### Webhook Processing Workflow
@@ -85,6 +111,8 @@ Create a dedicated `process-bling-webhook-workflow` to handle webhook events:
 - Trigger appropriate workflows (inventory sync, order update)
 - Improve error handling and traceability
 - Keep route handler thin (just trigger workflow)
+
+**Status:** Currently has TODO comment and basic structure, but workflow not yet implemented.
 
 Example:
 
@@ -170,6 +198,31 @@ Added descriptive comment for `process.exit()` usage.
 Pagination now implemented with configurable limit. Consider adding to `preferences.products.fetch_limit` for user control.
 
 ---
+
+## Review Comments Status
+
+### ✅ Handled
+
+- Dependencies pinned to specific versions (`^2.13.0`)
+- `generate_nf` typo fixed to `generate_nfe`
+- `inscricaoEstadual` now configurable via `default_state_registration`
+- `situacao` now configurable via `default_status`
+- Compensation logic implemented in `updateOrderMetadataStep`
+- Explicit inventory level checks (no longer using try/catch for flow control)
+- Pagination implemented in `fetchBlingProductsStep`
+
+### ⚠️ Partially Handled
+
+- Webhook route has TODO but workflow not yet created
+- Price conversion has TODO comment but could use clearer explanation
+
+### ❌ Not Handled (See sections above)
+
+- Service constructor `@ts-ignore` (Architecture Improvements)
+- OAuth callback return type (Architecture Improvements)
+- Order retrieval step separation (Architecture Improvements)
+- Transform usage in sync-order workflow (Workflows)
+- Type assertions in inventory step (Type Safety)
 
 ## Legend
 
