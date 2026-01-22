@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "*.config.ts",
+    "*.config.js",
+    "medusa-config.ts"
+  ]
+}

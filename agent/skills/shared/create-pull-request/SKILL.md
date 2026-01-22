@@ -10,8 +10,8 @@ Creates a GitHub pull request using the project's PR template and standard workf
 ## Project Documentation References
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@git-conventions.mdc](../../.cursor/rules/shared/git/git-conventions.mdc)** - Conventional commits and git workflows
-- **[@github-automation.mdc](../../.cursor/rules/shared/git/github-automation.mdc)** - GitHub project automation
+- **[@git-conventions.mdc](../../.agent/rules/shared/git/git-conventions.mdc)** - Conventional commits and git workflows
+- **[@github-automation.mdc](../../.agent/rules/shared/git/github-automation.mdc)** - GitHub project automation
 
 ## Workflow
 

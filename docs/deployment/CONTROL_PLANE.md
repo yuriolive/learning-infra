@@ -232,8 +232,8 @@ gcloud projects get-iam-policy PROJECT_ID \
 
 ## Related Documentation
 
-- [Control Plane API Development](../../.cursor/rules/apps/control-plane/api-development.mdc)
-- [Control Plane Domain Structure](../../.cursor/rules/apps/control-plane/domain-structure.mdc)
+- [Control Plane API Development](../../.agent/rules/apps/control-plane/api-development.mdc)
+- [Control Plane Domain Structure](../../.agent/rules/apps/control-plane/domain-structure.mdc)
 - [Test Architecture](../test/README.md)
-- [Database Infrastructure](../../.cursor/rules/infrastructure/database.mdc)
-- [Cloud Run Infrastructure](../../.cursor/rules/infrastructure/cloud-run.mdc)
+- [Database Infrastructure](../../.agent/rules/infrastructure/database.mdc)
+- [Cloud Run Infrastructure](../../.agent/rules/infrastructure/cloud-run.mdc)

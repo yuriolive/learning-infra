@@ -5,7 +5,7 @@ This directory contains Cursor AI rules that guide development practices for the
 ## Directory Structure
 
 ```
-.cursor/rules/
+.agent/rules/
 ├── apps/                       # Application-specific rules
 │   ├── control-plane/          # Control Plane (orchestrator) rules
 │   │   ├── provisioning.mdc   # Tenant provisioning patterns
@@ -53,7 +53,7 @@ Cursor AI will automatically apply these rules based on the file paths and conte
 1. **Shared rules** apply to all files in the project
 2. **App rules** apply specifically when working on application code (apps/control-plane/, apps/storefront/, etc.)
 3. **Infrastructure rules** apply when working on infrastructure code or configuration
-4. **Package rules** apply when working on shared packages (packages/*)
+4. **Package rules** apply when working on shared packages (packages/\*)
 
 ## Adding New Rules
 
