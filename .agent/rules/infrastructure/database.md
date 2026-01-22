@@ -1,0 +1,46 @@
+---
+description: Neon database provisioning patterns and management.
+globs: apps/control-plane/**/*
+---
+# Database Infrastructure Rules
+
+## Database Isolation (Non-Negotiable)
+
+- **NEVER** share databases between tenants
+- Each tenant **MUST** have a dedicated Neon PostgreSQL database
+- Physical isolation required, not logical separation
+
+## Database Provisioning Pattern
+
+The Control Plane creates databases programmatically via Neon API.
+
+See [docs/examples/database-provisioning.ts](../../docs/examples/database-provisioning.ts) for provisioning patterns.
+
+## Connection String Management
+
+- Store connection strings in GCP Secret Manager
+- Secret naming: `tenant-{tenantId}-db-url`
+- Grant access to tenant instance service account
+- Never log or expose connection strings
+
+## Database Configuration
+
+- **Provider**: Neon Serverless PostgreSQL
+- **Project**: Single Neon project for all tenant databases
+- **Isolation**: One database per tenant (physical separation)
+- **Region**: Configure per tenant requirements
+- **Backup**: Automated daily backups via Neon
+
+## Connection Pattern
+
+Tenant instances connect to their isolated database. See [docs/examples/database-provisioning.ts](../../docs/examples/database-provisioning.ts) for connection patterns.
+
+## Cleanup
+
+When deleting a tenant, delete database via Neon API and remove secrets. See [docs/examples/database-provisioning.ts](../../docs/examples/database-provisioning.ts) for cleanup patterns.
+
+## References
+
+- **Tenant isolation**: See [AGENTS.md](../../AGENTS.md#key-constraints)
+- **Secret management**: See [@secrets.md](./secrets.md)
+- **Code examples**: See [docs/examples/](../../docs/examples/)

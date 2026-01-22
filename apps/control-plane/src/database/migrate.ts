@@ -18,17 +18,34 @@ if (!connectionString) {
 
 logger.info("Running migrations...");
 
-const sql = postgres(connectionString, { max: 1 });
+// Configure connection with timeouts to prevent hanging
+const sql = postgres(connectionString, {
+  max: 1,
+  idle_timeout: 20, // Close idle connections after 20 seconds
+  connect_timeout: 10, // Fail fast if connection takes > 10 seconds
+});
 const database = drizzle(sql);
 
 const migrationsFolder = path.resolve(process.cwd(), "drizzle");
 
+let exitCode = 0;
+
 try {
   await migrate(database, { migrationsFolder });
   logger.info("Migrations completed successfully");
-  await sql.end();
 } catch (error) {
   logger.error({ error }, "Migration failed");
-  await sql.end();
-  throw error;
+  exitCode = 1;
+} finally {
+  // Always close the connection, even if migration throws
+  try {
+    await sql.end();
+  } catch (endError) {
+    logger.error({ error: endError }, "Failed to close database connection");
+    exitCode = 1;
+  }
 }
+
+// Explicitly exit to ensure process terminates
+// eslint-disable-next-line unicorn/no-process-exit -- This is a CLI script that needs to signal success or failure to the caller
+process.exit(exitCode);

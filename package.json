@@ -6,14 +6,15 @@
   "packageManager": "bun@1.2.20",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "packages/*/plugins/*"
   ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "typecheck": "turbo run typecheck",
