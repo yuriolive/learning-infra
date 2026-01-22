@@ -1,0 +1,47 @@
+terraform {
+  required_version = ">= 1.0"
+
+  # Backend configuration (Production Ready)
+  # Uncomment and configure with your bucket details
+  # backend "gcs" {
+  #   bucket  = "vendin-terraform-state"
+  #   prefix  = "terraform/state"
+  # }
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
+    neon = {
+      source  = "kislerdm/neon"
+      version = "~> 0.1"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
+provider "neon" {
+  api_key = var.neon_api_key
+}

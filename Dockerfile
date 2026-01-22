@@ -9,7 +9,6 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/utils/package.json ./packages/utils/
 COPY apps/control-plane/package.json ./apps/control-plane/
 COPY apps/storefront/package.json ./apps/storefront/
-COPY apps/tenant-instance/package.json ./apps/tenant-instance/
 
 # Install dependencies including workspaces
 RUN bun install --frozen-lockfile
