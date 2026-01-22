@@ -108,13 +108,47 @@ describe("TenantRepository", () => {
       const tenants = await repository.findAll();
 
       expect(tenants).toHaveLength(2);
-      expect(tenants.map((t) => t.name)).toEqual(["Store 1", "Store 2"]);
+      // eslint-disable-next-line unicorn/no-array-sort
+      expect(tenants.map((t) => t.name).sort()).toEqual(["Store 1", "Store 2"]);
     });
 
     it("should return empty array when no tenants exist", async () => {
       const tenants = await repository.findAll();
 
       expect(tenants).toEqual([]);
+    });
+
+    it("should respect limit and offset", async () => {
+      // Create 5 tenants
+      const createdTenants = [];
+      for (let index = 0; index < 5; index++) {
+        const tenant = await repository.create({
+          name: `Store ${index}`,
+          merchantEmail: `store${index}@example.com`,
+        });
+        createdTenants.push(tenant);
+      }
+      // Reverse the array to match the descending order of createdAt
+      createdTenants.reverse();
+
+      // Test limit
+      const limited = await repository.findAll(2);
+      expect(limited).toHaveLength(2);
+      expect(limited.map((t) => t.id)).toEqual(
+        createdTenants.slice(0, 2).map((t) => t.id),
+      );
+
+      // Test offset
+      const offset = await repository.findAll(2, 2);
+      expect(offset).toHaveLength(2);
+      expect(offset.map((t) => t.id)).toEqual(
+        createdTenants.slice(2, 4).map((t) => t.id),
+      );
+
+      // Test default limit (20) - should return all 5
+      const all = await repository.findAll();
+      expect(all).toHaveLength(5);
+      expect(all.map((t) => t.id)).toEqual(createdTenants.map((t) => t.id));
     });
   });
 

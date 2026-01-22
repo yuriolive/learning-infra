@@ -256,9 +256,9 @@ describe("TenantService", () => {
 
       expect(tenants).toHaveLength(3);
       expect(tenants.map((t) => t.name)).toEqual([
-        "Store 1",
-        "Store 2",
         "Store 3",
+        "Store 2",
+        "Store 1",
       ]);
     });
 

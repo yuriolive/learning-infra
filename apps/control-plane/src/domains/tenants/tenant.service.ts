@@ -125,8 +125,8 @@ export class TenantService {
     // TODO: Trigger resource cleanup (database, etc.)
   }
 
-  async listTenants(): Promise<Tenant[]> {
-    const tenants = await this.repository.findAll();
+  async listTenants(limit?: number, offset?: number): Promise<Tenant[]> {
+    const tenants = await this.repository.findAll(limit, offset);
     return tenants;
   }
 }

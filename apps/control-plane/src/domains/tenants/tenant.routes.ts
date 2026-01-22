@@ -73,7 +73,7 @@ async function handleCollectionRequest(
     return response;
   }
   if (request.method === "GET") {
-    const response = await handleListTenants(service, logger);
+    const response = await handleListTenants(request, service, logger);
     return response;
   }
   return new Response("Not found", { status: 404 });
@@ -196,11 +196,42 @@ async function handleGetTenant(
  * ```
  */
 async function handleListTenants(
+  request: Request,
   service: TenantService,
   logger: Logger,
 ): Promise<Response> {
   try {
-    const tenants = await service.listTenants();
+    const url = new URL(request.url);
+    const limitParameter = url.searchParams.get("limit");
+    const offsetParameter = url.searchParams.get("offset");
+
+    const limit =
+      limitParameter == null ? undefined : Number.parseInt(limitParameter, 10);
+    const offset =
+      offsetParameter == null
+        ? undefined
+        : Number.parseInt(offsetParameter, 10);
+
+    if (
+      (limitParameter != null && (Number.isNaN(limit) || (limit ?? 0) < 0)) ||
+      (offsetParameter != null && (Number.isNaN(offset) || (offset ?? 0) < 0))
+    ) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Invalid 'limit' or 'offset' parameter. They must be non-negative numbers.",
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
+      );
+    }
+
+    const tenants = await service.listTenants(limit, offset);
 
     return new Response(JSON.stringify(tenants), {
       status: 200,

@@ -33,7 +33,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(201);
       expect(data.id).toBeDefined();
@@ -52,7 +52,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(400);
       expect(data.error).toBe("Validation error");
@@ -77,7 +77,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(409);
       expect(data.error).toBe("Subdomain already in use");
@@ -100,7 +100,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data).toHaveLength(2);
@@ -112,10 +112,74 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data).toEqual([]);
+    });
+
+    it("should handle pagination parameters", async () => {
+      // Create 5 tenants
+      for (let index = 0; index < 5; index++) {
+        await service.createTenant({
+          name: `Store ${index}`,
+          merchantEmail: `store${index}@example.com`,
+        });
+      }
+
+      // Test limit
+      let request = new Request("http://localhost:3000/api/tenants?limit=2", {
+        method: "GET",
+      });
+      let response = await routes.handleRequest(request);
+      let data = (await response.json()) as any;
+      expect(response.status).toBe(200);
+      expect(data).toHaveLength(2);
+
+      // Test offset
+      request = new Request(
+        "http://localhost:3000/api/tenants?limit=2&offset=2",
+        {
+          method: "GET",
+        },
+      );
+      response = await routes.handleRequest(request);
+      data = (await response.json()) as any;
+      expect(response.status).toBe(200);
+      expect(data).toHaveLength(2);
+    });
+
+    it("should return 400 for invalid pagination parameters", async () => {
+      // Negative limit
+      let request = new Request("http://localhost:3000/api/tenants?limit=-1", {
+        method: "GET",
+      });
+      let response = await routes.handleRequest(request);
+      let data = (await response.json()) as any;
+      expect(response.status).toBe(400);
+      expect(data.error).toBeDefined();
+
+      // Non-numeric limit
+      request = new Request("http://localhost:3000/api/tenants?limit=abc", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      data = (await response.json()) as any;
+      expect(response.status).toBe(400);
+
+      // Negative offset
+      request = new Request("http://localhost:3000/api/tenants?offset=-1", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      expect(response.status).toBe(400);
+
+      // Empty limit string (tests the null check fix)
+      request = new Request("http://localhost:3000/api/tenants?limit=", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      expect(response.status).toBe(400);
     });
   });
 
@@ -134,7 +198,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data.id).toBe(created.id);
@@ -150,7 +214,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(404);
       expect(data.error).toBe("Tenant not found");
@@ -165,7 +229,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(400);
       expect(data.error).toBe("Validation error");
@@ -192,7 +256,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data.name).toBe("Updated Name");
@@ -211,7 +275,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(404);
       expect(data.error).toBe("Tenant not found");
@@ -233,7 +297,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
@@ -248,7 +312,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(404);
       expect(data.error).toBe("Tenant not found");
