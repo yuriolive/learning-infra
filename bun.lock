@@ -129,6 +129,7 @@
   },
   "trustedDependencies": [
     "sharp",
+    "@medusajs/cli",
     "unrs-resolver",
   ],
   "overrides": {
