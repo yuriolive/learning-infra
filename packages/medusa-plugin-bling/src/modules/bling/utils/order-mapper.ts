@@ -1,9 +1,14 @@
-import { OrderDTO } from "@medusajs/types";
-import { BlingSyncPreferences } from "../../../models/bling-config.js";
-import { isValidCNPJ, isValidCPF, sanitizeDocument } from "./document-validation.js";
-import { OrderSyncOptions } from "../types.js";
+import {
+  isValidCNPJ,
+  isValidCPF,
+  sanitizeDocument,
+} from "./document-validation.js";
 
-export type BlingOrderPayload = {
+import type { BlingSyncPreferences } from "../../../models/bling-config.js";
+import type { OrderSyncOptions } from "../types/index.js";
+import type { OrderDTO } from "@medusajs/types";
+
+export interface BlingOrderPayload {
   numeroPedidoLoja: string;
   data: string;
   situacao: string;
@@ -58,23 +63,27 @@ export type BlingOrderPayload = {
     obs?: string;
   }>;
   numero?: number;
-};
+}
 
 export class BlingOrderMapper {
   static mapToBlingPayload(
     order: OrderDTO,
     preferences: BlingSyncPreferences,
     options: OrderSyncOptions,
-    warnings: string[]
+    warnings: string[],
   ): BlingOrderPayload {
     const shippingAddress = order.shipping_address ?? order.billing_address;
     if (!shippingAddress) {
-      throw new Error("Pedido sem endereço. Endereço de entrega ou faturamento é obrigatório.");
+      throw new Error(
+        "Pedido sem endereço. Endereço de entrega ou faturamento é obrigatório.",
+      );
     }
 
     const document = this.extractDocument(order, shippingAddress);
     if (!document) {
-      throw new Error("CPF ou CNPJ obrigatório para sincronizar o pedido com o Bling.");
+      throw new Error(
+        "CPF ou CNPJ obrigatório para sincronizar o pedido com o Bling.",
+      );
     }
 
     const documentDigits = sanitizeDocument(document);
@@ -87,15 +96,20 @@ export class BlingOrderMapper {
     }
 
     if (!shippingAddress.address_1) {
-      throw new Error("Endereço (logradouro) é obrigatório para sincronizar o pedido.");
+      throw new Error(
+        "Endereço (logradouro) é obrigatório para sincronizar o pedido.",
+      );
     }
 
     const itemsPayload = this.buildItemsPayload(order.items ?? [], warnings);
     if (itemsPayload.length === 0) {
-      throw new Error("Nenhum item do pedido possui SKU ou ID associado no Bling.");
+      throw new Error(
+        "Nenhum item do pedido possui SKU ou ID associado no Bling.",
+      );
     }
 
-    const addressMetadata = (shippingAddress.metadata as Record<string, any>) ?? {};
+    const addressMetadata =
+      (shippingAddress.metadata as Record<string, any>) ?? {};
     const orderMetadata = (order.metadata as Record<string, any>) ?? {};
 
     const nomeCliente = this.composeCustomerName(order);
@@ -103,20 +117,20 @@ export class BlingOrderMapper {
       shippingAddress.phone,
       order.billing_address?.phone,
       orderMetadata?.telefone,
-      orderMetadata?.phone
+      orderMetadata?.phone,
     );
     const bairro =
       this.pickString(
         addressMetadata?.bairro,
         addressMetadata?.district,
-        shippingAddress.province
+        shippingAddress.province,
       ) ?? "Centro";
     const numero = this.extractHouseNumber(shippingAddress) ?? "S/N";
     const uf =
       this.pickString(
         addressMetadata?.uf,
         shippingAddress.province,
-        shippingAddress.country_code
+        shippingAddress.country_code,
       ) ?? "SP";
     const cep = shippingAddress.postal_code
       ? sanitizeDocument(shippingAddress.postal_code)
@@ -136,7 +150,7 @@ export class BlingOrderMapper {
 
     const complemento = this.pickString(
       addressMetadata?.complemento,
-      shippingAddress.address_2
+      shippingAddress.address_2,
     );
     if (complemento) {
       cliente.complemento = complemento;
@@ -147,7 +161,9 @@ export class BlingOrderMapper {
       cliente.email = email;
     }
 
-    const telefoneNormalizado = telefone ? sanitizeDocument(telefone) : undefined;
+    const telefoneNormalizado = telefone
+      ? sanitizeDocument(telefone)
+      : undefined;
     if (telefoneNormalizado) {
       cliente.fone = telefoneNormalizado;
     }
@@ -166,15 +182,18 @@ export class BlingOrderMapper {
 
     const inscricaoEstadual = this.pickString(
       addressMetadata?.state_registration,
-      preferences.orders.default_state_registration || "ISENTO"
+      preferences.orders.default_state_registration || "ISENTO",
     );
     if (inscricaoEstadual) {
       cliente.ie_rg = inscricaoEstadual;
     }
 
     const shippingMethod = (order.shipping_methods ?? [])[0];
-    const freightValue = this.safeNumber(order.shipping_total ?? shippingMethod?.amount);
-    const shippingMetadata = (shippingMethod?.metadata as Record<string, any>) ?? {};
+    const freightValue = this.safeNumber(
+      order.shipping_total ?? shippingMethod?.amount,
+    );
+    const shippingMetadata =
+      (shippingMethod?.metadata as Record<string, any>) ?? {};
 
     const payload: BlingOrderPayload = {
       numeroPedidoLoja: order.id,
@@ -202,12 +221,16 @@ export class BlingOrderMapper {
       payload.observacoes = observacoes;
     }
 
-    const observacoesInternas = this.pickString(orderMetadata?.["observacoes_internas"]);
+    const observacoesInternas = this.pickString(
+      orderMetadata?.["observacoes_internas"],
+    );
     if (observacoesInternas) {
       payload.observacoesInternas = observacoesInternas;
     }
 
-    const naturezaOperacao = this.pickString(orderMetadata?.["natureza_operacao"]);
+    const naturezaOperacao = this.pickString(
+      orderMetadata?.["natureza_operacao"],
+    );
     if (naturezaOperacao) {
       payload.natureza_operacao = naturezaOperacao;
     }
@@ -262,7 +285,8 @@ export class BlingOrderMapper {
 
   private static extractDocument(order: OrderDTO, address: any): string | null {
     const addressMetadata = (address.metadata as Record<string, any>) ?? {};
-    const billingMetadata = (order.billing_address?.metadata as Record<string, any>) ?? {};
+    const billingMetadata =
+      (order.billing_address?.metadata as Record<string, any>) ?? {};
     const orderMetadata = (order.metadata as Record<string, any>) ?? {};
 
     const candidates = [
@@ -298,12 +322,12 @@ export class BlingOrderMapper {
       metadata.external_id,
       metadata.codigo,
       metadata.sku,
-      item.variant_sku
+      item.variant_sku,
     );
 
     if (!externalId) {
       warnings.push(
-        `Item ${item.title} (ID ${item.id}) ignorado: nenhuma referência de SKU/ID do Bling encontrada.`
+        `Item ${item.title} (ID ${item.id}) ignorado: nenhuma referência de SKU/ID do Bling encontrada.`,
       );
       return null;
     }
@@ -389,15 +413,19 @@ export class BlingOrderMapper {
     if (value == null) return 0;
     if (typeof value === "number") return Number.isNaN(value) ? 0 : value;
     if (typeof value === "string") {
-      const normalized = value.replace(/,/g, ".");
-      const parsed = parseFloat(normalized);
+      const normalized = value.replaceAll(",", ".");
+      const parsed = Number.parseFloat(normalized);
       return Number.isNaN(parsed) ? 0 : parsed;
     }
     // Handle BigNumber-like objects often found in Medusa
-    if (typeof value === "object") {
-       // @ts-ignore
-      if (typeof value.toNumber === "function") return value.toNumber();
-      if (value.value) return this.safeNumber(value.value);
+    if (value && typeof value === "object") {
+      if (
+        "toNumber" in value &&
+        typeof (value as any).toNumber === "function"
+      ) {
+        return (value as any).toNumber();
+      }
+      if ("value" in value) return this.safeNumber((value as any).value);
     }
     return 0;
   }

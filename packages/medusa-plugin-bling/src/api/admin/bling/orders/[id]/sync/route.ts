@@ -1,30 +1,37 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { z } from "zod";
-import { syncOrderToBlingWorkflow } from "../../../../../workflows/sync-order.js";
+
+import { syncOrderToBlingWorkflow } from "../../../../../../workflows/sync-order.js";
+
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
 const schema = z.object({
   generateNfe: z.boolean().optional(),
   generateShippingLabel: z.boolean().optional(),
 });
 
-export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
-  const { id } = req.params;
-  const body = schema.parse(req.body);
+export const POST = async (
+  request: MedusaRequest,
+  response: MedusaResponse,
+) => {
+  const { id } = request.params;
+  const body = schema.parse(request.body);
 
   try {
-    const { result, transaction } = await syncOrderToBlingWorkflow(req.scope).run({
-        input: {
-            orderId: id,
-            options: body
-        }
+    const { result, transaction } = await syncOrderToBlingWorkflow(
+      request.scope,
+    ).run({
+      input: {
+        orderId: id as string,
+        options: body,
+      },
     });
 
-    res.json({
-        message: "Order sync started",
-        result,
-        transaction_id: transaction.transactionId
+    response.json({
+      message: "Order sync started",
+      result,
+      transaction_id: transaction.transactionId,
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    response.status(500).json({ message: error.message });
   }
 };

@@ -1,21 +1,23 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { z } from "zod";
-import { BLING_MODULE } from "../../../../modules/bling.js";
-import BlingModuleService from "../../../../modules/bling/service.js";
+
+import { BLING_MODULE } from "../../../../modules/bling/index.js";
+
+import type BlingModuleService from "../../../../modules/bling/service.js";
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
 const schema = z.object({
   redirect_uri: z.string().url(),
 });
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const { redirect_uri } = schema.parse(req.query);
+export const GET = async (request: MedusaRequest, response: MedusaResponse) => {
+  const { redirect_uri } = schema.parse(request.query);
 
-  const blingService: BlingModuleService = req.scope.resolve(BLING_MODULE);
+  const blingService: BlingModuleService = request.scope.resolve(BLING_MODULE);
 
   try {
     const url = await blingService.getAuthorizationUrl(redirect_uri);
-    res.json({ url });
+    response.json({ url });
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    response.status(400).json({ message: error.message });
   }
 };
