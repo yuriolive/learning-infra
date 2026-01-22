@@ -113,7 +113,7 @@
       "name": "@vendin/config",
       "version": "0.1.0",
     },
-    "packages/medusa-plugin-bling": {
+    "packages/medusa/plugins/medusa-plugin-bling": {
       "name": "@vendin/medusa-plugin-bling",
       "version": "1.0.0",
       "dependencies": {
@@ -1866,7 +1866,7 @@
 
     "@vendin/control-plane": ["@vendin/control-plane@workspace:apps/control-plane"],
 
-    "@vendin/medusa-plugin-bling": ["@vendin/medusa-plugin-bling@workspace:packages/medusa-plugin-bling"],
+    "@vendin/medusa-plugin-bling": ["@vendin/medusa-plugin-bling@workspace:packages/medusa/plugins/medusa-plugin-bling"],
 
     "@vendin/tenant-instance": ["@vendin/tenant-instance@workspace:apps/tenant-instance"],
 

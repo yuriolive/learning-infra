@@ -1,12 +1,17 @@
-import { createWorkflow, WorkflowResponse } from "@medusajs/framework/workflows-sdk";
+import {
+  createWorkflow,
+  WorkflowResponse,
+} from "@medusajs/framework/workflows-sdk";
+
 import { syncOrderToBlingStep } from "./steps/sync-order-step.js";
 import { updateOrderMetadataStep } from "./steps/update-order-metadata-step.js";
-import { OrderSyncOptions } from "../modules/bling/types/index.js";
 
-type SyncOrderWorkflowInput = {
+import type { OrderSyncOptions } from "../modules/bling/types/index.js";
+
+interface SyncOrderWorkflowInput {
   orderId: string;
   options?: OrderSyncOptions;
-};
+}
 
 export const syncOrderToBlingWorkflow = createWorkflow(
   "sync-order-to-bling",
@@ -20,13 +25,13 @@ export const syncOrderToBlingWorkflow = createWorkflow(
     // Let's pass what we need.
 
     updateOrderMetadataStep({
-        orderId: input.orderId,
-        blingId: syncResult.blingId,
-        payload: syncResult.payload,
-        response: syncResult.response,
-        warnings: syncResult.warnings
+      orderId: input.orderId,
+      blingId: syncResult.blingId,
+      payload: syncResult.payload,
+      response: syncResult.response,
+      warnings: syncResult.warnings,
     });
 
     return new WorkflowResponse(syncResult);
-  }
+  },
 );

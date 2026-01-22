@@ -10,7 +10,7 @@ Guidelines for developing and integrating private MedusaJS plugins within the mo
 
 ## Quick Reference
 
-- **Plugin Location**: `packages/medusa-plugin-*`
+- **Plugin Location**: `packages/medusa/plugins/medusa-plugin-*`
 - **Application Link**: `workspace:*` in `apps/tenant-instance/package.json`
 - **Registration**: `medusa-config.ts`
 

@@ -2,7 +2,7 @@
 
 **Last Updated**: 2026-01-21
 **Status**: ✅ Active
-**Component**: `packages/medusa-plugin-*`
+**Component**: `packages/medusa/plugins/medusa-plugin-*`
 
 ## Overview
 
@@ -15,7 +15,7 @@ This document outlines the standard practice for developing and integrating priv
 All private plugins must be developed in the `packages/` directory.
 
 > [!TIP]
-> Use a consistent naming convention: `packages/medusa-plugin-{name}`.
+> Use a consistent naming convention: `packages/medusa/plugins/medusa-plugin-{name}`.
 
 ### 2. Plugin Structure
 

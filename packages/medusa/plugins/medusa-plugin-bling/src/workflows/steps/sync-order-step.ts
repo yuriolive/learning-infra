@@ -1,24 +1,26 @@
-import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 import { Modules } from "@medusajs/framework/utils";
-import { BLING_MODULE } from "../../modules/bling/index.js";
-import BlingModuleService from "../../modules/bling/service.js";
-import { BlingOrderMapper } from "../../modules/bling/utils/order-mapper.js";
-import { OrderSyncOptions } from "../../modules/bling/types/index.js";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
-type SyncOrderStepInput = {
+import { BLING_MODULE } from "../../modules/bling/index.js";
+import { BlingOrderMapper } from "../../modules/bling/utils/order-mapper.js";
+
+import type BlingModuleService from "../../modules/bling/service.js";
+import type { OrderSyncOptions } from "../../modules/bling/types/index.js";
+
+interface SyncOrderStepInput {
   orderId: string;
   options?: OrderSyncOptions;
-};
+}
 
 // Define a unified return type
-type SyncOrderStepOutput = {
-    success: boolean;
-    message?: string;
-    blingId?: string | number;
-    payload?: any;
-    response?: any;
-    warnings?: string[];
-};
+export interface SyncOrderStepOutput {
+  success: boolean;
+  message?: string;
+  blingId?: string | number;
+  payload?: any;
+  response?: any;
+  warnings?: string[];
+}
 
 export const syncOrderToBlingStep = createStep(
   "sync-order-to-bling",
@@ -48,7 +50,7 @@ export const syncOrderToBlingStep = createStep(
     const config = await blingService.getBlingConfig();
     const preferences = blingService.mergePreferences(
       {},
-      config?.syncPreferences ?? undefined
+      config?.syncPreferences ?? undefined,
     );
 
     if (!preferences.orders.enabled || !preferences.orders.send_to_bling) {
@@ -66,11 +68,11 @@ export const syncOrderToBlingStep = createStep(
         order,
         preferences,
         options,
-        warnings
+        warnings,
       );
     } catch (error: any) {
-       logger.error(`Failed to map order ${orderId} to Bling: ${error.message}`);
-       throw error;
+      logger.error(`Failed to map order ${orderId} to Bling: ${error.message}`);
+      throw error;
     }
 
     // 4. Send to Bling
@@ -89,5 +91,5 @@ export const syncOrderToBlingStep = createStep(
       logger.error(`Failed to create order in Bling: ${error.message}`);
       throw error;
     }
-  }
+  },
 );

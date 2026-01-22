@@ -54,11 +54,11 @@ Follow these steps to create a new MedusaJS plugin:
 
 ### 2. Create Plugin Structure
 
-**Location:** `packages/medusa-plugin-{service-name}/`
+**Location:** `packages/medusa/plugins/medusa-plugin-{service-name}/`
 
 **Required files:**
 ```
-packages/medusa-plugin-{service-name}/
+packages/medusa/plugins/medusa-plugin-{service-name}/
 ├── package.json
 ├── tsconfig.json
 ├── .gitignore

@@ -1,6 +1,6 @@
-import { BlingSyncPreferences } from "../../../models/bling-config.js";
+import type { BlingSyncPreferences } from "../../../models/bling-config.js";
 
-export type ProductSnapshot = {
+export interface ProductSnapshot {
   external_id: string;
   name: string;
   sku?: string;
@@ -11,9 +11,9 @@ export type ProductSnapshot = {
   stock: Array<{ warehouse_id: string | null; quantity: number }>;
   variants: VariantSnapshot[];
   raw: any;
-};
+}
 
-export type VariantSnapshot = {
+export interface VariantSnapshot {
   external_id: string | null;
   sku: string | null;
   barcode: string | null;
@@ -24,16 +24,18 @@ export type VariantSnapshot = {
   height_cm: number | null;
   width_cm: number | null;
   stock: Array<{ warehouse_id: string | null; quantity: number }>;
-};
+}
 
 export class BlingProductMapper {
   static normalizeProductSnapshot(
     source: any,
-    preferences: BlingSyncPreferences
+    preferences: BlingSyncPreferences,
   ): ProductSnapshot {
     const productWrapper = this.toJsonObject(source);
     const productData = this.toJsonObject(
-      this.isJsonObject(productWrapper.produto) ? productWrapper.produto : productWrapper
+      this.isJsonObject(productWrapper.produto)
+        ? productWrapper.produto
+        : productWrapper,
     );
 
     const externalId =
@@ -55,7 +57,7 @@ export class BlingProductMapper {
     const variantsSnapshots = this.extractVariantSnapshots(
       productData,
       preferences,
-      includeInventory
+      includeInventory,
     );
 
     const snapshot: ProductSnapshot = {
@@ -96,9 +98,11 @@ export class BlingProductMapper {
   private static extractVariantSnapshots(
     productData: any,
     preferences: BlingSyncPreferences,
-    includeInventory: boolean
+    includeInventory: boolean,
   ): VariantSnapshot[] {
-    const rawVariants = this.toJsonArray(productData.variacoes ?? productData.variantes);
+    const rawVariants = this.toJsonArray(
+      productData.variacoes ?? productData.variantes,
+    );
 
     if (rawVariants.length === 0) {
       return [];
@@ -107,7 +111,9 @@ export class BlingProductMapper {
     return rawVariants.map((variant) => {
       const variantRoot = this.toJsonObject(variant);
       const variantData = this.toJsonObject(
-        this.isJsonObject(variantRoot.variacao) ? variantRoot.variacao : variantRoot
+        this.isJsonObject(variantRoot.variacao)
+          ? variantRoot.variacao
+          : variantRoot,
       );
       const variantStock = includeInventory
         ? this.extractStockSnapshots(variantData)
@@ -128,7 +134,7 @@ export class BlingProductMapper {
           ? (this.toOptionalString(variantData.moeda) ?? "BRL")
           : null,
         weight_kg: this.parseNumber(
-          variantData.pesoLiquido ?? variantData.pesoBruto
+          variantData.pesoLiquido ?? variantData.pesoBruto,
         ),
         depth_cm: this.parseNumber(variantData.comprimento),
         height_cm: this.parseNumber(variantData.altura),
@@ -154,7 +160,7 @@ export class BlingProductMapper {
             this.toOptionalString(imageObject.path);
           return url;
         })
-        .filter((url): url is string => Boolean(url));
+        .filter((url): url is string => url !== null);
     }
 
     if (typeof imagesRaw === "string") {
@@ -163,14 +169,17 @@ export class BlingProductMapper {
 
     if (this.isJsonObject(imagesRaw)) {
       const single =
-        this.toOptionalString(imagesRaw.link) ?? this.toOptionalString(imagesRaw.url);
+        this.toOptionalString(imagesRaw.link) ??
+        this.toOptionalString(imagesRaw.url);
       return single ? [single] : [];
     }
 
     return [];
   }
 
-  private static extractStockSnapshots(data: any): Array<{ warehouse_id: string | null; quantity: number }> {
+  private static extractStockSnapshots(
+    data: any,
+  ): Array<{ warehouse_id: string | null; quantity: number }> {
     const rawEntries = data.estoques ?? data.depositos ?? data.saldo ?? null;
 
     if (!Array.isArray(rawEntries)) {
@@ -183,7 +192,9 @@ export class BlingProductMapper {
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
   }
 
-  private static normalizeStockEntry(value: any): { warehouse_id: string | null; quantity: number } | null {
+  private static normalizeStockEntry(
+    value: any,
+  ): { warehouse_id: string | null; quantity: number } | null {
     if (value === null || value === undefined) {
       return null;
     }
@@ -231,7 +242,7 @@ export class BlingProductMapper {
       return Number.isNaN(value) ? null : value;
     }
     if (typeof value === "string") {
-      const normalized = value.replace(/\./g, "").replace(",", ".");
+      const normalized = value.replaceAll(".", "").replace(",", ".");
       const parsed = Number.parseFloat(normalized);
       return Number.isNaN(parsed) ? null : parsed;
     }

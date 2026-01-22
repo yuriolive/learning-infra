@@ -1,15 +1,15 @@
 ---
 description: Patterns and standards for developing private MedusaJS plugins in the monorepo.
-globs: packages/medusa-plugin-*/**/*
+globs: packages/medusa/plugins/medusa-plugin-*/**/*
 ---
 
 # MedusaJS Plugin Development
 
-Standards for creating and maintaining private plugins within the `packages/` directory.
+Standards for creating and maintaining private plugins within the `packages/medusa/plugins/` directory.
 
 ## Core Principles
 
-- **Location**: Use `packages/medusa-plugin-{name}`.
+- **Location**: Use `packages/medusa/plugins/medusa-plugin-{name}`.
 - **Isolation**: Each plugin should be self-contained but can depend on `@vendin/utils` and `@vendin/config`.
 - **DRY**: Do not duplicate core business logic; move shared logic to `@vendin/utils`.
 

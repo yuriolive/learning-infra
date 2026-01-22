@@ -1,10 +1,11 @@
-import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 import { Modules } from "@medusajs/framework/utils";
-import { ProductSnapshot } from "../../modules/bling/utils/product-mapper.js";
+import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 
-type UpsertProductsStepInput = {
+import type { ProductSnapshot } from "../../modules/bling/utils/product-mapper.js";
+
+interface UpsertProductsStepInput {
   products: ProductSnapshot[];
-};
+}
 
 export const upsertMedusaProductsStep = createStep(
   "upsert-medusa-products",
@@ -19,10 +20,12 @@ export const upsertMedusaProductsStep = createStep(
     const externalIds = products.map((p) => p.external_id).filter(Boolean);
     const existingProducts = await productModule.listProducts(
       { external_id: externalIds },
-      { relations: ["variants"] }
+      { relations: ["variants"] },
     );
 
-    const existingMap = new Map(existingProducts.map((p) => [p.external_id, p]));
+    const existingMap = new Map(
+      existingProducts.map((p) => [p.external_id, p]),
+    );
     const upsertData: any[] = [];
     let created = 0;
     let updated = 0;
@@ -31,41 +34,41 @@ export const upsertMedusaProductsStep = createStep(
       const existing = existingMap.get(snapshot.external_id);
 
       const variantsData = snapshot.variants.map((v) => ({
-         title: v.sku || "Default Variant",
-         sku: v.sku,
-         barcode: v.barcode,
-         metadata: {
-             bling_external_id: v.external_id
-         }
+        title: v.sku || "Default Variant",
+        sku: v.sku,
+        barcode: v.barcode,
+        metadata: {
+          bling_external_id: v.external_id,
+        },
       }));
 
       const productInput: any = {
-          title: snapshot.name,
-          description: snapshot.description,
-          external_id: snapshot.external_id,
-          handle: snapshot.external_id,
-          status: existing ? existing.status : "draft",
-          metadata: {
-              bling_source: "bling",
-              bling_external_id: snapshot.external_id
-          },
-          variants: variantsData
+        title: snapshot.name,
+        description: snapshot.description,
+        external_id: snapshot.external_id,
+        handle: snapshot.external_id,
+        status: existing ? existing.status : "draft",
+        metadata: {
+          bling_source: "bling",
+          bling_external_id: snapshot.external_id,
+        },
+        variants: variantsData,
       };
 
       if (existing) {
-          productInput.id = existing.id;
-          updated++;
+        productInput.id = existing.id;
+        updated++;
       } else {
-          created++;
+        created++;
       }
 
       upsertData.push(productInput);
     }
 
     if (upsertData.length > 0) {
-        await productModule.upsertProducts(upsertData);
+      await productModule.upsertProducts(upsertData);
     }
 
     return new StepResponse({ created, updated });
-  }
+  },
 );

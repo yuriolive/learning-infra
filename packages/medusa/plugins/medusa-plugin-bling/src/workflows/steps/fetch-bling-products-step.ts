@@ -1,7 +1,9 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
+
 import { BLING_MODULE } from "../../modules/bling/index.js";
-import BlingModuleService from "../../modules/bling/service.js";
 import { BlingProductMapper } from "../../modules/bling/utils/product-mapper.js";
+
+import type BlingModuleService from "../../modules/bling/service.js";
 
 export const fetchBlingProductsStep = createStep(
   "fetch-bling-products",
@@ -12,7 +14,7 @@ export const fetchBlingProductsStep = createStep(
     const config = await blingService.getBlingConfig();
     const preferences = blingService.mergePreferences(
       {},
-      config?.syncPreferences ?? undefined
+      config?.syncPreferences ?? undefined,
     );
 
     if (!preferences.products.enabled) {
@@ -36,25 +38,25 @@ export const fetchBlingProductsStep = createStep(
         const rawProducts = Array.isArray(data) ? data : [];
 
         if (rawProducts.length === 0) {
-            hasMore = false;
+          hasMore = false;
         } else {
-            allProducts.push(...rawProducts);
-            if (rawProducts.length < limit) {
-                hasMore = false;
-            } else {
-                page++;
-            }
+          allProducts.push(...rawProducts);
+          if (rawProducts.length < limit) {
+            hasMore = false;
+          } else {
+            page++;
+          }
         }
 
         // Safety break to prevent infinite loops in bad API responses
         if (page > 100) {
-             logger.warn("Fetch products limit reached (100 pages), stopping.");
-             hasMore = false;
+          logger.warn("Fetch products limit reached (100 pages), stopping.");
+          hasMore = false;
         }
       }
 
       const normalized = allProducts.map((p: any) =>
-        BlingProductMapper.normalizeProductSnapshot(p, preferences)
+        BlingProductMapper.normalizeProductSnapshot(p, preferences),
       );
 
       return new StepResponse(normalized);
@@ -62,5 +64,5 @@ export const fetchBlingProductsStep = createStep(
       logger.error(`Failed to fetch products from Bling: ${error.message}`);
       throw error;
     }
-  }
+  },
 );

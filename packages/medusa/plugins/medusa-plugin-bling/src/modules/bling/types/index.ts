@@ -1,4 +1,4 @@
-export type OrderSyncOptions = {
+export interface OrderSyncOptions {
   generateNfe?: boolean;
   generateShippingLabel?: boolean;
-};
+}

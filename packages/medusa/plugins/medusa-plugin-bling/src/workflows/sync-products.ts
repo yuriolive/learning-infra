@@ -1,7 +1,11 @@
-import { createWorkflow, WorkflowResponse } from "@medusajs/framework/workflows-sdk";
+import {
+  createWorkflow,
+  WorkflowResponse,
+} from "@medusajs/framework/workflows-sdk";
+
 import { fetchBlingProductsStep } from "./steps/fetch-bling-products-step.js";
-import { upsertMedusaProductsStep } from "./steps/upsert-medusa-products-step.js";
 import { updateInventoryStep } from "./steps/update-inventory-step.js";
+import { upsertMedusaProductsStep } from "./steps/upsert-medusa-products-step.js";
 
 export const syncProductsFromBlingWorkflow = createWorkflow(
   "sync-products-from-bling",
@@ -16,8 +20,8 @@ export const syncProductsFromBlingWorkflow = createWorkflow(
     const inventoryResult = updateInventoryStep({ products });
 
     return new WorkflowResponse({
-        products_synced: productResult,
-        inventory_synced: inventoryResult
+      products_synced: productResult,
+      inventory_synced: inventoryResult,
     });
-  }
+  },
 );

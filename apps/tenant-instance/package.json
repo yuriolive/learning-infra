@@ -12,9 +12,9 @@
     "typescript"
   ],
   "scripts": {
-    "build": "../../node_modules/.bin/medusa build",
-    "start": "../../node_modules/.bin/medusa start",
-    "dev": "TS_NODE_PROJECT=tsconfig.json ../../node_modules/.bin/medusa develop",
+    "build": "medusa build",
+    "start": "medusa start",
+    "dev": "TS_NODE_PROJECT=tsconfig.json medusa develop",
     "lint": "bun x eslint .",
     "typecheck": "bun x tsc --noEmit"
   },

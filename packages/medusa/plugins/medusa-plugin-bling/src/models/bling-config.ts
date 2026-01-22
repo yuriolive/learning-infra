@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, JsonType } from "@mikro-orm/core";
 
-export type BlingSyncPreferences = {
+export interface BlingSyncPreferences {
   products: {
     enabled: boolean;
     import_images: boolean;
@@ -23,7 +23,7 @@ export type BlingSyncPreferences = {
     default_status?: string; // Configurable initial status
     default_state_registration?: string; // Configurable default IE
   };
-};
+}
 
 @Entity({ tableName: "bling_config" })
 export class BlingConfig {
@@ -48,7 +48,11 @@ export class BlingConfig {
   @Property({ nullable: true, columnType: "integer", fieldName: "expires_in" })
   expiresIn: number | null = null;
 
-  @Property({ nullable: true, columnType: "timestamptz", fieldName: "token_updated_at" })
+  @Property({
+    nullable: true,
+    columnType: "timestamptz",
+    fieldName: "token_updated_at",
+  })
   tokenUpdatedAt: Date | null = null;
 
   @Property({ nullable: true, type: JsonType, fieldName: "sync_preferences" })
