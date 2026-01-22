@@ -108,7 +108,10 @@ describe("TenantRepository", () => {
       const tenants = await repository.findAll();
 
       expect(tenants).toHaveLength(2);
-      expect(tenants.map((t) => t.name).sort()).toEqual(["Store 1", "Store 2"]);
+      expect(tenants.map((t) => t.name).toSorted()).toEqual([
+        "Store 1",
+        "Store 2",
+      ]);
     });
 
     it("should return empty array when no tenants exist", async () => {
@@ -119,28 +122,35 @@ describe("TenantRepository", () => {
 
     it("should respect limit and offset", async () => {
       // Create 5 tenants
-      for (let i = 0; i < 5; i++) {
-        await repository.create({
-          name: `Store ${i}`,
-          merchantEmail: `store${i}@example.com`,
+      const createdTenants = [];
+      for (let index = 0; index < 5; index++) {
+        const tenant = await repository.create({
+          name: `Store ${index}`,
+          merchantEmail: `store${index}@example.com`,
         });
+        createdTenants.push(tenant);
       }
+      // Reverse the array to match the descending order of createdAt
+      createdTenants.reverse();
 
       // Test limit
       const limited = await repository.findAll(2);
       expect(limited).toHaveLength(2);
+      expect(limited.map((t) => t.id)).toEqual(
+        createdTenants.slice(0, 2).map((t) => t.id),
+      );
 
       // Test offset
       const offset = await repository.findAll(2, 2);
       expect(offset).toHaveLength(2);
-      // We expect Store 2 and Store 3 (indices 2 and 3)
-      // Note: Order is not guaranteed without order by, but in insertion order in PGlite usually works.
-      // To be safe, we can just check IDs or names are disjoint from first page if we sorted.
-      // But for basic offset check, length is good enough for now, or check they are different.
+      expect(offset.map((t) => t.id)).toEqual(
+        createdTenants.slice(2, 4).map((t) => t.id),
+      );
 
       // Test default limit (20) - should return all 5
       const all = await repository.findAll();
       expect(all).toHaveLength(5);
+      expect(all.map((t) => t.id)).toEqual(createdTenants.map((t) => t.id));
     });
   });
 

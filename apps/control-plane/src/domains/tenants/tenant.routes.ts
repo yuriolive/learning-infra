@@ -202,27 +202,36 @@ async function handleListTenants(
 ): Promise<Response> {
   try {
     const url = new URL(request.url);
-    const limitParam = url.searchParams.get("limit");
-    const offsetParam = url.searchParams.get("offset");
+    const limitParameter = url.searchParams.get("limit");
+    const offsetParameter = url.searchParams.get("offset");
 
-    const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined;
-    const offset = offsetParam ? Number.parseInt(offsetParam, 10) : undefined;
+    const limit = limitParameter
+      ? Number.parseInt(limitParameter, 10)
+      : undefined;
+    const offset = offsetParameter
+      ? Number.parseInt(offsetParameter, 10)
+      : undefined;
 
-    // Validate that limit and offset are numbers if they were provided
-    if (limit !== undefined && Number.isNaN(limit)) {
-      // ignore invalid limit or default
+    if (
+      (limitParameter && (Number.isNaN(limit) || limit! < 0)) ||
+      (offsetParameter && (Number.isNaN(offset) || offset! < 0))
+    ) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Invalid 'limit' or 'offset' parameter. They must be non-negative numbers.",
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
+      );
     }
-    if (offset !== undefined && Number.isNaN(offset)) {
-      // ignore invalid offset or default
-    }
 
-    // Pass validated (or undefined if NaN check failed, though logic above is just a comment, let's make it real)
-    const validLimit =
-      limit !== undefined && !Number.isNaN(limit) ? limit : undefined;
-    const validOffset =
-      offset !== undefined && !Number.isNaN(offset) ? offset : undefined;
-
-    const tenants = await service.listTenants(validLimit, validOffset);
+    const tenants = await service.listTenants(limit, offset);
 
     return new Response(JSON.stringify(tenants), {
       status: 200,

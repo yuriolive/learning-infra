@@ -1,7 +1,8 @@
-
 import { TenantRepository } from "../src/domains/tenants/tenant.repository";
+
 import { createMockDatabase } from "./utils/mock-database";
-import { CreateTenantInput } from "../src/domains/tenants/tenant.types";
+
+import type { CreateTenantInput } from "../src/domains/tenants/tenant.types";
 
 async function runBenchmark() {
   console.log("Setting up benchmark...");
@@ -11,11 +12,11 @@ async function runBenchmark() {
   // Seed 1000 tenants
   console.log("Seeding 1000 tenants...");
   const tenants: CreateTenantInput[] = [];
-  for (let i = 0; i < 1000; i++) {
+  for (let index = 0; index < 1000; index++) {
     tenants.push({
-      name: `Benchmark Tenant ${i}`,
-      merchantEmail: `benchmark${i}@example.com`,
-      subdomain: `bench${i}`,
+      name: `Benchmark Tenant ${index}`,
+      merchantEmail: `benchmark${index}@example.com`,
+      subdomain: `bench${index}`,
     });
   }
 
@@ -37,16 +38,57 @@ async function runBenchmark() {
   let totalTime = 0;
   let recordCount = 0;
 
-  for (let i = 0; i < iterations; i++) {
+  for (let index = 0; index < iterations; index++) {
     const start = performance.now();
     const results = await repository.findAll();
     const end = performance.now();
-    totalTime += (end - start);
+    totalTime += end - start;
     recordCount = results.length;
   }
 
   const avgTime = totalTime / iterations;
-  console.log(`Average time to fetch ${recordCount} records: ${avgTime.toFixed(2)}ms`);
+  console.log(
+    `Average time to fetch ${recordCount} records (page 1): ${avgTime.toFixed(2)}ms`,
+  );
+
+  // Benchmark "Fetch All via Pagination" vs "Fetch All Unbounded"
+  // Note: We can't run unbounded on the modified repo easily without changing code back or passing a huge limit.
+  // We can pass a huge limit to simulate unbounded.
+
+  console.log("Running unbounded simulation (limit=2000)...");
+  let totalTimeUnbounded = 0;
+  for (let index = 0; index < iterations; index++) {
+    const start = performance.now();
+    await repository.findAll(2000);
+    const end = performance.now();
+    totalTimeUnbounded += end - start;
+  }
+  const avgTimeUnbounded = totalTimeUnbounded / iterations;
+  console.log(
+    `Average time to fetch 1000 records (simulated unbounded): ${avgTimeUnbounded.toFixed(2)}ms`,
+  );
+
+  // Benchmark sequential pagination
+  console.log("Running sequential pagination (fetch all 1000 records)...");
+  let totalTimePagination = 0;
+  for (let index = 0; index < 5; index++) {
+    // fewer iterations as it takes longer
+    const start = performance.now();
+    let fetched = 0;
+    let offset = 0;
+    while (fetched < 1000) {
+      const page = await repository.findAll(20, offset);
+      fetched += page.length;
+      offset += 20;
+      if (page.length === 0) break;
+    }
+    const end = performance.now();
+    totalTimePagination += end - start;
+  }
+  const avgTimePagination = totalTimePagination / 5;
+  console.log(
+    `Average time to fetch 1000 records via pagination (page size 20): ${avgTimePagination.toFixed(2)}ms`,
+  );
 }
 
-runBenchmark().catch(console.error);
+await runBenchmark().catch(console.error);
