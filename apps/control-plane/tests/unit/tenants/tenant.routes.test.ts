@@ -120,10 +120,10 @@ describe("TenantRoutes", () => {
 
     it("should handle pagination parameters", async () => {
       // Create 5 tenants
-      for (let i = 0; i < 5; i++) {
+      for (let index = 0; index < 5; index++) {
         await service.createTenant({
-          name: `Store ${i}`,
-          merchantEmail: `store${i}@example.com`,
+          name: `Store ${index}`,
+          merchantEmail: `store${index}@example.com`,
         });
       }
 
@@ -137,9 +137,12 @@ describe("TenantRoutes", () => {
       expect(data).toHaveLength(2);
 
       // Test offset
-      request = new Request("http://localhost:3000/api/tenants?limit=2&offset=2", {
-        method: "GET",
-      });
+      request = new Request(
+        "http://localhost:3000/api/tenants?limit=2&offset=2",
+        {
+          method: "GET",
+        },
+      );
       response = await routes.handleRequest(request);
       data = (await response.json()) as any;
       expect(response.status).toBe(200);
