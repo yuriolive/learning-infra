@@ -206,13 +206,11 @@ async function handleListTenants(
     const offsetParameter = url.searchParams.get("offset");
 
     const limit =
-      limitParameter != null
-        ? Number.parseInt(limitParameter, 10)
-        : undefined;
+      limitParameter == null ? undefined : Number.parseInt(limitParameter, 10);
     const offset =
-      offsetParameter != null
-        ? Number.parseInt(offsetParameter, 10)
-        : undefined;
+      offsetParameter == null
+        ? undefined
+        : Number.parseInt(offsetParameter, 10);
 
     if (
       (limitParameter != null && (Number.isNaN(limit) || (limit ?? 0) < 0)) ||

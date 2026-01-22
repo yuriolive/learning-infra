@@ -108,6 +108,7 @@ describe("TenantRepository", () => {
       const tenants = await repository.findAll();
 
       expect(tenants).toHaveLength(2);
+      // eslint-disable-next-line unicorn/no-array-sort
       expect(tenants.map((t) => t.name).sort()).toEqual(["Store 1", "Store 2"]);
     });
 
