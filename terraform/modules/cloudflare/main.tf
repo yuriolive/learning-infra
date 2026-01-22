@@ -18,6 +18,16 @@ variable "control_plane_service_url" {
   type        = string
 }
 
+variable "github_owner" {
+  description = "GitHub repository owner"
+  type        = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository name"
+  type        = string
+}
+
 resource "cloudflare_pages_project" "storefront" {
   account_id        = var.account_id
   name              = "storefront"
@@ -27,6 +37,21 @@ resource "cloudflare_pages_project" "storefront" {
     build_command   = "npm run build"
     destination_dir = ".next"
     root_dir        = "apps/storefront"
+  }
+
+  source {
+    type = "github"
+    config {
+      owner                         = var.github_owner
+      repo_name                     = var.github_repo
+      production_branch             = "main"
+      pr_comments_enabled           = true
+      deployments_enabled           = true
+      production_deployment_enabled = true
+      preview_deployment_setting    = "all"
+      preview_branch_includes       = ["*"]
+      preview_branch_excludes       = ["main"]
+    }
   }
 }
 
@@ -49,11 +74,6 @@ resource "cloudflare_pages_domain" "admin" {
 }
 
 # Wildcard DNS for tenant subdomains (*.my.vendin.store)
-# Note: Wildcard custom domains on Pages require Enterprise or Custom Hostnames (SaaS).
-# Assuming we are using Cloudflare for SaaS (Custom Hostnames) pointing to a fallback origin.
-# The doc says: "Set Fallback Origin to your storefront URL: storefront.pages.dev"
-# And then add CNAME *.my -> storefront.pages.dev
-
 resource "cloudflare_record" "wildcard_my" {
   zone_id = var.zone_id
   name    = "*.my"
@@ -63,9 +83,6 @@ resource "cloudflare_record" "wildcard_my" {
 }
 
 # Control Plane API (control.vendin.store -> ghs.googlehosted.com)
-# Requires extracting the hostname from the service URL or mapping it manually.
-# Since Cloud Run custom domains map to ghs.googlehosted.com, we use that.
-
 resource "cloudflare_record" "control_plane" {
   zone_id = var.zone_id
   name    = "control"

@@ -1,6 +1,5 @@
 -- Drop existing enums if they exist (safe because table won't exist on first run)
 DROP TYPE IF EXISTS "public"."tenant_status" CASCADE;
---> statement-breakpoint
 DROP TYPE IF EXISTS "public"."tenant_plan" CASCADE;
 --> statement-breakpoint
 -- Create enum types

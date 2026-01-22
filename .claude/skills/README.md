@@ -6,7 +6,7 @@ This directory contains Claude Skills for the multi-tenant e-commerce platform p
 
 ### shared/create-skill
 
-**Location**: `.skills/skills/shared/create-skill/`
+**Location**: `.claude/skills/shared/create-skill/`
 
 Helps create new Claude Skills following official format and learning-infra monorepo structure. Includes templates and validation tools.
 
@@ -14,7 +14,7 @@ Helps create new Claude Skills following official format and learning-infra mono
 
 ### shared/debug-code
 
-**Location**: `.skills/skills/shared/debug-code/`
+**Location**: `.claude/skills/shared/debug-code/`
 
 Debugs code issues, errors, failing tests, and broken flows using a systematic workflow. Identifies root causes, applies minimal fixes, and validates solutions. Includes tenant isolation and provisioning debugging patterns.
 
@@ -22,7 +22,7 @@ Debugs code issues, errors, failing tests, and broken flows using a systematic w
 
 ### shared/review-code
 
-**Location**: `.skills/skills/shared/review-code/`
+**Location**: `.claude/skills/shared/review-code/`
 
 Reviews code against project standards for architecture compliance, code quality, tenant isolation, and test coverage. Reviews for REST API patterns, provisioning workflows, and infrastructure best practices.
 
@@ -30,7 +30,7 @@ Reviews code against project standards for architecture compliance, code quality
 
 ### shared/create-pull-request
 
-**Location**: `.skills/skills/shared/create-pull-request/`
+**Location**: `.claude/skills/shared/create-pull-request/`
 
 Creates a GitHub pull request using the project's PR template and standard workflows. Handles branch pushing and PR creation via GitHub CLI.
 
@@ -38,7 +38,7 @@ Creates a GitHub pull request using the project's PR template and standard workf
 
 ### shared/github-project-management
 
-**Location**: `.skills/skills/shared/github-project-management/`
+**Location**: `.claude/skills/shared/github-project-management/`
 
 Creates and manages GitHub issues and project items. Works with GitHub Projects v2 via MCP tools.
 
@@ -48,9 +48,9 @@ Creates and manages GitHub issues and project items. Works with GitHub Projects 
 
 Skills are organized by scope in the monorepo:
 
-- **Control Plane Skills** -> `.skills/skills/control-plane/` - For REST API, tenant provisioning, domain logic
-- **Shared Skills** -> `.skills/skills/shared/` - For cross-app functionality
-- **Infrastructure Skills** -> `.skills/skills/infrastructure/` - For Cloud Run, Cloudflare, Neon patterns
+- **Control Plane Skills** -> `.claude/skills/control-plane/` - For REST API, tenant provisioning, domain logic
+- **Shared Skills** -> `.claude/skills/shared/` - For cross-app functionality
+- **Infrastructure Skills** -> `.claude/skills/infrastructure/` - For Cloud Run, Cloudflare, Neon patterns
 
 ## Creating New Skills
 

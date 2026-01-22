@@ -43,3 +43,9 @@ variable "domain_name" {
   type        = string
   default     = "vendin.store"
 }
+
+variable "neon_api_key" {
+  description = "Neon API Key"
+  type        = string
+  sensitive   = true
+}

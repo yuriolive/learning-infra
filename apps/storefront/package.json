@@ -8,7 +8,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "bun x tsc --noEmit",
     "pages:build": "bun x @cloudflare/next-on-pages"
   },
   "dependencies": {
@@ -28,13 +27,5 @@
     "eslint-config-next": "16.1.4",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "ignoreScripts": [
-    "sharp",
-    "unrs-resolver"
-  ],
-  "trustedDependencies": [
-    "sharp",
-    "unrs-resolver"
-  ]
+  }
 }

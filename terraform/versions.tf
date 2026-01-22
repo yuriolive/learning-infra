@@ -1,5 +1,13 @@
 terraform {
   required_version = ">= 1.0"
+
+  # Backend configuration (Production Ready)
+  # Uncomment and configure with your bucket details
+  # backend "gcs" {
+  #   bucket  = "vendin-terraform-state"
+  #   prefix  = "terraform/state"
+  # }
+
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -12,6 +20,10 @@ terraform {
     cloudflare = {
       source  = "cloudflare/cloudflare"
       version = "~> 4.0"
+    }
+    neon = {
+      source  = "kislerdm/neon"
+      version = "~> 0.1"
     }
   }
 }
@@ -28,4 +40,8 @@ provider "google-beta" {
 
 provider "cloudflare" {
   api_token = var.cloudflare_api_token
+}
+
+provider "neon" {
+  api_key = var.neon_api_key
 }

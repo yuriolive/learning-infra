@@ -27,6 +27,10 @@ module "secrets" {
   depends_on = [module.apis]
 }
 
+module "neon" {
+  source = "./modules/neon"
+}
+
 module "cloud_run_control_plane" {
   source                = "./modules/cloud_run"
   project_id            = var.project_id
@@ -48,8 +52,18 @@ module "cloud_run_control_plane" {
     {
       name   = "CLOUDFLARE_API_TOKEN"
       secret = "cloudflare-api-token"
+    },
+    {
+      name   = "NEON_API_KEY"
+      secret = "neon-api-key"
+    },
+    {
+      name   = "NEON_PROJECT_ID"
+      secret = "neon-project-id"
     }
   ]
+
+  domain_name = "control.${var.domain_name}"
 
   depends_on = [module.apis, module.iam, module.artifact_registry, module.secrets]
 }
@@ -60,4 +74,7 @@ module "cloudflare" {
   zone_id                   = var.cloudflare_zone_id
   domain_name               = var.domain_name
   control_plane_service_url = module.cloud_run_control_plane.service_url
+
+  github_owner              = var.github_repo_owner
+  github_repo               = var.github_repo_name
 }

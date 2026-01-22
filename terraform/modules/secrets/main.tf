@@ -8,7 +8,9 @@ variable "secrets" {
   type        = list(string)
   default     = [
     "control-plane-db-url",
-    "cloudflare-api-token"
+    "cloudflare-api-token",
+    "neon-api-key",
+    "neon-project-id"
   ]
 }
 
@@ -33,4 +35,8 @@ resource "google_secret_manager_secret_version" "secret_version" {
   for_each = google_secret_manager_secret.secrets
   secret = each.value.id
   secret_data = "change-me"
+
+  lifecycle {
+    ignore_changes = [secret_data]
+  }
 }

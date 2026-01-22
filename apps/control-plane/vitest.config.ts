@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     coverage: {
       exclude: [
-        ".agent/",
+        ".cursor/",
         "node_modules/",
         "dist/",
         "**/*.d.ts",

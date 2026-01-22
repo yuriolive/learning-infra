@@ -40,6 +40,12 @@ variable "secret_env_vars" {
   default = []
 }
 
+variable "domain_name" {
+  description = "Custom domain name to map to the service (e.g., control.vendin.store)"
+  type        = string
+  default     = ""
+}
+
 resource "google_cloud_run_v2_service" "default" {
   name     = var.service_name
   location = var.region
@@ -90,12 +96,28 @@ resource "google_cloud_run_v2_service" "default" {
 }
 
 # Allow unauthenticated access
-resource "google_cloud_run_service_iam_member" "public" {
+resource "google_cloud_run_v2_service_iam_member" "public" {
   location = google_cloud_run_v2_service.default.location
   project  = google_cloud_run_v2_service.default.project
-  service  = google_cloud_run_v2_service.default.name
+  name     = google_cloud_run_v2_service.default.name
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+# Domain mapping for custom domain
+resource "google_cloud_run_domain_mapping" "default" {
+  count    = var.domain_name != "" ? 1 : 0
+  location = var.region
+  name     = var.domain_name
+  project  = var.project_id
+
+  metadata {
+    namespace = var.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.default.name
+  }
 }
 
 output "service_url" {

@@ -48,9 +48,9 @@ description: You can use this to debug
 
 - [ ] SKILL.md file exists in correct location
 - [ ] Directory structure matches monorepo organization:
-  - Control Plane Skills -> `.skills/skills/control-plane/`
-  - Shared Skills -> `.skills/skills/shared/`
-  - Infrastructure Skills -> `.skills/skills/infrastructure/`
+  - Control Plane Skills -> `.claude/skills/control-plane/`
+  - Shared Skills -> `.claude/skills/shared/`
+  - Infrastructure Skills -> `.claude/skills/infrastructure/`
 - [ ] Supporting files (if any) are in same directory
 - [ ] File paths use forward slashes (not backslashes)
 
@@ -170,7 +170,7 @@ description: You can use this to debug
 - [ ] Skill follows official Claude Skills format
 - [ ] Skill follows learning-infra patterns
 - [ ] Skill is ready for use
-- [ ] Skill is documented in `.skills/skills/README.md` (if applicable)
+- [ ] Skill is documented in `.claude/skills/README.md` (if applicable)
 
 ## Validation Command
 
