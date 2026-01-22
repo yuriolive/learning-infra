@@ -26,7 +26,8 @@ export const POST = async (
         .status(400)
         .json({ message: "Failed to authenticate with Bling" });
     }
-  } catch (error: any) {
-    response.status(500).json({ message: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Generic error";
+    response.status(500).json({ message });
   }
 };

@@ -17,7 +17,8 @@ export const GET = async (request: MedusaRequest, response: MedusaResponse) => {
   try {
     const url = await blingService.getAuthorizationUrl(redirect_uri);
     response.json({ url });
-  } catch (error: any) {
-    response.status(400).json({ message: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Generic error";
+    response.status(400).json({ message });
   }
 };

@@ -15,7 +15,8 @@ export const POST = async (
       result,
       transaction_id: transaction.transactionId,
     });
-  } catch (error: any) {
-    response.status(500).json({ message: error.message });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Generic error";
+    response.status(500).json({ message });
   }
 };
