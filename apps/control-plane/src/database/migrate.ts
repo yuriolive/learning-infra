@@ -47,5 +47,5 @@ try {
 }
 
 // Explicitly exit to ensure process terminates
-// eslint-disable-next-line unicorn/no-process-exit -- This is a CLI migration script
+// eslint-disable-next-line unicorn/no-process-exit -- This is a CLI script that needs to signal success or failure to the caller
 process.exit(exitCode);
