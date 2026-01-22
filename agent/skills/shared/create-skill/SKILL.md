@@ -22,13 +22,13 @@ For comprehensive project documentation and compatibility requirements, see:
 Follow these steps to create a new Skill:
 
 1. **Determine scope**
-   - Control Plane: REST API, tenant provisioning -> `.claude/skills/control-plane/`
-   - Shared: Cross-app functionality -> `.claude/skills/shared/`
-   - Infrastructure: Cloud Run, Cloudflare, Neon -> `.claude/skills/infrastructure/`
+   - Control Plane: REST API, tenant provisioning -> `.skills/skills/control-plane/`
+   - Shared: Cross-app functionality -> `.skills/skills/shared/`
+   - Infrastructure: Cloud Run, Cloudflare, Neon -> `.skills/skills/infrastructure/`
    - Package: Config, utils -> Context-aware placement
 
 2. **Choose location**
-   - Create directory: `.claude/skills/{scope}/{skill-name}/`
+   - Create directory: `.skills/skills/{scope}/{skill-name}/`
    - Skill name: lowercase, hyphens, max 64 chars, no reserved words
 
 3. **Write description**
@@ -55,7 +55,7 @@ Follow these steps to create a new Skill:
 
 ## Monorepo Organization
 
-### Control Plane Skills (`.claude/skills/control-plane/`)
+### Control Plane Skills (`.skills/skills/control-plane/`)
 
 For Skills specific to Control Plane development:
 
@@ -69,7 +69,7 @@ For Skills specific to Control Plane development:
 - `control-plane/provision-tenant/`
 - `control-plane/create-api-endpoint/`
 
-### Shared Skills (`.claude/skills/shared/`)
+### Shared Skills (`.skills/skills/shared/`)
 
 For Skills used across multiple apps:
 
@@ -84,7 +84,7 @@ For Skills used across multiple apps:
 - `shared/debug-code/`
 - `shared/create-skill/` (this Skill)
 
-### Infrastructure Skills (`.claude/skills/infrastructure/`)
+### Infrastructure Skills (`.skills/skills/infrastructure/`)
 
 For Skills specific to infrastructure:
 
