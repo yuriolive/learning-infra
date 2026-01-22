@@ -37,12 +37,30 @@ Plugins MUST define explicit exports for Medusa's loader to function correctly.
 
 ## Implementation Patterns
 
-- **Modules**: Place custom business logic in `src/modules`.
-- **Workflows**: Use Medusa workflows for complex orchestrations in `src/workflows`.
-- **API**: Custom routes go in `src/api`.
+For detailed implementation guidance, use the **create-medusa-plugin** skill:
+
+```
+View the skill: .agent/skills/shared/create-medusa-plugin/SKILL.md
+```
+
+The skill provides comprehensive guidance on:
+- Plugin structure and organization
+- Module services with dependency injection
+- MikroORM entities and repositories
+- Admin and Store API routes
+- Workflow orchestration patterns
+- OAuth integration
+- Testing strategies
+
+**Quick reference:**
+- **Modules**: Place custom business logic in `src/modules/`
+- **Workflows**: Use Medusa workflows for orchestrations in `src/workflows/`
+- **API**: Custom routes in `src/api/admin/` or `src/api/store/`
+- **Models**: MikroORM entities in `src/models/`
 
 ## References
 
-- **Documentation**: See [docs/medusa/PRIVATE_PLUGINS.md](../../../docs/medusa/PRIVATE_PLUGINS.md) for full guidelines.
-- **Example**: See [docs/examples/medusa-plugin-package.json](../../../docs/examples/medusa-plugin-package.json).
-- **Architecture**: [AGENTS.md](../../../AGENTS.md).
+- **Skill**: [create-medusa-plugin](../../skills/shared/create-medusa-plugin/SKILL.md) - Complete plugin creation guide
+- **Templates**: [TEMPLATE.md](../../skills/shared/create-medusa-plugin/TEMPLATE.md) - Code templates and examples
+- **Example**: [medusa-plugin-bling](../../../packages/medusa-plugin-bling) - Reference implementation
+- **Architecture**: [AGENTS.md](../../../AGENTS.md) - Project architecture overview
