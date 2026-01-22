@@ -1,19 +1,14 @@
-DO $$ BEGIN
- BEGIN
-  CREATE TYPE "public"."tenant_plan" AS ENUM('free', 'starter', 'professional', 'enterprise');
- EXCEPTION
-  WHEN duplicate_object THEN null;
- END;
-END $$;
+-- Drop existing enums if they exist (safe because table won't exist on first run)
+DROP TYPE IF EXISTS "public"."tenant_status" CASCADE;
 --> statement-breakpoint
-DO $$ BEGIN
- BEGIN
-  CREATE TYPE "public"."tenant_status" AS ENUM('provisioning', 'active', 'suspended', 'deleted', 'provisioning_failed');
- EXCEPTION
-  WHEN duplicate_object THEN null;
- END;
-END $$;
+DROP TYPE IF EXISTS "public"."tenant_plan" CASCADE;
 --> statement-breakpoint
+-- Create enum types
+CREATE TYPE "public"."tenant_plan" AS ENUM('free', 'starter', 'professional', 'enterprise');
+--> statement-breakpoint
+CREATE TYPE "public"."tenant_status" AS ENUM('provisioning', 'active', 'suspended', 'deleted', 'provisioning_failed');
+--> statement-breakpoint
+-- Create tenants table
 CREATE TABLE IF NOT EXISTS "tenants" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
