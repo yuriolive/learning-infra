@@ -108,10 +108,7 @@ describe("TenantRepository", () => {
       const tenants = await repository.findAll();
 
       expect(tenants).toHaveLength(2);
-      expect(tenants.map((t) => t.name).toSorted()).toEqual([
-        "Store 1",
-        "Store 2",
-      ]);
+      expect(tenants.map((t) => t.name).sort()).toEqual(["Store 1", "Store 2"]);
     });
 
     it("should return empty array when no tenants exist", async () => {

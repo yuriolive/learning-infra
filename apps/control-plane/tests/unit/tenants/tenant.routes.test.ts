@@ -117,6 +117,67 @@ describe("TenantRoutes", () => {
       expect(response.status).toBe(200);
       expect(data).toEqual([]);
     });
+
+    it("should handle pagination parameters", async () => {
+      // Create 5 tenants
+      for (let i = 0; i < 5; i++) {
+        await service.createTenant({
+          name: `Store ${i}`,
+          merchantEmail: `store${i}@example.com`,
+        });
+      }
+
+      // Test limit
+      let request = new Request("http://localhost:3000/api/tenants?limit=2", {
+        method: "GET",
+      });
+      let response = await routes.handleRequest(request);
+      let data = (await response.json()) as any;
+      expect(response.status).toBe(200);
+      expect(data).toHaveLength(2);
+
+      // Test offset
+      request = new Request("http://localhost:3000/api/tenants?limit=2&offset=2", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      data = (await response.json()) as any;
+      expect(response.status).toBe(200);
+      expect(data).toHaveLength(2);
+    });
+
+    it("should return 400 for invalid pagination parameters", async () => {
+      // Negative limit
+      let request = new Request("http://localhost:3000/api/tenants?limit=-1", {
+        method: "GET",
+      });
+      let response = await routes.handleRequest(request);
+      let data = (await response.json()) as any;
+      expect(response.status).toBe(400);
+      expect(data.error).toBeDefined();
+
+      // Non-numeric limit
+      request = new Request("http://localhost:3000/api/tenants?limit=abc", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      data = (await response.json()) as any;
+      expect(response.status).toBe(400);
+
+      // Negative offset
+      request = new Request("http://localhost:3000/api/tenants?offset=-1", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      expect(response.status).toBe(400);
+
+      // Empty limit string (tests the null check fix)
+      request = new Request("http://localhost:3000/api/tenants?limit=", {
+        method: "GET",
+      });
+      response = await routes.handleRequest(request);
+      expect(response.status).toBe(400);
+    });
   });
 
   describe("GET /api/tenants/:tenantId", () => {

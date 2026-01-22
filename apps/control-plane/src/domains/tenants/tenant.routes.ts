@@ -213,8 +213,8 @@ async function handleListTenants(
       : undefined;
 
     if (
-      (limitParameter && (Number.isNaN(limit) || limit! < 0)) ||
-      (offsetParameter && (Number.isNaN(offset) || offset! < 0))
+      (limitParameter != null && (Number.isNaN(limit) || (limit ?? 0) < 0)) ||
+      (offsetParameter != null && (Number.isNaN(offset) || (offset ?? 0) < 0))
     ) {
       return new Response(
         JSON.stringify({
