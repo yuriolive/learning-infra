@@ -33,7 +33,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(201);
       expect(data.id).toBeDefined();
@@ -52,7 +52,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(400);
       expect(data.error).toBe("Validation error");
@@ -77,7 +77,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(409);
       expect(data.error).toBe("Subdomain already in use");
@@ -100,7 +100,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data).toHaveLength(2);
@@ -112,7 +112,7 @@ describe("TenantRoutes", () => {
       });
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data).toEqual([]);
@@ -134,7 +134,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data.id).toBe(created.id);
@@ -150,7 +150,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(404);
       expect(data.error).toBe("Tenant not found");
@@ -165,7 +165,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(400);
       expect(data.error).toBe("Validation error");
@@ -192,7 +192,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data.name).toBe("Updated Name");
@@ -211,7 +211,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(404);
       expect(data.error).toBe("Tenant not found");
@@ -233,7 +233,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
@@ -248,7 +248,7 @@ describe("TenantRoutes", () => {
       );
 
       const response = await routes.handleRequest(request);
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       expect(response.status).toBe(404);
       expect(data.error).toBe("Tenant not found");
