@@ -38,6 +38,6 @@ gcloud run services describe control-plane --region southamerica-east1
 
 ## Related Documentation
 
-- [Cloud Run Infrastructure](../../.cursor/rules/infrastructure/cloud-run.mdc)
-- [Control Plane API Development](../../.cursor/rules/apps/control-plane/api-development.mdc)
+- [Cloud Run Infrastructure](../../.agent/rules/infrastructure/cloud-run.mdc)
+- [Control Plane API Development](../../.agent/rules/apps/control-plane/api-development.mdc)
 - [Test Architecture](../test/README.md)

@@ -20,7 +20,7 @@ description: [Third-person description with trigger keywords. Include what the S
 
 For comprehensive project documentation and compatibility requirements, see:
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.cursor/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
 - [Add other relevant rule references based on Skill scope]
 
 **Available Cursor Rules** (reference, don't duplicate):
@@ -57,9 +57,9 @@ description: [What it does for Control Plane]. Use when [trigger conditions]. Co
 
 ## Project Documentation References
 
-- **[@api-development.mdc](../../.cursor/rules/apps/control-plane/api-development.mdc)** - REST API patterns and procedures
-- **[@domain-structure.mdc](../../.cursor/rules/apps/control-plane/domain-structure.mdc)** - Domain-driven design patterns
-- **[@provisioning.mdc](../../.cursor/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - REST API patterns and procedures
+- **[@domain-structure.mdc](../../.agent/rules/apps/control-plane/domain-structure.mdc)** - Domain-driven design patterns
+- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
 
 ## Tech Stack
 
@@ -96,8 +96,8 @@ description: [What it does across apps]. Use when [trigger conditions]. Adapts b
 
 ## Project Documentation References
 
-- **[@project-overview.mdc](../../.cursor/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@coding-standards.mdc](../../.cursor/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
+- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
 
 ## Context Detection
 
@@ -139,10 +139,10 @@ description: [What it does for infrastructure]. Use when [trigger conditions]. I
 
 ## Project Documentation References
 
-- **[@cloud-run.mdc](../../.cursor/rules/infrastructure/cloud-run.mdc)** - Google Cloud Run deployment patterns
-- **[@cloudflare.mdc](../../.cursor/rules/infrastructure/cloudflare.mdc)** - Cloudflare for SaaS patterns
-- **[@database.mdc](../../.cursor/rules/infrastructure/database.mdc)** - Neon database provisioning patterns
-- **[@secrets.mdc](../../.cursor/rules/infrastructure/secrets.mdc)** - GCP Secret Manager patterns
+- **[@cloud-run.mdc](../../.agent/rules/infrastructure/cloud-run.mdc)** - Google Cloud Run deployment patterns
+- **[@cloudflare.mdc](../../.agent/rules/infrastructure/cloudflare.mdc)** - Cloudflare for SaaS patterns
+- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database provisioning patterns
+- **[@secrets.mdc](../../.agent/rules/infrastructure/secrets.mdc)** - GCP Secret Manager patterns
 
 ## Instructions
 
@@ -169,7 +169,7 @@ description: [What it does for packages]. Use when [trigger conditions]. Works w
 
 ## Project Documentation References
 
-- **[@project-overview.mdc](../../.cursor/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
 
 ## Package Context Detection
 
