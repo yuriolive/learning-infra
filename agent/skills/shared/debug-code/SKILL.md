@@ -14,12 +14,12 @@ Debugs code issues, errors, failing tests, and broken flows using a systematic w
 For comprehensive project documentation and compatibility requirements, see:
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.cursor/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@api-development.mdc](../../.cursor/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
-- **[@provisioning.mdc](../../.cursor/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
-- **[@database.mdc](../../.cursor/rules/infrastructure/database.mdc)** - Neon database provisioning patterns
-- **[@testing-strategy.mdc](../../.cursor/rules/shared/testing/testing-strategy.mdc)** - Testing patterns and strategies
-- **[@coding-standards.mdc](../../.cursor/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
+- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
+- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database provisioning patterns
+- **[@testing-strategy.mdc](../../.agent/rules/shared/testing/testing-strategy.mdc)** - Testing patterns and strategies
+- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
 
 ## Debugging Workflow
 

@@ -60,6 +60,6 @@ bun run test:e2e            # E2E tests (~10min)
 
 ## Related Documentation
 
-- [Testing Strategy](../../.cursor/rules/shared/testing/testing-strategy.mdc) - Testing rules and patterns
-- [Control Plane API](../../.cursor/rules/apps/control-plane/api-development.mdc) - API testing patterns
+- [Testing Strategy](../../.agent/rules/shared/testing/testing-strategy.mdc) - Testing rules and patterns
+- [Control Plane API](../../.agent/rules/apps/control-plane/api-development.mdc) - API testing patterns
 - [ROADMAP.md](../../ROADMAP.md) - Project phases and testing milestones
