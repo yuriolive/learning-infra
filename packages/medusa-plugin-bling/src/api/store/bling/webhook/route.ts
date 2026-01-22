@@ -5,7 +5,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     // Logic to handle stock updates or order status updates.
 
     // Example: Check headers or body type
-    const type = req.body?.type; // Hypothetical structure
+    const body = req.body as unknown as { type?: string } | undefined;
+    const type = body?.type;
 
     if (type === 'stock') {
         // Trigger inventory sync workflow

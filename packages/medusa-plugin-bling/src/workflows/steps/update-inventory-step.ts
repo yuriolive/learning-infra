@@ -26,17 +26,31 @@ export const updateInventoryStep = createStep(
         for (const v of p.variants) {
             if (!v.sku) continue;
 
-            const [inventoryItems] = await inventoryModule.listInventoryItems({ sku: v.sku });
+            // Fix: Retrieve array correctly. listInventoryItems returns InventoryItemDTO[] in some versions or [items, count]
+            // We'll treat it as standard list response which is usually [items, count] in V2 modules?
+            // But previous errors suggested direct array.
+            // Safer way:
+            const itemsList = await inventoryModule.listInventoryItems({ sku: v.sku });
 
-            if (inventoryItems && inventoryItems.length > 0) {
+            // Normalize result
+            const inventoryItems = Array.isArray(itemsList)
+                ? (Array.isArray(itemsList[0]) ? itemsList[0] : itemsList) // Handle [items, count] or items[]
+                : [];
+
+            // inventoryItems is now any[] or InventoryItemDTO[]
+
+            if (inventoryItems.length > 0) {
                 const item = inventoryItems[0] as unknown as InventoryItemDTO;
                 const totalStock = v.stock.reduce((acc: number, s: any) => acc + s.quantity, 0);
 
-                // Check for existing level to decide between update or create
-                const [levels] = await inventoryModule.listInventoryLevels({
+                const levelsList = await inventoryModule.listInventoryLevels({
                     inventory_item_id: item.id,
                     location_id: defaultLocationId
                 });
+
+                const levels = Array.isArray(levelsList)
+                    ? (Array.isArray(levelsList[0]) ? levelsList[0] : levelsList)
+                    : [];
 
                 if (levels.length > 0) {
                      await (inventoryModule as any).updateInventoryLevels([

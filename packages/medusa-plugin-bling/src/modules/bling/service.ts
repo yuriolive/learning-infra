@@ -55,7 +55,7 @@ export default class BlingModuleService extends MedusaService({
     deps: InjectedDependencies,
     options: BlingModuleOptions = {}
   ) {
-    // @ts-expect-error - MedusaService mixin expects specific args that match this signature roughly
+    // @ts-ignore
     super(...arguments);
 
     this.logger_ = deps.logger;
@@ -68,7 +68,7 @@ export default class BlingModuleService extends MedusaService({
     this.apiBaseUrl = mergedOptions.apiBaseUrl;
     this.oauthBaseUrl = mergedOptions.oauthBaseUrl;
   }
-// ... rest of the file ...
+// ... rest
     async getBlingConfig(): Promise<BlingConfig | null> {
     const config = await this.configRepository_.findOne({ id: BLING_CONFIG_ID });
     if (!config) {
