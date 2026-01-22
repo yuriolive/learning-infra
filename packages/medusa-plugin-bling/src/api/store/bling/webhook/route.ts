@@ -3,10 +3,19 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     // Bling webhooks usually send data in body.
     // Logic to handle stock updates or order status updates.
-    // For MVP we just acknowledge.
 
-    // We would parse the type of webhook (stock update vs order update) and trigger relevant workflows.
-    // E.g. if type == 'stock', trigger updateInventoryStep (wrapped in a workflow).
+    // Example: Check headers or body type
+    const type = req.body?.type; // Hypothetical structure
+
+    if (type === 'stock') {
+        // Trigger inventory sync workflow
+        // await syncInventoryWorkflow(req.scope).run({ input: req.body });
+    } else if (type === 'order') {
+        // Trigger order status update
+    }
+
+    // TODO: Implement full webhook processing logic with workflows.
+    // Currently acknowledging to prevent retries from Bling.
 
     res.status(200).send("OK");
 };

@@ -19,7 +19,9 @@ export type BlingSyncPreferences = {
     enabled: boolean;
     send_to_bling: boolean;
     receive_from_bling: boolean;
-    generate_nf: boolean;
+    generate_nfe: boolean; // Fixed typo from generate_nf
+    default_status?: string; // Configurable initial status
+    default_state_registration?: string; // Configurable default IE
   };
 };
 

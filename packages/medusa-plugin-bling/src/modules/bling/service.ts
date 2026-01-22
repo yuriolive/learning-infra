@@ -27,7 +27,9 @@ const DEFAULT_SYNC_PREFERENCES: BlingSyncPreferences = {
     enabled: true,
     send_to_bling: true,
     receive_from_bling: true,
-    generate_nf: false,
+    generate_nfe: false,
+    default_status: "Atendido",
+    default_state_registration: "ISENTO"
   },
 };
 
@@ -50,13 +52,14 @@ export default class BlingModuleService extends MedusaService({
   protected readonly oauthBaseUrl: string;
 
   constructor(
-    { manager, logger }: InjectedDependencies,
+    deps: InjectedDependencies,
     options: BlingModuleOptions = {}
   ) {
     // @ts-ignore
     super(...arguments);
-    this.logger_ = logger;
-    this.configRepository_ = manager.getRepository(BlingConfig);
+
+    this.logger_ = deps.logger;
+    this.configRepository_ = deps.manager.getRepository(BlingConfig);
 
     const mergedOptions = {
       ...DEFAULT_MODULE_OPTIONS,
@@ -65,8 +68,8 @@ export default class BlingModuleService extends MedusaService({
     this.apiBaseUrl = mergedOptions.apiBaseUrl;
     this.oauthBaseUrl = mergedOptions.oauthBaseUrl;
   }
-
-  async getBlingConfig(): Promise<BlingConfig | null> {
+// ... rest of the file
+    async getBlingConfig(): Promise<BlingConfig | null> {
     const config = await this.configRepository_.findOne({ id: BLING_CONFIG_ID });
     if (!config) {
       return null;
@@ -94,9 +97,7 @@ export default class BlingModuleService extends MedusaService({
       config.webhookSecret = sanitized && sanitized.length > 0 ? sanitized : null;
     }
 
-    // Fix: Handle partial update of preferences correctly
     if (data.syncPreferences !== undefined) {
-      // data.syncPreferences can be null, but mergePreferences expects Partial<T> | undefined
       const incoming = data.syncPreferences === null ? {} : data.syncPreferences;
       config.syncPreferences = this.mergePreferences(incoming, config.syncPreferences ?? undefined);
     } else if (!config.syncPreferences) {
@@ -250,7 +251,9 @@ export default class BlingModuleService extends MedusaService({
         enabled: incoming.orders?.enabled ?? source.orders.enabled,
         send_to_bling: incoming.orders?.send_to_bling ?? source.orders.send_to_bling,
         receive_from_bling: incoming.orders?.receive_from_bling ?? source.orders.receive_from_bling,
-        generate_nf: incoming.orders?.generate_nf ?? source.orders.generate_nf,
+        generate_nfe: incoming.orders?.generate_nfe ?? source.orders.generate_nfe,
+        default_status: incoming.orders?.default_status ?? source.orders.default_status,
+        default_state_registration: incoming.orders?.default_state_registration ?? source.orders.default_state_registration,
       },
     };
   }

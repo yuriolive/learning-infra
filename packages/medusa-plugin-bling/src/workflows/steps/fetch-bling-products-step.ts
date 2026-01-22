@@ -1,5 +1,5 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
-import { BLING_MODULE } from "../../modules/bling.js";
+import { BLING_MODULE } from "../../modules/bling/index.js";
 import BlingModuleService from "../../modules/bling/service.js";
 import { BlingProductMapper } from "../../modules/bling/utils/product-mapper.js";
 
@@ -21,18 +21,39 @@ export const fetchBlingProductsStep = createStep(
     }
 
     try {
-      // API call to fetch products
-      // Note: Pagination should be handled for large catalogs.
-      // For MVP/Simplicity we fetch one page or rely on service.
-      // Bling V3 uses /produtos with pagination (limite, pagina).
-      // Here we assume service handles it or we iterate.
-      // Let's implement basic iteration or simple fetch in service.
+      // Improved pagination logic for robust fetching
+      const allProducts: any[] = [];
+      let page = 1;
+      const limit = 100; // Configurable limit could be added to preferences
+      let hasMore = true;
 
-      const response = await blingService.getProducts({ limit: 100 });
-      const rawProducts = Array.isArray(response.data) ? response.data : [];
+      while (hasMore) {
+        // Pass page and limit to getProducts
+        // Assuming getProducts handles pagination params as generic object
+        const response = await blingService.getProducts({ limit, page });
+        const data = response?.data; // Check API structure. Usually { data: [...] } or just array
 
-      // Normalize
-      const normalized = rawProducts.map((p: any) =>
+        const rawProducts = Array.isArray(data) ? data : [];
+
+        if (rawProducts.length === 0) {
+            hasMore = false;
+        } else {
+            allProducts.push(...rawProducts);
+            if (rawProducts.length < limit) {
+                hasMore = false;
+            } else {
+                page++;
+            }
+        }
+
+        // Safety break to prevent infinite loops in bad API responses
+        if (page > 100) {
+             logger.warn("Fetch products limit reached (100 pages), stopping.");
+             hasMore = false;
+        }
+      }
+
+      const normalized = allProducts.map((p: any) =>
         BlingProductMapper.normalizeProductSnapshot(p, preferences)
       );
 

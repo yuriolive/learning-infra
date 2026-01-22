@@ -25,12 +25,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@medusajs/framework": "latest",
-    "@medusajs/medusa": "latest",
-    "@medusajs/utils": "latest",
-    "@medusajs/types": "latest",
-    "@medusajs/admin-sdk": "latest",
-    "@medusajs/ui": "latest",
+    "@medusajs/framework": "^2.0.0",
+    "@medusajs/medusa": "^2.0.0",
+    "@medusajs/utils": "^2.0.0",
+    "@medusajs/types": "^2.0.0",
+    "@medusajs/admin-sdk": "^2.0.0",
+    "@medusajs/ui": "^2.0.0",
     "axios": "^1.6.8",
     "zod": "^3.22.4"
   },
@@ -38,7 +38,7 @@
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0",
-    "@medusajs/cli": "latest"
+    "@medusajs/cli": "^2.0.0"
   },
   "peerDependencies": {
     "@medusajs/framework": "^2.0.0"

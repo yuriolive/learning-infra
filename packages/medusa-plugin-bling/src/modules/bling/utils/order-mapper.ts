@@ -166,7 +166,7 @@ export class BlingOrderMapper {
 
     const inscricaoEstadual = this.pickString(
       addressMetadata?.state_registration,
-      "ISENTO"
+      preferences.orders.default_state_registration || "ISENTO"
     );
     if (inscricaoEstadual) {
       cliente.ie_rg = inscricaoEstadual;
@@ -178,7 +178,7 @@ export class BlingOrderMapper {
 
     const payload: BlingOrderPayload = {
       numeroPedidoLoja: order.id,
-      situacao: "Atendido", // Default status, maybe make configurable?
+      situacao: preferences.orders.default_status || "Atendido",
       data: new Date(order.created_at).toISOString().slice(0, 10),
       cliente,
       itens: itemsPayload,
@@ -212,7 +212,7 @@ export class BlingOrderMapper {
       payload.natureza_operacao = naturezaOperacao;
     }
 
-    if (preferences.orders.generate_nf || options.generateNfe) {
+    if (preferences.orders.generate_nfe || options.generateNfe) {
       payload.gerar_nfe = "S";
     }
 
