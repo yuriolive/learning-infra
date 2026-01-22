@@ -5,6 +5,12 @@ WORKDIR /app
 # Stage 1: Install dependencies
 FROM base AS builder
 COPY package.json bun.lock ./
+# Copy all workspace package.json files - REQUIRED for Bun workspace resolution
+# When root package.json defines workspaces as ["apps/*", "packages/*"], Bun expects
+# ALL matching packages to be present. If any are missing, bun install --frozen-lockfile
+# will fail with "lockfile had changes, but lockfile is frozen" because Bun detects
+# the workspace structure doesn't match what's in the lockfile.
+# Note: We only copy package.json files here, not source code (that comes later)
 COPY packages/config/package.json ./packages/config/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/medusa-plugin-bling/package.json ./packages/medusa-plugin-bling/
@@ -15,7 +21,9 @@ COPY apps/tenant-instance/package.json ./apps/tenant-instance/
 # Install dependencies including workspaces
 RUN bun install --frozen-lockfile
 
-# Copy source code
+# Copy source code - only what control-plane actually needs
+# We don't copy medusa-plugin-bling, storefront, or tenant-instance source code
+# since control-plane doesn't depend on them (only their package.json was needed above)
 COPY packages/config ./packages/config
 COPY packages/utils ./packages/utils
 COPY apps/control-plane ./apps/control-plane
