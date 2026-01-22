@@ -17,6 +17,9 @@ export const updateOrderMetadataStep = createStep(
 
     const order = await orderModule.retrieveOrder(orderId);
 
+    // Capture previous metadata state for compensation
+    const previousMetadata = order.metadata ? JSON.parse(JSON.stringify(order.metadata)) : {};
+
     const baseMetadata = { ...(order.metadata || {}) };
     const existingBling = (baseMetadata.bling as Record<string, any>) || {};
 
@@ -43,9 +46,19 @@ export const updateOrderMetadataStep = createStep(
       },
     });
 
-    return new StepResponse({ success: true });
+    return new StepResponse({ success: true }, { orderId, previousMetadata });
   },
-  async (input, { container }) => {
-     // Compensation logic (optional)
+  async (compensationInput, { container }) => {
+     if (!compensationInput || !compensationInput.previousMetadata) {
+         return;
+     }
+
+     const orderModule = container.resolve(Modules.ORDER);
+     const { orderId, previousMetadata } = compensationInput;
+
+     // Revert metadata
+     await orderModule.updateOrders(orderId, {
+         metadata: previousMetadata
+     });
   }
 );

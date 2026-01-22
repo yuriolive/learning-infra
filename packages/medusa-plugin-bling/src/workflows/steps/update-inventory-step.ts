@@ -32,15 +32,21 @@ export const updateInventoryStep = createStep(
                 const item = inventoryItems[0] as unknown as InventoryItemDTO;
                 const totalStock = v.stock.reduce((acc: number, s: any) => acc + s.quantity, 0);
 
-                try {
-                    await (inventoryModule as any).updateInventoryLevels([
+                // Check for existing level to decide between update or create
+                const [levels] = await inventoryModule.listInventoryLevels({
+                    inventory_item_id: item.id,
+                    location_id: defaultLocationId
+                });
+
+                if (levels.length > 0) {
+                     await (inventoryModule as any).updateInventoryLevels([
                         {
                             inventory_item_id: item.id,
                             location_id: defaultLocationId,
                             stocked_quantity: totalStock
                         }
                     ]);
-                } catch (e) {
+                } else {
                      await inventoryModule.createInventoryLevels({
                         inventory_item_id: item.id,
                         location_id: defaultLocationId,
