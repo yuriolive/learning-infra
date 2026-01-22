@@ -21,3 +21,25 @@ variable "github_repo_name" {
   type        = string
   default     = "vendin"
 }
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare Account ID"
+  type        = string
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID for the domain"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Root domain name (e.g., vendin.store)"
+  type        = string
+  default     = "vendin.store"
+}

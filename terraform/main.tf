@@ -44,8 +44,20 @@ module "cloud_run_control_plane" {
     {
       name   = "DATABASE_URL"
       secret = "control-plane-db-url"
+    },
+    {
+      name   = "CLOUDFLARE_API_TOKEN"
+      secret = "cloudflare-api-token"
     }
   ]
 
   depends_on = [module.apis, module.iam, module.artifact_registry, module.secrets]
+}
+
+module "cloudflare" {
+  source                    = "./modules/cloudflare"
+  account_id                = var.cloudflare_account_id
+  zone_id                   = var.cloudflare_zone_id
+  domain_name               = var.domain_name
+  control_plane_service_url = module.cloud_run_control_plane.service_url
 }

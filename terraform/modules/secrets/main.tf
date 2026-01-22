@@ -6,7 +6,10 @@ variable "project_id" {
 variable "secrets" {
   description = "List of secrets to create"
   type        = list(string)
-  default     = ["control-plane-db-url"]
+  default     = [
+    "control-plane-db-url",
+    "cloudflare-api-token"
+  ]
 }
 
 resource "google_secret_manager_secret" "secrets" {
