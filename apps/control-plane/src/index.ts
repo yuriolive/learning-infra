@@ -1,5 +1,6 @@
 import { createLogger } from "@vendin/utils/logger";
 import { serve } from "bun";
+import { LRUCache } from "lru-cache";
 
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
@@ -18,7 +19,12 @@ const tenantRepository = new TenantRepository();
 const tenantService = new TenantService(tenantRepository);
 const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
-const openApiSpecs = new Map<string, ReturnType<typeof generateOpenAPISpec>>();
+const openApiSpecs = new LRUCache<string, ReturnType<typeof generateOpenAPISpec>>(
+  {
+    max: 100, // Cache up to 100 different origins
+    ttl: 1000 * 60 * 60, // 1 hour TTL
+  },
+);
 
 const getOpenAPISpec = (origin: string) => {
   let spec = openApiSpecs.get(origin);
