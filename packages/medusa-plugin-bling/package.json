@@ -1,0 +1,49 @@
+{
+  "name": "@vendin/medusa-plugin-bling",
+  "version": "1.0.0",
+  "description": "Bling ERP integration for MedusaJS v2",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./api/*": "./dist/api/*",
+    "./modules/*": "./dist/modules/*",
+    "./workflows/*": "./dist/workflows/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "medusa plugin:build",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist .medusa",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@medusajs/framework": "latest",
+    "@medusajs/medusa": "latest",
+    "@medusajs/utils": "latest",
+    "@medusajs/types": "latest",
+    "@medusajs/admin-sdk": "latest",
+    "@medusajs/ui": "latest",
+    "axios": "^1.6.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@medusajs/cli": "latest"
+  },
+  "peerDependencies": {
+    "@medusajs/framework": "^2.0.0"
+  },
+  "files": [
+    "dist"
+  ]
+}
