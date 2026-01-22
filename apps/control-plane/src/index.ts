@@ -79,7 +79,7 @@ const server = serve({
         theme: "purple",
         layout: "modern",
       };
-      
+
       function initScalar() {
         if (typeof Scalar !== "undefined" && Scalar.createApiReference) {
           Scalar.createApiReference("#api-reference", configuration);
@@ -87,7 +87,7 @@ const server = serve({
           setTimeout(initScalar, 50);
         }
       }
-      
+
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initScalar);
       } else {
