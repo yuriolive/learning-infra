@@ -6,7 +6,7 @@ export default {
   bracketSameLine: false,
   bracketSpacing: true,
   embeddedLanguageFormatting: "auto",
-  endOfLine: "auto",
+  endOfLine: "lf",
   printWidth: 100,
   quoteProps: "as-needed",
   semi: true,
