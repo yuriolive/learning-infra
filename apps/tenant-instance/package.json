@@ -14,7 +14,9 @@
   "scripts": {
     "build": "../../node_modules/.bin/medusa build",
     "start": "../../node_modules/.bin/medusa start",
-    "dev": "TS_NODE_PROJECT=tsconfig.json ../../node_modules/.bin/medusa develop"
+    "dev": "TS_NODE_PROJECT=tsconfig.json ../../node_modules/.bin/medusa develop",
+    "lint": "bun x eslint .",
+    "typecheck": "bun x tsc --noEmit"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "^2.12.5",

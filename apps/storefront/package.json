@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "bun x tsc --noEmit",
     "pages:build": "bun x @cloudflare/next-on-pages"
   },
   "dependencies": {
