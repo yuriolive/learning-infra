@@ -7,6 +7,7 @@ FROM base AS builder
 COPY package.json bun.lock ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/utils/package.json ./packages/utils/
+COPY packages/medusa-plugin-bling/package.json ./packages/medusa-plugin-bling/
 COPY apps/control-plane/package.json ./apps/control-plane/
 COPY apps/storefront/package.json ./apps/storefront/
 COPY apps/tenant-instance/package.json ./apps/tenant-instance/
