@@ -152,7 +152,7 @@ export class NeonProvider {
 
   /**
    * Infers the default database name from environment variables.
-   * Priority: NEON_DEFAULT_DB > DATABASE_URL > "neondb"
+   * Priority: NEON_DEFAULT_DB \> DATABASE_URL \> "neondb"
    */
   private inferDefaultDatabase(): string {
     if (process.env.NEON_DEFAULT_DB) {

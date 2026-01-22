@@ -12,23 +12,23 @@ Creates new Claude Skills for the learning-infra monorepo following official for
 For comprehensive project documentation and compatibility requirements, see:
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.cursor/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@coding-standards.mdc](../../.cursor/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
-- **[@api-development.mdc](../../.cursor/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
-- **[@provisioning.mdc](../../.cursor/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
+- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
+- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
 
 ## Skill Creation Workflow
 
 Follow these steps to create a new Skill:
 
 1. **Determine scope**
-   - Control Plane: REST API, tenant provisioning -> `.claude/skills/control-plane/`
-   - Shared: Cross-app functionality -> `.claude/skills/shared/`
-   - Infrastructure: Cloud Run, Cloudflare, Neon -> `.claude/skills/infrastructure/`
+   - Control Plane: REST API, tenant provisioning -> `.skills/skills/control-plane/`
+   - Shared: Cross-app functionality -> `.skills/skills/shared/`
+   - Infrastructure: Cloud Run, Cloudflare, Neon -> `.skills/skills/infrastructure/`
    - Package: Config, utils -> Context-aware placement
 
 2. **Choose location**
-   - Create directory: `.claude/skills/{scope}/{skill-name}/`
+   - Create directory: `.skills/skills/{scope}/{skill-name}/`
    - Skill name: lowercase, hyphens, max 64 chars, no reserved words
 
 3. **Write description**
@@ -55,7 +55,7 @@ Follow these steps to create a new Skill:
 
 ## Monorepo Organization
 
-### Control Plane Skills (`.claude/skills/control-plane/`)
+### Control Plane Skills (`.skills/skills/control-plane/`)
 
 For Skills specific to Control Plane development:
 
@@ -69,7 +69,7 @@ For Skills specific to Control Plane development:
 - `control-plane/provision-tenant/`
 - `control-plane/create-api-endpoint/`
 
-### Shared Skills (`.claude/skills/shared/`)
+### Shared Skills (`.skills/skills/shared/`)
 
 For Skills used across multiple apps:
 
@@ -84,7 +84,7 @@ For Skills used across multiple apps:
 - `shared/debug-code/`
 - `shared/create-skill/` (this Skill)
 
-### Infrastructure Skills (`.claude/skills/infrastructure/`)
+### Infrastructure Skills (`.skills/skills/infrastructure/`)
 
 For Skills specific to infrastructure:
 
@@ -121,20 +121,20 @@ Package Skills are typically placed in `shared/` but include context detection f
 
 ### Available Cursor Rules
 
-**Control Plane Rules** (`.cursor/rules/apps/control-plane/`):
+**Control Plane Rules** (`.agent/rules/apps/control-plane/`):
 
 - `@api-development.mdc` - REST API patterns and procedures
 - `@domain-structure.mdc` - Domain-driven design patterns
 - `@provisioning.mdc` - Tenant provisioning patterns
 
-**Infrastructure Rules** (`.cursor/rules/infrastructure/`):
+**Infrastructure Rules** (`.agent/rules/infrastructure/`):
 
 - `@cloud-run.mdc` - Google Cloud Run deployment patterns
 - `@cloudflare.mdc` - Cloudflare for SaaS patterns
 - `@database.mdc` - Neon database provisioning patterns
 - `@secrets.mdc` - GCP Secret Manager patterns
 
-**Shared Rules** (`.cursor/rules/shared/`):
+**Shared Rules** (`.agent/rules/shared/`):
 
 - `@project-overview.mdc` - Project overview and tech stack
 - `@coding-standards.mdc` - Coding standards and guidelines
@@ -150,8 +150,8 @@ Package Skills are typically placed in `shared/` but include context detection f
 
 For comprehensive project documentation and compatibility requirements, see:
 
-- **[@provisioning.mdc](../../.cursor/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
-- **[@database.mdc](../../.cursor/rules/infrastructure/database.mdc)** - Neon database patterns
+- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database patterns
 ```
 
 **In instructions:**
@@ -181,7 +181,7 @@ The Control Plane orchestrates complete tenant provisioning:
 ```markdown
 ## Project Documentation References
 
-- **[@provisioning.mdc](../../.cursor/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
 
 ## Instructions
 
