@@ -37,7 +37,7 @@ Use pino logger from `@vendin/utils` for all logging.
 **Enforcement:**
 - ESLint rule `no-console: error` prevents console usage in source code
 - Exception: Console allowed in test files for debugging
-- See [@utils-package.mdc](../../packages/utils-package.mdc) for logger implementation
+- See [@utils-package.md](../../packages/utils-package.md) for logger implementation
 - See [docs/examples/logger-usage.ts](../../../docs/examples/logger-usage.ts) for usage examples
 
 ## Code Review Checklist
@@ -52,8 +52,8 @@ Use pino logger from `@vendin/utils` for all logging.
 
 ## References
 
-- **Pre-commit verification**: See [@git-conventions.mdc](../git/git-conventions.mdc)
-- **Logging patterns**: See [@utils-package.mdc](../../packages/utils-package.mdc)
+- **Pre-commit verification**: See [@git-conventions.md](../git/git-conventions.md)
+- **Logging patterns**: See [@utils-package.md](../../packages/utils-package.md)
 - **Logger examples**: See [docs/examples/logger-usage.ts](../../../docs/examples/logger-usage.ts)
 - **Architecture**: See [AGENTS.md](../../../AGENTS.md)
 - **Tenant isolation**: See [AGENTS.md](../../../AGENTS.md#key-constraints)

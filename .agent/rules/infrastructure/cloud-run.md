@@ -18,7 +18,7 @@ globs: apps/**/*, infrastructure/**/*
   - `port: 3000`
 
 ### Tenant Instance Services
-- **Service Naming**: See [@references.mdc](../shared/references.mdc)
+- **Service Naming**: See [@references.md](../shared/references.md)
 - **Type**: Separate service per tenant (dynamically provisioned)
 - **Purpose**: Isolated MedusaJS 2.0 backend per tenant
 - **Configuration**:
@@ -67,6 +67,6 @@ When deleting a tenant, delete the Cloud Run service. See [docs/examples/cloud-r
 
 ## References
 
-- **Service naming**: See [@references.mdc](../shared/references.mdc)
-- **Provisioning workflow**: See [@provisioning.mdc](../apps/control-plane/provisioning.mdc)
+- **Service naming**: See [@references.md](../shared/references.md)
+- **Provisioning workflow**: See [@provisioning.md](../apps/control-plane/provisioning.md)
 - **Code examples**: See [docs/examples/](../../docs/examples/)

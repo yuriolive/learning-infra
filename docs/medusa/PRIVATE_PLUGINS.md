@@ -82,4 +82,4 @@ If you need to internalize a vendor plugin (e.g., from a tarball), place it in a
 ## Related Documentation
 
 - [AGENTS.md](../../AGENTS.md)
-- [.agent/rules/tenant-instance/medusa-plugins.mdc](../../.agent/rules/tenant-instance/medusa-plugins.mdc)
+- [.agent/rules/tenant-instance/medusa-plugins.md](../../.agent/rules/tenant-instance/medusa-plugins.md)

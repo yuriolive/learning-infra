@@ -84,5 +84,5 @@ See detailed documentation in `docs/test/`:
 
 ## References
 
-- **Project overview**: See [@project-overview.mdc](../project/project-overview.mdc)
+- **Project overview**: See [@project-overview.md](../project/project-overview.md)
 - **Code examples**: See [docs/examples/](../../../docs/examples/)

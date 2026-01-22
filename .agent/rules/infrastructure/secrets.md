@@ -48,4 +48,4 @@ secrets: |
 ## References
 
 - **Code examples**: See [docs/examples/secret-management.ts](../../docs/examples/secret-management.ts)
-- **Database provisioning**: See [@database.mdc](./database.mdc)
+- **Database provisioning**: See [@database.md](./database.md)

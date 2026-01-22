@@ -44,4 +44,4 @@ See [docs/examples/domain-patterns.ts](../../../docs/examples/domain-patterns.ts
 ## References
 
 - **Code examples**: See [docs/examples/domain-patterns.ts](../../../docs/examples/domain-patterns.ts)
-- **API patterns**: See [@api-development.mdc](./api-development.mdc)
+- **API patterns**: See [@api-development.md](./api-development.md)

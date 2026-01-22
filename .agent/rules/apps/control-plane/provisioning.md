@@ -37,11 +37,11 @@ See [docs/examples/provisioning-workflow.ts](../../../docs/examples/provisioning
 - **Pattern**: `{store-name}.my.vendin.store`
 - **Generation**: Sanitize store name (lowercase, hyphens, no special chars)
 - **Uniqueness**: Check against existing subdomains
-- **Reserved**: Never use reserved subdomains (see [@references.mdc](../../shared/references.mdc))
+- **Reserved**: Never use reserved subdomains (see [@references.md](../../shared/references.md))
 
 ## Service Naming
 
-See [@references.mdc](../../shared/references.mdc) for service naming conventions.
+See [@references.md](../../shared/references.md) for service naming conventions.
 
 ## Monitoring
 
@@ -53,7 +53,7 @@ Track provisioning metrics:
 
 ## References
 
-- **Service naming**: See [@references.mdc](../../shared/references.mdc)
+- **Service naming**: See [@references.md](../../shared/references.md)
 - **Code examples**: See [docs/examples/provisioning-workflow.ts](../../../docs/examples/provisioning-workflow.ts)
-- **Database provisioning**: See [@database.mdc](../../infrastructure/database.mdc)
-- **Cloud Run deployment**: See [@cloud-run.mdc](../../infrastructure/cloud-run.mdc)
+- **Database provisioning**: See [@database.md](../../infrastructure/database.md)
+- **Cloud Run deployment**: See [@cloud-run.md](../../infrastructure/cloud-run.md)

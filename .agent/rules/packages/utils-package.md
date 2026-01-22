@@ -56,4 +56,4 @@ See `packages/utils/src/logger.ts` for implementation details.
 ## References
 
 - **Code examples**: See [docs/examples/logger-usage.ts](../../docs/examples/logger-usage.ts)
-- **Coding standards**: See [@coding-standards.mdc](../shared/quality/coding-standards.mdc)
+- **Coding standards**: See [@coding-standards.md](../shared/quality/coding-standards.md)

@@ -14,12 +14,12 @@ Debugs code issues, errors, failing tests, and broken flows using a systematic w
 For comprehensive project documentation and compatibility requirements, see:
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
-- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
-- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database provisioning patterns
-- **[@testing-strategy.mdc](../../.agent/rules/shared/testing/testing-strategy.mdc)** - Testing patterns and strategies
-- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
+- **[@project-overview.md](../../.agent/rules/shared/project/project-overview.md)** - Project overview and tech stack
+- **[@api-development.md](../../.agent/rules/apps/control-plane/api-development.md)** - Control Plane REST API patterns
+- **[@provisioning.md](../../.agent/rules/apps/control-plane/provisioning.md)** - Tenant provisioning patterns
+- **[@database.md](../../.agent/rules/infrastructure/database.md)** - Neon database provisioning patterns
+- **[@testing-strategy.md](../../.agent/rules/shared/testing/testing-strategy.md)** - Testing patterns and strategies
+- **[@coding-standards.md](../../.agent/rules/shared/quality/coding-standards.md)** - Coding standards and guidelines
 
 ## Debugging Workflow
 
@@ -41,16 +41,16 @@ For comprehensive project documentation and compatibility requirements, see:
 Trace using project patterns:
 
 1. **Control Plane Issues**: REST routes -> Services -> Repositories -> Database
-2. **Provisioning Issues**: Follow workflow in @provisioning.mdc
+2. **Provisioning Issues**: Follow workflow in @provisioning.md
 3. **Database Issues**: Neon API, Drizzle schema, migrations consistency
-4. **Tenant Isolation Issues**: Verify physical database isolation as per @project-overview.mdc
+4. **Tenant Isolation Issues**: Verify physical database isolation as per @project-overview.md
 
 ### Step 3: Reproduce
 
 1. **Create Reproduction**:
    - Prefer: A failing unit/integration test that reproduces the issue
    - Or: A minimal HTTP request
-   - If missing: Add a targeted test as per @testing-strategy.mdc
+   - If missing: Add a targeted test as per @testing-strategy.md
 
 2. **Isolate the Problem**:
    - Minimize the reproduction case
@@ -60,13 +60,13 @@ Trace using project patterns:
 
 1. **Read Code Around Failure**:
    - Understand the flow and data transformations
-   - Check Control Plane patterns (from @api-development.mdc)
-   - Verify provisioning logic (from @provisioning.mdc)
-   - Check database operations (from @database.mdc)
+   - Check Control Plane patterns (from @api-development.md)
+   - Verify provisioning logic (from @provisioning.md)
+   - Check database operations (from @database.md)
 
 2. **Avoid Destabilizing Changes**:
    - DO NOT add noisy or permanent console logs
-   - Use structured logging via `@vendin/utils/logger` as per @coding-standards.mdc
+   - Use structured logging via `@vendin/utils/logger` as per @coding-standards.md
 
 ### Step 5: Identify Root Cause
 
@@ -81,7 +81,7 @@ Check for common issues:
    - Neon API errors
    - Cloud Run deployment issues
    - Secret Manager configuration errors
-   - Rollback failures (see @provisioning.mdc)
+   - Rollback failures (see @provisioning.md)
 
 3. **Database and Schema Issues**:
    - Drizzle schema mismatches
@@ -101,9 +101,9 @@ Check for common issues:
    - Keeps functions small and focused
 
 2. **Follow Project Patterns**:
-   - REST patterns from @api-development.mdc
-   - Provisioning patterns from @provisioning.mdc
-   - Database patterns from @database.mdc
+   - REST patterns from @api-development.md
+   - Provisioning patterns from @provisioning.md
+   - Database patterns from @database.md
 
 ### Step 7: Validate the Fix
 
@@ -139,7 +139,7 @@ Check for common issues:
 
 ### Provisioning Rollback
 
-- If a provisioning step fails, verify that all previous resources were cleaned up as per @provisioning.mdc rollback logic.
+- If a provisioning step fails, verify that all previous resources were cleaned up as per @provisioning.md rollback logic.
 
 ## Best Practices
 

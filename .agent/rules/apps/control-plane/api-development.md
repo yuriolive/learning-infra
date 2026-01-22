@@ -52,5 +52,5 @@ All route handlers must include TSDoc with:
 
 ## References
 
-- **Domain patterns**: See [@domain-structure.mdc](./domain-structure.mdc)
-- **Logging**: See [@coding-standards.mdc](../../shared/quality/coding-standards.mdc)
+- **Domain patterns**: See [@domain-structure.md](./domain-structure.md)
+- **Logging**: See [@coding-standards.md](../../shared/quality/coding-standards.md)

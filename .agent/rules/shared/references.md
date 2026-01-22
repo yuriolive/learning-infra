@@ -27,6 +27,6 @@ These subdomains are reserved for platform services:
 
 ## References
 
-- **Subdomain structure**: See [@project-overview.mdc](./project/project-overview.mdc)
+- **Subdomain structure**: See [@project-overview.md](./project/project-overview.md)
 - **Architecture**: See [AGENTS.md](../../../AGENTS.md)
 - **Tenant isolation**: See [AGENTS.md](../../../AGENTS.md#key-constraints)

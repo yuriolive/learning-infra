@@ -141,4 +141,4 @@ docs/
 - **Requirements**: See `PRD.md` for project requirements.
 - **Setup Guides**: See `docs/setup/` for infrastructure setup documentation.
 - **External docs**: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS (see `AGENTS.md` Resources section).
-- **Service naming**: See [@references.mdc](../references.mdc)
+- **Service naming**: See [@references.md](../references.md)

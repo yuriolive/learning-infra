@@ -48,5 +48,5 @@ globs: apps/storefront/**/*
 
 ## References
 
-- **Hostname routing**: See [@routing.mdc](./routing.mdc)
-- **Subdomain structure**: See [@project-overview.mdc](../../shared/project/project-overview.mdc)
+- **Hostname routing**: See [@routing.md](./routing.md)
+- **Subdomain structure**: See [@project-overview.md](../../shared/project/project-overview.md)

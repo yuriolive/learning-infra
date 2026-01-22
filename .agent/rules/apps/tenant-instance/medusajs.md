@@ -42,4 +42,4 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 ## References
 
 - **Database isolation**: See [AGENTS.md](../../../AGENTS.md#key-constraints)
-- **Secret management**: See [@secrets.mdc](../../infrastructure/secrets.mdc)
+- **Secret management**: See [@secrets.md](../../infrastructure/secrets.md)

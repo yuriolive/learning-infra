@@ -12,10 +12,10 @@ Creates new Claude Skills for the learning-infra monorepo following official for
 For comprehensive project documentation and compatibility requirements, see:
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
-- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
-- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@project-overview.md](../../.agent/rules/shared/project/project-overview.md)** - Project overview and tech stack
+- **[@coding-standards.md](../../.agent/rules/shared/quality/coding-standards.md)** - Coding standards and guidelines
+- **[@api-development.md](../../.agent/rules/apps/control-plane/api-development.md)** - Control Plane REST API patterns
+- **[@provisioning.md](../../.agent/rules/apps/control-plane/provisioning.md)** - Tenant provisioning patterns
 
 ## Skill Creation Workflow
 
@@ -123,23 +123,23 @@ Package Skills are typically placed in `shared/` but include context detection f
 
 **Control Plane Rules** (`.agent/rules/apps/control-plane/`):
 
-- `@api-development.mdc` - REST API patterns and procedures
-- `@domain-structure.mdc` - Domain-driven design patterns
-- `@provisioning.mdc` - Tenant provisioning patterns
+- `@api-development.md` - REST API patterns and procedures
+- `@domain-structure.md` - Domain-driven design patterns
+- `@provisioning.md` - Tenant provisioning patterns
 
 **Infrastructure Rules** (`.agent/rules/infrastructure/`):
 
-- `@cloud-run.mdc` - Google Cloud Run deployment patterns
-- `@cloudflare.mdc` - Cloudflare for SaaS patterns
-- `@database.mdc` - Neon database provisioning patterns
-- `@secrets.mdc` - GCP Secret Manager patterns
+- `@cloud-run.md` - Google Cloud Run deployment patterns
+- `@cloudflare.md` - Cloudflare for SaaS patterns
+- `@database.md` - Neon database provisioning patterns
+- `@secrets.md` - GCP Secret Manager patterns
 
 **Shared Rules** (`.agent/rules/shared/`):
 
-- `@project-overview.mdc` - Project overview and tech stack
-- `@coding-standards.mdc` - Coding standards and guidelines
-- `@testing-strategy.mdc` - Testing patterns and strategies
-- `@git-conventions.mdc` - Conventional commits specification
+- `@project-overview.md` - Project overview and tech stack
+- `@coding-standards.md` - Coding standards and guidelines
+- `@testing-strategy.md` - Testing patterns and strategies
+- `@git-conventions.md` - Conventional commits specification
 
 ### Reference Pattern
 
@@ -150,8 +150,8 @@ Package Skills are typically placed in `shared/` but include context detection f
 
 For comprehensive project documentation and compatibility requirements, see:
 
-- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
-- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database patterns
+- **[@provisioning.md](../../.agent/rules/apps/control-plane/provisioning.md)** - Tenant provisioning patterns
+- **[@database.md](../../.agent/rules/infrastructure/database.md)** - Neon database patterns
 ```
 
 **In instructions:**
@@ -159,7 +159,7 @@ For comprehensive project documentation and compatibility requirements, see:
 ```markdown
 ## Instructions
 
-Follow provisioning patterns from @provisioning.mdc and database patterns from @database.mdc.
+Follow provisioning patterns from @provisioning.md and database patterns from @database.md.
 
 [Only Skill-specific guidance here - how to use the Skill, not the rules themselves]
 ```
@@ -173,7 +173,7 @@ The Control Plane orchestrates complete tenant provisioning:
 
 1. Merchant Signup -> Receive tenant creation request
 2. Create Neon Database -> Via Neon API
-   [Duplicates @provisioning.mdc content]
+   [Duplicates @provisioning.md content]
 ```
 
 **✅ Good**: Referencing rules
@@ -181,11 +181,11 @@ The Control Plane orchestrates complete tenant provisioning:
 ```markdown
 ## Project Documentation References
 
-- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@provisioning.md](../../.agent/rules/apps/control-plane/provisioning.md)** - Tenant provisioning patterns
 
 ## Instructions
 
-This Skill generates provisioning code following patterns from @provisioning.mdc.
+This Skill generates provisioning code following patterns from @provisioning.md.
 
 [Only Skill-specific guidance]
 ```

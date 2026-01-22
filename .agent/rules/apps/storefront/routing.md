@@ -33,6 +33,6 @@ Use Next.js middleware for hostname-based routing. See [docs/examples/hostname-r
 
 ## References
 
-- **Subdomain structure**: See [@project-overview.mdc](../../shared/project/project-overview.mdc)
-- **Reserved subdomains**: See [@references.mdc](../../shared/references.mdc)
+- **Subdomain structure**: See [@project-overview.md](../../shared/project/project-overview.md)
+- **Reserved subdomains**: See [@references.md](../../shared/references.md)
 - **Code examples**: See [docs/examples/hostname-routing.ts](../../../docs/examples/hostname-routing.ts)

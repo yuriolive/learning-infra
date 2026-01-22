@@ -20,19 +20,19 @@ description: [Third-person description with trigger keywords. Include what the S
 
 For comprehensive project documentation and compatibility requirements, see:
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@project-overview.md](../../.agent/rules/shared/project/project-overview.md)** - Project overview and tech stack
 - [Add other relevant rule references based on Skill scope]
 
 **Available Cursor Rules** (reference, don't duplicate):
-- Control Plane: `@api-development.mdc`, `@domain-structure.mdc`, `@provisioning.mdc`
-- Infrastructure: `@cloud-run.mdc`, `@cloudflare.mdc`, `@database.mdc`, `@secrets.mdc`
-- Shared: `@project-overview.mdc`, `@coding-standards.mdc`, `@testing-strategy.mdc`, `@git-conventions.mdc`
+- Control Plane: `@api-development.md`, `@domain-structure.md`, `@provisioning.md`
+- Infrastructure: `@cloud-run.md`, `@cloudflare.md`, `@database.md`, `@secrets.md`
+- Shared: `@project-overview.md`, `@coding-standards.md`, `@testing-strategy.md`, `@git-conventions.md`
 
 ## Instructions
 
 [Clear, step-by-step guidance that references rules, not duplicates them]
 
-**Pattern**: "Follow [pattern] from @rule-name.mdc" instead of repeating the pattern.
+**Pattern**: "Follow [pattern] from @rule-name.md" instead of repeating the pattern.
 
 ## Examples
 
@@ -57,9 +57,9 @@ description: [What it does for Control Plane]. Use when [trigger conditions]. Co
 
 ## Project Documentation References
 
-- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - REST API patterns and procedures
-- **[@domain-structure.mdc](../../.agent/rules/apps/control-plane/domain-structure.mdc)** - Domain-driven design patterns
-- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
+- **[@api-development.md](../../.agent/rules/apps/control-plane/api-development.md)** - REST API patterns and procedures
+- **[@domain-structure.md](../../.agent/rules/apps/control-plane/domain-structure.md)** - Domain-driven design patterns
+- **[@provisioning.md](../../.agent/rules/apps/control-plane/provisioning.md)** - Tenant provisioning patterns
 
 ## Tech Stack
 
@@ -73,9 +73,9 @@ description: [What it does for Control Plane]. Use when [trigger conditions]. Co
 
 [Control Plane-specific instructions that reference rules, not duplicate them]
 
-**Pattern**: "Follow [pattern] from @rule-name.mdc" instead of repeating the pattern.
+**Pattern**: "Follow [pattern] from @rule-name.md" instead of repeating the pattern.
 
-Example: "Use provisioning patterns from @provisioning.mdc for tenant creation."
+Example: "Use provisioning patterns from @provisioning.md for tenant creation."
 
 ## Examples
 
@@ -96,8 +96,8 @@ description: [What it does across apps]. Use when [trigger conditions]. Adapts b
 
 ## Project Documentation References
 
-- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
+- **[@project-overview.md](../../.agent/rules/shared/project/project-overview.md)** - Project overview and tech stack
+- **[@coding-standards.md](../../.agent/rules/shared/quality/coding-standards.md)** - Coding standards and guidelines
 
 ## Context Detection
 
@@ -139,16 +139,16 @@ description: [What it does for infrastructure]. Use when [trigger conditions]. I
 
 ## Project Documentation References
 
-- **[@cloud-run.mdc](../../.agent/rules/infrastructure/cloud-run.mdc)** - Google Cloud Run deployment patterns
-- **[@cloudflare.mdc](../../.agent/rules/infrastructure/cloudflare.mdc)** - Cloudflare for SaaS patterns
-- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database provisioning patterns
-- **[@secrets.mdc](../../.agent/rules/infrastructure/secrets.mdc)** - GCP Secret Manager patterns
+- **[@cloud-run.md](../../.agent/rules/infrastructure/cloud-run.md)** - Google Cloud Run deployment patterns
+- **[@cloudflare.md](../../.agent/rules/infrastructure/cloudflare.md)** - Cloudflare for SaaS patterns
+- **[@database.md](../../.agent/rules/infrastructure/database.md)** - Neon database provisioning patterns
+- **[@secrets.md](../../.agent/rules/infrastructure/secrets.md)** - GCP Secret Manager patterns
 
 ## Instructions
 
 [Infrastructure-specific instructions that reference rules, not duplicate them]
 
-**Pattern**: "Follow [pattern] from @rule-name.mdc" instead of repeating the pattern.
+**Pattern**: "Follow [pattern] from @rule-name.md" instead of repeating the pattern.
 
 ## Examples
 
@@ -169,7 +169,7 @@ description: [What it does for packages]. Use when [trigger conditions]. Works w
 
 ## Project Documentation References
 
-- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
+- **[@project-overview.md](../../.agent/rules/shared/project/project-overview.md)** - Project overview and tech stack
 
 ## Package Context Detection
 

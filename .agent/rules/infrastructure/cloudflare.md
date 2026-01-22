@@ -30,7 +30,7 @@ Storefront must resolve tenants from hostname. See [docs/examples/hostname-routi
 
 ## Reserved Subdomains
 
-See [@references.mdc](../shared/references.mdc) for reserved subdomains list.
+See [@references.md](../shared/references.md) for reserved subdomains list.
 
 ## DNS Configuration
 
@@ -40,6 +40,6 @@ See [@references.mdc](../shared/references.mdc) for reserved subdomains list.
 
 ## References
 
-- **Subdomain structure**: See [@project-overview.mdc](../shared/project/project-overview.mdc)
-- **Hostname routing**: See [@routing.mdc](../apps/storefront/routing.mdc)
+- **Subdomain structure**: See [@project-overview.md](../shared/project/project-overview.md)
+- **Hostname routing**: See [@routing.md](../apps/storefront/routing.md)
 - **Code examples**: See [docs/examples/](../../docs/examples/)

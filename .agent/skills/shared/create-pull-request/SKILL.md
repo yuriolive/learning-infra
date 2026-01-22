@@ -10,8 +10,8 @@ Creates a GitHub pull request using the project's PR template and standard workf
 ## Project Documentation References
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@git-conventions.mdc](../../.agent/rules/shared/git/git-conventions.mdc)** - Conventional commits and git workflows
-- **[@github-automation.mdc](../../.agent/rules/shared/git/github-automation.mdc)** - GitHub project automation
+- **[@git-conventions.md](../../.agent/rules/shared/git/git-conventions.md)** - Conventional commits and git workflows
+- **[@github-automation.md](../../.agent/rules/shared/git/github-automation.md)** - GitHub project automation
 
 ## Workflow
 
@@ -28,7 +28,7 @@ Creates a GitHub pull request using the project's PR template and standard workf
 
 ### Step 2: Push Changes
 
-1. **Commit**: Use conventional commits as per @git-conventions.mdc.
+1. **Commit**: Use conventional commits as per @git-conventions.md.
 2. **Push**: Push the current branch to origin.
    ```bash
    git push -u origin HEAD

@@ -14,14 +14,14 @@ Reviews code against learning-infra project standards for architecture complianc
 For comprehensive project documentation and compatibility requirements, see:
 
 - **[AGENTS.md](../../../AGENTS.md)** - Central reference for all project documentation
-- **[@project-overview.mdc](../../.agent/rules/shared/project/project-overview.mdc)** - Project overview and tech stack
-- **[@api-development.mdc](../../.agent/rules/apps/control-plane/api-development.mdc)** - Control Plane REST API patterns
-- **[@provisioning.mdc](../../.agent/rules/apps/control-plane/provisioning.mdc)** - Tenant provisioning patterns
-- **[@domain-structure.mdc](../../.agent/rules/apps/control-plane/domain-structure.mdc)** - Domain-driven design patterns
-- **[@database.mdc](../../.agent/rules/infrastructure/database.mdc)** - Neon database patterns
-- **[@cloud-run.mdc](../../.agent/rules/infrastructure/cloud-run.mdc)** - Cloud Run deployment patterns
-- **[@testing-strategy.mdc](../../.agent/rules/shared/testing/testing-strategy.mdc)** - Testing patterns and strategies
-- **[@coding-standards.mdc](../../.agent/rules/shared/quality/coding-standards.mdc)** - Coding standards and guidelines
+- **[@project-overview.md](../../.agent/rules/shared/project/project-overview.md)** - Project overview and tech stack
+- **[@api-development.md](../../.agent/rules/apps/control-plane/api-development.md)** - Control Plane REST API patterns
+- **[@provisioning.md](../../.agent/rules/apps/control-plane/provisioning.md)** - Tenant provisioning patterns
+- **[@domain-structure.md](../../.agent/rules/apps/control-plane/domain-structure.md)** - Domain-driven design patterns
+- **[@database.md](../../.agent/rules/infrastructure/database.md)** - Neon database patterns
+- **[@cloud-run.md](../../.agent/rules/infrastructure/cloud-run.md)** - Cloud Run deployment patterns
+- **[@testing-strategy.md](../../.agent/rules/shared/testing/testing-strategy.md)** - Testing patterns and strategies
+- **[@coding-standards.md](../../.agent/rules/shared/quality/coding-standards.md)** - Coding standards and guidelines
 
 ## Review Workflow
 
@@ -44,33 +44,33 @@ Review code against project standards. Reference rules, don't duplicate them.
 
 **Review Priorities**:
 
-1. **Tenant Isolation Compliance** (@project-overview.mdc, @coding-standards.mdc)
+1. **Tenant Isolation Compliance** (@project-overview.md, @coding-standards.md)
    - **MANDATORY**: Verify physical database isolation (one database per tenant)
    - Check that connection strings are never shared
    - Ensure tenant scoping in all queries
 
-2. **Control Plane API Patterns** (@api-development.mdc)
+2. **Control Plane API Patterns** (@api-development.md)
    - RESTful style compliance
    - TSDoc requirements met
    - OpenAPI/Scalar UI registration
    - Structured error handling
 
-3. **Provisioning Workflow Compliance** (@provisioning.mdc)
+3. **Provisioning Workflow Compliance** (@provisioning.md)
    - Proper orchestration steps
    - **CRITICAL**: Error handling and rollback implementation
    - Provisioning time targets considered
 
-4. **Infrastructure Best Practices** (@cloud-run.mdc, @cloudflare.mdc, @database.mdc)
+4. **Infrastructure Best Practices** (@cloud-run.md, @cloudflare.md, @database.md)
    - Scale-to-zero configuration
-   - Secure secret management (@secrets.mdc)
+   - Secure secret management (@secrets.md)
    - Serverless-first priority
 
-5. **Code Quality and Standards** (@coding-standards.mdc)
+5. **Code Quality and Standards** (@coding-standards.md)
    - TypeScript strict usage
    - Pino logger usage (no `console.log`)
    - Function length and complexity
 
-6. **Testing Strategy Compliance** (@testing-strategy.mdc)
+6. **Testing Strategy Compliance** (@testing-strategy.md)
    - Unit and integration tests added
    - Tenant isolation tests included
    - Coverage requirements met (80% minimum)
@@ -84,7 +84,7 @@ Review code against project standards. Reference rules, don't duplicate them.
 
 2. **Provide Constructive Feedback**:
    - Be direct and succinct
-   - Reference specific rules (@rule-name.mdc)
+   - Reference specific rules (@rule-name.md)
    - Suggest minimal fixes
 
 ## Review Checklist

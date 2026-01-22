@@ -42,5 +42,5 @@ When deleting a tenant, delete database via Neon API and remove secrets. See [do
 ## References
 
 - **Tenant isolation**: See [AGENTS.md](../../AGENTS.md#key-constraints)
-- **Secret management**: See [@secrets.mdc](./secrets.mdc)
+- **Secret management**: See [@secrets.md](./secrets.md)
 - **Code examples**: See [docs/examples/](../../docs/examples/)

@@ -83,4 +83,4 @@ bun run lint && bun run typecheck
 
 ## References
 
-- **General coding standards**: See [@coding-standards.mdc](../quality/coding-standards.mdc)
+- **General coding standards**: See [@coding-standards.md](../quality/coding-standards.md)
