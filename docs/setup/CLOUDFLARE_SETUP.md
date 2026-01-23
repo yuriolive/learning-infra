@@ -416,8 +416,15 @@ Proxy status: Proxied
 # Control Plane API
 Type: CNAME
 Name: control
-Target: ghs.googlehosted.com (Cloud Run domain mapping)
-Proxy status: DNS only (gray cloud)
+Target: 1.1.1.1 (or any IP, will be intercepted by Worker)
+Proxy status: Proxied (orange cloud)
+
+#### Setting up the Worker Proxy (Free Plan)
+Google Cloud Run requires the `Host` header to match the internal service URL. On Free/Pro plans, Origin Rules cannot rewrite the Host header. Use a **Cloudflare Worker**:
+
+1. **Create**: Go to **Workers & Pages** > **Create application** > **Create Worker** named `control-plane-proxy`.
+2. **Code**: Replace code with the proxy script (rewriting `url.hostname` and `Host` header).
+3. **Route**: Under the domain settings, add a Worker Route for `control.vendin.store/*`.
 
 # Platform Admin (optional)
 Type: CNAME
@@ -443,7 +450,7 @@ export async function middleware(request: NextRequest) {
 
   // Control Plane API: Route to control.vendin.store
   if (hostname === "control.vendin.store") {
-    // This should be handled by Cloud Run domain mapping, not storefront
+    // This is handled by Cloudflare proxying to the Cloud Run service URL
     return NextResponse.redirect("https://control.vendin.store");
   }
 
