@@ -1,5 +1,45 @@
 # Cloudflare Setup for Multi-Tenant SaaS
 
+- [Cloudflare Setup for Multi-Tenant SaaS](#cloudflare-setup-for-multi-tenant-saas)
+  - [Overview](#overview)
+  - [Subdomain Structure](#subdomain-structure)
+  - [Architecture](#architecture)
+  - [Prerequisites](#prerequisites)
+  - [Part A: Storefront Deployment (Cloudflare Pages)](#part-a-storefront-deployment-cloudflare-pages)
+    - [Step 1: Prepare Storefront for Deployment](#step-1-prepare-storefront-for-deployment)
+    - [Step 2: Deploy to Cloudflare](#step-2-deploy-to-cloudflare)
+    - [Step 3: Configure Environment Variables](#step-3-configure-environment-variables)
+    - [Step 4: Set Up Custom Domain for Storefront](#step-4-set-up-custom-domain-for-storefront)
+  - [Part B: Cloudflare for SaaS Setup](#part-b-cloudflare-for-saas-setup)
+    - [Step 1: Enable Cloudflare for SaaS](#step-1-enable-cloudflare-for-saas)
+    - [Step 2: Configure Fallback Origin](#step-2-configure-fallback-origin)
+    - [Step 3: Configure SSL/TLS Settings](#step-3-configure-ssltls-settings)
+    - [Step 4: Set Up API Credentials](#step-4-set-up-api-credentials)
+    - [Step 5: Add API Token to Secret Manager](#step-5-add-api-token-to-secret-manager)
+  - [Part C: Custom Hostname Management (API Integration)](#part-c-custom-hostname-management-api-integration)
+    - [API Endpoints](#api-endpoints)
+    - [DNS Requirements for Merchants](#dns-requirements-for-merchants)
+  - [Part D: Subdomain Routing Setup](#part-d-subdomain-routing-setup)
+    - [Wildcard DNS for Tenant Subdomains](#wildcard-dns-for-tenant-subdomains)
+      - [Solutions for Deep Wildcard SSL:](#solutions-for-deep-wildcard-ssl)
+    - [Storefront Routing Logic](#storefront-routing-logic)
+  - [Part E: Security Configuration](#part-e-security-configuration)
+    - [WAF (Web Application Firewall)](#waf-web-application-firewall)
+    - [Rate Limiting](#rate-limiting)
+    - [Bot Management](#bot-management)
+  - [Part F: Monitoring and Analytics](#part-f-monitoring-and-analytics)
+    - [Custom Hostname Status Monitoring](#custom-hostname-status-monitoring)
+    - [Analytics](#analytics)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+    - [Diagnostic Commands](#diagnostic-commands)
+  - [Cost Considerations](#cost-considerations)
+    - [Free Tier](#free-tier)
+    - [Paid Plans](#paid-plans)
+  - [Integration with Control Plane](#integration-with-control-plane)
+  - [Next Steps](#next-steps)
+  - [References](#references)
+
 ## Overview
 
 This document provides step-by-step instructions for configuring Cloudflare for your multi-tenant e-commerce platform. This includes:
@@ -7,6 +47,7 @@ This document provides step-by-step instructions for configuring Cloudflare for 
 1. **Storefront Deployment** (Cloudflare Pages) - Customer-facing Next.js application
 2. **Cloudflare for SaaS** - Custom domain management per tenant
 3. **DNS and SSL Automation** - Automatic SSL provisioning for merchant domains
+4. **SSL/TLS Encryption Mode** - Global encryption settings for the platform
 
 ## Subdomain Structure
 
@@ -21,6 +62,9 @@ admin.vendin.store              → Platform admin dashboard (optional)
   ├─ awesome-store.my.vendin.store → Merchant storefront
   └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
+
+> [!CAUTION]
+> **Deep Wildcard SSL Limitation**: Cloudflare's free Universal SSL only covers `domain.com` and `*.domain.com`. Deep wildcards like `*.my.vendin.store` (two levels deep) will show an SSL warning unless you use **Advanced Certificate Manager (ACM)**. See Part D for details.
 
 **Custom Domains (Optional):**
 
@@ -216,8 +260,10 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostna
 ### Step 3: Configure SSL/TLS Settings
 
 ```bash
-# In Cloudflare Dashboard → SSL/TLS → Custom Hostnames
+# In Cloudflare Dashboard → SSL/TLS → Overview
 # SSL/TLS encryption mode: Full (strict)
+#
+# Then in SSL/TLS → Edge Certificates (for basic settings):
 # Minimum TLS Version: 1.2
 # Always Use HTTPS: On
 # Automatic HTTPS Rewrites: On
@@ -324,6 +370,20 @@ Proxy status: Proxied (orange cloud)
 # But NOT reserved subdomains (api, admin, www) which should have explicit records
 # The .my. separator provides clear separation from platform services
 ```
+
+> [!WARNING]
+> **SSL Warning on Deep Wildcards**: Cloudflare's free Universal SSL does **not** cover second-level wildcards like `*.my.vendin.store`. You will see a "Hostname is not covered by a certificate" warning in the dashboard.
+
+#### Solutions for Deep Wildcard SSL:
+
+1. **Option A: Flat Subdomain Structure (Free)**
+   Change your pattern from `*.my.vendin.store` to `*.vendin.store`. This is covered by free Universal SSL but risks namespace collisions with your service subdomains (e.g., `admin.vendin.store`).
+
+2. **Option B: Advanced Certificate Manager (Paid)**
+   Subscribe to [Cloudflare ACM](https://developers.cloudflare.com/ssl/edge-certificates/advanced-certificate-manager/) ($10/mo). This allows you to issue certificates for deep wildcards like `*.my.vendin.store`.
+
+3. **Option C: Cloudflare for SaaS (Automatic)**
+   When a merchant adds a **custom domain** (e.g., `shop.merchant.com`), Cloudflare for SaaS issues a specific certificate for that hostname automatically. The warning only affects the default `.my.vendin.store` subdomains.
 
 **Explicit DNS Records for Platform Services:**
 
