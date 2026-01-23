@@ -23,15 +23,38 @@ import {
   UpdatePaymentInput,
   UpdatePaymentOutput,
   ProviderWebhookPayload,
-  WebhookActionResult
+  WebhookActionResult,
+  BigNumberInput
 } from "@medusajs/types";
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago";
 import { convertToDecimal, convertFromDecimal } from "./utils/index.js";
+import { randomUUID } from "node:crypto";
 
 type MercadoPagoOptions = {
   accessToken: string;
   webhookSecret?: string;
   webhookUrl?: string;
+}
+
+interface MercadoPagoPaymentData extends Record<string, unknown> {
+  sessionId?: string;
+  amount?: BigNumberInput;
+  paymentMethodId?: string;
+  installments?: number;
+  token?: string;
+  issuerId?: string;
+  identification?: {
+    type: string;
+    number: string;
+  };
+  externalId?: string;
+}
+
+interface MedusaPaymentContext {
+  customer?: {
+    email?: string;
+  };
+  idempotency_key?: string;
 }
 
 export default class MercadoPagoPaymentProviderService extends AbstractPaymentProvider {
@@ -60,7 +83,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
   }
 
   async initiatePayment(input: InitiatePaymentInput): Promise<InitiatePaymentOutput> {
-      const sessionId = "mp_sess_" + Math.random().toString(36);
+      const sessionId = `mp_sess_${randomUUID()}`;
       return {
           id: sessionId,
           status: "pending",
@@ -92,18 +115,18 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
 
   async authorizePayment(input: AuthorizePaymentInput): Promise<AuthorizePaymentOutput> {
     try {
-      const paymentData = input.data || {};
-      const context = input.context || {};
+      const paymentData = (input.data || {}) as MercadoPagoPaymentData;
+      const context = (input.context || {}) as unknown as MedusaPaymentContext;
 
       // Use trusted amount from session data (stored by initiate/update)
-      const amount = convertToDecimal(paymentData.amount as any || 0);
-      const sessionId = paymentData.sessionId as string;
+      const amount = convertToDecimal(paymentData.amount || 0);
+      const sessionId = paymentData.sessionId;
 
       if (!sessionId) {
           throw new Error("Session ID missing in payment data");
       }
 
-      const { email } = (context.customer || {}) as any;
+      const { email } = context.customer || {};
 
       const payload: any = {
         transaction_amount: amount,
