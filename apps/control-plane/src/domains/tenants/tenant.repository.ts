@@ -1,6 +1,6 @@
 import { and, eq, ne } from "drizzle-orm";
 
-import { database, type Database } from "../../database/database";
+import { type Database } from "../../database/database";
 import { tenants } from "../../database/schema";
 
 import type {
@@ -31,8 +31,8 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
 export class TenantRepository {
   private db: Database;
 
-  constructor(database_?: Database) {
-    this.db = database_ ?? (database as Database);
+  constructor(database: Database) {
+    this.db = database;
   }
 
   async create(input: CreateTenantInput): Promise<Tenant> {

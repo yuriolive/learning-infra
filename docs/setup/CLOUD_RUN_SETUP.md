@@ -61,82 +61,27 @@ gcloud projects add-iam-policy-binding vendin-store \
 
 By default, Cloud Run services have direct internet access. If you need to restrict traffic or use a static outbound IP, you can configure a VPC connector. For most Neon/external database setups, this is not required.
 
-## Step 6: Deploy Control Plane Service (Manual)
+## Step 6: Deploy Control Plane (Cloudflare Worker)
 
-The Control Plane is a **shared service** that orchestrates tenant provisioning. Before using GitHub Actions, test manual deployment:
+The Control Plane API has been migrated from Cloud Run to **Cloudflare Workers**. This natively resolves the custom domain limitations in `southamerica-east1` and reduces costs.
 
-```bash
-# Deploy control-plane service manually
-gcloud run deploy control-plane \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --image=southamerica-east1-docker.pkg.dev/vendin-store/containers/control-plane:latest \
-  --platform=managed \
-  --allow-unauthenticated \
-  --min-instances=0 \
-  --max-instances=10 \
-  --cpu=1 \
-  --memory=512Mi \
-  --port=3000 \
-  --set-env-vars=NODE_ENV=production \
-  --set-secrets=DATABASE_URL=control-plane-db-url:latest
-```
+### Deployment Process
 
-**Note**: This is a single shared service that manages all tenants. It handles merchant signup, database creation, and tenant instance provisioning.
+1. **Set up Secrets**:
+   Ensure your `DATABASE_URL` is set in Cloudflare:
 
-## Step 7: Configure Custom Domain (Managed - Unsupported in southamerica-east1)
-
-> [!WARNING]
-> **Domain Mapping Availability**
-> Managed domain mappings (`gcloud run domain-mappings`) are **NOT supported** in the `southamerica-east1` region.
->
-> If you are using this region, **skip Step 7** and use the **Cloudflare Proxy** approach below.
-
-If you are in a supported region (e.g., `us-central1`), you can use:
-
-```bash
-# Map custom domain to Cloud Run service
-gcloud run domain-mappings create \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --service=control-plane \
-  --domain=control.vendin.store
-
-# Verify domain mapping
-gcloud run domain-mappings list \
-  --project=vendin-store \
-  --region=southamerica-east1
-```
-
-### Alternative: Cloudflare Proxy (Recommended for southamerica-east1)
-
-Since managed domain mappings are unavailable in SA-East, use Cloudflare's proxy:
-
-1. **Get Service URL**:
    ```bash
-   gcloud run services describe control-plane \
-     --project=vendin-store \
-     --region=southamerica-east1 \
-     --format="value(status.url)"
+   bun wrangler --cwd apps/control-plane secret put DATABASE_URL
    ```
-2. **Create Cloudflare Worker (Free Tier Solution)**:
-   - Go to **Workers & Pages** > **Create application** > **Create Worker**.
-   - Name: `control-plane-proxy`.
-   - Replace the code with:
-     ```javascript
-     export default {
-       async fetch(request, env, ctx) {
-         const url = new URL(request.url);
-         url.hostname = "control-plane-110781160918.southamerica-east1.run.app";
-         const newRequest = new Request(url.toString(), request);
-         newRequest.headers.set("Host", url.hostname);
-         return fetch(newRequest);
-       },
-     };
-     ```
-3. **Configure Worker Route**:
-   - Go to your Domain -> **Settings** -> **Workers Routes**.
-   - Add Route: `control.vendin.store/*` pointing to `control-plane-proxy`.
+
+2. **Deploy**:
+   ```bash
+   bun wrangler --cwd apps/control-plane deploy
+   ```
+
+### Regional Note (GCP)
+
+While the Control Plane logic now resides on Cloudflare, the **Tenant Instances** (MedusaJS) will still be provisioned as Cloud Run services in the `southamerica-east1` region.
 
 ## Step 8: Set Up Monitoring and Logging
 
