@@ -144,12 +144,12 @@ vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root or alternative
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
-*.my.vendin.store               → Tenant stores (wildcard)
-  ├─ awesome-store.my.vendin.store → Merchant storefront
-  └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
+*-my.vendin.store               → Tenant stores (wildcard)
+  ├─ awesome-store-my.vendin.store → Merchant storefront
+  └─ awesome-store-my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
 
-**Pattern:** Following Shopify's `.myshopify.com` style with `.my.vendin.store` for tenant stores.
+**Pattern:** Following Shopify's `.myshopify.com` style but using `-my.vendin.store` for hyphenated SSL compatibility.
 
 ### Multi-Tenant Request Flow
 
@@ -164,10 +164,10 @@ Customer → vendin.store
 **Tenant Store (Subdomain or Custom Domain):**
 
 ```
-Customer → merchant-name.my.vendin.store OR shop.merchant.com
+Customer → merchant-name-my.vendin.store OR shop.merchant.com
         → Cloudflare (DNS + SSL + CDN)
         → Storefront (Cloudflare Pages - Next.js)
-        → Resolves tenant from hostname (.my. pattern or custom domain)
+        → Resolves tenant from hostname (-my pattern or custom domain)
         → Routes to tenant-{id} (Cloud Run - MedusaJS)
         → Tenant Database (Neon PostgreSQL)
 ```

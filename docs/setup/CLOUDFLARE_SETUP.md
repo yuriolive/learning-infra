@@ -21,7 +21,8 @@
     - [DNS Requirements for Merchants](#dns-requirements-for-merchants)
   - [Part D: Subdomain Routing Setup](#part-d-subdomain-routing-setup)
     - [Wildcard DNS for Tenant Subdomains](#wildcard-dns-for-tenant-subdomains)
-      - [Solutions for Deep Wildcard SSL:](#solutions-for-deep-wildcard-ssl)
+    - [Architecture Decision: Hyphens vs. Dots](#architecture-decision-hyphens-vs-dots)
+    - [Future Roadmap: Switching to Dotted Subdomains](#future-roadmap-switching-to-dotted-subdomains)
     - [Storefront Routing Logic](#storefront-routing-logic)
   - [Part E: Security Configuration](#part-e-security-configuration)
     - [WAF (Web Application Firewall)](#waf-web-application-firewall)
@@ -58,13 +59,10 @@ vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root or alternative storefront
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
-*.my.vendin.store               → Tenant stores (wildcard)
-  ├─ awesome-store.my.vendin.store → Merchant storefront
-  └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
+*-my.vendin.store               → Tenant stores (wildcard/hyphenated)
+  ├─ awesome-store-my.vendin.store → Merchant storefront
+  └─ awesome-store-my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
-
-> [!CAUTION]
-> **Deep Wildcard SSL Limitation**: Cloudflare's free Universal SSL only covers `domain.com` and `*.domain.com`. Deep wildcards like `*.my.vendin.store` (two levels deep) will show an SSL warning unless you use **Advanced Certificate Manager (ACM)**. See Part D for details.
 
 **Custom Domains (Optional):**
 
@@ -83,7 +81,7 @@ Customer Request Flow:
 └────────┬────────┘
          │
          │ vendin.store (signup) OR
-         │ merchant-name.my.vendin.store (store) OR
+         │ merchant-name-my.vendin.store (store) OR
          │ shop.merchant.com (custom domain)
          ▼
 ┌─────────────────┐
@@ -353,37 +351,58 @@ TTL: Auto
 
 ### Wildcard DNS for Tenant Subdomains
 
-For default tenant subdomains (e.g., `merchant-name.my.vendin.store`):
+For default tenant subdomains (e.g., `merchant-name-my.vendin.store`):
 
 ```bash
 # In Cloudflare DNS → Records
 # Add wildcard CNAME for tenant subdomains:
 Type: CNAME
-Name: *.my
+Name: *-my
 Target: storefront.pages.dev (or your storefront URL)
 TTL: Auto
 Proxy status: Proxied (orange cloud)
 
 # Note: This wildcard will match:
-# - awesome-store.my.vendin.store
-# - any-merchant.my.vendin.store
+# - awesome-store-my.vendin.store
+# - any-merchant-my.vendin.store
 # But NOT reserved subdomains (api, admin, www) which should have explicit records
-# The .my. separator provides clear separation from platform services
+# The -my prefix provides clear separation from platform services and works with Free SSL
 ```
 
-> [!WARNING]
-> **SSL Warning on Deep Wildcards**: Cloudflare's free Universal SSL does **not** cover second-level wildcards like `*.my.vendin.store`. You will see a "Hostname is not covered by a certificate" warning in the dashboard.
+### Architecture Decision: Hyphens vs. Dots
 
-#### Solutions for Deep Wildcard SSL:
+Our default tenant subdomains use the hyphenated pattern `{store}-my.vendin.store` instead of the dotted pattern `{store}.my.vendin.store`.
 
-1. **Option A: Flat Subdomain Structure (Free)**
-   Change your pattern from `*.my.vendin.store` to `*.vendin.store`. This is covered by free Universal SSL but risks namespace collisions with your service subdomains (e.g., `admin.vendin.store`).
+**Why Hyphens? (SSL Coverage)**
+Cloudflare's **Universal SSL** (Free/Pro) only issues certificates for:
 
-2. **Option B: Advanced Certificate Manager (Paid)**
-   Subscribe to [Cloudflare ACM](https://developers.cloudflare.com/ssl/edge-certificates/advanced-certificate-manager/) ($10/mo). This allows you to issue certificates for deep wildcards like `*.my.vendin.store`.
+1.  `vendin.store` (The apex domain)
+2.  `*.vendin.store` (First-level wildcards)
 
-3. **Option C: Cloudflare for SaaS (Automatic)**
-   When a merchant adds a **custom domain** (e.g., `shop.merchant.com`), Cloudflare for SaaS issues a specific certificate for that hostname automatically. The warning only affects the default `.my.vendin.store` subdomains.
+A dot separator like `store.my.vendin.store` is a **second-level** subdomain. Cloudflare will not issue a free certificate for it, resulting in a "Hostname is not covered by a certificate" warning and broken HTTPS for users.
+
+By using a hyphen (`store-my.vendin.store`), the hostname remains at the first level, ensuring full, automatic, and free SSL coverage for all tenants.
+
+### Future Roadmap: Switching to Dotted Subdomains
+
+If you prefer the aesthetic of `store.my.vendin.store` in the future, follow these steps to upgrade:
+
+1.  **Enable Advanced Certificate Manager (ACM)**:
+    In the Cloudflare dashboard, subscribe to ACM ($10/mo current pricing). This allows you to generate certificates for deep wildcards.
+2.  **Update DNS**:
+    Change the wildcard CNAME from `*-my` to `*.my`.
+3.  **Update Middleware Logic**:
+    Update `resolveTenantFromHostname` in `middleware.ts`:
+    ```typescript
+    // From:
+    if (hostname.endsWith("-my.vendin.store")) {
+      const storeName = hostname.replace("-my.vendin.store", "");
+    // To:
+    if (hostname.endsWith(".my.vendin.store")) {
+      const storeName = hostname.replace(".my.vendin.store", "");
+    ```
+4.  **Note on Custom Domains**:
+    This change only affects default subdomains. Custom merchant domains (e.g., `shop.merchant.com`) work regardless of the default pattern.
 
 **Explicit DNS Records for Platform Services:**
 
@@ -434,7 +453,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Tenant subdomain pattern: {store}.my.vendin.store or custom domain
+  // Tenant subdomain pattern: {store}-my.vendin.store or custom domain
   const tenantId = await resolveTenantFromHostname(hostname);
 
   if (!tenantId) {
@@ -454,10 +473,10 @@ export async function middleware(request: NextRequest) {
 async function resolveTenantFromHostname(
   hostname: string,
 ): Promise<string | null> {
-  // Check if it's a tenant subdomain pattern: {store}.my.vendin.store
-  if (hostname.endsWith(".my.vendin.store")) {
-    // Extract store name (e.g., "awesome-store" from "awesome-store.my.vendin.store")
-    const storeName = hostname.replace(".my.vendin.store", "");
+  // Check if it's a tenant subdomain pattern: {store}-my.vendin.store
+  if (hostname.endsWith("-my.vendin.store")) {
+    // Extract store name (e.g., "awesome-store" from "awesome-store-my.vendin.store")
+    const storeName = hostname.replace("-my.vendin.store", "");
 
     // Query Control Plane to find tenant by subdomain
     const tenant = await controlPlaneClient.findTenantBySubdomain(storeName);
