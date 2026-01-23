@@ -84,7 +84,15 @@ gcloud run deploy control-plane \
 
 **Note**: This is a single shared service that manages all tenants. It handles merchant signup, database creation, and tenant instance provisioning.
 
-## Step 7: Configure Custom Domain (Optional)
+## Step 7: Configure Custom Domain (Managed - Unsupported in southamerica-east1)
+
+> [!WARNING]
+> **Domain Mapping Availability**
+> Managed domain mappings (`gcloud run domain-mappings`) are **NOT supported** in the `southamerica-east1` region.
+>
+> If you are using this region, **skip Step 7** and use the **Cloudflare Proxy** approach below.
+
+If you are in a supported region (e.g., `us-central1`), you can use:
 
 ```bash
 # Map custom domain to Cloud Run service
@@ -99,6 +107,36 @@ gcloud run domain-mappings list \
   --project=vendin-store \
   --region=southamerica-east1
 ```
+
+### Alternative: Cloudflare Proxy (Recommended for southamerica-east1)
+
+Since managed domain mappings are unavailable in SA-East, use Cloudflare's proxy:
+
+1. **Get Service URL**:
+   ```bash
+   gcloud run services describe control-plane \
+     --project=vendin-store \
+     --region=southamerica-east1 \
+     --format="value(status.url)"
+   ```
+2. **Create Cloudflare Worker (Free Tier Solution)**:
+   - Go to **Workers & Pages** > **Create application** > **Create Worker**.
+   - Name: `control-plane-proxy`.
+   - Replace the code with:
+     ```javascript
+     export default {
+       async fetch(request, env, ctx) {
+         const url = new URL(request.url);
+         url.hostname = "control-plane-110781160918.southamerica-east1.run.app";
+         const newRequest = new Request(url.toString(), request);
+         newRequest.headers.set("Host", url.hostname);
+         return fetch(newRequest);
+       },
+     };
+     ```
+3. **Configure Worker Route**:
+   - Go to your Domain -> **Settings** -> **Workers Routes**.
+   - Add Route: `control.vendin.store/*` pointing to `control-plane-proxy`.
 
 ## Step 8: Set Up Monitoring and Logging
 

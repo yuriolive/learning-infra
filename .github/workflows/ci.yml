@@ -12,7 +12,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - ".cursor/**"
+      - ".agent/**"
       - "*.md"
       - "docs/**"
 
@@ -33,23 +33,10 @@ jobs:
         with:
           bun-version-file: ".bun-version"
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-node_modules-
-
       - name: Setup Turbo Remote Caching
         uses: rharkor/caching-for-turbo@v2.3.5
 
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
       - name: Run ESLint
@@ -68,23 +55,10 @@ jobs:
         with:
           bun-version-file: ".bun-version"
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-node_modules-
-
       - name: Setup Turbo Remote Caching
         uses: rharkor/caching-for-turbo@v2.3.5
 
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
       - name: Type check (tsc --noEmit)
@@ -119,23 +93,10 @@ jobs:
         with:
           bun-version-file: ".bun-version"
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-node_modules-
-
       - name: Setup Turbo Remote Caching
         uses: rharkor/caching-for-turbo@v2.3.5
 
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
       - name: Set DATABASE_URL
@@ -173,23 +134,10 @@ jobs:
         with:
           bun-version-file: ".bun-version"
 
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            apps/*/node_modules
-            packages/*/node_modules
-          key: ${{ runner.os }}-bun-node_modules-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-node_modules-
-
       - name: Setup Turbo Remote Caching
         uses: rharkor/caching-for-turbo@v2.3.5
 
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
       - name: Build project

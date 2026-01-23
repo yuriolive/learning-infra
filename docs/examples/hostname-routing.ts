@@ -1,7 +1,7 @@
 // Hostname Resolution Pattern
-// Subdomain Pattern: {store}.my.vendin.store
-if (hostname.endsWith('.my.vendin.store')) {
-  const storeName = hostname.replace('.my.vendin.store', '');
+// Subdomain Pattern: {store}-my.vendin.store
+if (hostname.endsWith('-my.vendin.store')) {
+  const storeName = hostname.replace('-my.vendin.store', '');
   
   // Check reserved subdomains
   const reserved = ['www', 'control', 'admin', 'mail', 'ftp'];

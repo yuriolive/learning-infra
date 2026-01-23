@@ -1,5 +1,6 @@
 import { createLogger } from "@vendin/utils/logger";
 import { serve } from "bun";
+import { LRUCache } from "lru-cache";
 
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
@@ -17,6 +18,23 @@ const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 const tenantRepository = new TenantRepository();
 const tenantService = new TenantService(tenantRepository);
 const tenantRoutes = createTenantRoutes({ logger, tenantService });
+
+const openApiSpecs = new LRUCache<
+  string,
+  ReturnType<typeof generateOpenAPISpec>
+>({
+  max: 100, // Cache up to 100 different origins
+  ttl: 1000 * 60 * 60, // 1 hour TTL
+});
+
+const getOpenAPISpec = (origin: string) => {
+  let spec = openApiSpecs.get(origin);
+  if (!spec) {
+    spec = generateOpenAPISpec(origin);
+    openApiSpecs.set(origin, spec);
+  }
+  return spec;
+};
 
 const server = serve({
   error(error: unknown) {
@@ -50,7 +68,7 @@ const server = serve({
     }
 
     if (url.pathname === "/openapi.json") {
-      const spec = generateOpenAPISpec(origin);
+      const spec = getOpenAPISpec(origin);
       return new Response(JSON.stringify(spec), {
         status: 200,
         headers: {
@@ -61,7 +79,7 @@ const server = serve({
     }
 
     if (url.pathname === "/docs") {
-      const spec = generateOpenAPISpec(origin);
+      const spec = getOpenAPISpec(origin);
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,7 +97,7 @@ const server = serve({
         theme: "purple",
         layout: "modern",
       };
-      
+
       function initScalar() {
         if (typeof Scalar !== "undefined" && Scalar.createApiReference) {
           Scalar.createApiReference("#api-reference", configuration);
@@ -87,7 +105,7 @@ const server = serve({
           setTimeout(initScalar, 50);
         }
       }
-      
+
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initScalar);
       } else {

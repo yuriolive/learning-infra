@@ -15,7 +15,7 @@ export default [
   // Ignore patterns
   {
     ignores: [
-      ".cursor/",
+      ".agent/",
       "node_modules/",
       "dist/",
       "build/",
