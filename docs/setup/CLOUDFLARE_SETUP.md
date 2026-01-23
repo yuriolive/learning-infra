@@ -73,58 +73,116 @@ Customer Request Flow:
 
 ### Step 1: Prepare Storefront for Deployment
 
-Your Next.js storefront should be configured for Cloudflare Pages:
+The storefront uses **OpenNext** with the Cloudflare adapter for optimal performance:
 
 ```bash
-# In your storefront project
-# Ensure next.config.js is configured for Cloudflare Pages
-# Use edge runtime for optimal performance
+# The storefront is pre-configured with:
+# - @opennextjs/cloudflare (replaces deprecated @cloudflare/next-on-pages)
+# - wrangler.jsonc (Cloudflare Workers configuration)
+# - open-next.config.ts (OpenNext configuration)
 ```
 
-### Step 2: Deploy to Cloudflare Pages
+### Step 2: Deploy to Cloudflare
+
+**Option 1: Via Wrangler CLI (Recommended)**
 
 ```bash
-# Option 1: Via Cloudflare Dashboard
-# 1. Go to Cloudflare Dashboard → Pages
-# 2. Click "Create a project"
-# 3. Connect your GitHub repository
-# 4. Select the storefront directory
-# 5. Configure build settings:
-#    - Build command: npm run build (or bun run build)
-#    - Build output directory: .next
-#    - Root directory: apps/storefront
+# Navigate to storefront directory
+cd apps/storefront
 
-# Option 2: Via Wrangler CLI
-npm install -g wrangler
-wrangler pages deploy apps/storefront/.next --project-name=storefront
+# Build and deploy in one command
+bun run pages:deploy
+
+# Or build first, then deploy
+bun run pages:build
+bun run pages:deploy
+
+# This uses OpenNext to:
+# 1. Build Next.js with Turbopack
+# 2. Generate Cloudflare Worker (.open-next/worker.js)
+# 3. Deploy to Cloudflare Workers
+```
+
+**Option 2: Via GitHub Actions (Automated)**
+
+The repository includes a GitHub Actions workflow that automatically deploys on push to `main`:
+
+```yaml
+# .github/workflows/deploy-storefront.yml
+# Triggers on:
+# - Push to main branch
+# - Changes to apps/storefront/** or packages/**
+# - Manual workflow dispatch
+
+# Required GitHub Secrets:
+# - CLOUDFLARE_API_TOKEN
+# - CLOUDFLARE_ACCOUNT_ID
+```
+
+**First-time setup:**
+
+```bash
+# Install Wrangler globally (optional, for local testing)
+bun add -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# The first deployment will create the project automatically
+bun run pages:deploy
 ```
 
 ### Step 3: Configure Environment Variables
 
-In Cloudflare Pages dashboard:
+Environment variables can be set via:
 
-```bash
-# Required environment variables:
-CONTROL_PLANE_API_URL=https://control.vendin.store
-CLOUDFLARE_ACCOUNT_ID=your-account-id
-CLOUDFLARE_API_TOKEN=your-api-token
-NODE_ENV=production
-```
+1. **Cloudflare Dashboard** (for production):
+   - Go to Workers & Pages → storefront → Settings → Environment Variables
+
+2. **`.dev.vars` file** (for local development):
+
+   ```bash
+   # apps/storefront/.dev.vars (gitignored)
+   CONTROL_PLANE_API_URL=https://control.vendin.store
+   CLOUDFLARE_ACCOUNT_ID=your-account-id
+   NODE_ENV=development
+   ```
+
+3. **GitHub Secrets** (for CI/CD):
+   ```bash
+   # Required secrets in repository settings:
+   CLOUDFLARE_API_TOKEN=your-api-token
+   CLOUDFLARE_ACCOUNT_ID=your-account-id
+   ```
+
+**API Token Permissions:**
+
+Create a Cloudflare API token with:
+
+- **Account** → **Cloudflare Pages** → **Edit**
+- **Account** → **Workers Scripts** → **Edit**
 
 ### Step 4: Set Up Custom Domain for Storefront
 
-```bash
-# In Cloudflare Pages → Custom domains
-# Add your platform domain: vendin.store (root domain)
-# Add www.vendin.store (optional, can redirect to root)
-# Cloudflare will automatically provision SSL
+After deployment, configure custom domains:
 
-# Root domain (vendin.store) serves:
-# - Landing page
-# - Signup page
-# - Marketing content
-# - Platform information
+```bash
+# Option 1: Via Cloudflare Dashboard
+# 1. Go to Workers & Pages → storefront → Settings → Domains
+# 2. Add custom domain: vendin.store
+# 3. Add www.vendin.store (optional)
+# 4. Cloudflare will automatically provision SSL
+
+# Option 2: Via Wrangler
+wrangler pages deployment tail
 ```
+
+**Root domain (vendin.store) serves:**
+
+- Landing page
+- Signup page
+- Marketing content
+- Platform information
 
 ## Part B: Cloudflare for SaaS Setup
 
