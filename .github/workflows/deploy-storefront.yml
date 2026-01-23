@@ -43,6 +43,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          project: storefront # Update this if your project name is different
-          directory: apps/storefront/.vercel/output/static
+          projectName: storefront
+          directory: apps/storefront/.open-next/assets
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
