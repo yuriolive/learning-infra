@@ -1,0 +1,13 @@
+{
+  "name": "control-plane-proxy",
+  "main": "src/index.js",
+  "compatibility_date": "2024-01-01",
+  "minify": true,
+  "node_compat": true,
+  "routes": [
+    {
+      "pattern": "control.vendin.store/*",
+      "zone_name": "vendin.store"
+    }
+  ]
+}
