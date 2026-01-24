@@ -279,12 +279,9 @@ describe("TenantRoutes", () => {
     });
 
     it("should return 400 when subdomain param is missing", async () => {
-      const request = new Request(
-        "http://localhost:3000/api/tenants/lookup",
-        {
-          method: "GET",
-        },
-      );
+      const request = new Request("http://localhost:3000/api/tenants/lookup", {
+        method: "GET",
+      });
 
       const response = await routes.handleRequest(request);
       const data = await response.json();
