@@ -1,14 +1,7 @@
-import { logger } from "@vendin/utils/logger";
 import { NextResponse } from "next/server";
-
-import { fetchTenantBySubdomain, fetchTenantById } from "./lib/tenant/client";
-import {
-  extractSubdomainFromHostname,
-  shouldRedirectToMarketing,
-  isLocalhost,
-} from "./lib/tenant/resolver";
-
 import type { NextRequest } from "next/server";
+import { fetchTenantBySubdomain, fetchTenantById } from "./lib/tenant/client";
+import { extractSubdomainFromHostname, shouldRedirectToMarketing, isLocalhost } from "./lib/tenant/resolver";
 
 export const config = {
   matcher: [
@@ -50,9 +43,9 @@ export async function middleware(request: NextRequest) {
       tenant = await fetchTenantBySubdomain(subdomain);
     } else {
       // Fallback to env var
-      const developmentTenantId = process.env.DEVELOPMENT_TENANT_ID;
-      if (developmentTenantId) {
-        tenantId = developmentTenantId;
+      const devTenantId = process.env.DEVELOPMENT_TENANT_ID;
+      if (devTenantId) {
+        tenantId = devTenantId;
         tenant = await fetchTenantById(tenantId);
       }
     }
@@ -65,19 +58,16 @@ export async function middleware(request: NextRequest) {
     subdomain = extractSubdomainFromHostname(hostname);
 
     if (subdomain) {
-      tenant = await fetchTenantBySubdomain(subdomain);
+       tenant = await fetchTenantBySubdomain(subdomain);
     } else {
-      // Invalid subdomain or custom domain (not supported)
-      // Log handled by generic not found below
+       // Invalid subdomain or custom domain (not supported)
+       // Log handled by generic not found below
     }
   }
 
   // If no tenant resolved
   if (!tenant) {
-    logger.warn({
-      msg: "Tenant not found for hostname",
-      hostname,
-    });
+    console.warn(`[Middleware] Tenant not found for hostname: ${hostname}`);
     return NextResponse.rewrite(new URL("/not-found", request.url));
   }
 
@@ -103,12 +93,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // Log success (structured)
-  logger.info({
-    msg: "Tenant resolved",
+  console.log(JSON.stringify({
+    level: "info",
+    message: "Tenant resolved",
     tenantId: tenant.id,
     subdomain: tenant.subdomain,
-    hostname,
-  });
+    hostname: hostname
+  }));
 
   return NextResponse.next({
     request: {
