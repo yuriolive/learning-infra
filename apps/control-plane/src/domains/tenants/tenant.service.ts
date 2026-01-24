@@ -1,5 +1,8 @@
 import { type createLogger } from "@vendin/utils/logger";
 
+import { CloudflareProvider } from "../../providers/cloudflare/cloudflare.client";
+import { CloudRunProvider } from "../../providers/gcp/cloud-run.client";
+import { SecretManagerProvider } from "../../providers/gcp/secret-manager.client";
 import { NeonProvider } from "../../providers/neon/neon.client";
 
 import type { TenantRepository } from "./tenant.repository";
@@ -17,6 +20,9 @@ interface TenantServiceConfig {
 
 export class TenantService {
   private neonProvider: NeonProvider | null = null;
+  private cloudRunProvider: CloudRunProvider;
+  private secretManagerProvider: SecretManagerProvider;
+  private cloudflareProvider: CloudflareProvider;
   private logger: ReturnType<typeof createLogger>;
 
   constructor(
@@ -35,6 +41,10 @@ export class TenantService {
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize NeonProvider");
     }
+
+    this.cloudRunProvider = new CloudRunProvider();
+    this.secretManagerProvider = new SecretManagerProvider();
+    this.cloudflareProvider = new CloudflareProvider();
   }
 
   async createTenant(input: CreateTenantInput): Promise<Tenant> {
@@ -45,6 +55,25 @@ export class TenantService {
       }
     }
 
+    // 0. Pre-flight checks: Validate R2 Access
+    try {
+      // We only validate if Neon is also enabled, implying full provisioning mode?
+      // Or always validate? If we are in local dev without R2 creds, this might block.
+      // But CloudflareProvider constructor allows missing creds (logs warning), and validateR2Access fails if so.
+      // If we want to allow "stub" mode, we should check.
+      // Assuming if Neon is present, we are in a provisioning environment.
+      if (this.neonProvider) {
+        const r2Valid = await this.cloudflareProvider.validateR2Access();
+        if (!r2Valid) {
+          this.logger.error("R2 storage validation failed");
+          throw new Error("R2 storage configuration is invalid");
+        }
+      }
+    } catch (error) {
+      this.logger.error({ error }, "Pre-flight check failed");
+      throw error;
+    }
+
     // 1. Create tenant record with status 'provisioning'
     const tenant = await this.repository.create({
       ...input,
@@ -52,7 +81,6 @@ export class TenantService {
     });
 
     // 2. Provision Database (Background process or sync)
-    // For MVP we do it synchronously to ensure valid state or fail fast
     if (this.neonProvider) {
       try {
         this.logger.info(
@@ -64,19 +92,32 @@ export class TenantService {
           tenant.id,
         );
 
-        // 3. Update tenant with database URL and set status to active (or 'provisioning' if more steps)
-        // Since we don't have Cloud Run provisioning yet, we might keep it 'provisioning'
-        // OR set it to 'active' for the database part.
-        // The PRD says "Single tenant can be provisioned end-to-end".
-        // For now, let's update the databaseUrl. Status update might depend on other steps.
-        // We will keep status as 'provisioning' until the full flow is ready,
-        // OR set to 'active' if this is the only step we have for now and want to test.
-        // Let's update databaseUrl.
+        // 3. Create Secret for Database URL
+        this.logger.info(
+          { tenantId: tenant.id },
+          "Creating database URL secret",
+        );
+        const secretName = `tenant-${tenant.id}-db-url`;
+        const secretVersion = await this.secretManagerProvider.createSecret(
+          secretName,
+          databaseUrl,
+        );
 
+        // 4. Deploy Cloud Run Service
+        this.logger.info(
+          { tenantId: tenant.id },
+          "Deploying Cloud Run service",
+        );
+        const apiUrl = await this.cloudRunProvider.deployTenantService(
+          tenant.id,
+          secretVersion,
+        );
+
+        // 5. Update tenant with database URL and API URL, set status to active
         const updated = await this.repository.update(tenant.id, {
           databaseUrl,
-          // We keep status as provisioning because API url is still missing
-          // status: "active"
+          apiUrl,
+          status: "active",
         });
 
         if (updated) {
@@ -85,14 +126,18 @@ export class TenantService {
       } catch (error) {
         this.logger.error(
           { error, tenantId: tenant.id },
-          "Failed to provision database",
+          "Failed to provision tenant resources",
         );
         // Rollback: Mark as provisioning_failed
         await this.repository.update(tenant.id, {
           status: "provisioning_failed",
         });
-        throw new Error("Failed to provision database resource");
+        throw new Error(`Failed to provision tenant resources: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
+    } else {
+      this.logger.warn(
+        "Skipping infrastructure provisioning (Neon provider missing)",
+      );
     }
 
     return tenant;
