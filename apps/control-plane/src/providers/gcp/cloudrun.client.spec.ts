@@ -124,6 +124,35 @@ describe("CloudRunProvider", () => {
     });
   });
 
+  it("should provision a tenant service with custom image", async () => {
+    provider = new CloudRunProvider();
+    const tenantId = "124";
+    const databaseUrl = "postgres://user:pass@host/db";
+    const customImage = "custom/image:1.0.0";
+    const expectedUrl = "https://tenant-124-xyz.run.app";
+
+    const mockOperation = {
+      name: "projects/test-project/locations/us-central1/operations/124",
+      promise: vi.fn().mockResolvedValue([
+        {
+          uri: expectedUrl,
+        },
+      ]),
+    };
+    mockCreateService.mockResolvedValue([mockOperation]);
+
+    const url = await provider.provisionTenantService(
+      tenantId,
+      databaseUrl,
+      customImage,
+    );
+
+    expect(url).toBe(expectedUrl);
+    const callArguments = mockCreateService.mock.calls[0][0];
+    const template = callArguments.service.template;
+    expect(template.containers[0].image).toBe(customImage);
+  });
+
   it("should throw error if service creation fails", async () => {
     provider = new CloudRunProvider();
     const error = new Error("GCP Error");

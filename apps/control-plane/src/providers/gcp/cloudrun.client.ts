@@ -37,6 +37,7 @@ export class CloudRunProvider {
   async provisionTenantService(
     tenantId: string,
     databaseUrl: string,
+    image?: string,
   ): Promise<string> {
     const serviceId = `tenant-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
@@ -60,7 +61,7 @@ export class CloudRunProvider {
           },
           containers: [
             {
-              image: "medusajs/medusa:latest",
+              image: image ?? "medusajs/medusa:latest",
               resources: {
                 limits: {
                   cpu: "1000m",
