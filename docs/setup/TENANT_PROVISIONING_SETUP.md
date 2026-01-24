@@ -96,82 +96,49 @@ gcloud secrets add-iam-policy-binding tenant-${TENANT_ID}-db-url \
 
 ### Step 3: Create Cloud Run Service
 
-Deploy the tenant instance to Cloud Run:
+Deploy the tenant instance to Cloud Run. This process is automated by the Control Plane using the Google Cloud Run API.
 
-```bash
-# Via Cloud Run Admin API (recommended)
-POST https://run.googleapis.com/v2/projects/vendin-store/locations/southamerica-east1/services
-Authorization: Bearer {gcp_access_token}
-Content-Type: application/json
+**Configuration Details:**
 
-{
-  "apiVersion": "serving.knative.dev/v1",
-  "kind": "Service",
-  "metadata": {
-    "name": "tenant-${TENANT_ID}",
-    "namespace": "vendin-store"
-  },
-  "spec": {
-    "template": {
-      "metadata": {
-        "annotations": {
-          "autoscaling.knative.dev/minScale": "0",
-          "autoscaling.knative.dev/maxScale": "10"
-        }
-      },
-      "spec": {
-        "containerConcurrency": 80,
-        "timeoutSeconds": 300,
-        "serviceAccountName": "cloud-run-sa@vendin-store.iam.gserviceaccount.com",
-        "containers": [{
-          "image": "southamerica-east1-docker.pkg.dev/vendin-store/containers/tenant-instance:latest",
-          "ports": [{
-            "containerPort": 3000
-          }],
-          "env": [
-            {
-              "name": "NODE_ENV",
-              "value": "production"
-            },
-            {
-              "name": "TENANT_ID",
-              "value": "${TENANT_ID}"
-            },
-            {
-              "name": "REDIS_NAMESPACE",
-              "value": "tenant-${TENANT_ID}"
-            }
-          ],
-          "resources": {
-            "limits": {
-              "cpu": "1",
-              "memory": "512Mi"
-            }
-          }
-        }]
-      }
+- **Service Name**: `tenant-${TENANT_ID}`
+- **Region**: `southamerica-east1` (default)
+- **Min Instances**: 0 (Scale-to-zero)
+- **Max Instances**: 1 (initially)
+- **Memory**: 512Mi
+
+**Environment Variables Injected:**
+
+- `NODE_ENV`: `production`
+- `TENANT_ID`: `${TENANT_ID}`
+- `REDIS_URL`: `${REDIS_URL}` (Shared Redis or per-tenant secret)
+- `S3_REGION`: `auto`
+
+**Secrets Mounted:**
+
+- `DATABASE_URL`: `tenant-${TENANT_ID}-db-url`
+- `S3_ACCESS_KEY_ID`: `r2-access-key-id`
+- `S3_SECRET_ACCESS_KEY`: `r2-secret-access-key`
+- `S3_BUCKET`: `r2-bucket-name`
+- `S3_ENDPOINT`: `r2-endpoint`
+- `S3_FILE_URL`: `r2-public-url`
+
+**API Call (Reference):**
+
+```typescript
+// apps/control-plane/src/providers/gcp/cloud-run.client.ts
+await runClient.projects.locations.services.create({
+  parent: `projects/${projectId}/locations/${region}`,
+  serviceId: `tenant-${tenantId}`,
+  requestBody: {
+    template: {
+      containers: [{
+        env: [
+          // ... env vars and secrets
+        ]
+      }]
     }
   }
-}
-```
-
-**Or via gcloud (for testing):**
-
-```bash
-gcloud run services create tenant-${TENANT_ID} \
-  --project=vendin-store \
-  --region=southamerica-east1 \
-  --image=southamerica-east1-docker.pkg.dev/vendin-store/containers/tenant-instance:latest \
-  --platform=managed \
-  --allow-unauthenticated \
-  --min-instances=0 \
-  --max-instances=10 \
-  --cpu=1 \
-  --memory=512Mi \
-  --port=3000 \
-  --service-account=cloud-run-sa@vendin-store.iam.gserviceaccount.com \
-  --set-env-vars=NODE_ENV=production,TENANT_ID=${TENANT_ID},REDIS_NAMESPACE=tenant-${TENANT_ID} \
-  --set-secrets=DATABASE_URL=tenant-${TENANT_ID}-db-url:latest
+});
 ```
 
 ### Step 4: Configure Default Subdomain
