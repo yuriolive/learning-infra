@@ -32,7 +32,7 @@ function getOpenAPISpec(origin: string) {
   return spec;
 }
 
-function getDocumentationHtml(spec: unknown) {
+function getDocumentationHtml() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,7 +46,9 @@ function getDocumentationHtml(spec: unknown) {
   <script>
     (function() {
       var configuration = {
-        spec: ${JSON.stringify(spec)},
+        spec: {
+          url: "/openapi.json",
+        },
         theme: "purple",
         layout: "modern",
       };
@@ -110,8 +112,7 @@ function handleApiRequest(
   }
 
   if (url.pathname === "/docs") {
-    const spec = getOpenAPISpec(origin);
-    return new Response(getDocumentationHtml(spec), {
+    return new Response(getDocumentationHtml(), {
       status: 200,
       headers: {
         "Content-Type": "text/html",
