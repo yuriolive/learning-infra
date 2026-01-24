@@ -1,86 +1,39 @@
 import { createLogger } from "@vendin/utils/logger";
-import { serve } from "bun";
 import { LRUCache } from "lru-cache";
 
+import { createDatabase } from "./database/database";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { generateOpenAPISpec } from "./openapi/generator";
 
-const nodeEnvironment = process.env.NODE_ENV ?? "development";
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: nodeEnvironment,
-});
-
-const port = Number.parseInt(process.env.PORT ?? "3000", 10);
-
-const tenantRepository = new TenantRepository();
-const tenantService = new TenantService(tenantRepository);
-const tenantRoutes = createTenantRoutes({ logger, tenantService });
+interface Environment {
+  DATABASE_URL: string;
+  LOG_LEVEL?: string;
+  NODE_ENV?: string;
+  NEON_API_KEY?: string;
+  NEON_PROJECT_ID?: string;
+}
 
 const openApiSpecs = new LRUCache<
   string,
   ReturnType<typeof generateOpenAPISpec>
 >({
-  max: 100, // Cache up to 100 different origins
-  ttl: 1000 * 60 * 60, // 1 hour TTL
+  max: 100,
+  ttl: 1000 * 60 * 60,
 });
 
-const getOpenAPISpec = (origin: string) => {
+function getOpenAPISpec(origin: string) {
   let spec = openApiSpecs.get(origin);
   if (!spec) {
     spec = generateOpenAPISpec(origin);
     openApiSpecs.set(origin, spec);
   }
   return spec;
-};
+}
 
-const server = serve({
-  error(error: unknown) {
-    logger.error({ error }, "Unhandled error in server");
-    return new Response("Internal server error", { status: 500 });
-  },
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
-    const origin = `${url.protocol}//${url.host}`;
-
-    if (url.pathname === "/health" || url.pathname === "/") {
-      return new Response(
-        JSON.stringify({
-          status: "ok",
-          timestamp: new Date().toISOString(),
-          endpoints: {
-            docs: "/docs",
-            health: "/health",
-            openapi: "/openapi.json",
-            tenants: "/api/tenants",
-          },
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        },
-      );
-    }
-
-    if (url.pathname === "/openapi.json") {
-      const spec = getOpenAPISpec(origin);
-      return new Response(JSON.stringify(spec), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
-    if (url.pathname === "/docs") {
-      const spec = getOpenAPISpec(origin);
-      const html = `<!DOCTYPE html>
+function getDocumentationHtml(spec: unknown) {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -115,31 +68,98 @@ const server = serve({
   </script>
 </body>
 </html>`;
-      return new Response(html, {
+}
+
+function handleApiRequest(
+  request: Request,
+  url: URL,
+  origin: string,
+  tenantRoutes: ReturnType<typeof createTenantRoutes>,
+): Response | Promise<Response> {
+  if (url.pathname === "/health" || url.pathname === "/") {
+    return new Response(
+      JSON.stringify({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        endpoints: {
+          docs: "/docs",
+          health: "/health",
+          openapi: "/openapi.json",
+          tenants: "/api/tenants",
+        },
+      }),
+      {
         status: 200,
         headers: {
-          "Content-Type": "text/html",
+          "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         },
-      });
-    }
+      },
+    );
+  }
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      });
-    }
+  if (url.pathname === "/openapi.json") {
+    const spec = getOpenAPISpec(origin);
+    return new Response(JSON.stringify(spec), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }
 
-    const response = await tenantRoutes.handleRequest(request);
-    return response;
+  if (url.pathname === "/docs") {
+    const spec = getOpenAPISpec(origin);
+    return new Response(getDocumentationHtml(spec), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods":
+          "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
+  return tenantRoutes.handleRequest(request);
+}
+
+export default {
+  async fetch(request: Request, environment: Environment): Promise<Response> {
+    const nodeEnvironment = environment.NODE_ENV ?? "development";
+    const logger = createLogger({
+      logLevel: environment.LOG_LEVEL,
+      nodeEnv: nodeEnvironment,
+    });
+
+    const database = createDatabase(environment.DATABASE_URL, nodeEnvironment);
+    const tenantRepository = new TenantRepository(database);
+    const tenantService = new TenantService(tenantRepository, {
+      logger,
+      neonApiKey: environment.NEON_API_KEY,
+      neonProjectId: environment.NEON_PROJECT_ID,
+    });
+    const tenantRoutes = createTenantRoutes({ logger, tenantService });
+
+    const url = new URL(request.url);
+    const origin = `${url.protocol}//${url.host}`;
+
+    try {
+      return await handleApiRequest(request, url, origin, tenantRoutes);
+    } catch (error: unknown) {
+      logger.error({ error }, "Unhandled error in server");
+      return new Response("Internal server error", { status: 500 });
+    }
   },
-  port,
-});
-
-logger.info(`Control Plane API listening on http://localhost:${server.port}`);
+};
