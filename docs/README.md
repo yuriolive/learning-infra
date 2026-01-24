@@ -24,11 +24,6 @@ docs/
 
 ## Quick Links
 
-### Architecture
-
-- [Architecture Overview](./architecture/README.md) - System components and request flows
-- [User Experiences](./architecture/USER_EXPERIENCES.md) - Three user experience flows
-
 ### Deployment
 
 - [Control Plane CD Pipeline](./deployment/CONTROL_PLANE.md) - Cloud Run deployment guide

@@ -47,9 +47,7 @@ coverage/
 dist/
 build/
 .next/
-.open-next/
 out/
-.dev.vars
 
 # OS generated files
 .DS_Store

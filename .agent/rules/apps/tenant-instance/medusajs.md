@@ -17,9 +17,8 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 
 ## API Endpoints
 
-- `/`: Custom storefront UI (customer experience)
 - `/admin`: Admin dashboard and API (for merchants)
-- `/store`: Store API (MedusaJS store API)
+- `/store`: Store API (for customers via storefront)
 - `/health`: Health check endpoint
 
 ## Database Initialization
@@ -30,15 +29,15 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 
 ## Admin Access
 
-- Merchants access admin at: `{store}-my.vendin.store/admin`
+- Merchants access admin at: `{store}.my.vendin.store/admin`
 - Authentication handled by MedusaJS
 - Each tenant has isolated admin access
 
 ## Store API
 
-- Customers access the tenant storefront UI served by the tenant instance
-- Storefront router redirects/proxies to the tenant instance
-- Tenant instance serves `/store` API endpoints for the UI
+- Customers access store via storefront routing
+- Storefront proxies requests to tenant instance
+- Tenant instance serves `/store` API endpoints
 
 ## References
 

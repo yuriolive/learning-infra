@@ -6,20 +6,20 @@ globs: apps/storefront/**/*
 
 ## Hostname Resolution
 
-The storefront is **router-only**. It resolves tenants from incoming hostname and redirects/proxies to tenant instances. It does not render customer UI.
+The storefront must resolve tenants from incoming hostname.
 
 See [docs/examples/hostname-routing.ts](../../../docs/examples/hostname-routing.ts) for implementation patterns.
 
 ## Routing Logic
 
 ### Root Domain (vendin.store)
-Root domain is served by the **marketing app**. If a root-domain request hits the storefront, redirect to the marketing site.
+Serve landing page, signup form, marketing content.
 
 ### Control Plane API (control.vendin.store)
 Should be handled by Cloud Run domain mapping, not storefront. Redirect or return 404.
 
 ### Tenant Store
-Resolve tenant from hostname. If tenant not found or inactive, redirect to marketing site or show suspended page. Redirect/proxy to tenant instance for active tenants.
+Resolve tenant from hostname. If tenant not found or inactive, redirect to landing page or show suspended page. Route to tenant instance for active tenants.
 
 ## Middleware Pattern (Next.js)
 
