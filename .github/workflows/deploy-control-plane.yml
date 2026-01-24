@@ -39,6 +39,12 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
       # We use GCP Secret Manager here because Cloudflare Secrets Store (Beta) does not support
       # retrieving the actual secret value via CLI/API, only metadata.
       - name: Get database URL from Secret Manager
