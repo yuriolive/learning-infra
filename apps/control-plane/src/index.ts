@@ -7,12 +7,18 @@ import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { generateOpenAPISpec } from "./openapi/generator";
 
+interface SecretBinding {
+  get(): Promise<string>;
+}
+
+type BoundSecret = string | SecretBinding;
+
 interface Environment {
-  DATABASE_URL: string;
+  DATABASE_URL: BoundSecret;
   LOG_LEVEL?: string;
   NODE_ENV?: string;
-  NEON_API_KEY?: string;
-  NEON_PROJECT_ID?: string;
+  NEON_API_KEY?: BoundSecret;
+  NEON_PROJECT_ID?: BoundSecret;
 }
 
 const openApiSpecs = new LRUCache<
@@ -22,6 +28,15 @@ const openApiSpecs = new LRUCache<
   max: 100,
   ttl: 1000 * 60 * 60,
 });
+
+function resolveSecret(
+  secret: BoundSecret | undefined,
+): Promise<string | undefined> {
+  if (typeof secret === "object" && secret !== null && "get" in secret) {
+    return secret.get();
+  }
+  return Promise.resolve(secret as string | undefined);
+}
 
 function getOpenAPISpec(origin: string) {
   let spec = openApiSpecs.get(origin);
@@ -144,12 +159,18 @@ export default {
       nodeEnv: nodeEnvironment,
     });
 
-    const database = createDatabase(environment.DATABASE_URL, nodeEnvironment);
+    const [databaseUrl, neonApiKey, neonProjectId] = await Promise.all([
+      resolveSecret(environment.DATABASE_URL),
+      resolveSecret(environment.NEON_API_KEY),
+      resolveSecret(environment.NEON_PROJECT_ID),
+    ]);
+
+    const database = createDatabase(databaseUrl, nodeEnvironment);
     const tenantRepository = new TenantRepository(database);
     const tenantService = new TenantService(tenantRepository, {
       logger,
-      neonApiKey: environment.NEON_API_KEY,
-      neonProjectId: environment.NEON_PROJECT_ID,
+      neonApiKey,
+      neonProjectId,
     });
     const tenantRoutes = createTenantRoutes({ logger, tenantService });
 

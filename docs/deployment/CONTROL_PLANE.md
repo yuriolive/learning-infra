@@ -26,11 +26,11 @@ Automated deployment pipeline for the Control Plane application to Cloudflare Wo
 
 Configure these secrets in GitHub repository settings:
 
-| Secret                        | Description                                                      |
-| ----------------------------- | ---------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`        | API Token with Workers and Secrets Store (Read/Edit) permissions |
-| `CLOUDFLARE_ACCOUNT_ID`       | Your Cloudflare Account ID                                       |
-| `CLOUDFLARE_SECRETS_STORE_ID` | (Variable) UUID of the Secrets Store                             |
+| Secret                        | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`        | API Token with Workers and Secrets Store (**Edit**) permissions |
+| `CLOUDFLARE_ACCOUNT_ID`       | Your Cloudflare Account ID                                      |
+| `CLOUDFLARE_SECRETS_STORE_ID` | (Variable) UUID of the Secrets Store                            |
 
 ## Local Deployment
 
