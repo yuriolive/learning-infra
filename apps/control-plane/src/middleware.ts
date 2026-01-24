@@ -78,22 +78,24 @@ export function createCorsMiddleware(options: MiddlewareOptions) {
     const origin = request.headers.get("Origin");
     const headers = new Headers(response.headers);
 
-    let allowOrigin = "*";
+    let allowOrigin: string | null = "*";
     if (nodeEnv === "production") {
       if (allowedOrigins && allowedOrigins.length > 0) {
-        allowOrigin =
-          origin && allowedOrigins.includes(origin)
-            ? origin
-            : allowedOrigins[0]!;
+        // Only set header if origin is explicitly allowed
+        allowOrigin = origin && allowedOrigins.includes(origin) ? origin : null;
       } else {
-        allowOrigin = "";
+        // No allowed origins configured in production - block all CORS
+        allowOrigin = null;
       }
     } else {
       // In development/test, "*" is usually fine unless specified
       allowOrigin = origin || "*";
     }
 
-    headers.set("Access-Control-Allow-Origin", allowOrigin);
+    // Only set Access-Control-Allow-Origin if we have a valid origin
+    if (allowOrigin) {
+      headers.set("Access-Control-Allow-Origin", allowOrigin);
+    }
     headers.set(
       "Access-Control-Allow-Methods",
       "GET, POST, PUT, PATCH, DELETE, OPTIONS",

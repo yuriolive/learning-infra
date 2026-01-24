@@ -102,7 +102,7 @@ describe("Security Integration Tests", () => {
       );
     });
 
-    it("should use first allowed origin if incoming origin is not allowed in production", async () => {
+    it("should omit CORS header when origin is not allowed in production", async () => {
       const PROD_ENV = {
         ...MOCK_ENV,
         NODE_ENV: "production",
@@ -116,9 +116,8 @@ describe("Security Integration Tests", () => {
       });
       const response = await server.fetch(request, PROD_ENV as any);
 
-      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://admin.vendin.store",
-      );
+      // Unauthorized origin should not receive CORS header
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
     });
   });
 });

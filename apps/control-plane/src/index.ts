@@ -168,6 +168,23 @@ export default {
       allowedOrigins,
     };
 
+    // Enforce ADMIN_API_KEY in production
+    if (nodeEnvironment === "production" && !adminApiKey) {
+      logger.error(
+        "ADMIN_API_KEY is required in production but was not configured",
+      );
+      return new Response(
+        JSON.stringify({
+          error: "Configuration Error",
+          message: "Service is not properly configured",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     const database = createDatabase(databaseUrl, nodeEnvironment);
     const tenantRepository = new TenantRepository(database);
     const tenantService = new TenantService(tenantRepository, {
