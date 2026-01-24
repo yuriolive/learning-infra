@@ -13,8 +13,13 @@ const TENANT_CACHE_TTL = process.env.TENANT_CACHE_TTL
   ? Number.parseInt(process.env.TENANT_CACHE_TTL, 10)
   : 300; // Default to 5 minutes
 
-export async function fetchTenantBySubdomain(
-  subdomain: string,
+/**
+ * Shared helper function to fetch tenant data from Control Plane API.
+ * Centralizes API call configuration, error handling, and logging.
+ */
+async function fetchTenant(
+  url: string,
+  logContext: Record<string, string>,
 ): Promise<Tenant | null> {
   if (!CONTROL_PLANE_URL || !API_KEY) {
     logger.error({
@@ -26,53 +31,7 @@ export async function fetchTenantBySubdomain(
   }
 
   try {
-    const response = await fetch(
-      `${CONTROL_PLANE_URL}/api/tenants/lookup?subdomain=${subdomain}`,
-      {
-        headers: {
-          Authorization: `Bearer ${API_KEY}`,
-        },
-        ...(ENABLE_TENANT_CACHE && { next: { revalidate: TENANT_CACHE_TTL } }),
-      },
-    );
-
-    if (response.status === 404) {
-      return null;
-    }
-
-    if (!response.ok) {
-      logger.error({
-        msg: "Failed to fetch tenant by subdomain",
-        subdomain,
-        status: response.status,
-        statusText: response.statusText,
-      });
-      return null;
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error({
-      msg: "Error fetching tenant by subdomain",
-      subdomain,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  }
-}
-
-export async function fetchTenantById(id: string): Promise<Tenant | null> {
-  if (!CONTROL_PLANE_URL || !API_KEY) {
-    logger.error({
-      msg: "Control Plane configuration missing",
-      controlPlaneUrl: !!CONTROL_PLANE_URL,
-      hasApiKey: !!API_KEY,
-    });
-    return null;
-  }
-
-  try {
-    const response = await fetch(`${CONTROL_PLANE_URL}/api/tenants/${id}`, {
+    const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${API_KEY}`,
       },
@@ -85,8 +44,8 @@ export async function fetchTenantById(id: string): Promise<Tenant | null> {
 
     if (!response.ok) {
       logger.error({
-        msg: "Failed to fetch tenant by ID",
-        tenantId: id,
+        msg: "Failed to fetch tenant",
+        ...logContext,
         status: response.status,
         statusText: response.statusText,
       });
@@ -96,10 +55,22 @@ export async function fetchTenantById(id: string): Promise<Tenant | null> {
     return response.json();
   } catch (error) {
     logger.error({
-      msg: "Error fetching tenant by ID",
-      tenantId: id,
+      msg: "Error fetching tenant",
+      ...logContext,
       error: error instanceof Error ? error.message : String(error),
     });
     return null;
   }
+}
+
+export async function fetchTenantBySubdomain(
+  subdomain: string,
+): Promise<Tenant | null> {
+  const url = `${CONTROL_PLANE_URL}/api/tenants/lookup?subdomain=${subdomain}`;
+  return fetchTenant(url, { subdomain });
+}
+
+export async function fetchTenantById(id: string): Promise<Tenant | null> {
+  const url = `${CONTROL_PLANE_URL}/api/tenants/${id}`;
+  return fetchTenant(url, { tenantId: id });
 }
