@@ -58,7 +58,7 @@ describe("CloudflareProvider", () => {
   });
 
   describe("createCustomHostname", () => {
-    it("should create a custom hostname successfully", async () => {
+    it("should create a custom hostname successfully with defaults", async () => {
       const provider = new CloudflareProvider();
       // Access private client via any cast for testing
       const mockCreate = (provider as any).client.customHostnames.create;
@@ -70,6 +70,25 @@ describe("CloudflareProvider", () => {
         hostname: "test.example.com",
         ssl: {
           method: "http",
+          type: "dv",
+        },
+        zone_id: "test-zone-id",
+      });
+    });
+
+    it("should allow overriding SSL settings", async () => {
+      const provider = new CloudflareProvider();
+      const mockCreate = (provider as any).client.customHostnames.create;
+      mockCreate.mockResolvedValue({} as any);
+
+      await provider.createCustomHostname("tenant-1", "test.example.com", {
+        ssl: { method: "cname", type: "dv" },
+      });
+
+      expect(mockCreate).toHaveBeenCalledWith({
+        hostname: "test.example.com",
+        ssl: {
+          method: "cname",
           type: "dv",
         },
         zone_id: "test-zone-id",

@@ -6,6 +6,13 @@ const logger = createLogger({
   nodeEnv: process.env.NODE_ENV ?? "development",
 });
 
+export interface CreateHostnameOptions {
+  ssl?: {
+    method?: "http" | "txt" | "cname";
+    type?: "dv";
+  };
+}
+
 export class CloudflareProvider {
   private client: Cloudflare;
   private zoneId: string;
@@ -31,6 +38,7 @@ export class CloudflareProvider {
   async createCustomHostname(
     tenantId: string,
     hostname: string,
+    options?: CreateHostnameOptions,
   ): Promise<void> {
     try {
       logger.info(
@@ -42,8 +50,8 @@ export class CloudflareProvider {
         zone_id: this.zoneId,
         hostname,
         ssl: {
-          method: "http",
-          type: "dv",
+          method: options?.ssl?.method ?? "http",
+          type: options?.ssl?.type ?? "dv",
         },
       });
 
