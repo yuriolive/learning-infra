@@ -57,7 +57,7 @@ export class CloudRunProvider {
       // Redis
       {
         name: "REDIS_URL",
-        value: process.env.REDIS_URL || "redis://localhost:6379",
+        value: process.env.REDIS_URL || (() => { throw new Error("REDIS_URL env var is missing"); })(),
       },
       // Security - In production these should be secrets too
       { name: "COOKIE_SECRET", value: crypto.randomBytes(32).toString("hex") },
@@ -157,6 +157,7 @@ export class CloudRunProvider {
       );
 
       // Return a predictable URL for now as we don't wait for LRO
+      // TODO: Implement LRO waiting or a ping/health-check mechanism to ensure service readiness
       return `https://${serviceName}-${this.projectId}.a.run.app`;
     } catch (error: any) {
       if (error.code === 409) {
