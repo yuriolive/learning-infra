@@ -31,6 +31,7 @@ Configure these secrets in GitHub repository settings:
 | `CLOUDFLARE_API_TOKEN`        | API Token with Workers and Secrets Store (**Edit**) permissions |
 | `CLOUDFLARE_ACCOUNT_ID`       | Your Cloudflare Account ID                                      |
 | `CLOUDFLARE_SECRETS_STORE_ID` | (Variable) UUID of the Secrets Store                            |
+| `CLOUDFLARE_ZONE_ID`          | Cloudflare Zone ID for vendin.store (for Custom Hostnames)      |
 | `ADMIN_API_KEY`               | Secret token for Control Plane API (Bearer Auth)                |
 | `ALLOWED_ORIGINS`             | Comma-separated list of allowed CORS origins (Production)       |
 
