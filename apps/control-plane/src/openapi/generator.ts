@@ -101,6 +101,11 @@ registry.registerPath({
   summary: "Create tenant",
   description: "Creates a new tenant in the system",
   tags: ["Tenants"],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   request: {
     body: {
       content: {
@@ -153,6 +158,11 @@ registry.registerPath({
   summary: "List tenants",
   description: "Retrieves a list of all tenants",
   tags: ["Tenants"],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   responses: {
     200: {
       description: "List of tenants",
@@ -180,6 +190,11 @@ registry.registerPath({
   summary: "Get tenant",
   description: "Retrieves a specific tenant by ID",
   tags: ["Tenants"],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   request: {
     params: z.object({
       tenantId: z.string().uuid().openapi({ description: "Tenant ID" }),
@@ -228,6 +243,11 @@ registry.registerPath({
   summary: "Update tenant",
   description: "Updates an existing tenant (supports partial updates)",
   tags: ["Tenants"],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   request: {
     params: z.object({
       tenantId: z.string().uuid().openapi({ description: "Tenant ID" }),
@@ -291,6 +311,11 @@ registry.registerPath({
   summary: "Delete tenant",
   description: "Soft deletes a tenant (marks as deleted with cleanup)",
   tags: ["Tenants"],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
   request: {
     params: z.object({
       tenantId: z.string().uuid().openapi({ description: "Tenant ID" }),
@@ -330,6 +355,14 @@ registry.registerPath({
       },
     },
   },
+});
+
+// Register security scheme
+registry.registerComponent("securitySchemes", "bearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  description:
+    "Admin API Key for Control Plane authentication. Use `Bearer {your-api-key}` format.",
 });
 
 const generator = new OpenApiGeneratorV3(registry.definitions);
