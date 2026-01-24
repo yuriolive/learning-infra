@@ -15,9 +15,31 @@ export type Database =
   | PgliteDatabase<typeof schema>;
 
 export const createDatabase = (
-  connectionString: string,
+  rawConnectionString: unknown,
   nodeEnvironment: string = "production",
 ): Database => {
+  // Handle Cloudflare Hyperdrive or other Service Binding objects
+  let connectionString = "";
+
+  if (typeof rawConnectionString === "string") {
+    connectionString = rawConnectionString;
+  } else if (
+    rawConnectionString &&
+    typeof rawConnectionString === "object" &&
+    "connectionString" in rawConnectionString &&
+    typeof rawConnectionString.connectionString === "string"
+  ) {
+    // Hyperdrive binding exposes .connectionString
+    connectionString = rawConnectionString.connectionString;
+  }
+
+  if (!connectionString) {
+    const errorMessage =
+      "DATABASE_URL is not defined or is an invalid type. " +
+      "Ensure it is set as an environment variable (string) or a Hyperdrive binding.";
+    throw new Error(errorMessage);
+  }
+
   const isLocal =
     nodeEnvironment === "development" ||
     connectionString.includes("localhost") ||
