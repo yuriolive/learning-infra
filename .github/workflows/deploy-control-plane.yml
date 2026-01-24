@@ -88,6 +88,7 @@ jobs:
             exit 1
           fi
           sed -i "s/STORE_ID_PLACEHOLDER/$STORE_ID/g" wrangler.jsonc
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:

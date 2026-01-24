@@ -214,6 +214,7 @@ Create a Cloudflare API token with:
 
 - **Account** → **Cloudflare Pages** → **Edit**
 - **Account** → **Workers Scripts** → **Edit**
+- **Account** → **Secrets Store** → **Read** (or **Edit** if the CI manages secrets)
 
 ### Step 4: Set Up Custom Domains
 
@@ -288,6 +289,8 @@ Your Control Plane needs API access to manage custom hostnames:
 ```bash
 # 1. Go to Cloudflare Dashboard → My Profile → API Tokens
 # 2. Create API Token with these Zone-level permissions:
+#    - Account → Secrets Store → Read (for reading shared secrets)
+#    - Account → Secrets Store → Edit (if the Control Plane needs to create/rotate secrets)
 #    - Zone: Zone Settings:Read (optional, for reading zone configuration)
 #    - Zone: SSL and Certificates:Read (for listing/reading custom hostnames)
 #    - Zone: SSL and Certificates:Write (for creating/editing/deleting custom hostnames)
