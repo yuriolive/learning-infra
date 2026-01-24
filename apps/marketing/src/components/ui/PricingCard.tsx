@@ -2,6 +2,7 @@
 
 import { Card, CardHeader, CardBody, CardFooter, Button, Chip, Divider } from "@heroui/react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface PricingCardProps {
   name: string;
@@ -20,6 +21,8 @@ export const PricingCard: React.FC<PricingCardProps> = ({
   popular = false,
   cta,
 }) => {
+  const router = useRouter();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -83,7 +86,7 @@ export const PricingCard: React.FC<PricingCardProps> = ({
             color={popular ? "primary" : "default"}
             variant={popular ? "solid" : "bordered"}
             className="font-semibold"
-            onPress={() => console.log(`Selected plan: ${name}`)}
+            onPress={() => router.push(`/signup?plan=${name.toLowerCase()}`)}
           >
             {cta}
           </Button>

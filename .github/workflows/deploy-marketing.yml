@@ -1,11 +1,11 @@
-name: Deploy Storefront to Cloudflare Pages
+name: Deploy Marketing App to Cloudflare Pages
 
 on:
   push:
     branches:
       - main
     paths:
-      - "apps/storefront/**"
+      - "apps/marketing/**"
       - "packages/**"
       - "package.json"
       - "bun.lock"
@@ -31,11 +31,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build Storefront
-        run: bun run build --filter=storefront
+      - name: Build Marketing App
+        run: bun run build --filter=marketing
 
       - name: Build for Pages
-        working-directory: apps/storefront
+        working-directory: apps/marketing
         run: bun run pages:build
 
       - name: Deploy to Cloudflare
@@ -43,5 +43,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/storefront
+          workingDirectory: apps/marketing
           command: deploy

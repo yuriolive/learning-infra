@@ -2,9 +2,10 @@
 
 import { Card, CardBody, Chip } from "@heroui/react";
 import { motion } from "framer-motion";
+import type { ElementType } from "react";
 
 interface FeatureCardProps {
-  icon: string;
+  icon: ElementType;
   title: string;
   description: string;
   color?: "primary" | "secondary" | "success" | "warning";
@@ -18,7 +19,7 @@ const colorMap = {
 };
 
 export const FeatureCard: React.FC<FeatureCardProps> = ({
-  icon,
+  icon: Icon,
   title,
   description,
   color = "primary",
@@ -44,7 +45,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
             bg-gradient-to-br ${colorMap[color]}
             group-hover:scale-110 transition-transform duration-300
           `}>
-            <span className="text-3xl" aria-hidden="true">{icon}</span>
+            <Icon className="w-8 h-8" />
           </div>
 
           <div className="space-y-2">

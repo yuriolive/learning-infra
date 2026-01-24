@@ -158,13 +158,19 @@ bun run pages:deploy
 
 **Option 2: Via GitHub Actions (Automated)**
 
-The repository includes a GitHub Actions workflow that automatically deploys on push to `main`:
+The repository includes GitHub Actions workflows that automatically deploy on push to `main`:
 
 ```yaml
 # .github/workflows/deploy-storefront.yml
 # Triggers on:
 # - Push to main branch
 # - Changes to apps/storefront/** or packages/**
+# - Manual workflow dispatch
+
+# .github/workflows/deploy-marketing.yml
+# Triggers on:
+# - Push to main branch
+# - Changes to apps/marketing/** or packages/**
 # - Manual workflow dispatch
 
 # Required GitHub Secrets:

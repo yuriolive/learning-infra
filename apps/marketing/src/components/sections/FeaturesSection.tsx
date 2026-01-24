@@ -2,40 +2,41 @@
 
 import { FeatureCard } from "../ui/FeatureCard";
 import { motion } from "framer-motion";
+import { Lock, Zap, TrendingDown, Globe, Wrench, Palette } from "lucide-react";
 
 const features = [
   {
-    icon: "🔒",
+    icon: Lock,
     title: "True Isolation",
     description: "Each store gets its own dedicated PostgreSQL database. No shared data, no security risks.",
     color: "primary" as const
   },
   {
-    icon: "⚡",
+    icon: Zap,
     title: "Instant Provisioning",
     description: "Automated infrastructure setup. From signup to live store in seconds.",
     color: "secondary" as const
   },
   {
-    icon: "💰",
+    icon: TrendingDown,
     title: "Scale-to-Zero Costs",
     description: "Infrastructure automatically scales to zero when idle. Save 60% on hosting costs.",
     color: "success" as const
   },
   {
-    icon: "🌍",
+    icon: Globe,
     title: "Global Edge Network",
     description: "Storefronts served from Cloudflare's global edge network. < 1s load times worldwide.",
     color: "warning" as const
   },
   {
-    icon: "🔧",
+    icon: Wrench,
     title: "Built on MedusaJS 2.0",
     description: "Full-featured store API with products, orders, customers, and payments out of the box.",
     color: "primary" as const
   },
   {
-    icon: "🎨",
+    icon: Palette,
     title: "Custom Domains & SSL",
     description: "Automatic SSL certificate provisioning for custom domains. Setup in minutes.",
     color: "secondary" as const

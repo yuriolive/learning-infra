@@ -1,8 +1,11 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import { useRouter } from "next/navigation";
 
 export const CTASection = () => {
+  const router = useRouter();
+
   return (
     <section className="py-24 bg-gradient-to-br from-primary-600 to-secondary-600 text-white">
       <div className="container mx-auto px-6 text-center">
@@ -16,7 +19,7 @@ export const CTASection = () => {
         <Button
           size="lg"
           className="bg-white text-primary font-bold px-8 h-14"
-          onPress={() => console.log("CTA clicked: Start Free Trial")}
+          onPress={() => router.push('/signup')}
         >
           Start Free Trial
         </Button>

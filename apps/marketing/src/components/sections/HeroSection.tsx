@@ -3,8 +3,11 @@
 import { Button, Chip, AvatarGroup, Avatar, Card, CardBody } from "@heroui/react";
 import { ArrowRight, Play, Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export const HeroSection = () => {
+  const router = useRouter();
+
   return (
     <section className="relative overflow-hidden py-24 sm:py-32">
       {/* Animated gradient background */}
@@ -65,7 +68,7 @@ export const HeroSection = () => {
                 color="primary"
                 className="font-semibold px-8"
                 endContent={<ArrowRight size={18} />}
-                onPress={() => console.log('CTA clicked: Start Free Trial')}
+                onPress={() => router.push('/signup')}
               >
                 Start Free Trial
               </Button>
@@ -73,7 +76,7 @@ export const HeroSection = () => {
                 size="lg"
                 variant="bordered"
                 startContent={<Play size={18} />}
-                onPress={() => console.log('CTA clicked: Watch Demo')}
+                onPress={() => router.push('/signup')}
               >
                 Watch Demo
               </Button>
