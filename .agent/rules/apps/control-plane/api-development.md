@@ -6,7 +6,7 @@ globs: apps/control-plane/**/*
 
 ## API Design
 - **Style**: RESTful
-- **Auth**: JWT-based (platform admin)
+- **Auth**: Fixed-token (Bearer) for MVP (using `ADMIN_API_KEY` env var)
 - **Format**: JSON
 - **Base URL**: `control.vendin.store`
 

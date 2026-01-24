@@ -5,7 +5,10 @@ import { createDatabase } from "./database/database";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
+import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
+
+import type { MiddlewareOptions } from "./middleware";
 
 interface SecretBinding {
   get(): Promise<string>;
@@ -19,6 +22,8 @@ interface Environment {
   NODE_ENV?: string;
   NEON_API_KEY?: BoundSecret;
   NEON_PROJECT_ID?: BoundSecret;
+  ADMIN_API_KEY?: BoundSecret;
+  ALLOWED_ORIGINS?: string;
 }
 
 const openApiSpecs = new LRUCache<
@@ -109,7 +114,6 @@ function handleApiRequest(
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
       },
     );
@@ -121,7 +125,6 @@ function handleApiRequest(
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   }
@@ -131,19 +134,6 @@ function handleApiRequest(
       status: 200,
       headers: {
         "Content-Type": "text/html",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  }
-
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods":
-          "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
       },
     });
   }
@@ -159,11 +149,41 @@ export default {
       nodeEnv: nodeEnvironment,
     });
 
-    const [databaseUrl, neonApiKey, neonProjectId] = await Promise.all([
-      resolveSecret(environment.DATABASE_URL),
-      resolveSecret(environment.NEON_API_KEY),
-      resolveSecret(environment.NEON_PROJECT_ID),
-    ]);
+    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey] =
+      await Promise.all([
+        resolveSecret(environment.DATABASE_URL),
+        resolveSecret(environment.NEON_API_KEY),
+        resolveSecret(environment.NEON_PROJECT_ID),
+        resolveSecret(environment.ADMIN_API_KEY),
+      ]);
+
+    const allowedOrigins = environment.ALLOWED_ORIGINS
+      ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+      : [];
+
+    const middlewareOptions: MiddlewareOptions = {
+      logger,
+      adminApiKey,
+      nodeEnv: nodeEnvironment,
+      allowedOrigins,
+    };
+
+    // Enforce ADMIN_API_KEY in production
+    if (nodeEnvironment === "production" && !adminApiKey) {
+      logger.error(
+        "ADMIN_API_KEY is required in production but was not configured",
+      );
+      return new Response(
+        JSON.stringify({
+          error: "Configuration Error",
+          message: "Service is not properly configured",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
 
     const database = createDatabase(databaseUrl, nodeEnvironment);
     const tenantRepository = new TenantRepository(database);
@@ -178,10 +198,38 @@ export default {
     const origin = `${url.protocol}//${url.host}`;
 
     try {
-      return await handleApiRequest(request, url, origin, tenantRoutes);
+      // Handle OPTIONS preflight requests
+      if (request.method === "OPTIONS") {
+        const response = new Response(null, { status: 204 });
+        return wrapResponse(response, request, middlewareOptions);
+      }
+
+      // Apply Auth Middleware for /api/tenants/*
+      if (url.pathname.startsWith("/api/tenants")) {
+        const authMiddleware = createAuthMiddleware(middlewareOptions);
+        const authResponse = authMiddleware(request);
+        if (authResponse) {
+          return wrapResponse(authResponse, request, middlewareOptions);
+        }
+      }
+
+      const response = await handleApiRequest(
+        request,
+        url,
+        origin,
+        tenantRoutes,
+      );
+      return wrapResponse(response, request, middlewareOptions);
     } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
-      return new Response("Internal server error", { status: 500 });
+      const errorResponse = new Response(
+        JSON.stringify({ error: "Internal server error" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      return wrapResponse(errorResponse, request, middlewareOptions);
     }
   },
 };
