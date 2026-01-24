@@ -337,7 +337,7 @@ registry.registerComponent("securitySchemes", "bearerAuth", {
   type: "http",
   scheme: "bearer",
   description:
-    "Admin API Key for Control Plane authentication. Use 'Bearer \u003Cyour-api-key\u003E' format.",
+    "Admin API Key for Control Plane authentication. Use `Bearer {your-api-key}` format.",
 });
 
 const generator = new OpenApiGeneratorV3(registry.definitions);
