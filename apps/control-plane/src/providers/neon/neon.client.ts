@@ -1,35 +1,28 @@
 import { createApiClient } from "@neondatabase/api-client";
-import { createLogger } from "@vendin/utils/logger";
+import { type createLogger } from "@vendin/utils/logger";
 
 import type { Api } from "@neondatabase/api-client";
 
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: process.env.NODE_ENV ?? "development",
-});
+interface NeonProviderConfig {
+  apiKey: string;
+  projectId: string;
+  defaultDatabase?: string;
+  logger: ReturnType<typeof createLogger>;
+}
 
 export class NeonProvider {
   private client: Api<unknown>;
   private projectId: string;
   private defaultDatabase: string;
+  private logger: ReturnType<typeof createLogger>;
 
-  constructor() {
-    const apiKey = process.env.NEON_API_KEY;
-    const projectId = process.env.NEON_PROJECT_ID;
-
-    if (!apiKey) {
-      throw new Error("NEON_API_KEY environment variable is not set");
-    }
-
-    if (!projectId) {
-      throw new Error("NEON_PROJECT_ID environment variable is not set");
-    }
-
+  constructor(private config: NeonProviderConfig) {
+    this.logger = config.logger;
     this.client = createApiClient({
-      apiKey,
+      apiKey: config.apiKey,
     });
-    this.projectId = projectId;
-    this.defaultDatabase = this.inferDefaultDatabase();
+    this.projectId = config.projectId;
+    this.defaultDatabase = config.defaultDatabase ?? "neondb";
   }
 
   /**
@@ -40,7 +33,10 @@ export class NeonProvider {
    */
   async createTenantDatabase(tenantId: string): Promise<string> {
     try {
-      logger.info({ tenantId }, "Creating Neon database branch for tenant");
+      this.logger.info(
+        { tenantId },
+        "Creating Neon database branch for tenant",
+      );
 
       // Create a branch for the tenant
       // We use the tenant ID as part of the branch name
@@ -56,7 +52,7 @@ export class NeonProvider {
       );
 
       const branchId = branchData.branch.id;
-      logger.info({ branchId, tenantId }, "Created Neon branch");
+      this.logger.info({ branchId, tenantId }, "Created Neon branch");
 
       // We need to wait for the branch to be ready or just get the connection string.
       // Usually, creating a branch also creates a default role and database.
@@ -124,7 +120,7 @@ export class NeonProvider {
         const hostname = endpoint.host;
         const connectionString = `postgres://${roleName}:${resetPassword}@${hostname}/${databaseName}?sslmode=require`;
 
-        logger.info(
+        this.logger.info(
           { branchId, tenantId },
           "Successfully provisioned Neon database",
         );
@@ -138,44 +134,19 @@ export class NeonProvider {
       const hostname = endpoint.host;
       const connectionString = `postgres://${roleName}:${password}@${hostname}/${databaseName}?sslmode=require`;
 
-      logger.info(
+      this.logger.info(
         { branchId, tenantId },
         "Successfully provisioned Neon database",
       );
 
       return connectionString;
     } catch (error) {
-      logger.error({ error, tenantId }, "Failed to provision Neon database");
+      this.logger.error(
+        { error, tenantId },
+        "Failed to provision Neon database",
+      );
       throw error;
     }
-  }
-
-  /**
-   * Infers the default database name from environment variables.
-   * Priority: NEON_DEFAULT_DB \> DATABASE_URL \> "neondb"
-   */
-  private inferDefaultDatabase(): string {
-    if (process.env.NEON_DEFAULT_DB) {
-      return process.env.NEON_DEFAULT_DB;
-    }
-
-    if (process.env.DATABASE_URL) {
-      try {
-        const url = new URL(process.env.DATABASE_URL);
-        const databaseName = url.pathname.slice(1);
-        if (databaseName) {
-          return databaseName;
-        }
-      } catch {
-        // Ignore invalid URL
-        logger.warn(
-          { tenantId: "default" },
-          "Failed to infer default database name from DATABASE_URL",
-        );
-      }
-    }
-
-    return "neondb";
   }
 
   /**
