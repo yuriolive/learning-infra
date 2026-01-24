@@ -28,7 +28,8 @@
     - [WAF (Web Application Firewall)](#waf-web-application-firewall)
     - [Rate Limiting](#rate-limiting)
     - [Bot Management](#bot-management)
-  - [Part F: Monitoring and Analytics](#part-f-monitoring-and-analytics)
+  - [Part F: Secrets Store Management](#part-f-secrets-store-management)
+  - [Part G: Monitoring and Analytics](#part-g-monitoring-and-analytics)
     - [Custom Hostname Status Monitoring](#custom-hostname-status-monitoring)
     - [Analytics](#analytics)
   - [Troubleshooting](#troubleshooting)
@@ -416,15 +417,10 @@ Proxy status: Proxied
 # Control Plane API
 Type: CNAME
 Name: control
-Target: 1.1.1.1 (or any IP, will be intercepted by Worker)
+Target: 1.1.1.1 (or any dummy IP)
 Proxy status: Proxied (orange cloud)
 
-#### Setting up the Worker Proxy (Free Plan)
-Google Cloud Run requires the `Host` header to match the internal service URL. On Free/Pro plans, Origin Rules cannot rewrite the Host header. Use a **Cloudflare Worker**:
-
-1. **Create**: Go to **Workers & Pages** > **Create application** > **Create Worker** named `control-plane-proxy`.
-2. **Code**: Replace code with the proxy script (rewriting `url.hostname` and `Host` header).
-3. **Route**: Under the domain settings, add a Worker Route for `control.vendin.store/*`.
+*Note: The Control Plane is deployed as a Worker located at `apps/control-plane`. Cloudflare will automatically intercept requests to this hostname and execute the Worker logic.*
 
 # Platform Admin (optional)
 Type: CNAME
@@ -527,7 +523,31 @@ async function resolveTenantFromHostname(
 # Or: Super Bot Fight Mode (Paid plans)
 ```
 
-## Part F: Monitoring and Analytics
+## Part F: Secrets Store Management
+
+Cloudflare **Secrets Store** allows you to securely store and share sensitive information across your entire account.
+
+### Why use Secrets Store?
+
+1. **Shared Access**: Secrets like `DATABASE_URL` or `NEON_API_KEY` can be used by multiple Workers without re-uploading them.
+2. **Centralized Management**: Rotate or update secrets in one place instead of per-worker.
+3. **Capacity**: Up to 100 secrets per account (Free/Pro).
+
+### Configuration via Dashboard
+
+1. Go to **Storage & Databases** → **Secrets Store**.
+2. Click **Create secret**.
+3. Use names like `control-plane-db-url`.
+4. These secrets are automatically available to your CI/CD pipeline and bound Workers.
+
+### Accessing via CLI
+
+```bash
+# Retrieve a secret value (Requires API Token with Secrets Store:Read)
+bun wrangler secrets-store secret get control-plane-db-url
+```
+
+## Part G: Monitoring and Analytics
 
 ### Custom Hostname Status Monitoring
 
