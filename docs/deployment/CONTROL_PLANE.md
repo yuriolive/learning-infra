@@ -1,6 +1,6 @@
 # Control Plane CD Pipeline
 
-**Last Updated**: 2026-01-23  
+**Last Updated**: 2026-01-24  
 **Status**: ✅ Active  
 **Component**: `apps/control-plane`  
 **Workflow**: `.github/workflows/deploy-control-plane.yml`
@@ -31,7 +31,6 @@ Configure these secrets in GitHub repository settings:
 | `CLOUDFLARE_API_TOKEN`        | API Token with Workers and Secrets Store permissions |
 | `CLOUDFLARE_ACCOUNT_ID`       | Your Cloudflare Account ID                           |
 | `CLOUDFLARE_SECRETS_STORE_ID` | (Variable) UUID of the Secrets Store                 |
-| `CLOUDFLARE_DB_URL_SECRET_ID` | (Variable) UUID of the database URL secret           |
 
 ## Local Deployment
 
@@ -62,8 +61,9 @@ graph LR
     A[Push to main] --> B[Detect Changes]
     B --> C[Install Dependencies]
     C --> D[Run Database Migrations]
-    D --> E[Deploy to Cloudflare]
-    E --> F[Success]
+    D --> E[Inject Secrets Store ID]
+    E --> F[Deploy to Cloudflare]
+    F --> G[Success]
 ```
 
 ## Monitoring & Logs

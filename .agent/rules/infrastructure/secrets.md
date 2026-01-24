@@ -6,17 +6,17 @@ globs: apps/**/*, infrastructure/**/*
 
 ## Secret Storage
 
-- **Provider**: GCP Secret Manager
+- **Primary Provider**: GCP Secret Manager (for Cloud Run and backend services)
+- **Secondary Provider**: Cloudflare Secrets Store (for Workers/Pages)
 - **Project**: `vendin-store`
-- **Encryption**: Automatic encryption at rest
-- **Access**: Via service account IAM roles
+- **Access**: Via service account roles (GCP) or `secrets_store_secrets` bindings (Cloudflare)
 
 ## Secret Naming Conventions
 
 - **Control Plane**: `control-plane-db-url`
 - **Tenant Databases**: `tenant-{tenantId}-db-url`
-- **API Keys**: `{service}-api-key` (e.g., `cloudflare-api-token`)
-- **JWT Secrets**: `jwt-secret` (if needed)
+- **API Keys**: `cloudflare-api-token`, `neon-api-key`, `neon-project-id`
+- **Cloudflare Store ID**: `CLOUDFLARE_SECRETS_STORE_ID` (GitHub Variable)
 
 ## Secret Creation Pattern
 
