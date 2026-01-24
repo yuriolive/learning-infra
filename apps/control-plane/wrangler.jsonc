@@ -14,5 +14,26 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "production": {
+      "secrets_store_secrets": [
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "control-plane-db-url"
+        },
+        {
+          "binding": "NEON_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "neon-api-key"
+        },
+        {
+          "binding": "NEON_PROJECT_ID",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "neon-project-id"
+        }
+      ]
+    }
   }
 }

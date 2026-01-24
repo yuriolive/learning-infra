@@ -554,7 +554,29 @@ Cloudflare **Secrets Store** allows you to securely store and share sensitive in
 1. Go to **Storage & Databases** → **Secrets Store**.
 2. Click **Create secret**.
 3. Use names like `control-plane-db-url`.
-4. These secrets are automatically available to your CI/CD pipeline and bound Workers.
+4. These secrets are automatically available to your CI/CD pipeline and bound Workers via `secrets_store_secrets`.
+
+### CD Integration (Dynamic Bindings)
+
+To avoid hardcoding Store IDs in the repository, use placeholders in `wrangler.jsonc`:
+
+```jsonc
+{
+  "env": {
+    "production": {
+      "secrets_store_secrets": [
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "control-plane-db-url",
+        },
+      ],
+    },
+  },
+}
+```
+
+The GitHub Actions workflow replaces `STORE_ID_PLACEHOLDER` with the value from the `CLOUDFLARE_SECRETS_STORE_ID` variable before deployment.
 
 ### Accessing via CLI
 
