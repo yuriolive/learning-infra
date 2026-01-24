@@ -332,6 +332,14 @@ registry.registerPath({
   },
 });
 
+// Register security scheme
+registry.registerComponent("securitySchemes", "bearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  description:
+    "Admin API Key for Control Plane authentication. Use 'Bearer \u003Cyour-api-key\u003E' format.",
+});
+
 const generator = new OpenApiGeneratorV3(registry.definitions);
 
 export const generateOpenAPISpec = (serverUrl: string) => {
@@ -360,6 +368,11 @@ export const generateOpenAPISpec = (serverUrl: string) => {
       {
         name: "Tenants",
         description: "Tenant management operations",
+      },
+    ],
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   });
