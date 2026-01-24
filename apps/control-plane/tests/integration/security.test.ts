@@ -10,17 +10,17 @@ vi.mock("bun", () => {
 import { handleRequest } from "../../src/index";
 
 describe("Control Plane Security Integration", () => {
-  const originalEnv = process.env;
+  const originalEnvironment = process.env;
 
   beforeEach(() => {
     vi.resetModules();
-    process.env = { ...originalEnv };
+    process.env = { ...originalEnvironment };
     process.env.ADMIN_API_KEY = "test-secret-key";
     process.env.NODE_ENV = "test";
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    process.env = originalEnvironment;
   });
 
   describe("Public Endpoints", () => {
@@ -73,32 +73,34 @@ describe("Control Plane Security Integration", () => {
 
   describe("CORS Headers", () => {
     it("should return Access-Control-Allow-Origin: * in test/dev env", async () => {
-       process.env.NODE_ENV = "development";
-       const request = new Request("http://localhost:3000/health");
-       const response = await handleRequest(request);
-       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+      process.env.NODE_ENV = "development";
+      const request = new Request("http://localhost:3000/health");
+      const response = await handleRequest(request);
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
     });
 
     it("should restrict Origin in production", async () => {
-       process.env.NODE_ENV = "production";
-       process.env.ALLOWED_ORIGINS = "http://trusted.com";
+      process.env.NODE_ENV = "production";
+      process.env.ALLOWED_ORIGINS = "http://trusted.com";
 
-       const request = new Request("http://localhost:3000/health", {
-           headers: { Origin: "http://trusted.com" }
-       });
-       const response = await handleRequest(request);
-       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://trusted.com");
+      const request = new Request("http://localhost:3000/health", {
+        headers: { Origin: "http://trusted.com" },
+      });
+      const response = await handleRequest(request);
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+        "http://trusted.com",
+      );
     });
 
     it("should not set Access-Control-Allow-Origin if origin not allowed in production", async () => {
-       process.env.NODE_ENV = "production";
-       process.env.ALLOWED_ORIGINS = "http://trusted.com";
+      process.env.NODE_ENV = "production";
+      process.env.ALLOWED_ORIGINS = "http://trusted.com";
 
-       const request = new Request("http://localhost:3000/health", {
-           headers: { Origin: "http://evil.com" }
-       });
-       const response = await handleRequest(request);
-       expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+      const request = new Request("http://localhost:3000/health", {
+        headers: { Origin: "http://evil.com" },
+      });
+      const response = await handleRequest(request);
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
     });
   });
 });

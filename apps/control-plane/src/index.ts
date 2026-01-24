@@ -43,12 +43,12 @@ export const handleRequest = async (request: Request): Promise<Response> => {
   const corsHeaders = getCorsHeaders(request);
 
   // Helper to attach CORS to response
-  const withCors = (res: Response) => {
+  const withCors = (response_: Response) => {
     const headers = corsHeaders as Record<string, string>;
     for (const [k, v] of Object.entries(headers)) {
-      res.headers.set(k, v);
+      response_.headers.set(k, v);
     }
-    return res;
+    return response_;
   };
 
   // Handle Preflight

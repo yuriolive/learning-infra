@@ -1,6 +1,23 @@
+import { timingSafeEqual } from "node:crypto";
+
 import { createLogger } from "@vendin/utils/logger";
 
-const logger = createLogger({ nodeEnv: process.env.NODE_ENV });
+const logger = createLogger({
+  nodeEnv: process.env.NODE_ENV ?? "development",
+});
+
+/**
+ * Compares two strings using constant-time comparison to prevent timing attacks.
+ * @param a - First string
+ * @param b - Second string
+ * @returns true if strings are equal, false otherwise
+ */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 /**
  * Authenticates a request using a fixed Bearer token.
@@ -35,7 +52,8 @@ export function authenticateRequest(request: Request): Response | null {
   }
 
   const token = authorizationHeader.split(" ")[1];
-  if (token !== apiKey) {
+
+  if (!token || !safeEqual(token, apiKey)) {
     return new Response(
       JSON.stringify({
         error: "Unauthorized",
