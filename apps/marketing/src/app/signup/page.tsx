@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Input, Checkbox, Link, Divider, Card, CardHeader, CardBody, CardFooter } from "@heroui/react";
-import { Github, Twitter } from "lucide-react";
+import { Github, Twitter, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 export default function SignupPage() {
@@ -60,9 +60,9 @@ export default function SignupPage() {
                     endContent={
                         <button className="focus:outline-none" type="button" onClick={toggleVisibility}>
                             {isVisible ? (
-                                <span className="text-2xl text-default-400 pointer-events-none">👁️</span>
+                                <EyeOff className="text-default-400 pointer-events-none" size={24} />
                             ) : (
-                                <span className="text-2xl text-default-400 pointer-events-none">👁️‍🗨️</span>
+                                <Eye className="text-default-400 pointer-events-none" size={24} />
                             )}
                         </button>
                     }
