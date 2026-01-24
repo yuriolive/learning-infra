@@ -13,6 +13,8 @@ on:
       - "packages/**"
       - "package.json"
       - "bun.lock"
+      - ".github/workflows/deploy-control-plane.yml"
+  workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
