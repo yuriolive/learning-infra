@@ -186,7 +186,7 @@ DEBUG = false
 
 - **Purpose**: CDN, DNS, security, and performance
 - **Features**: WAF, rate limiting, SSL termination
-- **Domain**: `control.vendin.store` → Cloudflare Proxy → Cloud Run
+- **Domain**: `control.vendin.store` → Cloud Run
 
 ## Cost Estimation
 
@@ -227,10 +227,9 @@ DEBUG = false
 - Verify region matches (southamerica-east1)
 - If you see `iam.serviceaccounts.actAs` denied, grant the GitHub Actions SA `roles/iam.serviceAccountUser` on the Cloud Run runtime service account
 
-5. **Domain not working / Domain Mapping failed**
-   - **If using southamerica-east1**: Managed domain mappings are NOT allowed. You must use Cloudflare Proxying.
-   - **Fix**: Create a CNAME in Cloudflare pointing directly to your Cloud Run service URL (`{id}.a.run.app`) and set it to **Proxied**.
-   - Check documentation in `CLOUD_RUN_SETUP.md` Step 7 for details.
+5. **Domain not working**
+   - Wait for DNS propagation (24-48 hours)
+   - Check domain mapping status
 
 ### Useful Diagnostic Commands
 

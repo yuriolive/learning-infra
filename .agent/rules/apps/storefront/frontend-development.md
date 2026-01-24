@@ -17,7 +17,7 @@ globs: apps/storefront/**/*
 - Use Next.js App Router
 - Implement hostname-based tenant resolution in middleware
 - Route to tenant instances for API calls
-- Storefront is router-only (no customer UI rendering)
+- Serve landing page on root domain
 
 ## API Integration
 
@@ -43,7 +43,7 @@ globs: apps/storefront/**/*
 
 - Deploy to Cloudflare Pages
 - Configure build settings in Pages dashboard
-- Set up tenant wildcard: `*-my.vendin.store`
+- Set up custom domain: `vendin.store`
 - Configure environment variables in Pages
 
 ## References

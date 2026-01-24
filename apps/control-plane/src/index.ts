@@ -1,54 +1,86 @@
 import { createLogger } from "@vendin/utils/logger";
+import { serve } from "bun";
 import { LRUCache } from "lru-cache";
 
-import { createDatabase } from "./database/database";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { generateOpenAPISpec } from "./openapi/generator";
 
-interface SecretBinding {
-  get(): Promise<string>;
-}
+const nodeEnvironment = process.env.NODE_ENV ?? "development";
+const logger = createLogger({
+  logLevel: process.env.LOG_LEVEL,
+  nodeEnv: nodeEnvironment,
+});
 
-type BoundSecret = string | SecretBinding;
+const port = Number.parseInt(process.env.PORT ?? "3000", 10);
 
-interface Environment {
-  DATABASE_URL: BoundSecret;
-  LOG_LEVEL?: string;
-  NODE_ENV?: string;
-  NEON_API_KEY?: BoundSecret;
-  NEON_PROJECT_ID?: BoundSecret;
-}
+const tenantRepository = new TenantRepository();
+const tenantService = new TenantService(tenantRepository);
+const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
 const openApiSpecs = new LRUCache<
   string,
   ReturnType<typeof generateOpenAPISpec>
 >({
-  max: 100,
-  ttl: 1000 * 60 * 60,
+  max: 100, // Cache up to 100 different origins
+  ttl: 1000 * 60 * 60, // 1 hour TTL
 });
 
-function resolveSecret(
-  secret: BoundSecret | undefined,
-): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null && "get" in secret) {
-    return secret.get();
-  }
-  return Promise.resolve(secret as string | undefined);
-}
-
-function getOpenAPISpec(origin: string) {
+const getOpenAPISpec = (origin: string) => {
   let spec = openApiSpecs.get(origin);
   if (!spec) {
     spec = generateOpenAPISpec(origin);
     openApiSpecs.set(origin, spec);
   }
   return spec;
-}
+};
 
-function getDocumentationHtml() {
-  return `<!DOCTYPE html>
+const server = serve({
+  error(error: unknown) {
+    logger.error({ error }, "Unhandled error in server");
+    return new Response("Internal server error", { status: 500 });
+  },
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const origin = `${url.protocol}//${url.host}`;
+
+    if (url.pathname === "/health" || url.pathname === "/") {
+      return new Response(
+        JSON.stringify({
+          status: "ok",
+          timestamp: new Date().toISOString(),
+          endpoints: {
+            docs: "/docs",
+            health: "/health",
+            openapi: "/openapi.json",
+            tenants: "/api/tenants",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
+      );
+    }
+
+    if (url.pathname === "/openapi.json") {
+      const spec = getOpenAPISpec(origin);
+      return new Response(JSON.stringify(spec), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    if (url.pathname === "/docs") {
+      const spec = getOpenAPISpec(origin);
+      const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -61,9 +93,7 @@ function getDocumentationHtml() {
   <script>
     (function() {
       var configuration = {
-        spec: {
-          url: "/openapi.json",
-        },
+        spec: ${JSON.stringify(spec)},
         theme: "purple",
         layout: "modern",
       };
@@ -85,103 +115,31 @@ function getDocumentationHtml() {
   </script>
 </body>
 </html>`;
-}
-
-function handleApiRequest(
-  request: Request,
-  url: URL,
-  origin: string,
-  tenantRoutes: ReturnType<typeof createTenantRoutes>,
-): Response | Promise<Response> {
-  if (url.pathname === "/health" || url.pathname === "/") {
-    return new Response(
-      JSON.stringify({
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        endpoints: {
-          docs: "/docs",
-          health: "/health",
-          openapi: "/openapi.json",
-          tenants: "/api/tenants",
-        },
-      }),
-      {
+      return new Response(html, {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "text/html",
           "Access-Control-Allow-Origin": "*",
         },
-      },
-    );
-  }
-
-  if (url.pathname === "/openapi.json") {
-    const spec = getOpenAPISpec(origin);
-    return new Response(JSON.stringify(spec), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  }
-
-  if (url.pathname === "/docs") {
-    return new Response(getDocumentationHtml(), {
-      status: 200,
-      headers: {
-        "Content-Type": "text/html",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  }
-
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods":
-          "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    });
-  }
-
-  return tenantRoutes.handleRequest(request);
-}
-
-export default {
-  async fetch(request: Request, environment: Environment): Promise<Response> {
-    const nodeEnvironment = environment.NODE_ENV ?? "development";
-    const logger = createLogger({
-      logLevel: environment.LOG_LEVEL,
-      nodeEnv: nodeEnvironment,
-    });
-
-    const [databaseUrl, neonApiKey, neonProjectId] = await Promise.all([
-      resolveSecret(environment.DATABASE_URL),
-      resolveSecret(environment.NEON_API_KEY),
-      resolveSecret(environment.NEON_PROJECT_ID),
-    ]);
-
-    const database = createDatabase(databaseUrl, nodeEnvironment);
-    const tenantRepository = new TenantRepository(database);
-    const tenantService = new TenantService(tenantRepository, {
-      logger,
-      neonApiKey,
-      neonProjectId,
-    });
-    const tenantRoutes = createTenantRoutes({ logger, tenantService });
-
-    const url = new URL(request.url);
-    const origin = `${url.protocol}//${url.host}`;
-
-    try {
-      return await handleApiRequest(request, url, origin, tenantRoutes);
-    } catch (error: unknown) {
-      logger.error({ error }, "Unhandled error in server");
-      return new Response("Internal server error", { status: 500 });
+      });
     }
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods":
+            "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
+    }
+
+    const response = await tenantRoutes.handleRequest(request);
+    return response;
   },
-};
+  port,
+});
+
+logger.info(`Control Plane API listening on http://localhost:${server.port}`);

@@ -10,7 +10,6 @@ on:
       - "package.json"
       - "bun.lock"
       - "turbo.json"
-      - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
 
 jobs:
@@ -39,10 +38,11 @@ jobs:
         working-directory: apps/storefront
         run: bun run pages:build
 
-      - name: Deploy to Cloudflare
-        uses: cloudflare/wrangler-action@v3
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/storefront
-          command: deploy
+          project: storefront # Update this if your project name is different
+          directory: apps/storefront/.vercel/output/static
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

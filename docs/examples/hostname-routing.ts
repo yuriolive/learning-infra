@@ -1,7 +1,7 @@
 // Hostname Resolution Pattern
-// Subdomain Pattern: {store}-my.vendin.store
-if (hostname.endsWith('-my.vendin.store')) {
-  const storeName = hostname.replace('-my.vendin.store', '');
+// Subdomain Pattern: {store}.my.vendin.store
+if (hostname.endsWith('.my.vendin.store')) {
+  const storeName = hostname.replace('.my.vendin.store', '');
   
   // Check reserved subdomains
   const reserved = ['www', 'control', 'admin', 'mail', 'ftp'];
@@ -18,17 +18,17 @@ if (hostname.endsWith('-my.vendin.store')) {
 const tenant = await controlPlaneClient.findTenantByCustomDomain(hostname);
 return tenant;
 
-// Root Domain - Handled by marketing app
-// If root domain request hits storefront router, redirect to marketing app
+// Root Domain
 if (hostname === 'vendin.store' || hostname === 'www.vendin.store') {
-  return redirect('https://vendin.store'); // Marketing app handles this
+  // Serve landing page, signup form, marketing content
+  return <LandingPage />;
 }
 
 // Tenant Store Routing
 const tenant = await resolveTenantFromHostname(hostname);
 
 if (!tenant) {
-  // Unknown hostname, redirect to marketing site
+  // Unknown hostname, redirect to landing page
   return redirect('https://vendin.store');
 }
 
@@ -37,7 +37,7 @@ if (tenant.status !== 'active') {
   return <SuspendedPage />;
 }
 
-// Redirect/proxy to tenant instance (tenant serves custom UI)
+// Route to tenant instance
 const tenantUrl = `https://tenant-${tenant.id}-xxx.a.run.app`;
 return proxyToTenant(tenantUrl, request);
 
@@ -45,9 +45,9 @@ return proxyToTenant(tenantUrl, request);
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   
-  // Root domain: Redirect to marketing app
+  // Root domain: Landing page
   if (hostname === 'vendin.store' || hostname === 'www.vendin.store') {
-    return NextResponse.redirect('https://vendin.store');
+    return NextResponse.next();
   }
   
   // Resolve tenant

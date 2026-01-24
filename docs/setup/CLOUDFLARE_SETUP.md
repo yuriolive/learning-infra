@@ -1,56 +1,12 @@
 # Cloudflare Setup for Multi-Tenant SaaS
 
-- [Cloudflare Setup for Multi-Tenant SaaS](#cloudflare-setup-for-multi-tenant-saas)
-  - [Overview](#overview)
-  - [Subdomain Structure](#subdomain-structure)
-  - [Architecture](#architecture)
-  - [Prerequisites](#prerequisites)
-  - [Part A: Storefront Deployment (Cloudflare Pages)](#part-a-storefront-deployment-cloudflare-pages)
-    - [Step 1: Prepare Storefront for Deployment](#step-1-prepare-storefront-for-deployment)
-    - [Step 2: Deploy to Cloudflare](#step-2-deploy-to-cloudflare)
-    - [Step 3: Configure Environment Variables](#step-3-configure-environment-variables)
-    - [Step 4: Set Up Custom Domain for Storefront](#step-4-set-up-custom-domain-for-storefront)
-  - [Part B: Cloudflare for SaaS Setup](#part-b-cloudflare-for-saas-setup)
-    - [Step 1: Enable Cloudflare for SaaS](#step-1-enable-cloudflare-for-saas)
-    - [Step 2: Configure Fallback Origin](#step-2-configure-fallback-origin)
-    - [Step 3: Configure SSL/TLS Settings](#step-3-configure-ssltls-settings)
-    - [Step 4: Set Up API Credentials](#step-4-set-up-api-credentials)
-    - [Step 5: Add API Token to Secret Manager](#step-5-add-api-token-to-secret-manager)
-  - [Part C: Custom Hostname Management (API Integration)](#part-c-custom-hostname-management-api-integration)
-    - [API Endpoints](#api-endpoints)
-    - [DNS Requirements for Merchants](#dns-requirements-for-merchants)
-  - [Part D: Subdomain Routing Setup](#part-d-subdomain-routing-setup)
-    - [Wildcard DNS for Tenant Subdomains](#wildcard-dns-for-tenant-subdomains)
-    - [Architecture Decision: Hyphens vs. Dots](#architecture-decision-hyphens-vs-dots)
-    - [Future Roadmap: Switching to Dotted Subdomains](#future-roadmap-switching-to-dotted-subdomains)
-    - [Storefront Routing Logic](#storefront-routing-logic)
-  - [Part E: Security Configuration](#part-e-security-configuration)
-    - [WAF (Web Application Firewall)](#waf-web-application-firewall)
-    - [Rate Limiting](#rate-limiting)
-    - [Bot Management](#bot-management)
-  - [Part F: Secrets Store Management](#part-f-secrets-store-management)
-  - [Part G: Monitoring and Analytics](#part-g-monitoring-and-analytics)
-    - [Custom Hostname Status Monitoring](#custom-hostname-status-monitoring)
-    - [Analytics](#analytics)
-  - [Troubleshooting](#troubleshooting)
-    - [Common Issues](#common-issues)
-    - [Diagnostic Commands](#diagnostic-commands)
-  - [Cost Considerations](#cost-considerations)
-    - [Free Tier](#free-tier)
-    - [Paid Plans](#paid-plans)
-  - [Integration with Control Plane](#integration-with-control-plane)
-  - [Next Steps](#next-steps)
-  - [References](#references)
-
 ## Overview
 
 This document provides step-by-step instructions for configuring Cloudflare for your multi-tenant e-commerce platform. This includes:
 
-1. **Marketing App Deployment** (Cloudflare Pages) - Landing page on root domain
-2. **Storefront Router Deployment** (Cloudflare Pages) - Router-only app for tenant domains
-3. **Cloudflare for SaaS** - Custom domain management per tenant
-4. **DNS and SSL Automation** - Automatic SSL provisioning for merchant domains
-5. **SSL/TLS Encryption Mode** - Global encryption settings for the platform
+1. **Storefront Deployment** (Cloudflare Pages) - Customer-facing Next.js application
+2. **Cloudflare for SaaS** - Custom domain management per tenant
+3. **DNS and SSL Automation** - Automatic SSL provisioning for merchant domains
 
 ## Subdomain Structure
 
@@ -61,9 +17,9 @@ vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root or alternative storefront
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
-*-my.vendin.store               → Tenant stores (wildcard/hyphenated)
-  ├─ awesome-store-my.vendin.store → Merchant storefront
-  └─ awesome-store-my.vendin.store/admin → Merchant admin (MedusaJS)
+*.my.vendin.store               → Tenant stores (wildcard)
+  ├─ awesome-store.my.vendin.store → Merchant storefront
+  └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
 
 **Custom Domains (Optional):**
@@ -83,7 +39,7 @@ Customer Request Flow:
 └────────┬────────┘
          │
          │ vendin.store (signup) OR
-         │ merchant-name-my.vendin.store (store) OR
+         │ merchant-name.my.vendin.store (store) OR
          │ shop.merchant.com (custom domain)
          ▼
 ┌─────────────────┐
@@ -93,15 +49,10 @@ Customer Request Flow:
          │
          ▼
 ┌─────────────────┐
-│ Marketing App   │  (Cloudflare Pages - Next.js)
-│ (Root domain)   │  - Landing/signup page
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
 │ Storefront      │  (Cloudflare Pages - Next.js)
-│ Router          │  - Tenant subdomain: Resolves tenant
-│ (No UI)         │  - Custom domain: Resolves tenant
+│ (Routes by      │  - Root: Landing/signup page
+│  hostname)      │  - Tenant subdomain: Resolves tenant
+│                 │  - Custom domain: Resolves tenant
 └────────┬────────┘
          │
          ▼
@@ -118,134 +69,62 @@ Customer Request Flow:
 - Control Plane deployed and accessible
 - Tenant instance container image built and ready
 
-## Part A: Marketing + Storefront Router Deployment (Cloudflare Pages)
+## Part A: Storefront Deployment (Cloudflare Pages)
 
-### Step 1: Prepare Apps for Deployment
+### Step 1: Prepare Storefront for Deployment
 
-The marketing app and storefront router use **OpenNext** with the Cloudflare adapter for optimal performance:
-
-```bash
-# The marketing app and storefront router are pre-configured with:
-# - @opennextjs/cloudflare (replaces deprecated @cloudflare/next-on-pages)
-# - wrangler.jsonc (Cloudflare Workers configuration)
-# - open-next.config.ts (OpenNext configuration)
-```
-
-### Step 2: Deploy to Cloudflare
-
-**Option 1: Via Wrangler CLI (Recommended)**
+Your Next.js storefront should be configured for Cloudflare Pages:
 
 ```bash
-# Deploy storefront router
-cd apps/storefront
-
-# Build and deploy in one command
-bun run pages:deploy
-
-# Deploy marketing app
-cd ../marketing
-bun run pages:deploy
-
-# Or build first, then deploy
-bun run pages:build
-bun run pages:deploy
-
-# This uses OpenNext to:
-# 1. Build Next.js with Turbopack
-# 2. Generate Cloudflare Worker (.open-next/worker.js)
-# 3. Deploy to Cloudflare Workers
+# In your storefront project
+# Ensure next.config.js is configured for Cloudflare Pages
+# Use edge runtime for optimal performance
 ```
 
-**Option 2: Via GitHub Actions (Automated)**
-
-The repository includes GitHub Actions workflows that automatically deploy on push to `main`:
-
-```yaml
-# .github/workflows/deploy-storefront.yml
-# Triggers on:
-# - Push to main branch
-# - Changes to apps/storefront/** or packages/**
-# - Manual workflow dispatch
-
-# .github/workflows/deploy-marketing.yml
-# Triggers on:
-# - Push to main branch
-# - Changes to apps/marketing/** or packages/**
-# - Manual workflow dispatch
-
-# Required GitHub Secrets:
-# - CLOUDFLARE_API_TOKEN
-# - CLOUDFLARE_ACCOUNT_ID
-```
-
-**First-time setup:**
+### Step 2: Deploy to Cloudflare Pages
 
 ```bash
-# Install Wrangler globally (optional, for local testing)
-bun add -g wrangler
+# Option 1: Via Cloudflare Dashboard
+# 1. Go to Cloudflare Dashboard → Pages
+# 2. Click "Create a project"
+# 3. Connect your GitHub repository
+# 4. Select the storefront directory
+# 5. Configure build settings:
+#    - Build command: npm run build (or bun run build)
+#    - Build output directory: .next
+#    - Root directory: apps/storefront
 
-# Login to Cloudflare
-wrangler login
-
-# The first deployment will create the project automatically
-bun run pages:deploy
+# Option 2: Via Wrangler CLI
+npm install -g wrangler
+wrangler pages deploy apps/storefront/.next --project-name=storefront
 ```
 
 ### Step 3: Configure Environment Variables
 
-Environment variables can be set via:
-
-1. **Cloudflare Dashboard** (for production):
-   - Go to Workers & Pages → storefront → Settings → Environment Variables
-
-2. **`.dev.vars` file** (for local development):
-
-   ```bash
-   # apps/storefront/.dev.vars (gitignored)
-   CONTROL_PLANE_API_URL=https://control.vendin.store
-   CLOUDFLARE_ACCOUNT_ID=your-account-id
-   NODE_ENV=development
-   ```
-
-3. **GitHub Secrets** (for CI/CD):
-   ```bash
-   # Required secrets in repository settings:
-   CLOUDFLARE_API_TOKEN=your-api-token
-   CLOUDFLARE_ACCOUNT_ID=your-account-id
-   ```
-
-**API Token Permissions:**
-
-Create a Cloudflare API token with:
-
-- **Account** → **Cloudflare Pages** → **Edit**
-- **Account** → **Workers Scripts** → **Edit**
-- **Account** → **Secrets Store** → **Edit** (Required for binding secrets during deployment)
-
-### Step 4: Set Up Custom Domains
-
-After deployment, configure custom domains:
+In Cloudflare Pages dashboard:
 
 ```bash
-# Option 1: Via Cloudflare Dashboard
-# Marketing app (root domain):
-# 1. Go to Workers & Pages → marketing → Settings → Domains
-# 2. Add custom domain: vendin.store
-# 3. Add www.vendin.store (optional)
-#
-# Storefront router (tenant wildcard):
-# 1. Go to Workers & Pages → storefront → Settings → Domains
-# 2. Keep Pages default domain for wildcard routing
-
-# Option 2: Via Wrangler
-wrangler pages deployment tail
+# Required environment variables:
+CONTROL_PLANE_API_URL=https://control.vendin.store
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_API_TOKEN=your-api-token
+NODE_ENV=production
 ```
 
-**Root domain (vendin.store) serves:**
+### Step 4: Set Up Custom Domain for Storefront
 
-- Marketing landing page
-- Pricing and signup
-- Platform information
+```bash
+# In Cloudflare Pages → Custom domains
+# Add your platform domain: vendin.store (root domain)
+# Add www.vendin.store (optional, can redirect to root)
+# Cloudflare will automatically provision SSL
+
+# Root domain (vendin.store) serves:
+# - Landing page
+# - Signup page
+# - Marketing content
+# - Platform information
+```
 
 ## Part B: Cloudflare for SaaS Setup
 
@@ -279,10 +158,8 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/{zone_id}/custom_hostna
 ### Step 3: Configure SSL/TLS Settings
 
 ```bash
-# In Cloudflare Dashboard → SSL/TLS → Overview
+# In Cloudflare Dashboard → SSL/TLS → Custom Hostnames
 # SSL/TLS encryption mode: Full (strict)
-#
-# Then in SSL/TLS → Edge Certificates (for basic settings):
 # Minimum TLS Version: 1.2
 # Always Use HTTPS: On
 # Automatic HTTPS Rewrites: On
@@ -294,9 +171,7 @@ Your Control Plane needs API access to manage custom hostnames:
 
 ```bash
 # 1. Go to Cloudflare Dashboard → My Profile → API Tokens
-# 2. Create API Token with these permissions:
-#    - Account → Secrets Store → Edit (Required for binding secrets)
-#    - Account → Workers Scripts → Edit (Required for deployment)
+# 2. Create API Token with these Zone-level permissions:
 #    - Zone: Zone Settings:Read (optional, for reading zone configuration)
 #    - Zone: SSL and Certificates:Read (for listing/reading custom hostnames)
 #    - Zone: SSL and Certificates:Write (for creating/editing/deleting custom hostnames)
@@ -374,100 +249,64 @@ TTL: Auto
 
 ### Wildcard DNS for Tenant Subdomains
 
-For default tenant subdomains (e.g., `merchant-name-my.vendin.store`):
+For default tenant subdomains (e.g., `merchant-name.my.vendin.store`):
 
 ```bash
 # In Cloudflare DNS → Records
 # Add wildcard CNAME for tenant subdomains:
 Type: CNAME
-Name: *-my
+Name: *.my
 Target: storefront.pages.dev (or your storefront URL)
 TTL: Auto
 Proxy status: Proxied (orange cloud)
 
 # Note: This wildcard will match:
-# - awesome-store-my.vendin.store
-# - any-merchant-my.vendin.store
+# - awesome-store.my.vendin.store
+# - any-merchant.my.vendin.store
 # But NOT reserved subdomains (api, admin, www) which should have explicit records
-# The -my prefix provides clear separation from platform services and works with Free SSL
+# The .my. separator provides clear separation from platform services
 ```
-
-### Architecture Decision: Hyphens vs. Dots
-
-Our default tenant subdomains use the hyphenated pattern `{store}-my.vendin.store` instead of the dotted pattern `{store}.my.vendin.store`.
-
-**Why Hyphens? (SSL Coverage)**
-Cloudflare's **Universal SSL** (Free/Pro) only issues certificates for:
-
-1.  `vendin.store` (The apex domain)
-2.  `*.vendin.store` (First-level wildcards)
-
-A dot separator like `store.my.vendin.store` is a **second-level** subdomain. Cloudflare will not issue a free certificate for it, resulting in a "Hostname is not covered by a certificate" warning and broken HTTPS for users.
-
-By using a hyphen (`store-my.vendin.store`), the hostname remains at the first level, ensuring full, automatic, and free SSL coverage for all tenants.
-
-### Future Roadmap: Switching to Dotted Subdomains
-
-If you prefer the aesthetic of `store.my.vendin.store` in the future, follow these steps to upgrade:
-
-1.  **Enable Advanced Certificate Manager (ACM)**:
-    In the Cloudflare dashboard, subscribe to ACM ($10/mo current pricing). This allows you to generate certificates for deep wildcards.
-2.  **Update DNS**:
-    Change the wildcard CNAME from `*-my` to `*.my`.
-3.  **Update Middleware Logic**:
-    Update `resolveTenantFromHostname` in `middleware.ts`:
-    ```typescript
-    // From:
-    if (hostname.endsWith("-my.vendin.store")) {
-      const storeName = hostname.replace("-my.vendin.store", "");
-    // To:
-    if (hostname.endsWith(".my.vendin.store")) {
-      const storeName = hostname.replace(".my.vendin.store", "");
-    ```
-4.  **Note on Custom Domains**:
-    This change only affects default subdomains. Custom merchant domains (e.g., `shop.merchant.com`) work regardless of the default pattern.
 
 **Explicit DNS Records for Platform Services:**
 
 ```bash
-# Root domain (marketing app)
+# Root domain (landing/signup)
 Type: A or CNAME
 Name: @
-Target: marketing.pages.dev
+Target: storefront.pages.dev
 Proxy status: Proxied
 
 # Control Plane API
 Type: CNAME
 Name: control
-Target: 1.1.1.1 (or any dummy IP)
-Proxy status: Proxied (orange cloud)
-
-*Note: The Control Plane is deployed as a Worker located at `apps/control-plane`. Cloudflare will automatically intercept requests to this hostname and execute the Worker logic.*
+Target: ghs.googlehosted.com (Cloud Run domain mapping)
+Proxy status: DNS only (gray cloud)
 
 # Platform Admin (optional)
 Type: CNAME
 Name: admin
-Target: marketing.pages.dev (or separate admin app)
+Target: storefront.pages.dev
 Proxy status: Proxied
 ```
 
-### Storefront Router Logic
+### Storefront Routing Logic
 
-Your Next.js storefront router should handle different hostname patterns:
+Your Next.js storefront should handle different hostname patterns:
 
 ```typescript
 // Example: apps/storefront/src/middleware.ts
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
 
-  // Root domain: Redirect to marketing app
+  // Root domain: Landing page and signup
   if (hostname === "vendin.store" || hostname === "www.vendin.store") {
-    return NextResponse.redirect("https://vendin.store");
+    // Serve landing page, signup form, marketing content
+    return NextResponse.next();
   }
 
   // Control Plane API: Route to control.vendin.store
   if (hostname === "control.vendin.store") {
-    // This is handled by Cloudflare proxying to the Cloud Run service URL
+    // This should be handled by Cloud Run domain mapping, not storefront
     return NextResponse.redirect("https://control.vendin.store");
   }
 
@@ -477,17 +316,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Tenant subdomain pattern: {store}-my.vendin.store or custom domain
+  // Tenant subdomain pattern: {store}.my.vendin.store or custom domain
   const tenantId = await resolveTenantFromHostname(hostname);
 
   if (!tenantId) {
-    // Unknown hostname, redirect to marketing site
+    // Unknown hostname, redirect to landing page
     return NextResponse.redirect("https://vendin.store");
   }
 
-  // Redirect/proxy to tenant instance
+  // Route to tenant instance
   const tenantUrl = `https://tenant-${tenantId}-xxx.a.run.app`;
-  // ... redirect or proxy request to tenant instance
+  // ... route request to tenant
 }
 ```
 
@@ -497,10 +336,10 @@ export async function middleware(request: NextRequest) {
 async function resolveTenantFromHostname(
   hostname: string,
 ): Promise<string | null> {
-  // Check if it's a tenant subdomain pattern: {store}-my.vendin.store
-  if (hostname.endsWith("-my.vendin.store")) {
-    // Extract store name (e.g., "awesome-store" from "awesome-store-my.vendin.store")
-    const storeName = hostname.replace("-my.vendin.store", "");
+  // Check if it's a tenant subdomain pattern: {store}.my.vendin.store
+  if (hostname.endsWith(".my.vendin.store")) {
+    // Extract store name (e.g., "awesome-store" from "awesome-store.my.vendin.store")
+    const storeName = hostname.replace(".my.vendin.store", "");
 
     // Query Control Plane to find tenant by subdomain
     const tenant = await controlPlaneClient.findTenantBySubdomain(storeName);
@@ -512,10 +351,6 @@ async function resolveTenantFromHostname(
   const tenant = await controlPlaneClient.findTenantByCustomDomain(hostname);
   return tenant?.id || null;
 }
-
-// Note: Both marketing app and storefront router are deployed to Cloudflare Pages
-// as separate deployments. Marketing app handles root domain, storefront router
-// handles tenant subdomains and custom domains.
 ```
 
 ## Part E: Security Configuration
@@ -548,59 +383,7 @@ async function resolveTenantFromHostname(
 # Or: Super Bot Fight Mode (Paid plans)
 ```
 
-## Part F: Secrets Store Management
-
-Cloudflare **Secrets Store** allows you to securely store and share sensitive information across your entire account.
-
-### Why use Secrets Store?
-
-1. **Shared Access**: Secrets like `DATABASE_URL` or `NEON_API_KEY` can be used by multiple Workers without re-uploading them.
-2. **Centralized Management**: Rotate or update secrets in one place instead of per-worker.
-3. **Capacity**: Up to 100 secrets per account (Free/Pro).
-
-### Configuration via Dashboard
-
-1. Go to **Storage & Databases** → **Secrets Store**.
-2. Click **Create secret**.
-3. Use names like `control-plane-db-url`.
-4. These secrets are automatically available to your CI/CD pipeline and bound Workers via `secrets_store_secrets`.
-
-### CD Integration (Dynamic Bindings)
-
-To avoid hardcoding Store IDs in the repository, use placeholders in `wrangler.jsonc`:
-
-```jsonc
-{
-  "env": {
-    "production": {
-      "secrets_store_secrets": [
-        {
-          "binding": "DATABASE_URL",
-          "store_id": "STORE_ID_PLACEHOLDER",
-          "secret_name": "control-plane-db-url",
-        },
-      ],
-    },
-  },
-}
-```
-
-The GitHub Actions workflow replaces `STORE_ID_PLACEHOLDER` with the value from the `CLOUDFLARE_SECRETS_STORE_ID` variable before deployment.
-
-### Accessing via CLI
-
-```bash
-# 1. List stores to find the STORE_ID
-bun wrangler secrets-store store list --remote
-
-# 2. List secrets in the store to find the SECRET_ID
-bun wrangler secrets-store secret list <STORE_ID> --remote
-
-# 3. Retrieve a secret value
-bun wrangler secrets-store secret get <STORE_ID> --secret-id <SECRET_ID> --remote
-```
-
-## Part G: Monitoring and Analytics
+## Part F: Monitoring and Analytics
 
 ### Custom Hostname Status Monitoring
 
@@ -721,13 +504,12 @@ async function addCustomHostname(tenantId: string, domain: string) {
 
 ## Next Steps
 
-1. Deploy marketing app to Cloudflare Pages (root domain)
-2. Deploy storefront router to Cloudflare Pages (tenant domains)
-3. Configure Cloudflare for SaaS
-4. Test custom hostname addition via API
-5. Implement tenant resolution in storefront router
-6. Set up monitoring and alerts
-7. Document merchant DNS setup process
+1. Deploy storefront to Cloudflare Pages
+2. Configure Cloudflare for SaaS
+3. Test custom hostname addition via API
+4. Implement tenant resolution in storefront
+5. Set up monitoring and alerts
+6. Document merchant DNS setup process
 
 ## References
 
