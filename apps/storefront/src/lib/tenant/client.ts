@@ -2,16 +2,18 @@ import { logger } from "@vendin/utils/logger";
 
 import type { Tenant } from "./types";
 
-const CONTROL_PLANE_URL = process.env.CONTROL_PLANE_API_URL;
-const API_KEY = process.env.CONTROL_PLANE_API_KEY;
-
-// Cache configuration from environment variables
-const ENABLE_TENANT_CACHE =
-  process.env.ENABLE_TENANT_CACHE === "true" ||
-  process.env.ENABLE_TENANT_CACHE === "1";
-const TENANT_CACHE_TTL = process.env.TENANT_CACHE_TTL
-  ? Number.parseInt(process.env.TENANT_CACHE_TTL, 10)
-  : 300; // Default to 5 minutes
+function getSettings() {
+  return {
+    CONTROL_PLANE_URL: process.env.CONTROL_PLANE_API_URL,
+    API_KEY: process.env.CONTROL_PLANE_API_KEY,
+    ENABLE_TENANT_CACHE:
+      process.env.ENABLE_TENANT_CACHE === "true" ||
+      process.env.ENABLE_TENANT_CACHE === "1",
+    TENANT_CACHE_TTL: process.env.TENANT_CACHE_TTL
+      ? Number.parseInt(process.env.TENANT_CACHE_TTL, 10)
+      : 300,
+  };
+}
 
 /**
  * Shared helper function to fetch tenant data from Control Plane API.
@@ -21,6 +23,9 @@ async function fetchTenant(
   url: string,
   logContext: Record<string, string>,
 ): Promise<Tenant | null> {
+  const { CONTROL_PLANE_URL, API_KEY, ENABLE_TENANT_CACHE, TENANT_CACHE_TTL } =
+    getSettings();
+
   if (!CONTROL_PLANE_URL || !API_KEY) {
     logger.error({
       msg: "Control Plane configuration missing",
@@ -63,14 +68,16 @@ async function fetchTenant(
   }
 }
 
-export async function fetchTenantBySubdomain(
+export function fetchTenantBySubdomain(
   subdomain: string,
 ): Promise<Tenant | null> {
+  const { CONTROL_PLANE_URL } = getSettings();
   const url = `${CONTROL_PLANE_URL}/api/tenants/lookup?subdomain=${subdomain}`;
   return fetchTenant(url, { subdomain });
 }
 
-export async function fetchTenantById(id: string): Promise<Tenant | null> {
+export function fetchTenantById(id: string): Promise<Tenant | null> {
+  const { CONTROL_PLANE_URL } = getSettings();
   const url = `${CONTROL_PLANE_URL}/api/tenants/${id}`;
   return fetchTenant(url, { tenantId: id });
 }

@@ -7,8 +7,12 @@ export function extractSubdomainFromHostname(hostname: string): string | null {
   const subdomain = hostname.replace(`.${ROOT_DOMAIN}`, "");
 
   // Validate format: alphanumeric, hyphens, 3-63 chars
-  // MVP: just alphanumeric and hyphens with length validation
-  if (!/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/.test(subdomain)) {
+  if (subdomain.length < 3 || subdomain.length > 63) {
+    return null;
+  }
+
+  // Must start and end with alphanumeric, can contain hyphens in between
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(subdomain)) {
     return null;
   }
 
@@ -20,5 +24,5 @@ export function shouldRedirectToMarketing(hostname: string): boolean {
 }
 
 export function isLocalhost(hostname: string): boolean {
-  return hostname.includes("localhost");
+  return hostname.includes("localhost") || hostname.includes("127.0.0.1");
 }
