@@ -11,6 +11,8 @@ interface Environment {
   DATABASE_URL: string;
   LOG_LEVEL?: string;
   NODE_ENV?: string;
+  NEON_API_KEY?: string;
+  NEON_PROJECT_ID?: string;
 }
 
 const openApiSpecs = new LRUCache<
@@ -134,11 +136,7 @@ function handleApiRequest(
 }
 
 export default {
-  async fetch(
-    request: Request,
-    environment: Environment,
-    _context: unknown,
-  ): Promise<Response> {
+  async fetch(request: Request, environment: Environment): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
     const logger = createLogger({
       logLevel: environment.LOG_LEVEL,
@@ -147,7 +145,11 @@ export default {
 
     const database = createDatabase(environment.DATABASE_URL, nodeEnvironment);
     const tenantRepository = new TenantRepository(database);
-    const tenantService = new TenantService(tenantRepository);
+    const tenantService = new TenantService(tenantRepository, {
+      logger,
+      neonApiKey: environment.NEON_API_KEY,
+      neonProjectId: environment.NEON_PROJECT_ID,
+    });
     const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
     const url = new URL(request.url);
