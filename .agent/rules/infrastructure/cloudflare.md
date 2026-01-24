@@ -8,8 +8,14 @@ globs: apps/storefront/**/*, infrastructure/**/*
 
 - **Platform**: Cloudflare Pages
 - **Framework**: Next.js with edge runtime
+- **Root Domain**: Handled by marketing app
+- **Wildcard DNS**: `*-my.vendin.store` → Storefront router Pages URL
+
+## Marketing App Deployment (Cloudflare Pages)
+
+- **Platform**: Cloudflare Pages
+- **Framework**: Next.js
 - **Root Domain**: `vendin.store` (landing page and signup)
-- **Wildcard DNS**: `*.my.vendin.store` → Storefront Pages URL
 
 ## Cloudflare for SaaS (Custom Domains)
 
@@ -34,9 +40,9 @@ See [@references.md](../shared/references.md) for reserved subdomains list.
 
 ## DNS Configuration
 
-- **Wildcard for tenants**: `*.my` CNAME → Storefront Pages URL
+- **Wildcard for tenants**: `*-my` CNAME → Storefront router Pages URL
 - **Control Plane**: `control` CNAME → `ghs.googlehosted.com` (DNS only)
-- **Root domain**: `@` A/CNAME → Storefront Pages URL
+- **Root domain**: `@` A/CNAME → Marketing Pages URL
 
 ## References
 

@@ -98,15 +98,26 @@ flowchart TB
 
 **Tenant Instances (Individual Stores)**
 
-- Isolated MedusaJS 2.0 backend instances
+- Isolated MedusaJS 2.0 instances per tenant
 - Each tenant has dedicated database and compute
-- Location: `/tenant-instance/` (template)
+- Serves custom storefront UI (per-tenant themes/customizations)
+- Serves MedusaJS Store API and Admin UI
+- Location: `apps/tenant-instance/` (template)
 
-**Storefront**
+**Marketing App**
 
-- Multi-tenant Next.js application
-- Routes requests to correct tenant based on hostname
-- Location: `/storefront/`
+- Marketing landing page on root domain
+- Pricing, signup, and platform information
+- Location: `apps/marketing/`
+- Deployed to Cloudflare Pages
+
+**Storefront Router**
+
+- Router-only Next.js application
+- Resolves tenant by hostname and redirects/proxies to tenant instances
+- Location: `apps/storefront/`
+- Deployed to Cloudflare Pages for tenant domains
+- Does not render customer UI (tenant instances serve custom UI)
 
 ---
 
@@ -218,7 +229,8 @@ flowchart TB
 **Frontend Hosting**
 
 - Provider: Cloudflare Pages
-- Framework: Next.js with edge runtime
+- Marketing App: Next.js on root domain (`vendin.store`)
+- Storefront Router: Next.js for tenant domains (router-only, no UI rendering)
 - Routing: Hostname-based tenant resolution
 - CDN: Global edge caching
 
@@ -855,11 +867,13 @@ Long-term enhancements:
 
 ### References
 
+- [Architecture Documentation](./docs/architecture/README.md) - Detailed system architecture and request flows
+- [User Experiences](./docs/architecture/USER_EXPERIENCES.md) - Three user experience flows
+- [AGENTS.md](./AGENTS.md) - Agent responsibilities and development guidelines
 - [MedusaJS Documentation](https://docs.medusajs.com/)
 - [Neon API Documentation](https://neon.tech/docs/api)
 - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
 - [Cloudflare for SaaS](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/)
-- [AGENTS.md](./AGENTS.md) - Detailed architecture and agent guidelines
 - [.agentrules](./.agentrules) - Development rules and constraints
 
 ### Document History

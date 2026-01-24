@@ -178,9 +178,11 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./apps/tenant-instance/Dockerfile
           push: false
+          tags: ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:test
           cache-from: |
-            type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/control-plane:buildcache
+            type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:buildcache
             type=registry,ref=oven/bun:1.2.20-slim
-          cache-to: type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/control-plane:buildcache,mode=max
+          cache-to: type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:buildcache,mode=max
           platforms: linux/amd64

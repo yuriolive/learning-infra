@@ -18,17 +18,17 @@ if (hostname.endsWith('-my.vendin.store')) {
 const tenant = await controlPlaneClient.findTenantByCustomDomain(hostname);
 return tenant;
 
-// Root Domain
+// Root Domain - Handled by marketing app
+// If root domain request hits storefront router, redirect to marketing app
 if (hostname === 'vendin.store' || hostname === 'www.vendin.store') {
-  // Serve landing page, signup form, marketing content
-  return <LandingPage />;
+  return redirect('https://vendin.store'); // Marketing app handles this
 }
 
 // Tenant Store Routing
 const tenant = await resolveTenantFromHostname(hostname);
 
 if (!tenant) {
-  // Unknown hostname, redirect to landing page
+  // Unknown hostname, redirect to marketing site
   return redirect('https://vendin.store');
 }
 
@@ -37,7 +37,7 @@ if (tenant.status !== 'active') {
   return <SuspendedPage />;
 }
 
-// Route to tenant instance
+// Redirect/proxy to tenant instance (tenant serves custom UI)
 const tenantUrl = `https://tenant-${tenant.id}-xxx.a.run.app`;
 return proxyToTenant(tenantUrl, request);
 
@@ -45,9 +45,9 @@ return proxyToTenant(tenantUrl, request);
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   
-  // Root domain: Landing page
+  // Root domain: Redirect to marketing app
   if (hostname === 'vendin.store' || hostname === 'www.vendin.store') {
-    return NextResponse.next();
+    return NextResponse.redirect('https://vendin.store');
   }
   
   // Resolve tenant
