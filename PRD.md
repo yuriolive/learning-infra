@@ -94,19 +94,22 @@ flowchart TB
 - Central API managing tenant provisioning
 - Handles merchant signup and store creation
 - Manages database and compute resource allocation
-- Location: `/control-plane/`
+- Location: `apps/control-plane/`
 
 **Tenant Instances (Individual Stores)**
 
 - Isolated MedusaJS 2.0 backend instances
 - Each tenant has dedicated database and compute
-- Location: `/tenant-instance/` (template)
+- Serves Store API (`/store`) and Admin Dashboard (`/app`)
+- Location: `apps/tenant-instance/` (template)
 
 **Storefront**
 
-- Multi-tenant Next.js application
-- Routes requests to correct tenant based on hostname
-- Location: `/storefront/`
+- Multi-tenant Next.js application on Cloudflare Pages
+- Routes/proxies customer requests to correct tenant backend (NOT simple redirects)
+- Serves platform landing page at root domain
+- Serves customer-facing store UI
+- Location: `apps/storefront/`
 
 ---
 
@@ -852,15 +855,16 @@ Long-term enhancements:
 - **Scale-to-Zero**: Automatic shutdown of idle resources to minimize costs
 - **Cold Start**: Time to start an idle container from zero instances
 - **Provisioning**: Automated process of creating tenant infrastructure
+- **Storefront**: Multi-tenant Next.js app that routes/proxies customer requests
 
 ### References
 
+- [Architecture Documentation](./docs/ARCHITECTURE.md) - Detailed system architecture and request flows
+- [AGENTS.md](./AGENTS.md) - Agent responsibilities and development guidelines
 - [MedusaJS Documentation](https://docs.medusajs.com/)
 - [Neon API Documentation](https://neon.tech/docs/api)
 - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
 - [Cloudflare for SaaS](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/)
-- [AGENTS.md](./AGENTS.md) - Detailed architecture and agent guidelines
-- [.agentrules](./.agentrules) - Development rules and constraints
 
 ### Document History
 

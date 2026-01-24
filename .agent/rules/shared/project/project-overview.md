@@ -55,24 +55,27 @@ admin.vendin.store              → Platform admin dashboard (optional)
 
 ### Storefront (Customer-Facing Application)
 - **Type**: Shared Cloudflare Pages deployment
-- **Purpose**: Multi-tenant Next.js application routing requests to tenants
-- **Location**: `apps/storefront/` (future)
+- **Purpose**: Multi-tenant Next.js application that **routes/proxies** requests (NOT simple redirects)
+- **Location**: `apps/storefront/`
 - **Responsibilities**:
   - Landing page and signup on root domain (`vendin.store`)
   - Hostname-based tenant resolution
-  - Routing to tenant instances based on subdomain or custom domain
-  - Product browsing, cart, checkout experience
+  - **Proxy/route** to tenant instances based on subdomain or custom domain
+  - Customer-facing UI: product browsing, cart, checkout experience
+  - Makes API calls to tenant backends and renders responses
 
 ### Tenant Instances (Individual Stores)
 - **Type**: Separate Cloud Run service per tenant
 - **Service Naming**: `tenant-{tenantId}` (e.g., `tenant-abc123`)
 - **Purpose**: Isolated MedusaJS 2.0 backend instances
-- **Location**: `apps/tenant-instance/` (template, future)
+- **Location**: `apps/tenant-instance/` (template)
 - **Responsibilities**:
-  - Serve `/admin` API and admin dashboard (for merchants)
+  - Serve `/app` - MedusaJS Admin Dashboard (for merchants to manage their store)
   - Serve `/store` API (for customers via storefront)
   - Each tenant has dedicated database and compute
   - Scale-to-zero when idle
+
+**Important**: Merchants access their admin at `{store}.my.vendin.store/app` - each tenant has its own isolated admin dashboard.
 
 ## Code Organization
 
@@ -137,8 +140,9 @@ docs/
 
 ## References
 
-- **Architecture**: See [AGENTS.md](../../../AGENTS.md) for detailed architecture, responsibilities, deployment workflow.
-- **Requirements**: See `PRD.md` for project requirements.
-- **Setup Guides**: See `docs/setup/` for infrastructure setup documentation.
-- **External docs**: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS (see `AGENTS.md` Resources section).
+- **Architecture**: See [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md) for detailed architecture, request flows, user experiences.
+- **Agent Guidelines**: See [AGENTS.md](../../../AGENTS.md) for agent responsibilities and deployment workflow.
+- **Requirements**: See [PRD.md](../../../PRD.md) for project requirements.
+- **Setup Guides**: See [docs/setup/](../../../../docs/setup/) for infrastructure setup documentation.
+- **External docs**: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS (see AGENTS.md Resources section).
 - **Service naming**: See [@references.md](../references.md)

@@ -11,10 +11,14 @@ This project uses a **monorepo architecture** with Turborepo and Bun workspaces 
 ```
 /
 ├── apps/
-│   └── control-plane/      # Orchestrator API (tenant provisioning)
+│   ├── control-plane/      # Orchestrator API (tenant provisioning)
+│   ├── storefront/         # Next.js multi-tenant storefront (customer UI + landing page)
+│   └── tenant-instance/    # MedusaJS template (merchant stores)
 ├── packages/
-│   └── config/             # Shared config (ESLint, TS, Prettier)
-└── infrastructure/         # Infrastructure as Code
+│   ├── config/             # Shared config (ESLint, TS, Prettier)
+│   └── utils/              # Shared utilities
+└── docs/
+    └── ARCHITECTURE.md     # System architecture reference
 ```
 
 ## Prerequisites
@@ -85,14 +89,32 @@ bun run lint:fix
 
 ### Control Plane (`apps/control-plane/`)
 
-Orchestrator API for managing tenant provisioning in the multi-tenant e-commerce platform.
+Orchestrator API for managing tenant provisioning.
 
 - RESTful API with tenant provisioning endpoints
 - Domain-driven design structure
-- In-memory storage (will be replaced with PostgreSQL)
+- Manages database creation (Neon) and compute provisioning (Cloud Run)
 - Comprehensive unit test suite (96% coverage)
 
 See [`apps/control-plane/README.md`](apps/control-plane/README.md) for details.
+
+### Storefront (`apps/storefront/`)
+
+Multi-tenant Next.js application serving customers and landing page.
+
+- Customer-facing store UI (product browsing, cart, checkout)
+- Platform landing page at root domain
+- Hostname-based tenant routing/proxying to backends
+- Deployed on Cloudflare Pages
+
+### Tenant Instance (`apps/tenant-instance/`)
+
+MedusaJS 2.0 template for individual merchant stores.
+
+- Store API (`/store`) for customer operations
+- Admin Dashboard (`/app`) for merchant management
+- Dedicated database per tenant (Neon PostgreSQL)
+- Deployed on Google Cloud Run with scale-to-zero
 
 ## Packages
 
@@ -122,6 +144,7 @@ Shared configuration for all apps and packages:
 
 ## Documentation
 
-- **Architecture**: See [AGENTS.md](AGENTS.md)
-- **Requirements**: See [PRD.md](PRD.md)
-- **Roadmap**: See [ROADMAP.md](ROADMAP.md)
+- **Architecture**: See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System components and request flows
+- **Agent Guidelines**: See [AGENTS.md](AGENTS.md) - Agent responsibilities and development guidelines
+- **Requirements**: See [PRD.md](PRD.md) - Product requirements and specifications
+- **Roadmap**: See [ROADMAP.md](ROADMAP.md) - Development milestones

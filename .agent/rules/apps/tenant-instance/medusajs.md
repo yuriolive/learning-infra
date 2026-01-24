@@ -17,7 +17,8 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 
 ## API Endpoints
 
-- `/admin`: Admin dashboard and API (for merchants)
+- `/app`: Admin dashboard (MedusaJS 2.0 admin UI for merchants)
+- `/admin/*`: Admin API endpoints (used by admin dashboard)
 - `/store`: Store API (for customers via storefront)
 - `/health`: Health check endpoint
 
@@ -29,9 +30,11 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 
 ## Admin Access
 
-- Merchants access admin at: `{store}.my.vendin.store/admin`
-- Authentication handled by MedusaJS
+- Merchants access admin dashboard at: `{store}.my.vendin.store/app`
+- Admin API endpoints at: `{store}.my.vendin.store/admin/*`
+- Authentication handled by MedusaJS JWT
 - Each tenant has isolated admin access
+- Storefront does NOT intercept `/app` or `/admin` routes
 
 ## Store API
 
@@ -41,5 +44,6 @@ Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
 
 ## References
 
-- **Database isolation**: See [AGENTS.md](../../../AGENTS.md#key-constraints)
+- **Architecture**: See [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for request flows
+- **Database isolation**: See [AGENTS.md](../../../../AGENTS.md#key-constraints)
 - **Secret management**: See [@secrets.md](../../infrastructure/secrets.md)

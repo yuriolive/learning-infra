@@ -1,28 +1,35 @@
 # Documentation
 
-This directory contains organized documentation for the Learning Infrastructure project.
+This directory contains organized documentation for the Multi-Tenant E-commerce Platform.
+
+## Quick Start
+
+**New to the project?** Start here:
+
+1. [USER_EXPERIENCES.md](./USER_EXPERIENCES.md) - Three user experiences explained (QUICK REFERENCE)
+2. [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture, components, and request flows
+3. [../AGENTS.md](../AGENTS.md) - Agent responsibilities and guidelines
+4. [../PRD.md](../PRD.md) - Product requirements and specifications
 
 ## Structure
 
 ```
 docs/
+├── USER_EXPERIENCES.md  # Three user experiences (QUICK REFERENCE)
+├── ARCHITECTURE.md      # System architecture (DETAILED)
 ├── deployment/          # CD/CI and deployment guides
-│   ├── README.md
-│   └── CONTROL_PLANE.md
-│
-├── setup/              # Infrastructure setup guides
-│
-├── medusa/            # MedusaJS 2.0 guides
-│   ├── README.md
-│   └── PRIVATE_PLUGINS.md
-│
-└── test/               # Testing strategy and architecture
-    ├── README.md
-    ├── CURRENT_STATE.md
-    └── PLANNED_IMPROVEMENTS.md
+├── setup/               # Infrastructure setup guides
+├── medusa/              # MedusaJS 2.0 guides
+├── test/                # Testing strategy and architecture
+└── examples/            # Code examples and patterns
 ```
 
 ## Quick Links
+
+### Architecture
+
+- [User Experiences](./USER_EXPERIENCES.md) - Quick reference for three user experiences
+- [System Architecture](./ARCHITECTURE.md) - Detailed components, request flows, deployment
 
 ### Deployment
 

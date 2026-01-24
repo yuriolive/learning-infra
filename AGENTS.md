@@ -6,27 +6,32 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ## Project Architecture
 
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for detailed architecture diagrams and request flows.
+
 ### Core Components
 
 1. **Control Plane (Orchestrator)**
    - Central API managing tenant provisioning
    - Handles merchant signup and store creation
    - Manages database and compute resource allocation
-   - Location: `/control-plane/`
+   - Location: `apps/control-plane/`
 
-2. **Tenant Instances (Individual Stores)**
+2. **Tenant Instances (Individual Merchant Stores)**
    - Isolated MedusaJS 2.0 backend instances
    - Each tenant has dedicated database and compute
-   - Location: `/tenant-instance/` (template) or `/tenants/{tenant-id}/`
+   - Serves Store API (`/store/*`) and Admin Dashboard (`/app`)
+   - Location: `apps/tenant-instance/` (template)
 
-3. **Storefront**
-   - Multi-tenant Next.js application
-   - Routes requests to correct tenant based on hostname/subdomain
-   - Location: `/storefront/`
+3. **Storefront (Multi-Tenant Frontend)**
+   - Multi-tenant Next.js application on Cloudflare Pages
+   - **Routes/proxies** customer requests to correct tenant backend (NOT simple redirects)
+   - Serves landing page at root domain and customer-facing store UI
+   - Location: `apps/storefront/`
 
 ## Agent Responsibilities
 
 ### Control Plane Agent
+
 - **Purpose**: Handle tenant provisioning, database creation, and resource management
 - **Key Tasks**:
   - Integrate with Neon API for dynamic database creation
@@ -35,22 +40,28 @@ This document describes the agent architecture and guidelines for AI assistants 
   - Handle tenant lifecycle (create, suspend, delete)
 
 ### Tenant Instance Agent
+
 - **Purpose**: Configure and maintain individual MedusaJS store instances
 - **Key Tasks**:
   - Set up MedusaJS 2.0 with tenant-specific configuration
   - Configure database connections (Neon PostgreSQL)
   - Set up Redis caching (Upstash)
+  - Configure Store API (`/store/*`) for customer operations
+  - Configure Admin Dashboard (`/app`) for merchant management
   - Implement tenant-specific customizations
 
 ### Storefront Agent
+
 - **Purpose**: Build and maintain the multi-tenant Next.js storefront
 - **Key Tasks**:
-  - Implement hostname-based tenant routing
-  - Configure Cloudflare SaaS for custom domains
-  - Handle SSL certificate management
+  - Implement hostname-based tenant routing (proxy/route, not redirect)
+  - Build customer-facing UI (product pages, cart, checkout)
+  - Build landing page for merchant signup at root domain
+  - Integrate with tenant backend APIs
   - Optimize for edge deployment (Cloudflare Pages)
 
 ### Infrastructure Agent
+
 - **Purpose**: Manage deployment, scaling, and infrastructure configuration
 - **Key Tasks**:
   - Configure Google Cloud Run with scale-to-zero
@@ -61,12 +72,14 @@ This document describes the agent architecture and guidelines for AI assistants 
 ## Key Constraints
 
 ### Non-Negotiables
+
 1. **Multi-Instance Only**: Never use shared-database multi-tenancy
 2. **Serverless Priority**: All components must be serverless
 3. **TypeScript Only**: All backend code must be TypeScript
 4. **Isolation**: 100% physical database isolation per merchant
 
 ### Performance Requirements
+
 - Store provisioning: < 2 minutes end-to-end
 - Scale-to-zero: Cloud Run `min-instances: 0`
 - Database: Neon Serverless PostgreSQL per tenant
@@ -74,44 +87,55 @@ This document describes the agent architecture and guidelines for AI assistants 
 ## Technology Stack
 
 ### Backend
+
 - **Framework**: MedusaJS 2.0+
 - **Language**: TypeScript
 - **Database**: Neon Serverless PostgreSQL
 - **Cache**: Upstash Redis (Serverless)
 
 ### Infrastructure
+
 - **Compute**: Google Cloud Run
 - **Frontend Hosting**: Cloudflare Pages
 - **DNS/SSL**: Cloudflare for SaaS
 - **Storage**: Cloudflare R2
 
 ### Future Additions
+
 - **Search**: Meilisearch (Milestone 5)
 
 ## Development Guidelines
 
 ### Code Organization
+
 ```
 /
-├── control-plane/          # Orchestrator API
-├── tenant-instance/        # MedusaJS template/boilerplate
-├── storefront/             # Next.js multi-tenant app
-├── infrastructure/         # IaC (Terraform/Pulumi)
-└── shared/                 # Shared utilities/types
+├── apps/
+│   ├── control-plane/      # Orchestrator API (tenant provisioning)
+│   ├── tenant-instance/    # MedusaJS template/boilerplate
+│   └── storefront/         # Next.js multi-tenant app (customer UI + landing page)
+├── packages/
+│   ├── config/             # Shared config
+│   └── utils/              # Shared utilities
+└── docs/
+    └── ARCHITECTURE.md     # Detailed architecture reference
 ```
 
 ### Database Strategy
+
 - Each tenant gets a dedicated Neon database
 - Use Neon API for programmatic database creation
 - Store connection strings securely (environment variables or secrets manager)
 - Never share database connections between tenants
 
 ### API Design
+
 - Control Plane API: RESTful endpoints for tenant management
 - Tenant API: Standard MedusaJS REST/GraphQL endpoints
 - Storefront API: Next.js API routes for tenant resolution
 
 ### Environment Variables
+
 - Control Plane: `NEON_API_KEY`, `GCP_PROJECT_ID`, `CLOUDFLARE_API_TOKEN`
 - Tenant Instances: `DATABASE_URL`, `REDIS_URL`, `TENANT_ID`
 - Storefront: `CONTROL_PLANE_API_URL`, `CLOUDFLARE_ACCOUNT_ID`
@@ -119,16 +143,19 @@ This document describes the agent architecture and guidelines for AI assistants 
 ## Testing Strategy
 
 ### Unit Tests
+
 - Test tenant provisioning logic
 - Test database connection handling
 - Test hostname routing logic
 
 ### Integration Tests
+
 - Test end-to-end store creation flow
 - Test tenant isolation
 - Test custom domain routing
 
 ### Performance Tests
+
 - Verify < 2 minute provisioning time
 - Test scale-to-zero behavior
 - Load test multi-tenant routing
@@ -153,6 +180,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 ## Common Agent Tasks
 
 ### Adding a New Feature
+
 1. Identify which component(s) need changes
 2. Consider multi-tenant implications
 3. Ensure isolation is maintained
@@ -160,6 +188,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 5. Document API changes
 
 ### Debugging Issues
+
 1. Identify tenant context (if applicable)
 2. Check logs in appropriate service
 3. Verify database isolation
@@ -167,6 +196,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 5. Review routing logic (for storefront issues)
 
 ### Performance Optimization
+
 1. Monitor Cloud Run cold start times
 2. Optimize database queries
 3. Implement proper caching strategies
@@ -174,6 +204,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 5. Optimize Next.js edge functions
 
 ### Documentation and Research
+
 - **Use context7 MCP** (if available) to search for up-to-date documentation and code examples
 - Search for library-specific documentation before implementing new features
 - Look for best practices and patterns in official documentation
@@ -184,6 +215,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ## Resources
 
+- [Architecture Documentation](./docs/ARCHITECTURE.md) - Detailed system architecture
 - [MedusaJS Documentation](https://docs.medusajs.com/)
 - [Neon API Documentation](https://neon.tech/docs/api)
 - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
