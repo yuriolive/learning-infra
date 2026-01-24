@@ -1,5 +1,7 @@
 # Vendin - Multi-Tenant E-commerce Platform
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/04adb4676ce1420ea6d7d09cb2561855)](https://app.codacy.com/gh/yuriolive/learning-infra?utm_source=github.com&utm_medium=referral&utm_content=yuriolive/learning-infra&utm_campaign=Badge_Grade)
+
 Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisioning. Each merchant gets a dedicated backend and database.
 
 ## Overview
