@@ -84,12 +84,12 @@ jobs:
         run: |
           STORE_ID="${{ vars.CLOUDFLARE_SECRETS_STORE_ID }}"
           if [ -z "$STORE_ID" ]; then
+          STORE_ID="${{ vars.CLOUDFLARE_SECRETS_STORE_ID }}"
+          if [ -z "$STORE_ID" ]; then
             echo "Error: CLOUDFLARE_SECRETS_STORE_ID variable is not set."
             exit 1
           fi
-          echo "Using Store ID: $STORE_ID"
           sed -i "s/STORE_ID_PLACEHOLDER/$STORE_ID/g" wrangler.jsonc
-
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
