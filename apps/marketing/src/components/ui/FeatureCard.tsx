@@ -11,7 +11,7 @@ interface FeatureCardProps {
   color?: "primary" | "secondary" | "success" | "warning";
 }
 
-const colorMap = {
+const colorMap: Record<NonNullable<FeatureCardProps["color"]>, string> = {
   primary: "from-primary-100 to-primary-50",
   secondary: "from-secondary-100 to-secondary-50",
   success: "from-success-100 to-success-50",
