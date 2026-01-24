@@ -16,7 +16,7 @@ Provisioning Flow:
          ▼
 ┌─────────────────┐
 │ Control Plane   │  (Orchestrates provisioning)
-│ (Cloud Run)     │
+│ (Cloudflare)    │
 └────────┬────────┘
          │
          ├─▶ Create Neon Database
@@ -176,7 +176,9 @@ gcloud run services create tenant-${TENANT_ID} \
 
 ### Step 4: Configure Default Subdomain
 
-Each tenant gets a default subdomain following the Shopify-style pattern: `{merchant-name}-my.vendin.store`
+Each tenant gets a default subdomain following the pattern: `{merchant-name}-my.vendin.store`
+
+**Note**: We use the `-my` pattern (hyphenated) for SSL coverage. Future migration to `.my` pattern is planned once Cloudflare deep wildcard SSL is enabled.
 
 **Subdomain Assignment:**
 

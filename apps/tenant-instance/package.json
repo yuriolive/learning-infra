@@ -12,7 +12,8 @@
     "typescript"
   ],
   "scripts": {
-    "build": "medusa build",
+    "build": "npx medusa build",
+    "build:bun": "medusa build",
     "start": "medusa start",
     "dev": "TS_NODE_PROJECT=tsconfig.json medusa develop",
     "lint": "bun x eslint .",

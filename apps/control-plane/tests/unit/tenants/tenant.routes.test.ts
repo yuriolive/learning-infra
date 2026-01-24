@@ -15,8 +15,8 @@ describe("TenantRoutes", () => {
   beforeEach(async () => {
     const database = await createMockDatabase();
     repository = new TenantRepository(database);
-    service = new TenantService(repository);
     logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
+    service = new TenantService(repository, { logger });
     routes = createTenantRoutes({ tenantService: service, logger });
   });
 

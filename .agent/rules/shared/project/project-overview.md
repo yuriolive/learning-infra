@@ -33,10 +33,12 @@ vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
-*.my.vendin.store               → Tenant stores (wildcard)
-  ├─ {store}.my.vendin.store → Merchant storefront
-  └─ {store}.my.vendin.store/admin → Merchant admin (MedusaJS)
+*-my.vendin.store               → Tenant stores (wildcard)
+  ├─ {store}-my.vendin.store → Merchant storefront
+  └─ {store}-my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
+
+**Note**: We use the `-my` pattern for SSL coverage today. Planned migration to `.my` once deep wildcard SSL is enabled in Cloudflare.
 
 ## Service Roles
 
@@ -53,24 +55,32 @@ admin.vendin.store              → Platform admin dashboard (optional)
   - Custom domain management via Cloudflare SaaS API
   - Tenant lifecycle management (create, suspend, delete)
 
-### Storefront (Customer-Facing Application)
-- **Type**: Shared Cloudflare Pages deployment
-- **Purpose**: Multi-tenant Next.js application routing requests to tenants
-- **Location**: `apps/storefront/` (future)
+### Marketing App (Landing)
+- **Type**: Cloudflare Pages deployment
+- **Purpose**: Marketing site for landing, pricing, and signup
+- **Location**: `apps/marketing/`
 - **Responsibilities**:
   - Landing page and signup on root domain (`vendin.store`)
+  - Marketing content, pricing, and CTAs
+
+### Storefront Router (Tenant Routing Only)
+- **Type**: Shared Cloudflare Pages deployment
+- **Purpose**: Router-only Next.js app that resolves tenant by hostname
+- **Location**: `apps/storefront/`
+- **Responsibilities**:
   - Hostname-based tenant resolution
-  - Routing to tenant instances based on subdomain or custom domain
-  - Product browsing, cart, checkout experience
+  - Redirect/proxy to tenant instances based on subdomain or custom domain
+  - No customer-facing UI rendered here
 
 ### Tenant Instances (Individual Stores)
 - **Type**: Separate Cloud Run service per tenant
 - **Service Naming**: `tenant-{tenantId}` (e.g., `tenant-abc123`)
 - **Purpose**: Isolated MedusaJS 2.0 backend instances
-- **Location**: `apps/tenant-instance/` (template, future)
+- **Location**: `apps/tenant-instance/` (template)
 - **Responsibilities**:
-  - Serve `/admin` API and admin dashboard (for merchants)
-  - Serve `/store` API (for customers via storefront)
+  - Serve custom storefront UI (customer experience)
+  - Serve `/store` API (MedusaJS store API)
+  - Serve `/admin` UI + API (merchant admin)
   - Each tenant has dedicated database and compute
   - Scale-to-zero when idle
 
@@ -80,8 +90,9 @@ admin.vendin.store              → Platform admin dashboard (optional)
 /
 ├── apps/
 │   ├── control-plane/      # Orchestrator API (tenant provisioning)
-│   ├── storefront/         # Next.js multi-tenant storefront (future)
-│   └── tenant-instance/    # MedusaJS template/boilerplate (future)
+│   ├── marketing/          # Marketing landing app (root domain)
+│   ├── storefront/         # Router-only storefront (tenant domains)
+│   └── tenant-instance/    # MedusaJS template/boilerplate
 ├── packages/
 │   ├── config/             # Shared config (ESLint, TS, Prettier)
 │   └── utils/              # Shared utilities
@@ -94,17 +105,18 @@ admin.vendin.store              → Platform admin dashboard (optional)
 **Landing/Signup:**
 ```
 Customer → vendin.store
-        → Storefront (Cloudflare Pages)
+        → Marketing app (Cloudflare Pages)
         → Landing page, signup form, marketing
 ```
 
 **Tenant Store:**
 ```
-Customer → {store}.my.vendin.store OR shop.merchant.com
+Customer → {store}-my.vendin.store OR shop.merchant.com
         → Cloudflare (DNS + SSL + CDN)
-        → Storefront (Cloudflare Pages - Next.js)
+        → Storefront router (Cloudflare Pages)
         → Resolves tenant from hostname
-        → Routes to tenant-{id} (Cloud Run - MedusaJS)
+        → Redirect/proxy to tenant-{id} (Cloud Run)
+        → Tenant instance serves custom storefront UI
         → Tenant Database (Neon PostgreSQL)
 ```
 
@@ -137,7 +149,7 @@ docs/
 
 ## References
 
-- **Architecture**: See [AGENTS.md](../../../AGENTS.md) for detailed architecture, responsibilities, deployment workflow.
+- **Architecture**: See [docs/architecture/README.md](../../../docs/architecture/README.md) for detailed architecture and flows.
 - **Requirements**: See `PRD.md` for project requirements.
 - **Setup Guides**: See `docs/setup/` for infrastructure setup documentation.
 - **External docs**: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS (see `AGENTS.md` Resources section).

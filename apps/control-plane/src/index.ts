@@ -1,43 +1,81 @@
 import { createLogger } from "@vendin/utils/logger";
-import { serve } from "bun";
 import { LRUCache } from "lru-cache";
 
+import { createDatabase } from "./database/database";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { authenticateRequest, getCorsHeaders } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
 
-const nodeEnvironment = process.env.NODE_ENV ?? "development";
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: nodeEnvironment,
-});
-
-const port = Number.parseInt(process.env.PORT ?? "3000", 10);
-
-const tenantRepository = new TenantRepository();
-const tenantService = new TenantService(tenantRepository);
-const tenantRoutes = createTenantRoutes({ logger, tenantService });
+interface Environment {
+  DATABASE_URL: string;
+  LOG_LEVEL?: string;
+  NODE_ENV?: string;
+  NEON_API_KEY?: string;
+  NEON_PROJECT_ID?: string;
+}
 
 const openApiSpecs = new LRUCache<
   string,
   ReturnType<typeof generateOpenAPISpec>
 >({
-  max: 100, // Cache up to 100 different origins
-  ttl: 1000 * 60 * 60, // 1 hour TTL
+  max: 100,
+  ttl: 1000 * 60 * 60,
 });
 
-const getOpenAPISpec = (origin: string) => {
+function getOpenAPISpec(origin: string) {
   let spec = openApiSpecs.get(origin);
   if (!spec) {
     spec = generateOpenAPISpec(origin);
     openApiSpecs.set(origin, spec);
   }
   return spec;
-};
+}
 
-export const handleRequest = async (request: Request): Promise<Response> => {
+function getDocumentationHtml(spec: unknown) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendin Control Plane API - Documentation</title>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js"></script>
+</head>
+<body>
+  <div id="api-reference"></div>
+  <script>
+    (function() {
+      var configuration = {
+        spec: ${JSON.stringify(spec)},
+        theme: "purple",
+        layout: "modern",
+      };
+
+      function initScalar() {
+        if (typeof Scalar !== "undefined" && Scalar.createApiReference) {
+          Scalar.createApiReference("#api-reference", configuration);
+        } else {
+          setTimeout(initScalar, 50);
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initScalar);
+      } else {
+        initScalar();
+      }
+    })();
+  </script>
+</body>
+</html>`;
+}
+
+// Export for integration testing
+export const handleRequest = async (
+  request: Request,
+  tenantRoutes: ReturnType<typeof createTenantRoutes>,
+): Promise<Response> => {
   const url = new URL(request.url);
   const origin = `${url.protocol}//${url.host}`;
   const corsHeaders = getCorsHeaders(request);
@@ -93,43 +131,8 @@ export const handleRequest = async (request: Request): Promise<Response> => {
 
   if (url.pathname === "/docs") {
     const spec = getOpenAPISpec(origin);
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vendin Control Plane API - Documentation</title>
-  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js"></script>
-</head>
-<body>
-  <div id="api-reference"></div>
-  <script>
-    (function() {
-      var configuration = {
-        spec: ${JSON.stringify(spec)},
-        theme: "purple",
-        layout: "modern",
-      };
-
-      function initScalar() {
-        if (typeof Scalar !== "undefined" && Scalar.createApiReference) {
-          Scalar.createApiReference("#api-reference", configuration);
-        } else {
-          setTimeout(initScalar, 50);
-        }
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initScalar);
-      } else {
-        initScalar();
-      }
-    })();
-  </script>
-</body>
-</html>`;
     return withCors(
-      new Response(html, {
+      new Response(getDocumentationHtml(spec), {
         status: 200,
         headers: {
           "Content-Type": "text/html",
@@ -150,15 +153,28 @@ export const handleRequest = async (request: Request): Promise<Response> => {
   return withCors(response);
 };
 
-if (import.meta.main) {
-  const server = serve({
-    error(error: unknown) {
+export default {
+  async fetch(request: Request, environment: Environment): Promise<Response> {
+    const nodeEnvironment = environment.NODE_ENV ?? "development";
+    const logger = createLogger({
+      logLevel: environment.LOG_LEVEL,
+      nodeEnv: nodeEnvironment,
+    });
+
+    const database = createDatabase(environment.DATABASE_URL, nodeEnvironment);
+    const tenantRepository = new TenantRepository(database);
+    const tenantService = new TenantService(tenantRepository, {
+      logger,
+      neonApiKey: environment.NEON_API_KEY,
+      neonProjectId: environment.NEON_PROJECT_ID,
+    });
+    const tenantRoutes = createTenantRoutes({ logger, tenantService });
+
+    try {
+      return await handleRequest(request, tenantRoutes);
+    } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
       return new Response("Internal server error", { status: 500 });
-    },
-    fetch: handleRequest,
-    port,
-  });
-
-  logger.info(`Control Plane API listening on http://localhost:${server.port}`);
-}
+    }
+  },
+};

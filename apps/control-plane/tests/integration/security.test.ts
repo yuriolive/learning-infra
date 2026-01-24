@@ -7,7 +7,25 @@ vi.mock("bun", () => {
   };
 });
 
+import { createLogger } from "@vendin/utils/logger";
+
+import { createTenantRoutes } from "../../src/domains/tenants/tenant.routes";
 import { handleRequest } from "../../src/index";
+
+// Mock dependencies
+const mockLogger = createLogger({ nodeEnv: "test" });
+const mockTenantService = {
+  createTenant: vi.fn(),
+  getTenant: vi.fn(),
+  listTenants: vi.fn(),
+  updateTenant: vi.fn(),
+  deleteTenant: vi.fn(),
+} as any;
+
+const mockTenantRoutes = createTenantRoutes({
+  logger: mockLogger,
+  tenantService: mockTenantService,
+});
 
 describe("Control Plane Security Integration", () => {
   const originalEnvironment = process.env;
@@ -26,7 +44,7 @@ describe("Control Plane Security Integration", () => {
   describe("Public Endpoints", () => {
     it("GET /health should be accessible without auth", async () => {
       const request = new Request("http://localhost:3000/health");
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
 
       expect(response.status).toBe(200);
       const body = await response.json();
@@ -36,7 +54,7 @@ describe("Control Plane Security Integration", () => {
 
     it("GET /openapi.json should be accessible without auth", async () => {
       const request = new Request("http://localhost:3000/openapi.json");
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
       expect(response.status).toBe(200);
     });
   });
@@ -44,7 +62,7 @@ describe("Control Plane Security Integration", () => {
   describe("Protected Endpoints (/api/tenants)", () => {
     it("should return 401 if Authorization header is missing", async () => {
       const request = new Request("http://localhost:3000/api/tenants");
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
 
       expect(response.status).toBe(401);
       const body = await response.json();
@@ -55,18 +73,22 @@ describe("Control Plane Security Integration", () => {
       const request = new Request("http://localhost:3000/api/tenants", {
         headers: { Authorization: "Bearer wrong-token" },
       });
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
 
       expect(response.status).toBe(401);
     });
 
     it("should allow access with correct Bearer token", async () => {
+      // Mock the route handler to return success so we know auth passed
+      mockTenantRoutes.handleRequest = vi
+        .fn()
+        .mockResolvedValue(new Response("OK", { status: 200 }));
+
       const request = new Request("http://localhost:3000/api/tenants", {
         headers: { Authorization: "Bearer test-secret-key" },
       });
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
 
-      // It should pass auth.
       expect(response.status).not.toBe(401);
     });
   });
@@ -75,7 +97,7 @@ describe("Control Plane Security Integration", () => {
     it("should return Access-Control-Allow-Origin: * in test/dev env", async () => {
       process.env.NODE_ENV = "development";
       const request = new Request("http://localhost:3000/health");
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
     });
 
@@ -86,7 +108,7 @@ describe("Control Plane Security Integration", () => {
       const request = new Request("http://localhost:3000/health", {
         headers: { Origin: "http://trusted.com" },
       });
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
         "http://trusted.com",
       );
@@ -99,7 +121,7 @@ describe("Control Plane Security Integration", () => {
       const request = new Request("http://localhost:3000/health", {
         headers: { Origin: "http://evil.com" },
       });
-      const response = await handleRequest(request);
+      const response = await handleRequest(request, mockTenantRoutes);
       expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
     });
   });
