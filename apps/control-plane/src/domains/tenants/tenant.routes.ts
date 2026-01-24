@@ -139,7 +139,6 @@ async function handleCreateTenant(
       status: 201,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
@@ -175,7 +174,6 @@ async function handleGetTenant(
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
@@ -206,7 +204,6 @@ async function handleListTenants(
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
@@ -254,7 +251,6 @@ async function handleUpdateTenant(
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
@@ -290,7 +286,6 @@ async function handleDeleteTenant(
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
@@ -317,7 +312,6 @@ function handleError(error: unknown, logger: Logger): Response {
         status: 400,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
       },
     );
@@ -329,7 +323,6 @@ function handleError(error: unknown, logger: Logger): Response {
         status: 404,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
       });
     }
@@ -338,7 +331,6 @@ function handleError(error: unknown, logger: Logger): Response {
         status: 409,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
       });
     }
@@ -349,7 +341,6 @@ function handleError(error: unknown, logger: Logger): Response {
     status: 500,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
     },
   });
 }

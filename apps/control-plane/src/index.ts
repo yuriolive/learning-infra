@@ -5,6 +5,7 @@ import { LRUCache } from "lru-cache";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
+import { authenticateRequest, getCorsHeaders } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
 
 const nodeEnvironment = process.env.NODE_ENV ?? "development";
@@ -36,17 +37,28 @@ const getOpenAPISpec = (origin: string) => {
   return spec;
 };
 
-const server = serve({
-  error(error: unknown) {
-    logger.error({ error }, "Unhandled error in server");
-    return new Response("Internal server error", { status: 500 });
-  },
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
-    const origin = `${url.protocol}//${url.host}`;
+export const handleRequest = async (request: Request): Promise<Response> => {
+  const url = new URL(request.url);
+  const origin = `${url.protocol}//${url.host}`;
+  const corsHeaders = getCorsHeaders(request);
 
-    if (url.pathname === "/health" || url.pathname === "/") {
-      return new Response(
+  // Helper to attach CORS to response
+  const withCors = (res: Response) => {
+    const headers = corsHeaders as Record<string, string>;
+    for (const [k, v] of Object.entries(headers)) {
+      res.headers.set(k, v);
+    }
+    return res;
+  };
+
+  // Handle Preflight
+  if (request.method === "OPTIONS") {
+    return withCors(new Response(null, { status: 204 }));
+  }
+
+  if (url.pathname === "/health" || url.pathname === "/") {
+    return withCors(
+      new Response(
         JSON.stringify({
           status: "ok",
           timestamp: new Date().toISOString(),
@@ -61,26 +73,27 @@ const server = serve({
           status: 200,
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
           },
         },
-      );
-    }
+      ),
+    );
+  }
 
-    if (url.pathname === "/openapi.json") {
-      const spec = getOpenAPISpec(origin);
-      return new Response(JSON.stringify(spec), {
+  if (url.pathname === "/openapi.json") {
+    const spec = getOpenAPISpec(origin);
+    return withCors(
+      new Response(JSON.stringify(spec), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
-      });
-    }
+      }),
+    );
+  }
 
-    if (url.pathname === "/docs") {
-      const spec = getOpenAPISpec(origin);
-      const html = `<!DOCTYPE html>
+  if (url.pathname === "/docs") {
+    const spec = getOpenAPISpec(origin);
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -115,31 +128,37 @@ const server = serve({
   </script>
 </body>
 </html>`;
-      return new Response(html, {
+    return withCors(
+      new Response(html, {
         status: 200,
         headers: {
           "Content-Type": "text/html",
-          "Access-Control-Allow-Origin": "*",
         },
-      });
+      }),
+    );
+  }
+
+  // Authenticate /api/tenants/* routes
+  if (url.pathname.startsWith("/api/tenants")) {
+    const authError = authenticateRequest(request);
+    if (authError) {
+      return withCors(authError);
     }
+  }
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods":
-            "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
-      });
-    }
+  const response = await tenantRoutes.handleRequest(request);
+  return withCors(response);
+};
 
-    const response = await tenantRoutes.handleRequest(request);
-    return response;
-  },
-  port,
-});
+if (import.meta.main) {
+  const server = serve({
+    error(error: unknown) {
+      logger.error({ error }, "Unhandled error in server");
+      return new Response("Internal server error", { status: 500 });
+    },
+    fetch: handleRequest,
+    port,
+  });
 
-logger.info(`Control Plane API listening on http://localhost:${server.port}`);
+  logger.info(`Control Plane API listening on http://localhost:${server.port}`);
+}
