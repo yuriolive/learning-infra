@@ -14,24 +14,16 @@ export type Database =
   | PostgresJsDatabase<typeof schema>
   | PgliteDatabase<typeof schema>;
 
-export const createDatabase = (
-  rawConnectionString: unknown,
-  nodeEnvironment: string = "production",
-): Database => {
-  // Handle Cloudflare Hyperdrive or other Service Binding objects
-  let connectionString = "";
-
-  if (typeof rawConnectionString === "string") {
-    connectionString = rawConnectionString;
-  } else if (
-    rawConnectionString &&
-    typeof rawConnectionString === "object" &&
-    "connectionString" in rawConnectionString &&
-    typeof rawConnectionString.connectionString === "string"
-  ) {
-    // Hyperdrive binding exposes .connectionString
-    connectionString = rawConnectionString.connectionString;
-  }
+const getConnectionString = (rawConnectionString: unknown): string => {
+  const connectionString =
+    typeof rawConnectionString === "string"
+      ? rawConnectionString
+      : rawConnectionString &&
+          typeof rawConnectionString === "object" &&
+          "connectionString" in rawConnectionString &&
+          typeof rawConnectionString.connectionString === "string"
+        ? rawConnectionString.connectionString
+        : "";
 
   if (!connectionString) {
     const errorMessage =
@@ -39,6 +31,15 @@ export const createDatabase = (
       "Ensure it is set as an environment variable (string) or a Hyperdrive binding.";
     throw new Error(errorMessage);
   }
+
+  return connectionString;
+};
+
+export const createDatabase = (
+  rawConnectionString: unknown,
+  nodeEnvironment: string = "production",
+): Database => {
+  const connectionString = getConnectionString(rawConnectionString);
 
   const isLocal =
     nodeEnvironment === "development" ||
