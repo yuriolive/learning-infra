@@ -14,33 +14,10 @@ export type Database =
   | PostgresJsDatabase<typeof schema>
   | PgliteDatabase<typeof schema>;
 
-const getConnectionString = (rawConnectionString: unknown): string => {
-  const connectionString =
-    typeof rawConnectionString === "string"
-      ? rawConnectionString
-      : rawConnectionString &&
-          typeof rawConnectionString === "object" &&
-          "connectionString" in rawConnectionString &&
-          typeof rawConnectionString.connectionString === "string"
-        ? rawConnectionString.connectionString
-        : "";
-
-  if (!connectionString) {
-    const errorMessage =
-      "DATABASE_URL is not defined or is an invalid type. " +
-      "Ensure it is set as an environment variable (string) or a Hyperdrive binding.";
-    throw new Error(errorMessage);
-  }
-
-  return connectionString;
-};
-
 export const createDatabase = (
-  rawConnectionString: unknown,
+  connectionString: string,
   nodeEnvironment: string = "production",
 ): Database => {
-  const connectionString = getConnectionString(rawConnectionString);
-
   const isLocal =
     nodeEnvironment === "development" ||
     connectionString.includes("localhost") ||

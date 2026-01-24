@@ -26,11 +26,7 @@ export class TenantService {
     this.logger = config.logger;
     try {
       if (config.neonApiKey && config.neonProjectId) {
-        this.neonProvider = new NeonProvider({
-          apiKey: config.neonApiKey,
-          projectId: config.neonProjectId,
-          logger: this.logger,
-        });
+        this.neonProvider = new NeonProvider();
       } else {
         this.logger.warn(
           "Neon credentials not found. Database provisioning will be skipped.",
