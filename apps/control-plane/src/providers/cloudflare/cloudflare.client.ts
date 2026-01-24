@@ -8,7 +8,7 @@ const logger = createLogger({
 
 export interface CreateHostnameOptions {
   ssl?: {
-    method?: "http" | "txt" | "cname";
+    method?: "http" | "txt" | "email";
     type?: "dv";
   };
 }

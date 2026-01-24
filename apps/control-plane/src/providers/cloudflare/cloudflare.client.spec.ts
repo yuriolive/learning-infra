@@ -82,13 +82,13 @@ describe("CloudflareProvider", () => {
       mockCreate.mockResolvedValue({} as any);
 
       await provider.createCustomHostname("tenant-1", "test.example.com", {
-        ssl: { method: "cname", type: "dv" },
+        ssl: { method: "txt", type: "dv" },
       });
 
       expect(mockCreate).toHaveBeenCalledWith({
         hostname: "test.example.com",
         ssl: {
-          method: "cname",
+          method: "txt",
           type: "dv",
         },
         zone_id: "test-zone-id",
