@@ -138,12 +138,6 @@ function handleApiRequest(
     });
   }
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-    });
-  }
-
   return tenantRoutes.handleRequest(request);
 }
 
@@ -187,6 +181,12 @@ export default {
     const origin = `${url.protocol}//${url.host}`;
 
     try {
+      // Handle OPTIONS preflight requests
+      if (request.method === "OPTIONS") {
+        const response = new Response(null, { status: 204 });
+        return wrapResponse(response, request, middlewareOptions);
+      }
+
       // Apply Auth Middleware for /api/tenants/*
       if (url.pathname.startsWith("/api/tenants")) {
         const authMiddleware = createAuthMiddleware(middlewareOptions);

@@ -8,6 +8,20 @@ export interface MiddlewareOptions {
 }
 
 /**
+ * Constant-time string comparison to prevent timing attacks.
+ */
+function areEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let result = 0;
+  for (let index = 0; index < a.length; index++) {
+    result |= (a.codePointAt(index) ?? 0) ^ (b.codePointAt(index) ?? 0);
+  }
+  return result === 0;
+}
+
+/**
  * Creates an authentication middleware to validate the ADMIN_API_KEY.
  * Returns a function that checks for the Authorization: Bearer <token> header.
  */
@@ -37,8 +51,7 @@ export function createAuthMiddleware(options: MiddlewareOptions) {
     }
 
     const token = authHeader.slice(7);
-    // eslint-disable-next-line security/detect-possible-timing-attacks
-    if (token !== adminApiKey) {
+    if (!areEqual(token, adminApiKey)) {
       return new Response(
         JSON.stringify({
           error: "Unauthorized",
@@ -68,16 +81,11 @@ export function createCorsMiddleware(options: MiddlewareOptions) {
     let allowOrigin = "*";
     if (nodeEnv === "production") {
       if (allowedOrigins && allowedOrigins.length > 0) {
-        if (origin && allowedOrigins.includes(origin)) {
-          allowOrigin = origin;
-        } else if (allowedOrigins.length > 0) {
-          allowOrigin = allowedOrigins[0]!; // Fallback to first allowed origin
-        } else {
-          allowOrigin = "";
-        }
+        allowOrigin =
+          origin && allowedOrigins.includes(origin)
+            ? origin
+            : allowedOrigins[0]!;
       } else {
-        // If production but no ALLOWED_ORIGINS, default to a safe-ish behavior or empty?
-        // For now, let's keep it restrictive if possible, or use the first if defined.
         allowOrigin = "";
       }
     } else {
