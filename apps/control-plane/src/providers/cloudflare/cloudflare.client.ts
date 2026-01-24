@@ -1,10 +1,6 @@
-import { createLogger } from "@vendin/utils/logger";
 import Cloudflare from "cloudflare";
 
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: process.env.NODE_ENV ?? "development",
-});
+import type { createLogger } from "@vendin/utils/logger";
 
 export interface CreateHostnameOptions {
   ssl?: {
@@ -16,17 +12,22 @@ export interface CreateHostnameOptions {
 export class CloudflareProvider {
   private client: Cloudflare;
   private zoneId: string;
+  private logger: ReturnType<typeof createLogger>;
 
-  constructor() {
-    const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-    const zoneId = process.env.CLOUDFLARE_ZONE_ID;
+  constructor(config: {
+    apiToken: string;
+    zoneId: string;
+    logger: ReturnType<typeof createLogger>;
+  }) {
+    const { apiToken, zoneId, logger } = config;
+    this.logger = logger;
 
     if (!apiToken) {
-      throw new Error("CLOUDFLARE_API_TOKEN environment variable is not set");
+      throw new Error("Cloudflare API token is not provided");
     }
 
     if (!zoneId) {
-      throw new Error("CLOUDFLARE_ZONE_ID environment variable is not set");
+      throw new Error("Cloudflare zone ID is not provided");
     }
 
     this.client = new Cloudflare({
@@ -41,7 +42,7 @@ export class CloudflareProvider {
     options?: CreateHostnameOptions,
   ): Promise<void> {
     try {
-      logger.info(
+      this.logger.info(
         { tenantId, hostname },
         "Creating Cloudflare custom hostname",
       );
@@ -55,12 +56,12 @@ export class CloudflareProvider {
         },
       });
 
-      logger.info(
+      this.logger.info(
         { tenantId, hostname },
         "Successfully created Cloudflare custom hostname",
       );
     } catch (error) {
-      logger.error(
+      this.logger.error(
         { error, tenantId, hostname },
         "Failed to create Cloudflare custom hostname",
       );
@@ -95,7 +96,7 @@ export class CloudflareProvider {
           : {}),
       };
     } catch (error) {
-      logger.error(
+      this.logger.error(
         { error, tenantId, hostname },
         "Failed to get hostname status",
       );

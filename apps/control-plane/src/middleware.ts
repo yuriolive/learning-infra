@@ -1,10 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 
-import { createLogger } from "@vendin/utils/logger";
-
-const logger = createLogger({
-  nodeEnv: process.env.NODE_ENV ?? "development",
-});
+import { type Logger } from "@vendin/utils/logger";
 
 /**
  * Compares two strings using constant-time comparison to prevent timing attacks.
@@ -23,11 +19,15 @@ function safeEqual(a: string, b: string): boolean {
  * Authenticates a request using a fixed Bearer token.
  * Checks if the Authorization header contains a valid Bearer token matching ADMIN_API_KEY.
  * @param request - The incoming HTTP request
+ * @param apiKey - The expected API key from environment
+ * @param logger - Logger instance
  * @returns A Response object if authentication fails (401/500), or null if successful.
  */
-export function authenticateRequest(request: Request): Response | null {
-  const apiKey = process.env.ADMIN_API_KEY;
-
+export function authenticateRequest(
+  request: Request,
+  apiKey: string | undefined,
+  logger: Logger,
+): Response | null {
   if (!apiKey) {
     logger.error("ADMIN_API_KEY is not set in environment");
     return new Response(
@@ -71,13 +71,18 @@ export function authenticateRequest(request: Request): Response | null {
  * In non-production environments, allows all origins (*).
  * In production, checks against ALLOWED_ORIGINS environment variable.
  * @param request - The incoming HTTP request
+ * @param allowedOriginsString - Comma-separated list of allowed origins
+ * @param nodeEnv - Current node environment
  * @returns HeadersInit object containing CORS headers
  */
-export function getCorsHeaders(request: Request): HeadersInit {
+export function getCorsHeaders(
+  request: Request,
+  allowedOriginsString: string = "",
+  nodeEnvironment: string = "development",
+): HeadersInit {
   const origin = request.headers.get("Origin") || "";
-  const allowedOriginsString = process.env.ALLOWED_ORIGINS ?? "";
   const allowedOrigins = allowedOriginsString.split(",").map((s) => s.trim());
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = nodeEnvironment === "production";
 
   const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",

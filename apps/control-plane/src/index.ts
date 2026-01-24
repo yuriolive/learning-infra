@@ -14,6 +14,10 @@ interface Environment {
   NODE_ENV?: string;
   NEON_API_KEY?: string;
   NEON_PROJECT_ID?: string;
+  ADMIN_API_KEY?: string;
+  ALLOWED_ORIGINS?: string;
+  CLOUDFLARE_API_TOKEN?: string;
+  CLOUDFLARE_ZONE_ID?: string;
 }
 
 const openApiSpecs = new LRUCache<
@@ -75,10 +79,16 @@ function getDocumentationHtml(spec: unknown) {
 export const handleRequest = async (
   request: Request,
   tenantRoutes: ReturnType<typeof createTenantRoutes>,
+  environment: Environment,
+  logger: ReturnType<typeof createLogger>,
 ): Promise<Response> => {
   const url = new URL(request.url);
   const origin = `${url.protocol}//${url.host}`;
-  const corsHeaders = getCorsHeaders(request);
+  const corsHeaders = getCorsHeaders(
+    request,
+    environment.ALLOWED_ORIGINS,
+    environment.NODE_ENV,
+  );
 
   // Helper to attach CORS to response
   const withCors = (response_: Response) => {
@@ -143,7 +153,11 @@ export const handleRequest = async (
 
   // Authenticate /api/tenants/* routes
   if (url.pathname.startsWith("/api/tenants")) {
-    const authError = authenticateRequest(request);
+    const authError = authenticateRequest(
+      request,
+      environment.ADMIN_API_KEY,
+      logger,
+    );
     if (authError) {
       return withCors(authError);
     }
@@ -171,7 +185,7 @@ export default {
     const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
     try {
-      return await handleRequest(request, tenantRoutes);
+      return await handleRequest(request, tenantRoutes, environment, logger);
     } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
       return new Response("Internal server error", { status: 500 });

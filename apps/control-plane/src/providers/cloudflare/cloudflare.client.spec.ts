@@ -1,5 +1,6 @@
+import { createLogger } from "@vendin/utils/logger";
 import Cloudflare from "cloudflare";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CloudflareProvider } from "./cloudflare.client";
 
@@ -25,41 +26,37 @@ vi.mock("@vendin/utils/logger", () => ({
 }));
 
 describe("CloudflareProvider", () => {
-  const originalEnvironment = process.env;
+  const mockLogger = createLogger({ nodeEnv: "test" });
+  const mockConfig = {
+    apiToken: "test-token",
+    zoneId: "test-zone-id",
+    logger: mockLogger,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...originalEnvironment };
-    process.env.CLOUDFLARE_API_TOKEN = "test-token";
-    process.env.CLOUDFLARE_ZONE_ID = "test-zone-id";
   });
 
-  afterEach(() => {
-    process.env = originalEnvironment;
+  it("should throw error if apiToken is missing", () => {
+    expect(
+      () => new CloudflareProvider({ ...mockConfig, apiToken: "" }),
+    ).toThrow("Cloudflare API token is not provided");
   });
 
-  it("should throw error if CLOUDFLARE_API_TOKEN is missing", () => {
-    delete process.env.CLOUDFLARE_API_TOKEN;
-    expect(() => new CloudflareProvider()).toThrow(
-      "CLOUDFLARE_API_TOKEN environment variable is not set",
-    );
-  });
-
-  it("should throw error if CLOUDFLARE_ZONE_ID is missing", () => {
-    delete process.env.CLOUDFLARE_ZONE_ID;
-    expect(() => new CloudflareProvider()).toThrow(
-      "CLOUDFLARE_ZONE_ID environment variable is not set",
+  it("should throw error if zoneId is missing", () => {
+    expect(() => new CloudflareProvider({ ...mockConfig, zoneId: "" })).toThrow(
+      "Cloudflare zone ID is not provided",
     );
   });
 
   it("should initialize with correct credentials", () => {
-    new CloudflareProvider();
+    new CloudflareProvider(mockConfig);
     expect(Cloudflare).toHaveBeenCalledWith({ apiToken: "test-token" });
   });
 
   describe("createCustomHostname", () => {
     it("should create a custom hostname successfully with defaults", async () => {
-      const provider = new CloudflareProvider();
+      const provider = new CloudflareProvider(mockConfig);
       // Access private client via any cast for testing
       const mockCreate = (provider as any).client.customHostnames.create;
       mockCreate.mockResolvedValue({} as any);
@@ -77,7 +74,7 @@ describe("CloudflareProvider", () => {
     });
 
     it("should allow overriding SSL settings", async () => {
-      const provider = new CloudflareProvider();
+      const provider = new CloudflareProvider(mockConfig);
       const mockCreate = (provider as any).client.customHostnames.create;
       mockCreate.mockResolvedValue({} as any);
 
@@ -96,7 +93,7 @@ describe("CloudflareProvider", () => {
     });
 
     it("should propagate errors from SDK", async () => {
-      const provider = new CloudflareProvider();
+      const provider = new CloudflareProvider(mockConfig);
       const mockCreate = (provider as any).client.customHostnames.create;
       const error = new Error("API Error");
       mockCreate.mockRejectedValue(error);
@@ -109,7 +106,7 @@ describe("CloudflareProvider", () => {
 
   describe("getHostnameStatus", () => {
     it("should return status and verification errors", async () => {
-      const provider = new CloudflareProvider();
+      const provider = new CloudflareProvider(mockConfig);
       const mockList = (provider as any).client.customHostnames.list;
 
       const mockResponse = {
@@ -140,7 +137,7 @@ describe("CloudflareProvider", () => {
     });
 
     it("should throw error if hostname not found", async () => {
-      const provider = new CloudflareProvider();
+      const provider = new CloudflareProvider(mockConfig);
       const mockList = (provider as any).client.customHostnames.list;
 
       const mockResponse = {
