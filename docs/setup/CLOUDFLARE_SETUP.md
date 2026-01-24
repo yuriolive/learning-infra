@@ -5,11 +5,11 @@
   - [Subdomain Structure](#subdomain-structure)
   - [Architecture](#architecture)
   - [Prerequisites](#prerequisites)
-  - [Part A: Storefront Deployment (Cloudflare Pages)](#part-a-storefront-deployment-cloudflare-pages)
-    - [Step 1: Prepare Storefront for Deployment](#step-1-prepare-storefront-for-deployment)
+  - [Part A: Marketing + Storefront Router Deployment (Cloudflare Pages)](#part-a-marketing--storefront-router-deployment-cloudflare-pages)
+    - [Step 1: Prepare Apps for Deployment](#step-1-prepare-apps-for-deployment)
     - [Step 2: Deploy to Cloudflare](#step-2-deploy-to-cloudflare)
     - [Step 3: Configure Environment Variables](#step-3-configure-environment-variables)
-    - [Step 4: Set Up Custom Domain for Storefront](#step-4-set-up-custom-domain-for-storefront)
+    - [Step 4: Set Up Custom Domains](#step-4-set-up-custom-domains)
   - [Part B: Cloudflare for SaaS Setup](#part-b-cloudflare-for-saas-setup)
     - [Step 1: Enable Cloudflare for SaaS](#step-1-enable-cloudflare-for-saas)
     - [Step 2: Configure Fallback Origin](#step-2-configure-fallback-origin)
@@ -23,12 +23,16 @@
     - [Wildcard DNS for Tenant Subdomains](#wildcard-dns-for-tenant-subdomains)
     - [Architecture Decision: Hyphens vs. Dots](#architecture-decision-hyphens-vs-dots)
     - [Future Roadmap: Switching to Dotted Subdomains](#future-roadmap-switching-to-dotted-subdomains)
-    - [Storefront Routing Logic](#storefront-routing-logic)
+    - [Storefront Router Logic](#storefront-router-logic)
   - [Part E: Security Configuration](#part-e-security-configuration)
     - [WAF (Web Application Firewall)](#waf-web-application-firewall)
     - [Rate Limiting](#rate-limiting)
     - [Bot Management](#bot-management)
   - [Part F: Secrets Store Management](#part-f-secrets-store-management)
+    - [Why use Secrets Store?](#why-use-secrets-store)
+    - [Configuration via Dashboard](#configuration-via-dashboard)
+    - [CD Integration (Dynamic Bindings)](#cd-integration-dynamic-bindings)
+    - [Accessing via CLI](#accessing-via-cli)
   - [Part G: Monitoring and Analytics](#part-g-monitoring-and-analytics)
     - [Custom Hostname Status Monitoring](#custom-hostname-status-monitoring)
     - [Analytics](#analytics)
@@ -563,7 +567,6 @@ Cloudflare **Secrets Store** allows you to securely store and share sensitive in
 1. Go to **Storage & Databases** → **Secrets Store**.
 2. Click **Create secret**.
 3. Use names like `control-plane-db-url`.
-   <<<<<<< HEAD
 4. These secrets are automatically available to your CI/CD pipeline and bound Workers via `secrets_store_secrets`.
 
 ### CD Integration (Dynamic Bindings)
