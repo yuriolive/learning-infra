@@ -26,6 +26,7 @@
     "@scalar/api-reference": "^1.28.0",
     "@vendin/utils": "workspace:*",
     "axios": "^1.13.2",
+    "cloudflare": "^5.2.0",
     "drizzle-orm": "^0.45.1",
     "lru-cache": "^11.2.4",
     "postgres": "^3.4.8",
