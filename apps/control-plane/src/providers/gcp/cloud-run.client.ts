@@ -1,6 +1,7 @@
-import { google } from "googleapis";
+import crypto from "node:crypto";
+
 import { createLogger } from "@vendin/utils/logger";
-import crypto from "crypto";
+import { google } from "googleapis";
 
 const logger = createLogger({
   logLevel: process.env.LOG_LEVEL,
@@ -30,12 +31,12 @@ export class CloudRunProvider {
    * Deploys a Cloud Run service for a tenant.
    * @param tenantId - The unique identifier of the tenant.
    * @param databaseUrlSecretVersion - The resource name of the secret version containing the database URL.
-   *                                   Format: projects/{project}/secrets/{secret}/versions/{version}
+   *                                   Format: projects/project/secrets/secret/versions/version
    * @returns The URL of the deployed service.
    */
   async deployTenantService(
     tenantId: string,
-    databaseUrlSecretVersion: string
+    databaseUrlSecretVersion: string,
   ): Promise<string> {
     logger.info({ tenantId }, "Deploying Cloud Run service for tenant");
 
@@ -51,13 +52,17 @@ export class CloudRunProvider {
     ];
 
     // Environment variables
-    const envVars = [
+    const environmentVariables = [
       { name: "NODE_ENV", value: "production" },
       { name: "TENANT_ID", value: tenantId },
       // Redis
       {
         name: "REDIS_URL",
-        value: process.env.REDIS_URL || (() => { throw new Error("REDIS_URL env var is missing"); })(),
+        value:
+          process.env.REDIS_URL ||
+          (() => {
+            throw new Error("REDIS_URL env var is missing");
+          })(),
       },
       // Security - In production these should be secrets too
       { name: "COOKIE_SECRET", value: crypto.randomBytes(32).toString("hex") },
@@ -72,30 +77,31 @@ export class CloudRunProvider {
     // Handle DATABASE_URL secret parsing logic:
     // If databaseUrlSecretVersion is a full path "projects/.../versions/1", extract.
     // Cloud Run expects just the secret name if in same project.
-    let dbSecretName = databaseUrlSecretVersion;
-    let dbSecretVersion = "latest";
+    let databaseSecretName = databaseUrlSecretVersion;
+    let databaseSecretVersion = "latest";
     if (databaseUrlSecretVersion.includes("/secrets/")) {
       const parts = databaseUrlSecretVersion.split("/");
       const secretIndex = parts.indexOf("secrets");
       if (secretIndex !== -1 && parts[secretIndex + 1]) {
-        dbSecretName = parts[secretIndex + 1]!;
+        databaseSecretName = parts[secretIndex + 1]!;
       }
       if (databaseUrlSecretVersion.includes("/versions/")) {
         const v = databaseUrlSecretVersion.split("/versions/")[1];
         if (v) {
-          dbSecretVersion = v;
+          databaseSecretVersion = v;
         }
       }
     }
 
-    const envList: any[] = [
-      ...envVars,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const environmentList: any[] = [
+      ...environmentVariables,
       {
         name: "DATABASE_URL",
         valueSource: {
           secretKeyRef: {
-            secret: dbSecretName,
-            version: dbSecretVersion,
+            secret: databaseSecretName,
+            version: databaseSecretVersion,
           },
         },
       },
@@ -118,7 +124,7 @@ export class CloudRunProvider {
           containers: [
             {
               image: this.image,
-              env: envList,
+              env: environmentList,
               resources: {
                 limits: {
                   cpu: "1000m",
@@ -141,16 +147,19 @@ export class CloudRunProvider {
         scopes: ["https://www.googleapis.com/auth/cloud-platform"],
       });
       const authClient = await auth.getClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       google.options({ auth: authClient as any });
 
       // Start long-running operation
-      const res = await this.runClient.projects.locations.services.create({
+      const response = await this.runClient.projects.locations.services.create({
         parent,
         serviceId: serviceName,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         requestBody: request.service as any,
       });
 
-      const operation = (res as any).data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const operation = (response as any).data;
       logger.info(
         { operationName: operation.name },
         "Cloud Run deployment started",
@@ -160,13 +169,15 @@ export class CloudRunProvider {
       // TODO: Implement LRO waiting or a ping/health-check mechanism to ensure service readiness
       return `https://${serviceName}-${this.projectId}.a.run.app`;
     } catch (error: any) {
-      if (error.code === 409) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((error as any).code === 409) {
         // Already exists
         logger.info("Service already exists, updating...");
         const fullServiceName = `${parent}/services/${serviceName}`;
         try {
           await this.runClient.projects.locations.services.patch({
             name: fullServiceName,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             requestBody: request.service as any,
           });
           return `https://${serviceName}-${this.projectId}.a.run.app`;

@@ -1,4 +1,8 @@
-import { S3Client, ListBucketsCommand, type S3ClientConfig } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  ListBucketsCommand,
+  type S3ClientConfig,
+} from "@aws-sdk/client-s3";
 import { createLogger } from "@vendin/utils/logger";
 
 const logger = createLogger({
@@ -27,7 +31,7 @@ export class CloudflareProvider {
     };
 
     if (endpoint) {
-        config.endpoint = endpoint;
+      config.endpoint = endpoint;
     }
 
     this.s3Client = new S3Client(config);

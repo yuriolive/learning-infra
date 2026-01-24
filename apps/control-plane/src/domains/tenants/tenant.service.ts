@@ -132,7 +132,9 @@ export class TenantService {
         await this.repository.update(tenant.id, {
           status: "provisioning_failed",
         });
-        throw new Error(`Failed to provision tenant resources: ${error instanceof Error ? error.message : "Unknown error"}`);
+        throw new Error(
+          `Failed to provision tenant resources: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
       }
     } else {
       this.logger.warn(

@@ -1,5 +1,5 @@
-import { google } from "googleapis";
 import { createLogger } from "@vendin/utils/logger";
+import { google } from "googleapis";
 
 const logger = createLogger({
   logLevel: process.env.LOG_LEVEL,
@@ -31,6 +31,7 @@ export class SecretManagerProvider {
           scopes: ["https://www.googleapis.com/auth/cloud-platform"],
         });
         const authClient = await auth.getClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         google.options({ auth: authClient as any });
 
         await this.client.projects.secrets.create({
@@ -42,6 +43,7 @@ export class SecretManagerProvider {
             },
           },
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         if (error.code !== 409) {
           // Ignore if already exists
@@ -51,6 +53,7 @@ export class SecretManagerProvider {
 
       // 2. Add a Secret Version
       // Type definition might be missing 'addVersion', casting to any to allow dynamic method or 'addVersion'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const versions = this.client.projects.secrets.versions as any;
       const { data: version } = await versions.addVersion({
         parent: `${parent}/secrets/${secretId}`,
