@@ -16,7 +16,7 @@ Provisioning Flow:
          ▼
 ┌─────────────────┐
 │ Control Plane   │  (Orchestrates provisioning)
-│ (Cloud Run)     │
+│ (Cloudflare)    │
 └────────┬────────┘
          │
          ├─▶ Create Neon Database
@@ -176,14 +176,16 @@ gcloud run services create tenant-${TENANT_ID} \
 
 ### Step 4: Configure Default Subdomain
 
-Each tenant gets a default subdomain following the Shopify-style pattern: `{merchant-name}.my.vendin.store`
+Each tenant gets a default subdomain following the pattern: `{merchant-name}-my.vendin.store`
+
+**Note**: We use the `-my` pattern (hyphenated) for SSL coverage. Future migration to `.my` pattern is planned once Cloudflare deep wildcard SSL is enabled.
 
 **Subdomain Assignment:**
 
 ```typescript
 // Control Plane assigns subdomain
 const subdomain = generateSubdomain(storeName); // e.g., "awesome-store"
-const tenantSubdomain = `${subdomain}.my.vendin.store`;
+const tenantSubdomain = `${subdomain}-my.vendin.store`;
 
 // Store in tenant record
 UPDATE tenants
@@ -195,16 +197,17 @@ WHERE id = '${TENANT_ID}'
 
 **No additional Cloudflare DNS configuration needed:**
 
-- Wildcard DNS (`*.my.vendin.store`) already configured
+- Wildcard DNS (`*-my.vendin.store`) already configured
 - Storefront will route based on hostname pattern
-- Tenant can access store at: `https://${subdomain}.my.vendin.store`
-- Admin accessible at: `https://${subdomain}.my.vendin.store/admin`
+- Tenant can access store at: `https://${subdomain}-my.vendin.store`
+- Admin accessible at: `https://${subdomain}-my.vendin.store/admin`
 
-**Benefits of `.my.` pattern:**
+**Benefits of `-my` pattern:**
 
+- SSL Coverage: Works with Cloudflare's free Universal SSL
 - Clear separation from platform services (api, admin, www)
 - Familiar pattern (similar to Shopify's `.myshopify.com`)
-- Easy DNS management (wildcard only for `*.my.vendin.store`)
+- Easy DNS management (wildcard only for `*-my.vendin.store`)
 - No conflicts with reserved subdomains
 
 ````

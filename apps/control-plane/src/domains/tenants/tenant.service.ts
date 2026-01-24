@@ -1,4 +1,4 @@
-import { createLogger } from "@vendin/utils/logger";
+import { type createLogger } from "@vendin/utils/logger";
 
 import { NeonProvider } from "../../providers/neon/neon.client";
 
@@ -9,27 +9,35 @@ import type {
   UpdateTenantInput,
 } from "./tenant.types";
 
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: process.env.NODE_ENV ?? "development",
-});
+interface TenantServiceConfig {
+  neonApiKey?: string | undefined;
+  neonProjectId?: string | undefined;
+  logger: ReturnType<typeof createLogger>;
+}
 
 export class TenantService {
   private neonProvider: NeonProvider | null = null;
+  private logger: ReturnType<typeof createLogger>;
 
-  constructor(private repository: TenantRepository) {
-    // We initialize NeonProvider lazily or check env vars to support dev mode without Neon
-    // But for this task, we assume we want to use it if configured.
+  constructor(
+    private repository: TenantRepository,
+    config: TenantServiceConfig,
+  ) {
+    this.logger = config.logger;
     try {
-      if (process.env.NEON_API_KEY && process.env.NEON_PROJECT_ID) {
-        this.neonProvider = new NeonProvider();
+      if (config.neonApiKey && config.neonProjectId) {
+        this.neonProvider = new NeonProvider({
+          apiKey: config.neonApiKey,
+          projectId: config.neonProjectId,
+          logger: this.logger,
+        });
       } else {
-        logger.warn(
+        this.logger.warn(
           "Neon credentials not found. Database provisioning will be skipped.",
         );
       }
     } catch (error) {
-      logger.error({ error }, "Failed to initialize NeonProvider");
+      this.logger.error({ error }, "Failed to initialize NeonProvider");
     }
   }
 
@@ -51,7 +59,7 @@ export class TenantService {
     // For MVP we do it synchronously to ensure valid state or fail fast
     if (this.neonProvider) {
       try {
-        logger.info(
+        this.logger.info(
           { tenantId: tenant.id },
           "Provisioning database for tenant",
         );
@@ -79,7 +87,7 @@ export class TenantService {
           return updated;
         }
       } catch (error) {
-        logger.error(
+        this.logger.error(
           { error, tenantId: tenant.id },
           "Failed to provision database",
         );
