@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import { createLogger } from "@vendin/utils/logger";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock NeonProvider
@@ -28,12 +29,14 @@ describe("TenantService", () => {
   beforeEach(async () => {
     // Reset mocks and env vars
     vi.clearAllMocks();
-    process.env.NEON_API_KEY = "mock-key";
-    process.env.NEON_PROJECT_ID = "mock-project";
-
+    const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
     const database = await createMockDatabase();
     repository = new TenantRepository(database);
-    service = new TenantService(repository);
+    service = new TenantService(repository, {
+      logger,
+      neonApiKey: "mock-key",
+      neonProjectId: "mock-project",
+    });
   });
 
   describe("createTenant", () => {
@@ -77,9 +80,14 @@ describe("TenantService", () => {
       }));
 
       // Re-initialize service with failed provider
+      const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
       const database = await createMockDatabase();
       repository = new TenantRepository(database);
-      service = new TenantService(repository);
+      service = new TenantService(repository, {
+        logger,
+        neonApiKey: "mock-key",
+        neonProjectId: "mock-project",
+      });
 
       const input: CreateTenantInput = {
         name: "Test Store",
