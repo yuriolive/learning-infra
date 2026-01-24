@@ -10,7 +10,7 @@ export default function Error({
     <div className="flex min-h-screen flex-col items-center justify-center p-4 text-center">
       <h1 className="mb-4 text-4xl font-bold">Something Went Wrong</h1>
       <p className="mb-8 text-lg text-gray-600">
-        We're experiencing technical difficulties. Please try again.
+        We&apos;re experiencing technical difficulties. Please try again.
       </p>
       <button
         onClick={reset}
