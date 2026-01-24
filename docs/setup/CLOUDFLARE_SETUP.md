@@ -158,13 +158,19 @@ bun run pages:deploy
 
 **Option 2: Via GitHub Actions (Automated)**
 
-The repository includes a GitHub Actions workflow that automatically deploys on push to `main`:
+The repository includes GitHub Actions workflows that automatically deploy on push to `main`:
 
 ```yaml
 # .github/workflows/deploy-storefront.yml
 # Triggers on:
 # - Push to main branch
 # - Changes to apps/storefront/** or packages/**
+# - Manual workflow dispatch
+
+# .github/workflows/deploy-marketing.yml
+# Triggers on:
+# - Push to main branch
+# - Changes to apps/marketing/** or packages/**
 # - Manual workflow dispatch
 
 # Required GitHub Secrets:
@@ -214,6 +220,7 @@ Create a Cloudflare API token with:
 
 - **Account** → **Cloudflare Pages** → **Edit**
 - **Account** → **Workers Scripts** → **Edit**
+- **Account** → **Secrets Store** → **Edit** (Required for binding secrets during deployment)
 
 ### Step 4: Set Up Custom Domains
 
@@ -287,7 +294,9 @@ Your Control Plane needs API access to manage custom hostnames:
 
 ```bash
 # 1. Go to Cloudflare Dashboard → My Profile → API Tokens
-# 2. Create API Token with these Zone-level permissions:
+# 2. Create API Token with these permissions:
+#    - Account → Secrets Store → Edit (Required for binding secrets)
+#    - Account → Workers Scripts → Edit (Required for deployment)
 #    - Zone: Zone Settings:Read (optional, for reading zone configuration)
 #    - Zone: SSL and Certificates:Read (for listing/reading custom hostnames)
 #    - Zone: SSL and Certificates:Write (for creating/editing/deleting custom hostnames)
@@ -554,7 +563,30 @@ Cloudflare **Secrets Store** allows you to securely store and share sensitive in
 1. Go to **Storage & Databases** → **Secrets Store**.
 2. Click **Create secret**.
 3. Use names like `control-plane-db-url`.
-4. These secrets are automatically available to your CI/CD pipeline and bound Workers.
+   <<<<<<< HEAD
+4. These secrets are automatically available to your CI/CD pipeline and bound Workers via `secrets_store_secrets`.
+
+### CD Integration (Dynamic Bindings)
+
+To avoid hardcoding Store IDs in the repository, use placeholders in `wrangler.jsonc`:
+
+```jsonc
+{
+  "env": {
+    "production": {
+      "secrets_store_secrets": [
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "control-plane-db-url",
+        },
+      ],
+    },
+  },
+}
+```
+
+The GitHub Actions workflow replaces `STORE_ID_PLACEHOLDER` with the value from the `CLOUDFLARE_SECRETS_STORE_ID` variable before deployment.
 
 ### Accessing via CLI
 

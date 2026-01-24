@@ -1,7 +1,7 @@
 {
   "name": "control-plane",
   "main": "src/index.ts",
-  "compatibility_date": "2024-01-01",
+  "compatibility_date": "2025-01-24",
   "minify": true,
   "compatibility_flags": [
     "nodejs_compat"
@@ -14,5 +14,46 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "production": {
+      "secrets_store_secrets": [
+        {
+          "binding": "DATABASE_URL",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "control-plane-db-url"
+        },
+        {
+          "binding": "NEON_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "neon-api-key"
+        },
+        {
+          "binding": "NEON_PROJECT_ID",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "neon-project-id"
+        },
+        {
+          "binding": "ADMIN_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "admin-api-key"
+        },
+        {
+          "binding": "ALLOWED_ORIGINS",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "allowed-origins"
+        },
+        {
+          "binding": "CLOUDFLARE_API_TOKEN",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "cloudflare-api-token"
+        },
+        {
+          "binding": "CLOUDFLARE_ZONE_ID",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "cloudflare-zone-id"
+        }
+      ]
+    }
   }
 }

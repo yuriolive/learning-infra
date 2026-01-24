@@ -1,14 +1,14 @@
 # User Experiences
 
-**Last Updated**: 2026-01-23
+**Last Updated**: 2026-01-23  
 **Status**: Active
 
 This document outlines the three distinct user experiences in the platform.
 
 ## 1. Marketing Landing & Signup
 
-**User**: Prospective merchants
-**Domain**: `vendin.store`
+**User**: Prospective merchants  
+**Domain**: `vendin.store`  
 **App**: Marketing app (`apps/marketing/`)
 
 ```
@@ -25,8 +25,8 @@ Customer → vendin.store
 
 ## 2. Customer Shopping (Tenant Store)
 
-**User**: End customers
-**Domain**: `{store}-my.vendin.store` or custom domain
+**User**: End customers  
+**Domain**: `{store}-my.vendin.store` or custom domain  
 **Apps**: Storefront router + Tenant instance
 
 ```
@@ -44,8 +44,8 @@ Customer → awesome-store-my.vendin.store
 
 ## 3. Merchant Admin
 
-**User**: Merchant/store owner
-**Domain**: `{store}-my.vendin.store/admin`
+**User**: Merchant/store owner  
+**Domain**: `{store}-my.vendin.store/admin`  
 **App**: Tenant instance (MedusaJS)
 
 ```

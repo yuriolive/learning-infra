@@ -8,16 +8,22 @@ import { TenantService } from "./domains/tenants/tenant.service";
 import { authenticateRequest, getCorsHeaders } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
 
+interface SecretBinding {
+  get(): Promise<string>;
+}
+
+type BoundSecret = string | SecretBinding;
+
 interface Environment {
-  DATABASE_URL: string;
+  DATABASE_URL: BoundSecret;
   LOG_LEVEL?: string;
   NODE_ENV?: string;
-  NEON_API_KEY?: string;
-  NEON_PROJECT_ID?: string;
-  ADMIN_API_KEY?: string;
+  NEON_API_KEY?: BoundSecret;
+  NEON_PROJECT_ID?: BoundSecret;
+  ADMIN_API_KEY?: BoundSecret;
   ALLOWED_ORIGINS?: string;
-  CLOUDFLARE_API_TOKEN?: string;
-  CLOUDFLARE_ZONE_ID?: string;
+  CLOUDFLARE_API_TOKEN?: BoundSecret;
+  CLOUDFLARE_ZONE_ID?: BoundSecret;
 }
 
 const openApiSpecs = new LRUCache<
@@ -28,6 +34,15 @@ const openApiSpecs = new LRUCache<
   ttl: 1000 * 60 * 60,
 });
 
+function resolveSecret(
+  secret: BoundSecret | undefined,
+): Promise<string | undefined> {
+  if (typeof secret === "object" && secret !== null && "get" in secret) {
+    return secret.get();
+  }
+  return Promise.resolve(secret as string | undefined);
+}
+
 function getOpenAPISpec(origin: string) {
   let spec = openApiSpecs.get(origin);
   if (!spec) {
@@ -37,7 +52,7 @@ function getOpenAPISpec(origin: string) {
   return spec;
 }
 
-function getDocumentationHtml(spec: unknown) {
+function getDocumentationHtml(_spec: unknown) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,7 +66,9 @@ function getDocumentationHtml(spec: unknown) {
   <script>
     (function() {
       var configuration = {
-        spec: ${JSON.stringify(spec)},
+        spec: {
+          url: "/openapi.json",
+        },
         theme: "purple",
         layout: "modern",
       };
@@ -75,11 +92,23 @@ function getDocumentationHtml(spec: unknown) {
 </html>`;
 }
 
+interface ResolvedEnvironment {
+  DATABASE_URL: string;
+  LOG_LEVEL?: string;
+  NODE_ENV?: string;
+  NEON_API_KEY?: string | undefined;
+  NEON_PROJECT_ID?: string | undefined;
+  ADMIN_API_KEY?: string | undefined;
+  ALLOWED_ORIGINS?: string;
+  CLOUDFLARE_API_TOKEN?: string | undefined;
+  CLOUDFLARE_ZONE_ID?: string | undefined;
+}
+
 // Export for integration testing
 export const handleRequest = async (
   request: Request,
   tenantRoutes: ReturnType<typeof createTenantRoutes>,
-  environment: Environment,
+  environment: ResolvedEnvironment,
   logger: ReturnType<typeof createLogger>,
 ): Promise<Response> => {
   const url = new URL(request.url);
@@ -170,22 +199,55 @@ export const handleRequest = async (
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
+
+    // Resolve all bound secrets
+    const [
+      databaseUrl,
+      neonApiKey,
+      neonProjectId,
+      adminApiKey,
+      cloudflareApiToken,
+      cloudflareZoneId,
+    ] = await Promise.all([
+      resolveSecret(environment.DATABASE_URL),
+      resolveSecret(environment.NEON_API_KEY),
+      resolveSecret(environment.NEON_PROJECT_ID),
+      resolveSecret(environment.ADMIN_API_KEY),
+      resolveSecret(environment.CLOUDFLARE_API_TOKEN),
+      resolveSecret(environment.CLOUDFLARE_ZONE_ID),
+    ]);
+
+    const resolvedEnvironment: ResolvedEnvironment = {
+      ...environment,
+      DATABASE_URL: databaseUrl!,
+      NEON_API_KEY: neonApiKey,
+      NEON_PROJECT_ID: neonProjectId,
+      ADMIN_API_KEY: adminApiKey,
+      CLOUDFLARE_API_TOKEN: cloudflareApiToken,
+      CLOUDFLARE_ZONE_ID: cloudflareZoneId,
+    };
+
     const logger = createLogger({
       logLevel: environment.LOG_LEVEL,
       nodeEnv: nodeEnvironment,
     });
 
-    const database = createDatabase(environment.DATABASE_URL, nodeEnvironment);
+    const database = createDatabase(databaseUrl, nodeEnvironment);
     const tenantRepository = new TenantRepository(database);
     const tenantService = new TenantService(tenantRepository, {
       logger,
-      neonApiKey: environment.NEON_API_KEY,
-      neonProjectId: environment.NEON_PROJECT_ID,
+      neonApiKey,
+      neonProjectId,
     });
     const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
     try {
-      return await handleRequest(request, tenantRoutes, environment, logger);
+      return await handleRequest(
+        request,
+        tenantRoutes,
+        resolvedEnvironment,
+        logger,
+      );
     } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
       return new Response("Internal server error", { status: 500 });

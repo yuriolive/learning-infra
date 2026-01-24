@@ -1,7 +1,7 @@
 # Architecture Overview
 
-**Last Updated**: 2026-01-23
-**Status**: Active
+**Last Updated**: 2026-01-23  
+**Status**: Active  
 **Component**: `apps/marketing/`, `apps/storefront/`, `apps/tenant-instance/`
 
 ## System Components
