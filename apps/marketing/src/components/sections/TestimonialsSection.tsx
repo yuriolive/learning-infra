@@ -1,54 +1,45 @@
 "use client";
 
 import { TestimonialCard } from "../ui/TestimonialCard";
-import { motion } from "framer-motion";
 
 const testimonials = [
   {
-    quote: "We launched our store in under an hour. The dedicated infrastructure gives us peace of mind about security and performance.",
+    quote: "Vendin saved us months of dev time. We launched our multi-vendor marketplace in weeks instead of months.",
     name: "Sarah Chen",
-    role: "Founder",
-    company: "ModernGoods",
-    rating: 5
-  },
-  {
-    quote: "Scale-to-zero has cut our hosting costs by 70%. We only pay for what we actually use, not idle resources.",
-    name: "Marcus Rodriguez",
     role: "CTO",
-    company: "EcoMarket",
+    company: "FashionHub",
     rating: 5
   },
   {
-    quote: "The provisioning speed is incredible. Our merchants can go from signup to first sale in the same day.",
+    quote: "The isolated infrastructure is a game changer. Our enterprise clients require strict data separation, and Vendin delivers.",
+    name: "Marcus Rodriguez",
+    role: "Lead Architect",
+    company: "EnterpriseComm",
+    rating: 5
+  },
+  {
+    quote: "Scale-to-zero pricing allows us to host hundreds of demo stores for pennies. Incredible value.",
     name: "Emily Watson",
-    role: "Operations",
-    company: "StoreBuilder",
+    role: "Product Manager",
+    company: "AgencyFlow",
     rating: 5
   }
 ];
 
 export const TestimonialsSection = () => {
   return (
-    <section className="py-24">
+    <section className="py-24 bg-default-50">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Trusted by Merchants</h2>
+          <h2 className="text-4xl font-bold mb-4 tracking-tight">Trusted by Developers</h2>
           <p className="text-xl text-default-500">
-            Join thousands of successful stores running on Vendin.
+            Join thousands of developers building the future of commerce.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((t, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <TestimonialCard {...t} />
-            </motion.div>
+          {testimonials.map((testimonial, i) => (
+             <TestimonialCard key={i} {...testimonial} />
           ))}
         </div>
       </div>

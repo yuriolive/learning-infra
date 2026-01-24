@@ -16,10 +16,10 @@ const specs = [
 
 export const TechSpecsSection = () => {
   return (
-    <section className="py-24 bg-default-50/50">
+    <section className="py-24 bg-background border-t border-default-100">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Built for Scale</h2>
+          <h2 className="text-4xl font-bold mb-4 tracking-tight">Built for Scale</h2>
           <p className="text-xl text-default-500">
             Technical specifications for the modern developer.
           </p>
@@ -27,12 +27,14 @@ export const TechSpecsSection = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {specs.map((spec, i) => (
-            <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow bg-background/60">
+            <Card key={i} shadow="sm" className="border border-default-200" isPressable>
               <CardBody className="gap-3 p-6 items-center text-center">
-                <spec.icon className="text-primary w-8 h-8" />
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                    <spec.icon className="w-6 h-6" />
+                </div>
                 <div>
                   <h3 className="font-bold text-sm">{spec.title}</h3>
-                  <p className="text-tiny text-default-500">{spec.description}</p>
+                  <p className="text-tiny text-default-500 mt-1">{spec.description}</p>
                 </div>
               </CardBody>
             </Card>

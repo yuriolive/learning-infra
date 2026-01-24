@@ -4,7 +4,7 @@ import { Button, Input, Checkbox, Link, Divider, Card, CardHeader, CardBody, Car
 import { Github, Twitter } from "lucide-react";
 import { useState } from "react";
 
-export default function SignupPage() {
+export default function LoginPage() {
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -12,17 +12,17 @@ export default function SignupPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-default-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col gap-1 items-center pb-0 pt-8">
-            <h1 className="text-2xl font-bold">Create an account</h1>
-            <p className="text-small text-default-500">Enter your details to get started</p>
+            <h1 className="text-2xl font-bold">Welcome back</h1>
+            <p className="text-small text-default-500">Log in to your account to continue</p>
         </CardHeader>
 
         <CardBody className="gap-4 px-8 py-8">
             <div className="flex flex-col gap-2">
                 <Button variant="bordered" startContent={<Github size={20} />}>
-                    Sign up with GitHub
+                    Continue with GitHub
                 </Button>
                 <Button variant="bordered" startContent={<Twitter size={20} />}>
-                    Sign up with Twitter
+                    Continue with Twitter
                 </Button>
             </div>
 
@@ -33,19 +33,6 @@ export default function SignupPage() {
             </div>
 
             <form className="flex flex-col gap-4">
-                 <Input
-                    label="Full Name"
-                    placeholder="John Doe"
-                    type="text"
-                    variant="bordered"
-                />
-                 <Input
-                    label="Store Name"
-                    placeholder="my-awesome-store"
-                    type="text"
-                    variant="bordered"
-                    description="This will be your subdomain"
-                />
                 <Input
                     label="Email"
                     placeholder="Enter your email"
@@ -54,7 +41,7 @@ export default function SignupPage() {
                 />
                 <Input
                     label="Password"
-                    placeholder="Create a password"
+                    placeholder="Enter your password"
                     type={isVisible ? "text" : "password"}
                     variant="bordered"
                     endContent={
@@ -67,24 +54,28 @@ export default function SignupPage() {
                         </button>
                     }
                 />
-                 <Checkbox
-                    classNames={{
-                        label: "text-small",
-                    }}
-                    defaultSelected
-                >
-                    I agree to the <Link href="#" size="sm">Terms</Link> and <Link href="#" size="sm">Privacy Policy</Link>
-                </Checkbox>
+                <div className="flex py-2 px-1 justify-between">
+                    <Checkbox
+                        classNames={{
+                            label: "text-small",
+                        }}
+                    >
+                        Remember me
+                    </Checkbox>
+                    <Link color="primary" href="#" size="sm">
+                        Forgot password?
+                    </Link>
+                </div>
                 <Button color="primary" fullWidth size="lg">
-                    Get Started
+                    Log In
                 </Button>
             </form>
         </CardBody>
         <CardFooter className="justify-center pb-8 pt-0">
              <p className="text-small text-default-500">
-                Already have an account?{" "}
-                <Link size="sm" href="/login">
-                    Log in
+                Don&apos;t have an account?{" "}
+                <Link size="sm" href="/signup">
+                    Sign up
                 </Link>
             </p>
         </CardFooter>

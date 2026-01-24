@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { Card, CardHeader, CardBody, Chip } from "@heroui/react";
 
 interface StepCardProps {
   number: number;
@@ -18,34 +18,30 @@ export const StepCard: React.FC<StepCardProps> = ({
   badge,
 }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: number * 0.1 }}
-      viewport={{ once: true }}
-      className="flex flex-col items-center text-center relative max-w-sm mx-auto"
-    >
-      <div className="relative mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center text-3xl shadow-lg">
-          {icon}
+    <Card className="flex-1 w-full min-w-[300px] border-default-200" shadow="sm">
+      <CardHeader className="flex gap-3 px-6 pt-6 justify-between items-start">
+        <div className="flex gap-4 items-center">
+            <div className="w-12 h-12 text-2xl bg-default-100 rounded-lg flex items-center justify-center">
+            {icon}
+            </div>
+            <div className="flex flex-col">
+                <p className="text-small text-default-500 uppercase font-bold">Step {number}</p>
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                    {title}
+                </h3>
+            </div>
         </div>
-        <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold border-4 border-background">
-          {number}
-        </div>
-      </div>
-
-      <h3 className="text-xl font-bold mb-2 flex items-center gap-2 justify-center flex-wrap">
-        {title}
         {badge && (
-          <span className="px-2 py-0.5 rounded-full bg-success-100 text-success-700 text-xs font-semibold">
+            <Chip size="sm" color="success" variant="flat">
             {badge}
-          </span>
+            </Chip>
         )}
-      </h3>
-
-      <p className="text-default-500">
-        {description}
-      </p>
-    </motion.div>
+      </CardHeader>
+      <CardBody className="px-6 pb-6">
+        <p className="text-default-500">
+          {description}
+        </p>
+      </CardBody>
+    </Card>
   );
 };
