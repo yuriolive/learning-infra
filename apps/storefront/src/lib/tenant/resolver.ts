@@ -6,9 +6,9 @@ export function extractSubdomainFromHostname(hostname: string): string | null {
 
   const subdomain = hostname.replace(`.${ROOT_DOMAIN}`, "");
 
-  // Validate format: alphanumeric, hyphens, 3-63 chars (approx)
-  // MVP: just alphanumeric and hyphens
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(subdomain)) {
+  // Validate format: alphanumeric, hyphens, 3-63 chars
+  // MVP: just alphanumeric and hyphens with length validation
+  if (!/^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/.test(subdomain)) {
     return null;
   }
 

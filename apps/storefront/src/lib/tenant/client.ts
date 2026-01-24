@@ -1,13 +1,27 @@
-import { Tenant } from "./types";
+import { logger } from "@vendin/utils/logger";
+
+import type { Tenant } from "./types";
 
 const CONTROL_PLANE_URL = process.env.CONTROL_PLANE_API_URL;
 const API_KEY = process.env.CONTROL_PLANE_API_KEY;
+
+// Cache configuration from environment variables
+const ENABLE_TENANT_CACHE =
+  process.env.ENABLE_TENANT_CACHE === "true" ||
+  process.env.ENABLE_TENANT_CACHE === "1";
+const TENANT_CACHE_TTL = process.env.TENANT_CACHE_TTL
+  ? Number.parseInt(process.env.TENANT_CACHE_TTL, 10)
+  : 300; // Default to 5 minutes
 
 export async function fetchTenantBySubdomain(
   subdomain: string,
 ): Promise<Tenant | null> {
   if (!CONTROL_PLANE_URL || !API_KEY) {
-    console.error("Control Plane configuration missing");
+    logger.error({
+      msg: "Control Plane configuration missing",
+      controlPlaneUrl: !!CONTROL_PLANE_URL,
+      hasApiKey: !!API_KEY,
+    });
     return null;
   }
 
@@ -18,7 +32,7 @@ export async function fetchTenantBySubdomain(
         headers: {
           Authorization: `Bearer ${API_KEY}`,
         },
-        next: { revalidate: 300 }, // 5 minutes cache
+        ...(ENABLE_TENANT_CACHE && { next: { revalidate: TENANT_CACHE_TTL } }),
       },
     );
 
@@ -27,22 +41,33 @@ export async function fetchTenantBySubdomain(
     }
 
     if (!response.ok) {
-      console.error(
-        `Failed to fetch tenant: ${response.status} ${response.statusText}`,
-      );
+      logger.error({
+        msg: "Failed to fetch tenant by subdomain",
+        subdomain,
+        status: response.status,
+        statusText: response.statusText,
+      });
       return null;
     }
 
     return response.json();
   } catch (error) {
-    console.error("Error fetching tenant:", error);
+    logger.error({
+      msg: "Error fetching tenant by subdomain",
+      subdomain,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
 
 export async function fetchTenantById(id: string): Promise<Tenant | null> {
   if (!CONTROL_PLANE_URL || !API_KEY) {
-    console.error("Control Plane configuration missing");
+    logger.error({
+      msg: "Control Plane configuration missing",
+      controlPlaneUrl: !!CONTROL_PLANE_URL,
+      hasApiKey: !!API_KEY,
+    });
     return null;
   }
 
@@ -51,7 +76,7 @@ export async function fetchTenantById(id: string): Promise<Tenant | null> {
       headers: {
         Authorization: `Bearer ${API_KEY}`,
       },
-      next: { revalidate: 300 }, // 5 minutes cache
+      ...(ENABLE_TENANT_CACHE && { next: { revalidate: TENANT_CACHE_TTL } }),
     });
 
     if (response.status === 404) {
@@ -59,15 +84,22 @@ export async function fetchTenantById(id: string): Promise<Tenant | null> {
     }
 
     if (!response.ok) {
-      console.error(
-        `Failed to fetch tenant: ${response.status} ${response.statusText}`,
-      );
+      logger.error({
+        msg: "Failed to fetch tenant by ID",
+        tenantId: id,
+        status: response.status,
+        statusText: response.statusText,
+      });
       return null;
     }
 
     return response.json();
   } catch (error) {
-    console.error("Error fetching tenant:", error);
+    logger.error({
+      msg: "Error fetching tenant by ID",
+      tenantId: id,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
