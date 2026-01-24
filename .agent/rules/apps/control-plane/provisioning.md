@@ -13,7 +13,7 @@ The Control Plane orchestrates complete tenant provisioning:
 3. **Store Database URL** → In GCP Secret Manager
 4. **Create Cloud Run Service** → Deploy tenant instance (`tenant-{id}`)
 5. **Configure Secrets** → Database URL, Redis namespace, tenant ID
-6. **Add Subdomain** → Assign `{store}.my.vendin.store`
+6. **Add Subdomain** → Assign `{store}-my.vendin.store`
 7. **Add Custom Hostname** → Via Cloudflare SaaS API (if provided)
 8. **Wait for SSL** → Poll Cloudflare API for certificate status
 9. **Initialize MedusaJS** → Bootstrap tenant database
@@ -34,7 +34,7 @@ See [docs/examples/provisioning-workflow.ts](../../../docs/examples/provisioning
 
 ## Subdomain Assignment
 
-- **Pattern**: `{store-name}.my.vendin.store`
+- **Pattern**: `{store-name}-my.vendin.store`
 - **Generation**: Sanitize store name (lowercase, hyphens, no special chars)
 - **Uniqueness**: Check against existing subdomains
 - **Reserved**: Never use reserved subdomains (see [@references.md](../../shared/references.md))

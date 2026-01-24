@@ -40,7 +40,7 @@ jobs:
       - name: Fetch Database URL from Cloudflare Secrets Store
         id: fetch-secrets
         run: |
-          DB_URL=$(bun wrangler secrets-store secret get control-plane-db-url)
+          DB_URL=$(bun wrangler secrets-store secret get ${{ vars.CLOUDFLARE_SECRETS_STORE_ID }} --secret-id ${{ vars.CLOUDFLARE_DB_URL_SECRET_ID }} --remote)
           echo "::add-mask::$DB_URL"
           echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
         env:

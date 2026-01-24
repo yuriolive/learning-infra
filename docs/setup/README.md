@@ -44,11 +44,12 @@ Follow these steps in sequence for a complete infrastructure setup:
 
 **Time: 15-30 minutes**
 
-- Storefront deployment (Cloudflare Pages)
+- Marketing app deployment (Cloudflare Pages - root domain)
+- Storefront router deployment (Cloudflare Pages - tenant domains)
 - Cloudflare for SaaS setup (custom domains)
 - DNS, SSL automation, and security
 - WAF, rate limiting
-- **Required** for storefront and custom domain support
+- **Required** for marketing site, storefront routing, and custom domain support
 
 ### 6. **Tenant Provisioning** (`TENANT_PROVISIONING_SETUP.md`)
 
@@ -140,16 +141,16 @@ And these GitHub variables (for Gemini features):
 ### Subdomain Structure
 
 ```
-vendin.store                    → Landing page & Signup (root domain)
-www.vendin.store                → Redirects to root or alternative
+vendin.store                    → Marketing app (landing page & signup)
+www.vendin.store                → Redirects to root
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
 *-my.vendin.store               → Tenant stores (wildcard)
-  ├─ awesome-store-my.vendin.store → Merchant storefront
-  └─ awesome-store-my.vendin.store/admin → Merchant admin (MedusaJS)
+  ├─ awesome-store-my.vendin.store → Tenant storefront UI (served by tenant instance)
+  └─ awesome-store-my.vendin.store/admin → Tenant admin (MedusaJS)
 ```
 
-**Pattern:** Following Shopify's `.myshopify.com` style but using `-my.vendin.store` for hyphenated SSL compatibility.
+**Pattern:** Using `-my.vendin.store` (hyphenated) for SSL coverage. Planned migration to `.my.vendin.store` once Cloudflare deep wildcard SSL is enabled.
 
 ### Multi-Tenant Request Flow
 
@@ -157,7 +158,7 @@ admin.vendin.store              → Platform admin dashboard (optional)
 
 ```
 Customer → vendin.store
-        → Storefront (Cloudflare Pages)
+        → Marketing app (Cloudflare Pages)
         → Landing page, signup form, marketing
 ```
 
@@ -166,9 +167,10 @@ Customer → vendin.store
 ```
 Customer → merchant-name-my.vendin.store OR shop.merchant.com
         → Cloudflare (DNS + SSL + CDN)
-        → Storefront (Cloudflare Pages - Next.js)
+        → Storefront router (Cloudflare Pages - Next.js)
         → Resolves tenant from hostname (-my pattern or custom domain)
-        → Routes to tenant-{id} (Cloud Run - MedusaJS)
+        → Redirect/proxy to tenant-{id} (Cloud Run)
+        → Tenant instance serves custom storefront UI + APIs
         → Tenant Database (Neon PostgreSQL)
 ```
 
@@ -177,12 +179,15 @@ Customer → merchant-name-my.vendin.store OR shop.merchant.com
 **Shared Services:**
 
 - **Control Plane** (Cloud Run): Single shared service managing all tenants
-- **Storefront** (Cloudflare Pages): Single Next.js app routing to tenants
+- **Marketing App** (Cloudflare Pages): Landing page on root domain
+- **Storefront Router** (Cloudflare Pages): Router-only app for tenant domains
 - **Redis** (Upstash): Shared instance with tenant namespacing
 
 **Per-Tenant Services:**
 
 - **Tenant Instance** (Cloud Run): One MedusaJS instance per tenant (`tenant-{id}`)
+  - Serves custom storefront UI (per-tenant themes/customizations)
+  - Serves MedusaJS Store API and Admin UI
 - **Database** (Neon): One PostgreSQL database per tenant
 - **Custom Domain** (Cloudflare): Optional custom hostname per tenant
 

@@ -11,10 +11,13 @@ This project uses a **monorepo architecture** with Turborepo and Bun workspaces 
 ```
 /
 ├── apps/
-│   └── control-plane/      # Orchestrator API (tenant provisioning)
+│   ├── control-plane/      # Orchestrator API (tenant provisioning)
+│   ├── marketing/          # Marketing landing app (root domain)
+│   ├── storefront/         # Router-only storefront (tenant domains)
+│   └── tenant-instance/    # MedusaJS template (per-tenant)
 ├── packages/
 │   └── config/             # Shared config (ESLint, TS, Prettier)
-└── infrastructure/         # Infrastructure as Code
+└── docs/                   # Architecture and setup guides
 ```
 
 ## Prerequisites
@@ -94,6 +97,33 @@ Orchestrator API for managing tenant provisioning in the multi-tenant e-commerce
 
 See [`apps/control-plane/README.md`](apps/control-plane/README.md) for details.
 
+### Marketing App (`apps/marketing/`)
+
+Marketing landing page for the platform.
+
+- Landing page, pricing, and signup
+- Deployed to Cloudflare Pages on root domain (`vendin.store`)
+- Separate from storefront router
+
+### Storefront Router (`apps/storefront/`)
+
+Router-only Next.js app for tenant domain routing.
+
+- Resolves tenant by hostname
+- Redirects/proxies to tenant instances
+- Deployed to Cloudflare Pages for tenant subdomains
+- Does not render customer UI (tenant instances serve custom UI)
+
+### Tenant Instance (`apps/tenant-instance/`)
+
+MedusaJS 2.0 template for individual merchant stores.
+
+- Custom storefront UI per tenant (themes, customizations)
+- Store API (`/store`) for customer operations
+- Admin Dashboard (`/admin`) for merchant management
+- Dedicated database per tenant (Neon PostgreSQL)
+- Deployed on Google Cloud Run with scale-to-zero
+
 ## Packages
 
 ### Config (`packages/config/`)
@@ -122,6 +152,7 @@ Shared configuration for all apps and packages:
 
 ## Documentation
 
-- **Architecture**: See [AGENTS.md](AGENTS.md)
+- **Architecture**: See [docs/architecture/README.md](docs/architecture/README.md)
+- **Agent Guidelines**: See [AGENTS.md](AGENTS.md)
 - **Requirements**: See [PRD.md](PRD.md)
 - **Roadmap**: See [ROADMAP.md](ROADMAP.md)
