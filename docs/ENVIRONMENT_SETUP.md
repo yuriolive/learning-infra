@@ -262,7 +262,7 @@ gh secret set ADMIN_API_KEY --body "$NEW_KEY"
 
 ## Related Files
 
-- [`apps/control-plane/wrangler.jsonc`](file:///C:/Users/yuri_/IdeaProjects/learning-infra/apps/control-plane/wrangler.jsonc) - Worker configuration
-- [`apps/control-plane/src/index.ts`](file:///C:/Users/yuri_/IdeaProjects/learning-infra/apps/control-plane/src/index.ts) - Environment binding usage
-- [`apps/control-plane/src/middleware.ts`](file:///C:/Users/yuri_/IdeaProjects/learning-infra/apps/control-plane/src/middleware.ts) - Authentication logic
-- [`.github/workflows/deploy-control-plane.yml`](file:///C:/Users/yuri_/IdeaProjects/learning-infra/.github/workflows/deploy-control-plane.yml) - CI/CD workflow
+- [`apps/control-plane/wrangler.jsonc`](../../apps/control-plane/wrangler.jsonc) - Worker configuration
+- [`apps/control-plane/src/index.ts`](../../apps/control-plane/src/index.ts) - Environment binding usage
+- [`apps/control-plane/src/middleware.ts`](../../apps/control-plane/src/middleware.ts) - Authentication logic
+- [`.github/workflows/deploy-control-plane.yml`](../../.github/workflows/deploy-control-plane.yml) - CI/CD workflow
