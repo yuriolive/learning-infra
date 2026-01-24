@@ -47,6 +47,20 @@ export function createTenantRoutes(context: RouteContext) {
       if (
         pathParts.length === 3 &&
         pathParts[0] === "api" &&
+        pathParts[1] === "tenants" &&
+        pathParts[2] === "lookup"
+      ) {
+        const response = await handleLookupTenant(
+          request,
+          tenantService,
+          logger,
+        );
+        return response;
+      }
+
+      if (
+        pathParts.length === 3 &&
+        pathParts[0] === "api" &&
         pathParts[1] === "tenants"
       ) {
         const response = await handleResourceRequest(
@@ -77,6 +91,37 @@ async function handleCollectionRequest(
     return response;
   }
   return new Response("Not found", { status: 404 });
+}
+
+async function handleLookupTenant(
+  request: Request,
+  service: TenantService,
+  logger: Logger,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const subdomain = url.searchParams.get("subdomain");
+
+  if (!subdomain) {
+    return new Response(JSON.stringify({ error: "Subdomain is required" }), {
+      status: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  try {
+    const tenant = await service.getTenantBySubdomain(subdomain);
+
+    return new Response(JSON.stringify(tenant), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    return handleError(error, logger);
+  }
 }
 
 async function handleResourceRequest(
