@@ -12,6 +12,7 @@ import {
   NavbarMenuItem
 } from "@heroui/react";
 import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,32 +26,46 @@ export const Navbar = () => {
   ];
 
   return (
-    <HeroNavbar onMenuOpenChange={setIsMenuOpen} maxWidth="xl" position="sticky" isBordered>
-      <NavbarContent>
+    <HeroNavbar 
+      isMenuOpen={isMenuOpen}
+      onMenuOpenChange={setIsMenuOpen} 
+      maxWidth="xl" 
+      position="sticky" 
+      isBordered 
+      className="bg-background/60 backdrop-blur-md border-default-100"
+      height="4.5rem"
+    >
+      <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           className="sm:hidden"
+          icon={(isOpen) => isOpen ? <X size={24} /> : <Menu size={24} />}
         />
         <NavbarBrand>
-          <Link href="/" className="font-bold text-inherit text-2xl tracking-tighter text-foreground">
-            Vendin
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-black overflow-hidden shadow-sm">
+               V
+            </div>
+            <span className="font-black text-2xl tracking-tighter text-foreground">
+              Vendin
+            </span>
           </Link>
         </NavbarBrand>
       </NavbarContent>
 
-      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+      <NavbarContent className="hidden sm:flex gap-8" justify="center">
         <NavbarItem>
-          <Link color="foreground" href="#features">
+          <Link color="foreground" href="#features" className="text-sm font-semibold hover:text-primary transition-colors">
             Features
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="#pricing">
+          <Link color="foreground" href="#pricing" className="text-sm font-semibold hover:text-primary transition-colors">
             Pricing
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="#about">
+          <Link color="foreground" href="#about" className="text-sm font-semibold hover:text-primary transition-colors">
             About
           </Link>
         </NavbarItem>
@@ -58,10 +73,10 @@ export const Navbar = () => {
 
       <NavbarContent justify="end">
         <NavbarItem className="hidden lg:flex">
-          <Link href="/login" color="foreground">Login</Link>
+          <Link href="/login" color="foreground" className="text-sm font-semibold">Login</Link>
         </NavbarItem>
         <NavbarItem>
-          <Button as={Link} color="primary" href="/signup" variant="shadow">
+          <Button as={Link} color="primary" href="/signup" variant="flat" className="font-bold whitespace-nowrap">
             Sign Up
           </Button>
         </NavbarItem>

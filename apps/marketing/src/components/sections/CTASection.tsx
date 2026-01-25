@@ -7,25 +7,44 @@ export const CTASection = () => {
   const router = useRouter();
 
   return (
-    <section className="py-24 bg-gradient-to-br from-primary-600 to-secondary-600 text-white">
-      <div className="container mx-auto px-6 text-center">
-        <h2 className="text-4xl md:text-5xl font-bold mb-6">
-          Ready to Launch Your Store?
+    <section className="py-24 relative overflow-hidden bg-foreground text-background">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 opacity-50"></div>
+      
+      <div className="container mx-auto px-6 text-center relative z-10">
+        <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-none">
+          Ready to scale your <br />
+          commerce business?
         </h2>
-        <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
-          Join 1,000+ merchants selling with Vendin. No credit card required.
+        <p className="text-xl text-default-400 max-w-2xl mx-auto mb-12">
+          Join the next generation of merchants building on high-performance infrastructure. 
+          No credit card required.
         </p>
 
-        <Button
-          size="lg"
-          className="bg-white text-primary font-bold px-8 h-14"
-          onPress={() => router.push('/signup')}
-        >
-          Start Free Trial
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+          <Button
+            size="lg"
+            color="primary"
+            variant="shadow"
+            className="font-bold px-12 h-16 text-xl"
+            onPress={() => router.push('/signup')}
+          >
+            Get Started Now
+          </Button>
+          <Button
+            size="lg"
+            variant="bordered"
+            className="font-semibold px-12 h-16 text-xl border-default-200"
+            onPress={() => {
+                // Scroll to top or something
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            Back to Top
+          </Button>
+        </div>
 
-        <p className="text-sm text-white/60 mt-6">
-          Free forever tier available • Cancel anytime
+        <p className="text-small text-default-400 mt-10 font-medium">
+          Free forever tier available • 99.9% Uptime SLA • Instant setup
         </p>
       </div>
     </section>

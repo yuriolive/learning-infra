@@ -19,7 +19,7 @@ import { Search, Bell, Settings, LayoutDashboard, ShoppingBag, Users, CreditCard
 
 export const MockDashboard = () => {
   return (
-    <Card className="w-full max-w-5xl mx-auto border-default-200/50 bg-background/60 backdrop-blur-xl shadow-2xl" isBlurred>
+    <Card className="w-full max-w-[1000px] mx-auto border-default-200/50 bg-background/60 backdrop-blur-xl shadow-2xl relative z-10" isBlurred>
       <div className="flex h-[500px]">
         {/* Sidebar */}
         <div className="w-64 border-r border-default-200/50 p-4 hidden md:flex flex-col gap-2">
