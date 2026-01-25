@@ -1,3 +1,4 @@
+import { captureError, initAnalytics } from "@vendin/analytics";
 import { createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
@@ -24,6 +25,8 @@ interface Environment {
   NEON_PROJECT_ID?: BoundSecret;
   ADMIN_API_KEY?: BoundSecret;
   ALLOWED_ORIGINS?: string;
+  POSTHOG_API_KEY?: BoundSecret;
+  POSTHOG_HOST?: string;
 }
 
 const openApiSpecs = new LRUCache<
@@ -149,13 +152,21 @@ export default {
       nodeEnv: nodeEnvironment,
     });
 
-    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey] =
+    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey, postHogApiKey] =
       await Promise.all([
         resolveSecret(environment.DATABASE_URL),
         resolveSecret(environment.NEON_API_KEY),
         resolveSecret(environment.NEON_PROJECT_ID),
         resolveSecret(environment.ADMIN_API_KEY),
+        resolveSecret(environment.POSTHOG_API_KEY),
       ]);
+
+    if (postHogApiKey) {
+      initAnalytics(
+        postHogApiKey,
+        environment.POSTHOG_HOST ? { host: environment.POSTHOG_HOST } : {},
+      );
+    }
 
     const allowedOrigins = environment.ALLOWED_ORIGINS
       ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
@@ -222,6 +233,10 @@ export default {
       return wrapResponse(response, request, middlewareOptions);
     } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
+      captureError(error, {
+        path: url.pathname,
+        method: request.method,
+      });
       const errorResponse = new Response(
         JSON.stringify({ error: "Internal server error" }),
         {
