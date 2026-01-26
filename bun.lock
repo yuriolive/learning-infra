@@ -78,6 +78,7 @@
       "dependencies": {
         "@heroui/react": "^2.8.7",
         "@vendin/analytics": "workspace:*",
+        "@vendin/assets": "workspace:*",
         "framer-motion": "^12.27.2",
         "lucide-react": "^0.473.0",
         "next": "16.1.4",
@@ -157,6 +158,17 @@
       },
       "peerDependencies": {
         "react": "^18.0.0 || ^19.0.0",
+      },
+    },
+    "packages/assets": {
+      "name": "@vendin/assets",
+      "version": "0.1.0",
+      "dependencies": {
+        "react": "19.2.3",
+      },
+      "devDependencies": {
+        "@types/react": "^19",
+        "typescript": "^5",
       },
     },
     "packages/config": {
@@ -1965,6 +1977,8 @@
     "@unrs/resolver-binding-win32-x64-msvc": ["@unrs/resolver-binding-win32-x64-msvc@1.11.1", "", { "os": "win32", "cpu": "x64" }, "sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g=="],
 
     "@vendin/analytics": ["@vendin/analytics@workspace:packages/analytics"],
+
+    "@vendin/assets": ["@vendin/assets@workspace:packages/assets"],
 
     "@vendin/config": ["@vendin/config@workspace:packages/config"],
 

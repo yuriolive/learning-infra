@@ -11,10 +11,10 @@ import {
   NavbarMenu,
   NavbarMenuItem,
 } from "@heroui/react";
+import { LogoPrimary } from "@vendin/assets";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
-import { Logo } from "../ui/logo";
 import { ThemeSwitch } from "../ui/theme-switch";
 
 export const Navbar = () => {
@@ -46,7 +46,7 @@ export const Navbar = () => {
         />
         <NavbarBrand>
           <Link href="/" className="flex items-center gap-2">
-            <Logo size={40} className="text-foreground" />
+            <LogoPrimary size={40} className="text-foreground" />
             <span className="font-black text-2xl tracking-tighter text-foreground">
               Vendin
             </span>

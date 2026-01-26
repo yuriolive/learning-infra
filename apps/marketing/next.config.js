@@ -11,7 +11,7 @@ const nextConfig = {
     root: path.resolve(__dirname, "../../"),
   },
   // Ensure we can use lucide-react and other packages correctly if needed
-  transpilePackages: ["@heroui/react"],
+  transpilePackages: ["@heroui/react", "@vendin/assets"],
 };
 
 export default nextConfig;
