@@ -98,7 +98,7 @@ export const PricingCard: React.FC<PricingCardProperties> = ({
           color={popular ? "primary" : "default"}
           variant={popular ? "shadow" : "bordered"}
           className="font-bold h-14 text-base"
-          onPress={() => router.push(`/signup?plan=${name.toLowerCase()}`)}
+            onPress={() => { router.push(`/signup?plan=${name.toLowerCase()}`); }}
         >
           {cta}
         </Button>

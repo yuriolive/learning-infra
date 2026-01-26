@@ -26,7 +26,7 @@ export const CTASection = () => {
             color="primary"
             variant="shadow"
             className="font-bold px-12 h-16 text-xl"
-            onPress={() => router.push("/signup")}
+          onPress={() => { router.push("/signup"); }}
           >
             Get Started Now
           </Button>

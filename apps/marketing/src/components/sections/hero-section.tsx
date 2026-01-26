@@ -48,7 +48,7 @@ export const HeroSection = () => {
               variant="shadow"
               className="font-bold px-10 h-14 text-lg"
               endContent={<ArrowRight size={20} />}
-              onPress={() => router.push("/signup")}
+                onPress={() => { router.push("/signup"); }}
             >
               Start Free Trial
             </Button>
