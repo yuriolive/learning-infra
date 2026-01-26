@@ -145,7 +145,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 - Control Plane: `NEON_API_KEY`, `GCP_PROJECT_ID`, `CLOUDFLARE_API_TOKEN`, `POSTHOG_API_KEY`
 - Tenant Instances: `DATABASE_URL`, `REDIS_URL`, `TENANT_ID`
-- Storefront/Marketing: `CONTROL_PLANE_API_URL`, `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_POSTHOG_KEY`
+- Storefront/Marketing: `CONTROL_PLANE_API_URL`, `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
 
 ## Testing Strategy
 
