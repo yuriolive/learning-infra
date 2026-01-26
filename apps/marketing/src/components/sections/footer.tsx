@@ -1,6 +1,7 @@
 "use client";
 
 import { Divider, Link } from "@heroui/react";
+import { LogoPrimary } from "@vendin/assets";
 import { Github, Twitter, MessageCircle } from "lucide-react";
 
 export const Footer = () => {
@@ -116,9 +117,13 @@ export const Footer = () => {
         <Divider />
 
         <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
-          <div className="text-sm text-default-400">
-            © 2026 Vendin. All rights reserved.
-          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm text-default-400 hover:text-foreground transition-colors"
+          >
+            <LogoPrimary size={32} />
+            <span>© 2026 Vendin. All rights reserved.</span>
+          </Link>
 
           <div className="flex gap-4">
             <Link href="#" color="foreground">
