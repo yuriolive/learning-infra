@@ -24,6 +24,8 @@ This document consolidates all environment variable and secrets management for t
 | `ALLOWED_ORIGINS`      | Plain Var | `wrangler.jsonc` | CORS allowed origins             |
 | `LOG_LEVEL`            | Plain Var | `wrangler.jsonc` | Logging verbosity (info/debug)   |
 | `NODE_ENV`             | Plain Var | `wrangler.jsonc` | Runtime environment (production) |
+| `POSTHOG_API_KEY`      | Secret    | Secrets Store    | PostHog project API key          |
+| `POSTHOG_HOST`         | Plain Var | `wrangler.jsonc` | PostHog API host                 |
 
 ---
 
@@ -46,6 +48,8 @@ Save this value - you'll need it for both Cloudflare Secrets Store and GitHub Se
 - **CLOUDFLARE_API_TOKEN**: Create at [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
   - Required permissions: **Workers Scripts (Edit)**, **Workers Secrets (Edit)**
 - **CLOUDFLARE_ZONE_ID**: From Cloudflare dashboard → vendin.store → Overview → Zone ID
+- **POSTHOG_API_KEY**: From PostHog Dashboard → Project Settings → Project API Key
+- **POSTHOG_HOST**: Use `https://us.i.posthog.com` for US Cloud or `https://eu.i.posthog.com` for EU.
 
 ---
 
@@ -73,6 +77,7 @@ echo -n "your-neon-project-id" | bun wrangler secrets-store secret put neon-proj
 echo -n "$(openssl rand -base64 32)" | bun wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-cloudflare-api-token" | bun wrangler secrets-store secret put cloudflare-api-token --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-cloudflare-zone-id" | bun wrangler secrets-store secret put cloudflare-zone-id --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-posthog-api-key" | bun wrangler secrets-store secret put posthog-api-key --secrets-store-id=$SECRETS_STORE_ID
 ```
 
 ### 2.3 Verify Secrets
@@ -104,6 +109,7 @@ Update `apps/control-plane/wrangler.jsonc`:
       { "binding": "ADMIN_API_KEY", "name": "control-plane-admin-api-key" },
       { "binding": "CLOUDFLARE_API_TOKEN", "name": "cloudflare-api-token" },
       { "binding": "CLOUDFLARE_ZONE_ID", "name": "cloudflare-zone-id" },
+      { "binding": "POSTHOG_API_KEY", "name": "posthog-api-key" },
     ],
   },
 
@@ -111,6 +117,7 @@ Update `apps/control-plane/wrangler.jsonc`:
     "ALLOWED_ORIGINS": "https://vendin.store,https://www.vendin.store",
     "LOG_LEVEL": "info",
     "NODE_ENV": "production",
+    "POSTHOG_HOST": "https://us.i.posthog.com",
   },
 }
 ```
@@ -129,12 +136,14 @@ For CI/CD deployment, add these to your GitHub repository settings (Settings →
 | `CLOUDFLARE_ACCOUNT_ID`       | Your Cloudflare account ID  | Account identification        |
 | `CLOUDFLARE_SECRETS_STORE_ID` | UUID from Step 2.1          | Access Secrets Store in CI    |
 | `ADMIN_API_KEY`               | Admin API key from Step 1.1 | Testing API in CI (if needed) |
+| `NEXT_PUBLIC_POSTHOG_KEY`     | PostHog project API key     | Analytics integration         |
 
 ### GitHub Variables
 
-| Variable Name     | Value                                           | Purpose         |
-| ----------------- | ----------------------------------------------- | --------------- |
-| `ALLOWED_ORIGINS` | `https://vendin.store,https://www.vendin.store` | Production CORS |
+| Variable Name              | Value                                           | Purpose                  |
+| -------------------------- | ----------------------------------------------- | ------------------------ |
+| `ALLOWED_ORIGINS`          | `https://vendin.store,https://www.vendin.store` | Production CORS          |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `https://us.i.posthog.com`                      | PostHog Ingestion Sector |
 
 ---
 
@@ -154,6 +163,10 @@ CLOUDFLARE_ZONE_ID="your-zone-id"
 ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"
 LOG_LEVEL="debug"
 NODE_ENV="development"
+POSTHOG_API_KEY="your-posthog-api-key"
+POSTHOG_HOST="https://us.i.posthog.com"
+NEXT_PUBLIC_POSTHOG_KEY="your-posthog-api-key"
+NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
 ```
 
 > ⚠️ **Important**: `.dev.vars` is gitignored. Never commit secrets to version control.
