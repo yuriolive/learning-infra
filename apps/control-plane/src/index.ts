@@ -168,9 +168,7 @@ export default {
     if (postHogApiKey) {
       initAnalytics(
         postHogApiKey,
-        environment.POSTHOG_HOST
-          ? { host: environment.POSTHOG_HOST }
-          : undefined,
+        environment.POSTHOG_HOST ? { host: environment.POSTHOG_HOST } : {},
       );
     }
 

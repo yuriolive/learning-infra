@@ -12,7 +12,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       apiKey={process.env.NEXT_PUBLIC_POSTHOG_KEY}
       host={process.env.NEXT_PUBLIC_POSTHOG_HOST}
     >
-      <HeroUIProvider navigate={(path: string) => router.push(path)}>{children}</HeroUIProvider>
+      <HeroUIProvider
+        navigate={(path: string) => {
+          router.push(path);
+        }}
+      >
+        {children}
+      </HeroUIProvider>
     </PostHogProvider>
   );
 }
