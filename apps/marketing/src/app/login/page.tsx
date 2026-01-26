@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export default function LoginPage() {
   const [isVisible, setIsVisible] = useState(false);
-  const toggleVisibility = () => setIsVisible(!isVisible);
+  const toggleVisibility = () => { setIsVisible(!isVisible); };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-default-50 p-4">
