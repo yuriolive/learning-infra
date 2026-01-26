@@ -12,7 +12,7 @@ function PostHogPageView() {
   useEffect(() => {
     if (pathname && posthog) {
       let url = globalThis.origin + pathname;
-      if (searchParameters?.toString()) {
+      if (searchParameters.toString()) {
         url = url + `?${searchParameters.toString()}`;
       }
       posthog.capture("$pageview", {
