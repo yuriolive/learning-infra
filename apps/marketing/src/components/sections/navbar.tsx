@@ -15,6 +15,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import { Logo } from "../ui/logo";
+import { ThemeSwitch } from "../ui/theme-switch";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,6 +85,9 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent justify="end">
+        <NavbarItem>
+          <ThemeSwitch />
+        </NavbarItem>
         <NavbarItem className="hidden lg:flex">
           <Link
             href="/login"
@@ -93,7 +97,7 @@ export const Navbar = () => {
             Login
           </Link>
         </NavbarItem>
-        <NavbarItem>
+        <NavbarItem className="flex items-center">
           <Button
             as={Link}
             color="primary"

@@ -2,6 +2,7 @@
 
 import { HeroUIProvider } from "@heroui/react";
 import { PostHogProvider } from "@vendin/analytics/react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useRouter } from "next/navigation";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -9,7 +10,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <PostHogProvider>
-      <HeroUIProvider navigate={(path) => { router.push(path); }}>{children}</HeroUIProvider>
+      <HeroUIProvider
+        navigate={(path) => {
+          router.push(path);
+        }}
+      >
+        <NextThemesProvider attribute="class" defaultTheme="dark">
+          {children}
+        </NextThemesProvider>
+      </HeroUIProvider>
     </PostHogProvider>
   );
 }
