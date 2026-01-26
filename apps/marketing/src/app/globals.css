@@ -3,6 +3,18 @@
 
 @source "../../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 
+@theme {
+  --color-brand-primary: #34d399;
+  --color-brand-bg: #0a0a0a;
+  --color-brand-surface: #171717;
+  --color-brand-text: #ffffff;
+}
+
+:root {
+  --background: var(--color-brand-bg);
+  --foreground: var(--color-brand-text);
+}
+
 html {
   scroll-behavior: smooth;
 }

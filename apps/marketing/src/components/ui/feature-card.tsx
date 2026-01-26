@@ -1,21 +1,26 @@
 "use client";
 
 import { Card, CardHeader, CardBody } from "@heroui/react";
+
 import type { ElementType } from "react";
 
-interface FeatureCardProps {
+interface FeatureCardProperties {
   icon: ElementType;
   title: string;
   description: string;
 }
 
-export const FeatureCard: React.FC<FeatureCardProps> = ({
+export const FeatureCard: React.FC<FeatureCardProperties> = ({
   icon: Icon,
   title,
   description,
 }) => {
   return (
-    <Card className="h-full border-none bg-default-50/50 backdrop-blur-sm hover:bg-default-100/50 transition-colors" shadow="sm" isPressable>
+    <Card
+      className="h-full border-none bg-default-50/50 backdrop-blur-sm hover:bg-default-100/50 transition-colors"
+      shadow="sm"
+      isPressable
+    >
       <CardHeader className="flex gap-3 px-6 pt-6">
         <div className="p-2 rounded-lg bg-primary/10 text-primary">
           <Icon size={24} />

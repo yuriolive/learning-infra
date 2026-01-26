@@ -9,15 +9,15 @@ export const CTASection = () => {
   return (
     <section className="py-24 relative overflow-hidden bg-foreground text-background">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 opacity-50"></div>
-      
+
       <div className="container mx-auto px-6 text-center relative z-10">
         <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-none">
           Ready to scale your <br />
           commerce business?
         </h2>
         <p className="text-xl text-default-400 max-w-2xl mx-auto mb-12">
-          Join the next generation of merchants building on high-performance infrastructure. 
-          No credit card required.
+          Join the next generation of merchants building on high-performance
+          infrastructure. No credit card required.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -26,20 +26,9 @@ export const CTASection = () => {
             color="primary"
             variant="shadow"
             className="font-bold px-12 h-16 text-xl"
-            onPress={() => router.push('/signup')}
+            onPress={() => router.push("/signup")}
           >
             Get Started Now
-          </Button>
-          <Button
-            size="lg"
-            variant="bordered"
-            className="font-semibold px-12 h-16 text-xl border-default-200"
-            onPress={() => {
-                // Scroll to top or something
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          >
-            Back to Top
           </Button>
         </div>
 

@@ -1,14 +1,17 @@
 "use client";
 
-import { StepCard } from "../ui/StepCard";
 import { ArrowRight } from "lucide-react";
+
+import { StepCard } from "../ui/step-card";
 
 export const HowItWorksSection = () => {
   return (
     <section className="py-24 bg-default-50">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 tracking-tight">How It Works</h2>
+          <h2 className="text-4xl font-bold mb-4 tracking-tight">
+            How It Works
+          </h2>
           <p className="text-xl text-default-500 max-w-2xl mx-auto">
             Get your store running in three simple steps.
           </p>
@@ -34,7 +37,7 @@ export const HowItWorksSection = () => {
             badge="< 2 min"
           />
 
-           <div className="hidden lg:flex text-default-300">
+          <div className="hidden lg:flex text-default-300">
             <ArrowRight size={32} />
           </div>
 

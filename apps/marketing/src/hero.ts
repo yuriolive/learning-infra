@@ -2,35 +2,47 @@ import { heroui } from "@heroui/react";
 
 export default heroui({
   themes: {
+    dark: {
+      colors: {
+        background: "#0A0A0A", // Deep Black
+        foreground: "#FFFFFF",
+        primary: {
+          DEFAULT: "#34D399", // Mint Green
+          foreground: "#000000",
+          50: "#ECFDF5",
+          100: "#D1FAE5",
+          200: "#A7F3D0",
+          300: "#6EE7B7",
+          400: "#34D399",
+          500: "#10B981",
+          600: "#059669",
+          700: "#047857",
+          800: "#065F46",
+          900: "#064E3B",
+        },
+        focus: "#34D399",
+      },
+      layout: {
+        disabledOpacity: "0.3",
+        radius: {
+          small: "4px",
+          medium: "6px",
+          large: "8px",
+        },
+        borderWidth: {
+          small: "1px",
+          medium: "2px",
+          large: "3px",
+        },
+      },
+    },
     light: {
+      // Keeping a light mode fallback or removing it if we are dark-only.
+      // For now, let's mirror the structure but focus on Dark mode as default.
       colors: {
         primary: {
-          DEFAULT: "#006FEE",
-          foreground: "#FFFFFF",
-          50: "#E6F1FE",
-          100: "#CCE3FD",
-          200: "#99C7FB",
-          300: "#66AAF9",
-          400: "#338EF7",
-          500: "#006FEE",
-          600: "#005BC4",
-          700: "#00449E",
-          800: "#00337A",
-          900: "#002159",
-        },
-        secondary: {
-          DEFAULT: "#7828C8",
-          foreground: "#FFFFFF",
-          50: "#F2EAFA",
-          100: "#E4D4F4",
-          200: "#C9A9E9",
-          300: "#AF7EDD",
-          400: "#9454D1",
-          500: "#7828C8",
-          600: "#6020A0",
-          700: "#481878",
-          800: "#301050",
-          900: "#180828",
+          DEFAULT: "#34D399",
+          foreground: "#000000",
         },
       },
     },

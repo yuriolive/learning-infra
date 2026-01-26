@@ -14,6 +14,8 @@ import {
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
+import { Logo } from "../ui/logo";
+
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -43,9 +45,7 @@ export const Navbar = () => {
         />
         <NavbarBrand>
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-black overflow-hidden shadow-sm">
-              V
-            </div>
+            <Logo size={40} className="text-foreground" />
             <span className="font-black text-2xl tracking-tighter text-foreground">
               Vendin
             </span>

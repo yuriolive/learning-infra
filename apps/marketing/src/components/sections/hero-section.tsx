@@ -3,7 +3,8 @@
 import { Button, Chip } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { MockDashboard } from "../ui/MockDashboard";
+
+import { MockDashboard } from "../ui/mock-dashboard";
 
 export const HeroSection = () => {
   const router = useRouter();
@@ -35,8 +36,9 @@ export const HeroSection = () => {
           </h1>
 
           <p className="text-xl text-default-500 max-w-2xl mb-12 leading-relaxed">
-            Provision physically isolated e-commerce infrastructure with dedicated databases 
-            and compute. High-performance commerce for the modern era.
+            Provision physically isolated e-commerce infrastructure with
+            dedicated databases and compute. High-performance commerce for the
+            modern era.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto">
@@ -46,7 +48,7 @@ export const HeroSection = () => {
               variant="shadow"
               className="font-bold px-10 h-14 text-lg"
               endContent={<ArrowRight size={20} />}
-              onPress={() => router.push('/signup')}
+              onPress={() => router.push("/signup")}
             >
               Start Free Trial
             </Button>
@@ -55,8 +57,8 @@ export const HeroSection = () => {
               variant="bordered"
               className="font-semibold px-10 h-14 text-lg border-default-200 hover:border-primary transition-colors"
               onPress={() => {
-                const element = document.getElementById('features');
-                element?.scrollIntoView({ behavior: 'smooth' });
+                const element = document.querySelector("#features");
+                element?.scrollIntoView({ behavior: "smooth" });
               }}
             >
               Learn More
@@ -65,12 +67,13 @@ export const HeroSection = () => {
         </div>
 
         {/* Dashboard Preview */}
-        <div className="relative mx-auto max-w-6xl group p-4 sm:p-8">
-           {/* Animated Glow Effect */}
-           <div className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-primary rounded-[2.5rem] blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-700 animate-gradient-x"></div>
-           <div className="relative border border-default-200/50 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-700 group-hover:scale-[1.01]">
-             <MockDashboard />
-           </div>
+        <div className="relative mx-auto max-w-6xl group p-6 sm:p-12">
+          {/* Animated Glow Effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30 rounded-[3rem] blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity duration-700"></div>
+
+          <div className="relative transition-transform duration-700 group-hover:scale-[1.01]">
+            <MockDashboard />
+          </div>
         </div>
       </div>
     </section>
