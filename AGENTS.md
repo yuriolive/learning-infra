@@ -107,7 +107,6 @@ This document describes the agent architecture and guidelines for AI assistants 
 - **Frontend Hosting**: Cloudflare Pages
 - **DNS/SSL**: Cloudflare for SaaS
 - **Storage**: Cloudflare R2
-- **Analytics/Monitoring**: PostHog
 
 ### Future Additions
 
@@ -143,9 +142,9 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ### Environment Variables
 
-- Control Plane: `NEON_API_KEY`, `GCP_PROJECT_ID`, `CLOUDFLARE_API_TOKEN`, `POSTHOG_API_KEY`
+- Control Plane: `NEON_API_KEY`, `GCP_PROJECT_ID`, `CLOUDFLARE_API_TOKEN`
 - Tenant Instances: `DATABASE_URL`, `REDIS_URL`, `TENANT_ID`
-- Storefront/Marketing: `CONTROL_PLANE_API_URL`, `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
+- Storefront: `CONTROL_PLANE_API_URL`, `CLOUDFLARE_ACCOUNT_ID`
 
 ## Testing Strategy
 

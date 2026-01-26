@@ -1,4 +1,3 @@
-import { captureError, initAnalytics } from "@vendin/analytics";
 import { createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
@@ -25,8 +24,6 @@ interface Environment {
   NEON_PROJECT_ID?: BoundSecret;
   ADMIN_API_KEY?: BoundSecret;
   ALLOWED_ORIGINS?: string;
-  POSTHOG_API_KEY?: BoundSecret;
-  POSTHOG_HOST?: string;
 }
 
 const openApiSpecs = new LRUCache<
@@ -62,7 +59,7 @@ function getDocumentationHtml() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendin Control Plane API - Documentation</title>
-  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.28.0/dist/browser/standalone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js"></script>
 </head>
 <body>
   <div id="api-reference"></div>
@@ -144,16 +141,6 @@ function handleApiRequest(
   return tenantRoutes.handleRequest(request);
 }
 
-function resolveEnvironmentSecrets(environment: Environment) {
-  return Promise.all([
-    resolveSecret(environment.DATABASE_URL),
-    resolveSecret(environment.NEON_API_KEY),
-    resolveSecret(environment.NEON_PROJECT_ID),
-    resolveSecret(environment.ADMIN_API_KEY),
-    resolveSecret(environment.POSTHOG_API_KEY),
-  ]);
-}
-
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
@@ -162,25 +149,23 @@ export default {
       nodeEnv: nodeEnvironment,
     });
 
-    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey, postHogApiKey] =
-      await resolveEnvironmentSecrets(environment);
+    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey] =
+      await Promise.all([
+        resolveSecret(environment.DATABASE_URL),
+        resolveSecret(environment.NEON_API_KEY),
+        resolveSecret(environment.NEON_PROJECT_ID),
+        resolveSecret(environment.ADMIN_API_KEY),
+      ]);
 
-    if (postHogApiKey) {
-      initAnalytics(
-        postHogApiKey,
-        environment.POSTHOG_HOST
-          ? { host: environment.POSTHOG_HOST }
-          : undefined,
-      );
-    }
+    const allowedOrigins = environment.ALLOWED_ORIGINS
+      ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+      : [];
 
     const middlewareOptions: MiddlewareOptions = {
       logger,
       adminApiKey,
       nodeEnv: nodeEnvironment,
-      allowedOrigins: environment.ALLOWED_ORIGINS
-        ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-        : [],
+      allowedOrigins,
     };
 
     // Enforce ADMIN_API_KEY in production
@@ -237,10 +222,6 @@ export default {
       return wrapResponse(response, request, middlewareOptions);
     } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
-      captureError(error, {
-        path: url.pathname,
-        method: request.method,
-      });
       const errorResponse = new Response(
         JSON.stringify({ error: "Internal server error" }),
         {

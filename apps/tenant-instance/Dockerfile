@@ -13,20 +13,12 @@ RUN apt-get update && \
 # Copy package.json files
 COPY package.json bun.lock turbo.json ./
 COPY apps/tenant-instance/package.json ./apps/tenant-instance/
-COPY packages/analytics/package.json ./packages/analytics/
-COPY packages/config/package.json ./packages/config/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/medusa/plugins/medusa-plugin-bling/package.json ./packages/medusa/plugins/medusa-plugin-bling/
 
 # Install dependencies
 RUN bun install
 
-# Copy application code and workspace dependencies
+# Copy application code
 COPY apps/tenant-instance ./apps/tenant-instance
-COPY packages/analytics ./packages/analytics
-COPY packages/config ./packages/config
-COPY packages/utils ./packages/utils
-COPY packages/medusa/plugins/medusa-plugin-bling ./packages/medusa/plugins/medusa-plugin-bling
 
 # Build the application
 WORKDIR /app/apps/tenant-instance

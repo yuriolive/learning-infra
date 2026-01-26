@@ -25,7 +25,6 @@ Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisio
 - **DNS/SSL**: Cloudflare for SaaS
 - **Compute**: Google Cloud Run
 - **Storage**: Cloudflare R2
-- **Analytics**: PostHog
 
 ## Subdomain Structure
 

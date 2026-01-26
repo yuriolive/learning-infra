@@ -33,16 +33,10 @@ jobs:
 
       - name: Build Marketing App
         run: bun run build --filter=marketing
-        env:
-          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
 
       - name: Build for Pages
         working-directory: apps/marketing
         run: bun run pages:build
-        env:
-          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
-          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3

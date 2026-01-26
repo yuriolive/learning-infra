@@ -54,7 +54,7 @@ jobs:
         run: bun run build --filter=@vendin/utils
 
       - name: Run database migrations
-        run: bun run db:migrate --filter=@vendin/control-plane
+        run: bun run --filter=@vendin/control-plane db:migrate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 

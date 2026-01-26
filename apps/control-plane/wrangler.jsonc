@@ -46,18 +46,13 @@
         {
           "binding": "CLOUDFLARE_ZONE_ID",
           "store_id": "STORE_ID_PLACEHOLDER",
-        },
-        {
-          "binding": "POSTHOG_API_KEY",
-          "store_id": "STORE_ID_PLACEHOLDER",
-          "secret_name": "posthog-api-key"
+          "secret_name": "cloudflare-zone-id"
         }
       ],
       "vars": {
         "ALLOWED_ORIGINS": "https://vendin.store,https://www.vendin.store",
         "LOG_LEVEL": "info",
-        "NODE_ENV": "production",
-        "POSTHOG_HOST": "https://us.i.posthog.com"
+        "NODE_ENV": "production"
       }
     }
   }

@@ -4,9 +4,7 @@
     "baseUrl": ".",
     "outDir": "./dist",
     "paths": {
-      "@/*": ["./src/*"],
-      "@vendin/utils": ["../../packages/utils/src/index.ts"],
-      "@vendin/utils/*": ["../../packages/utils/src/*.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*", "tests/**/*"],

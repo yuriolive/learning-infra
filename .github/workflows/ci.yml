@@ -180,7 +180,6 @@ jobs:
           context: .
           file: ./apps/tenant-instance/Dockerfile
           push: false
-          load: true
           tags: ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:test
           cache-from: |
             type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:buildcache
