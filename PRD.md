@@ -67,6 +67,7 @@ flowchart TB
         Redis[Upstash Redis]
         R2[Cloudflare R2]
         CFSAAS[Cloudflare for SaaS]
+        PH[PostHog]
     end
 
     M1 & M2 & M3 -->|HTTPS| CF
@@ -79,9 +80,8 @@ flowchart TB
     Provisioner -->|Deploy Instance| GCR
     Provisioner -->|Configure DNS/SSL| CFSAAS
 
-    T1 -->|Isolated DB| Neon
-    T2 -->|Isolated DB| Neon
-    T3 -->|Isolated DB| Neon
+    T1 & T2 & T3 -->|Isolated DB| Neon
+    controlPlane & tenantInstances & storefront -->|Track Events/Errors| PH
 
     T1 & T2 & T3 -->|Cache| Redis
     T1 & T2 & T3 -->|Assets| R2
@@ -282,6 +282,7 @@ flowchart TB
 - Tracing: Distributed tracing for multi-service calls
 - Alerting: Real-time alerts for critical failures
 - Dashboards: Per-tenant and platform-wide metrics
+- **Product Analytics**: User behavior and event tracking via PostHog
 
 **Reliability**
 
