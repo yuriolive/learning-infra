@@ -15,6 +15,7 @@ globs: apps/**/*, infrastructure/**/*
 
 - **Control Plane**: `control-plane-db-url`
 - **Tenant Databases**: `tenant-{tenantId}-db-url`
+- **API Keys (Cloudflare/Neon)**: `cloudflare-api-token`, `neon-api-key`, `neon-project-id`, `posthog-api-key`
 - **GitHub Secrets**: `NEXT_PUBLIC_POSTHOG_KEY`
 - **GitHub Variables**: `NEXT_PUBLIC_POSTHOG_HOST`, `CLOUDFLARE_SECRETS_STORE_ID`
 
