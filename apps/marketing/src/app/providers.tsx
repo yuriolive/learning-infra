@@ -9,7 +9,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <PostHogProvider>
-      <HeroUIProvider navigate={router.push}>{children}</HeroUIProvider>
+      <HeroUIProvider navigate={(path) => router.push(path)}>{children}</HeroUIProvider>
     </PostHogProvider>
   );
 }
