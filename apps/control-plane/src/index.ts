@@ -144,6 +144,16 @@ function handleApiRequest(
   return tenantRoutes.handleRequest(request);
 }
 
+async function resolveEnvironmentSecrets(environment: Environment) {
+  return Promise.all([
+    resolveSecret(environment.DATABASE_URL),
+    resolveSecret(environment.NEON_API_KEY),
+    resolveSecret(environment.NEON_PROJECT_ID),
+    resolveSecret(environment.ADMIN_API_KEY),
+    resolveSecret(environment.POSTHOG_API_KEY),
+  ]);
+}
+
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
@@ -153,30 +163,24 @@ export default {
     });
 
     const [databaseUrl, neonApiKey, neonProjectId, adminApiKey, postHogApiKey] =
-      await Promise.all([
-        resolveSecret(environment.DATABASE_URL),
-        resolveSecret(environment.NEON_API_KEY),
-        resolveSecret(environment.NEON_PROJECT_ID),
-        resolveSecret(environment.ADMIN_API_KEY),
-        resolveSecret(environment.POSTHOG_API_KEY),
-      ]);
+      await resolveEnvironmentSecrets(environment);
 
     if (postHogApiKey) {
       initAnalytics(
         postHogApiKey,
-        environment.POSTHOG_HOST ? { host: environment.POSTHOG_HOST } : {},
+        environment.POSTHOG_HOST
+          ? { host: environment.POSTHOG_HOST }
+          : undefined,
       );
     }
-
-    const allowedOrigins = environment.ALLOWED_ORIGINS
-      ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-      : [];
 
     const middlewareOptions: MiddlewareOptions = {
       logger,
       adminApiKey,
       nodeEnv: nodeEnvironment,
-      allowedOrigins,
+      allowedOrigins: environment.ALLOWED_ORIGINS
+        ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+        : [],
     };
 
     // Enforce ADMIN_API_KEY in production

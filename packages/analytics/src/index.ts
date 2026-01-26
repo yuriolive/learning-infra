@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { PostHog } from "posthog-node";
 
 let client: PostHog | null = null;
@@ -14,9 +13,10 @@ export const initAnalytics = (
     options?.host || process.env.POSTHOG_HOST || "https://app.posthog.com";
 
   if (!key) {
-    // Only warn once
     if (process.env.NODE_ENV !== "test") {
-      console.warn("Analytics: POSTHOG_API_KEY not found, analytics disabled");
+      throw new Error(
+        "PostHog API key is not configured. Analytics is disabled.",
+      );
     }
     return null;
   }
@@ -32,14 +32,18 @@ export const initAnalytics = (
 
 export const captureError = (
   error: unknown,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  context: Record<string, any> = {},
+  context: Record<string, unknown> = {},
 ) => {
   try {
     if (!client) {
-      initAnalytics();
+      if (process.env.NODE_ENV !== "test") {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "Analytics client not initialized, skipping error capture.",
+        );
+      }
+      return;
     }
-    if (!client) return;
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? error.stack : undefined;
@@ -56,6 +60,7 @@ export const captureError = (
       },
     });
   } catch (error_) {
+    // eslint-disable-next-line no-console
     console.error("Failed to capture analytics error", error_);
   }
 };

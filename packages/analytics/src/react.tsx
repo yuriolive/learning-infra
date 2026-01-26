@@ -40,7 +40,7 @@ export function PostHogProvider({
     const apiHost =
       host || process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
 
-    if (key && !posthog.has_opted_in_capturing()) {
+    if (key) {
       posthog.init(key, {
         api_host: apiHost,
         person_profiles: "identified_only",

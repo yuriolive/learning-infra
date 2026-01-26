@@ -1,9 +1,10 @@
-import { MedusaContainer } from "@medusajs/medusa";
 import { initAnalytics } from "@vendin/analytics";
 
-export default async (
+import type { MedusaContainer } from "@medusajs/medusa";
+
+const analyticsLoader = async (
   container: MedusaContainer,
-  config: Record<string, unknown>,
+  _config: Record<string, unknown>,
 ): Promise<void> => {
   try {
     const apiKey = process.env.POSTHOG_API_KEY;
@@ -12,7 +13,10 @@ export default async (
     if (apiKey) {
       initAnalytics(apiKey, host ? { host } : undefined);
     }
-  } catch (err) {
-    console.warn("Failed to init analytics", err);
+  } catch (error) {
+    const logger = container.resolve("logger");
+    logger.warn(`Failed to init analytics: ${error}`);
   }
 };
+
+export default analyticsLoader;
