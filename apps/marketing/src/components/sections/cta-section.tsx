@@ -19,7 +19,7 @@ export const CTASection = () => {
         <Button
           size="lg"
           className="bg-white text-primary font-bold px-8 h-14"
-          onPress={() => router.push('/signup')}
+          onPress={() => router.push("/signup")}
         >
           Start Free Trial
         </Button>

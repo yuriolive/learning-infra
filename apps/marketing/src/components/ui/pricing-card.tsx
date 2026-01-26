@@ -1,10 +1,18 @@
 "use client";
 
-import { Card, CardHeader, CardBody, CardFooter, Button, Chip, Divider } from "@heroui/react";
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Button,
+  Chip,
+  Divider,
+} from "@heroui/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-interface PricingCardProps {
+interface PricingCardProperties {
   name: string;
   price: number;
   period: "month" | "year";
@@ -13,7 +21,7 @@ interface PricingCardProps {
   cta: string;
 }
 
-export const PricingCard: React.FC<PricingCardProps> = ({
+export const PricingCard: React.FC<PricingCardProperties> = ({
   name,
   price,
   period,
@@ -34,9 +42,10 @@ export const PricingCard: React.FC<PricingCardProps> = ({
       <Card
         className={`
           relative h-full
-          ${popular
-            ? 'border-2 border-primary shadow-2xl shadow-primary-500/20'
-            : 'border border-default-200'
+          ${
+            popular
+              ? "border-2 border-primary shadow-2xl shadow-primary-500/20"
+              : "border border-default-200"
           }
           backdrop-blur-sm bg-background/95
           hover:shadow-xl transition-all duration-300
@@ -64,8 +73,8 @@ export const PricingCard: React.FC<PricingCardProps> = ({
         <Divider />
 
         <CardBody className="gap-3 py-6">
-          {features.map((feature, i) => (
-            <div key={i} className="flex items-center gap-2">
+          {features.map((feature, index) => (
+            <div key={index} className="flex items-center gap-2">
               <Chip
                 size="sm"
                 variant="flat"

@@ -1,6 +1,15 @@
 "use client";
 
-import { Button, Card, CardBody, Navbar, NavbarBrand, NavbarContent, NavbarItem, Link } from "@heroui/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  Link,
+} from "@heroui/react";
 
 export default function LandingPage() {
   return (

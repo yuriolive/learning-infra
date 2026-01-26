@@ -7,7 +7,8 @@ export default function SignupPage() {
           This is a placeholder for the signup flow.
         </p>
         <p className="text-sm text-default-400">
-          In a real application, this would contain the signup form that submits to the Control Plane API.
+          In a real application, this would contain the signup form that submits
+          to the Control Plane API.
         </p>
       </div>
     </div>

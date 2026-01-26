@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-interface StepCardProps {
+interface StepCardProperties {
   number: number;
   icon: string;
   title: string;
@@ -10,7 +10,7 @@ interface StepCardProps {
   badge?: string;
 }
 
-export const StepCard: React.FC<StepCardProps> = ({
+export const StepCard: React.FC<StepCardProperties> = ({
   number,
   icon,
   title,
@@ -43,9 +43,7 @@ export const StepCard: React.FC<StepCardProps> = ({
         )}
       </h3>
 
-      <p className="text-default-500">
-        {description}
-      </p>
+      <p className="text-default-500">{description}</p>
     </motion.div>
   );
 };

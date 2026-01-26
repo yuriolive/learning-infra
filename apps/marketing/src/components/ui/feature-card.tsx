@@ -2,23 +2,24 @@
 
 import { Card, CardBody, Chip } from "@heroui/react";
 import { motion } from "framer-motion";
+
 import type { ElementType } from "react";
 
-interface FeatureCardProps {
+interface FeatureCardProperties {
   icon: ElementType;
   title: string;
   description: string;
   color?: "primary" | "secondary" | "success" | "warning";
 }
 
-const colorMap: Record<NonNullable<FeatureCardProps["color"]>, string> = {
+const colorMap: Record<NonNullable<FeatureCardProperties["color"]>, string> = {
   primary: "from-primary-100 to-primary-50",
   secondary: "from-secondary-100 to-secondary-50",
   success: "from-success-100 to-success-50",
   warning: "from-warning-100 to-warning-50",
 };
 
-export const FeatureCard: React.FC<FeatureCardProps> = ({
+export const FeatureCard: React.FC<FeatureCardProperties> = ({
   icon: Icon,
   title,
   description,
@@ -40,11 +41,16 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
       >
         <CardBody className="gap-4 p-6">
           {/* Icon with gradient background */}
-          <div className={`
+          <div
+            className={`
             inline-flex p-3 rounded-xl
-            bg-gradient-to-br ${colorMap[color]}
+            bg-gradient-to-br ${
+              // eslint-disable-next-line security/detect-object-injection
+              colorMap[color]
+            }
             group-hover:scale-110 transition-transform duration-300
-          `}>
+          `}
+          >
             <Icon className="w-8 h-8" />
           </div>
 
