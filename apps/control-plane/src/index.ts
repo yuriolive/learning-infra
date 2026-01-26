@@ -164,8 +164,8 @@ export default {
     if (postHogApiKey) {
       initAnalytics(
         postHogApiKey,
-        environment.POSTHOG_HOST ? { host: environment.POSTHOG_HOST } : {},
-      );
+        postHogApiKey,
+        environment.POSTHOG_HOST ? { host: environment.POSTHOG_HOST } : undefined,
     }
 
     const allowedOrigins = environment.ALLOWED_ORIGINS
