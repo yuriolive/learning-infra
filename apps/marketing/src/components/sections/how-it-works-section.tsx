@@ -1,7 +1,8 @@
 "use client";
 
-import { StepCard } from "../ui/StepCard";
 import { ArrowRight } from "lucide-react";
+
+import { StepCard } from "../ui/step-card";
 
 export const HowItWorksSection = () => {
   return (
@@ -15,7 +16,6 @@ export const HowItWorksSection = () => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-center items-start gap-8 relative">
-
           <StepCard
             number={1}
             icon="📝"
@@ -45,7 +45,6 @@ export const HowItWorksSection = () => {
             title="Start Selling"
             description="Access your admin dashboard, add products, and go live."
           />
-
         </div>
       </div>
     </section>

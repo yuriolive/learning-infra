@@ -2,6 +2,7 @@
 
 import { Card, CardBody, Chip } from "@heroui/react";
 import { motion } from "framer-motion";
+
 import type { ElementType } from "react";
 
 interface FeatureCardProps {
@@ -40,11 +41,16 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
       >
         <CardBody className="gap-4 p-6">
           {/* Icon with gradient background */}
-          <div className={`
+          <div
+            className={`
             inline-flex p-3 rounded-xl
-            bg-gradient-to-br ${colorMap[color]}
+            bg-gradient-to-br ${
+              // eslint-disable-next-line security/detect-object-injection
+              colorMap[color]
+            }
             group-hover:scale-110 transition-transform duration-300
-          `}>
+          `}
+          >
             <Icon className="w-8 h-8" />
           </div>
 

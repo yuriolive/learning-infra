@@ -43,9 +43,7 @@ export const StepCard: React.FC<StepCardProps> = ({
         )}
       </h3>
 
-      <p className="text-default-500">
-        {description}
-      </p>
+      <p className="text-default-500">{description}</p>
     </motion.div>
   );
 };

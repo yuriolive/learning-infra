@@ -1,10 +1,21 @@
 "use client";
 
-import { Navbar as HeroNavbar, NavbarBrand, NavbarContent, NavbarItem, Link, Button } from "@heroui/react";
+import {
+  Navbar as HeroNavbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  Link,
+  Button,
+} from "@heroui/react";
 
 export const Navbar = () => {
   return (
-    <HeroNavbar maxWidth="xl" position="sticky" className="bg-background/70 backdrop-blur-lg">
+    <HeroNavbar
+      maxWidth="xl"
+      position="sticky"
+      className="bg-background/70 backdrop-blur-lg"
+    >
       <NavbarBrand>
         <p className="font-bold text-inherit text-xl">Vendin</p>
       </NavbarBrand>
