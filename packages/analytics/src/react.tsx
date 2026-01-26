@@ -36,13 +36,9 @@ export function PostHogProvider({
   host,
 }: PostHogProviderProperties) {
   useEffect(() => {
-    const key = apiKey || process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    const apiHost =
-      host || process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com";
-
-    if (key) {
-      posthog.init(key, {
-        api_host: apiHost,
+    if (apiKey && !posthog.has_opted_in_capturing()) {
+      posthog.init(apiKey, {
+        api_host: host || "https://app.posthog.com",
         person_profiles: "identified_only",
         capture_pageview: false, // Manually handled for SPA
         capture_pageleave: true,

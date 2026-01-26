@@ -144,7 +144,7 @@ function handleApiRequest(
   return tenantRoutes.handleRequest(request);
 }
 
-async function resolveEnvironmentSecrets(environment: Environment) {
+function resolveEnvironmentSecrets(environment: Environment) {
   return Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -168,7 +168,9 @@ export default {
     if (postHogApiKey) {
       initAnalytics(
         postHogApiKey,
-        environment.POSTHOG_HOST ? { host: environment.POSTHOG_HOST } : {},
+        environment.POSTHOG_HOST
+          ? { host: environment.POSTHOG_HOST }
+          : undefined,
       );
     }
 
