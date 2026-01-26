@@ -2,23 +2,26 @@ import { PostHog } from "posthog-node";
 
 let client: PostHog | null = null;
 
+const getPostHogConfig = (apiKey?: string, options?: { host?: string }) => {
+  const key = apiKey || process.env.POSTHOG_API_KEY;
+  const host =
+    options?.host || process.env.POSTHOG_HOST || "https://app.posthog.com";
+  return { key, host };
+};
+
 export const initAnalytics = (
   apiKey?: string,
   options?: { host?: string; flushAt?: number; flushInterval?: number },
 ) => {
   if (client) return client;
 
-  const key = apiKey || process.env.POSTHOG_API_KEY;
-  const host =
-    options?.host || process.env.POSTHOG_HOST || "https://app.posthog.com";
+  const { key, host } = getPostHogConfig(apiKey, options);
 
   if (!key) {
-    if (process.env.NODE_ENV !== "test") {
-      throw new Error(
-        "PostHog API key is not configured. Analytics is disabled.",
-      );
-    }
-    return null;
+    if (process.env.NODE_ENV === "test") return null;
+    throw new Error(
+      "PostHog API key is not configured. Analytics is disabled.",
+    );
   }
 
   client = new PostHog(key, {
@@ -69,4 +72,9 @@ export const shutdown = async () => {
   if (client) {
     await client.shutdown();
   }
+};
+
+/** @internal */
+export const __resetClient = () => {
+  client = null;
 };
