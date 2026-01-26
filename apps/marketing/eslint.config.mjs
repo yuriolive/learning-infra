@@ -30,6 +30,17 @@ const eslintConfig = defineConfig([
         },
       },
     },
+    rules: {
+      "unicorn/prevent-abbreviations": [
+        "error",
+        {
+          allowList: {
+            Props: true,
+            props: true,
+          },
+        },
+      ],
+    },
   },
 ]);
 

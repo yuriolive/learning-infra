@@ -3,7 +3,7 @@
 import { Card, CardBody, CardFooter, Avatar } from "@heroui/react";
 import { Star } from "lucide-react";
 
-interface TestimonialCardProperties {
+interface TestimonialCardProps {
   quote: string;
   name: string;
   role: string;
@@ -11,7 +11,7 @@ interface TestimonialCardProperties {
   rating?: number;
 }
 
-export const TestimonialCard: React.FC<TestimonialCardProperties> = ({
+export const TestimonialCard: React.FC<TestimonialCardProps> = ({
   quote,
   name,
   role,

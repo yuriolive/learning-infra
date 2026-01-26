@@ -12,7 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-interface PricingCardProperties {
+interface PricingCardProps {
   name: string;
   price: number;
   period: "month" | "year";
@@ -21,7 +21,7 @@ interface PricingCardProperties {
   cta: string;
 }
 
-export const PricingCard: React.FC<PricingCardProperties> = ({
+export const PricingCard: React.FC<PricingCardProps> = ({
   name,
   price,
   period,

@@ -75,7 +75,7 @@ export const HeroSection = () => {
                 color="primary"
                 className="font-semibold px-8"
                 endContent={<ArrowRight size={18} />}
-                onPress={() => { router.push("/signup"); }}
+                onPress={() => router.push("/signup")}
               >
                 Start Free Trial
               </Button>

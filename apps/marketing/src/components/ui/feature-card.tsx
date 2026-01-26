@@ -5,21 +5,21 @@ import { motion } from "framer-motion";
 
 import type { ElementType } from "react";
 
-interface FeatureCardProperties {
+interface FeatureCardProps {
   icon: ElementType;
   title: string;
   description: string;
   color?: "primary" | "secondary" | "success" | "warning";
 }
 
-const colorMap: Record<NonNullable<FeatureCardProperties["color"]>, string> = {
+const colorMap: Record<NonNullable<FeatureCardProps["color"]>, string> = {
   primary: "from-primary-100 to-primary-50",
   secondary: "from-secondary-100 to-secondary-50",
   success: "from-success-100 to-success-50",
   warning: "from-warning-100 to-warning-50",
 };
 
-export const FeatureCard: React.FC<FeatureCardProperties> = ({
+export const FeatureCard: React.FC<FeatureCardProps> = ({
   icon: Icon,
   title,
   description,
