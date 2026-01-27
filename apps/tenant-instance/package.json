@@ -17,6 +17,7 @@
     "start": "medusa start",
     "dev": "TS_NODE_PROJECT=tsconfig.json medusa develop",
     "lint": "bun x eslint .",
+    "lint:fix": "bun x eslint . --fix",
     "typecheck": "bun x tsc --noEmit",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
