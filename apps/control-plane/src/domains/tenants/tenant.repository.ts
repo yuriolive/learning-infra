@@ -2,6 +2,7 @@ import { and, eq, ne } from "drizzle-orm";
 
 import { type Database } from "../../database/database";
 import { tenants } from "../../database/schema";
+import { DuplicateError } from "./tenant.errors";
 
 import type {
   CreateTenantInput,
@@ -36,22 +37,31 @@ export class TenantRepository {
   }
 
   async create(input: CreateTenantInput): Promise<Tenant> {
-    const [tenant] = await this.db
-      .insert(tenants)
-      .values({
-        name: input.name,
-        merchantEmail: input.merchantEmail,
-        subdomain: input.subdomain,
-        plan: input.plan,
-        metadata: input.metadata,
-      })
-      .returning();
+    try {
+      const [tenant] = await this.db
+        .insert(tenants)
+        .values({
+          name: input.name,
+          merchantEmail: input.merchantEmail,
+          subdomain: input.subdomain,
+          plan: input.plan,
+          metadata: input.metadata,
+        })
+        .returning();
 
-    if (!tenant) {
-      throw new Error("Failed to create tenant");
+      if (!tenant) {
+        throw new Error("Failed to create tenant");
+      }
+
+      return mapToTenant(tenant);
+    } catch (error: unknown) {
+      // Check for Postgres unique constraint violation (23505)
+      const code = (error as unknown).code || (error as any).cause?.code;
+      if (code === "23505") {
+        throw new DuplicateError("Subdomain already in use");
+      }
+      throw error;
     }
-
-    return mapToTenant(tenant);
   }
 
   async findById(id: string): Promise<Tenant | null> {

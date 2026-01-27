@@ -1,5 +1,5 @@
 import { createLogger } from "@vendin/utils/logger";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { createTenantRoutes } from "../../../src/domains/tenants/tenant.routes";
@@ -81,6 +81,85 @@ describe("TenantRoutes", () => {
 
       expect(response.status).toBe(409);
       expect(data.error).toBe("Subdomain already in use");
+    });
+
+    it("should return 409 when race condition occurs (pre-check passes but DB fails)", async () => {
+      // 1. Create a tenant
+      await service.createTenant({
+        name: "Existing Store",
+        merchantEmail: "test@example.com",
+        subdomain: "racecondition",
+      });
+
+      // 2. Spy on repository.findBySubdomain to return null (simulate race condition)
+      vi.spyOn(repository, "findBySubdomain").mockResolvedValue(null);
+
+      const request = new Request("http://localhost:3000/api/tenants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "New Store",
+          merchantEmail: "new@example.com",
+          subdomain: "racecondition",
+        }),
+      });
+
+      const response = await routes.handleRequest(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(409);
+      expect(data.error).toBe("Subdomain already in use");
+    });
+  });
+
+  describe("GET /api/tenants/lookup", () => {
+    it("should return tenant when found by subdomain", async () => {
+      const created = await service.createTenant({
+        name: "Lookup Store",
+        merchantEmail: "lookup@example.com",
+        subdomain: "lookupstore",
+      });
+
+      const request = new Request(
+        "http://localhost:3000/api/tenants/lookup?subdomain=lookupstore",
+        {
+          method: "GET",
+        },
+      );
+
+      const response = await routes.handleRequest(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.id).toBe(created.id);
+      expect(data.subdomain).toBe("lookupstore");
+    });
+
+    it("should return 404 when tenant not found by subdomain", async () => {
+      const request = new Request(
+        "http://localhost:3000/api/tenants/lookup?subdomain=unknownstore",
+        {
+          method: "GET",
+        },
+      );
+
+      const response = await routes.handleRequest(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(data.error).toBe("Tenant not found");
+    });
+
+    it("should return 400 when subdomain parameter is missing", async () => {
+      const request = new Request("http://localhost:3000/api/tenants/lookup", {
+        method: "GET",
+      });
+
+      const response = await routes.handleRequest(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Subdomain parameter is required");
     });
   });
 

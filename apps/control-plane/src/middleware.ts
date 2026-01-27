@@ -1,3 +1,5 @@
+import { createHash, timingSafeEqual } from "node:crypto";
+
 import type { Logger } from "@vendin/utils/logger";
 
 export interface MiddlewareOptions {
@@ -11,14 +13,9 @@ export interface MiddlewareOptions {
  * Constant-time string comparison to prevent timing attacks.
  */
 function areEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-  let result = 0;
-  for (let index = 0; index < a.length; index++) {
-    result |= (a.codePointAt(index) ?? 0) ^ (b.codePointAt(index) ?? 0);
-  }
-  return result === 0;
+  const hashA = createHash("sha256").update(a).digest();
+  const hashB = createHash("sha256").update(b).digest();
+  return timingSafeEqual(hashA, hashB);
 }
 
 /**
