@@ -17,6 +17,7 @@ export const auth = betterAuth({
       sendOTP: async ({ phoneNumber, code }) => {
         const token = process.env.WHATSAPP_ACCESS_TOKEN;
         const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        const apiVersion = process.env.WHATSAPP_API_VERSION || "v21.0";
 
         if (!token || !phoneNumberId) {
           console.error("WhatsApp credentials missing");
@@ -28,7 +29,7 @@ export const auth = betterAuth({
 
         try {
           const response = await fetch(
-            `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+            `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`,
             {
               method: "POST",
               headers: {
