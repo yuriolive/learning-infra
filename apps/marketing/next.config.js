@@ -13,8 +13,8 @@ const nextConfig = {
   // Ensure we can use lucide-react and other packages correctly if needed
   transpilePackages: [
     "@heroui/react",
+    "@vendin/analytics",
     "@vendin/assets",
-    "framer-motion",
     "next-themes",
   ],
 };

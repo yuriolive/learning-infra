@@ -47,6 +47,7 @@ coverage/
 dist/
 build/
 .next/
+next-env.d.ts
 .open-next/
 out/
 .dev.vars
