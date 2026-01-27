@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Input, Checkbox, Link } from "@heroui/react";
 
 import { AuthCardWrapper } from "../../components/auth/auth-card-wrapper";
