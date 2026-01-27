@@ -32,6 +32,20 @@ describe("NeonProvider", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockListProjectBranchEndpoints.mockResolvedValue({
+      data: {
+        endpoints: [{ host: "test-host.neon.tech" }],
+      },
+    });
+
+    mockCreateProjectBranchRole.mockResolvedValue({
+      data: {
+        role: { password: "test-password" },
+      },
+    });
+
+    mockCreateProjectBranchDatabase.mockResolvedValue({});
   });
 
   it("should fetch default branch and cache it", async () => {
@@ -47,20 +61,6 @@ describe("NeonProvider", () => {
         ],
       },
     });
-
-    mockListProjectBranchEndpoints.mockResolvedValue({
-      data: {
-        endpoints: [{ host: "test-host.neon.tech" }],
-      },
-    });
-
-    mockCreateProjectBranchRole.mockResolvedValue({
-      data: {
-        role: { password: "test-password" },
-      },
-    });
-
-    mockCreateProjectBranchDatabase.mockResolvedValue({});
 
     // First call
     await provider.createTenantDatabase("tenant-1");
@@ -106,20 +106,6 @@ describe("NeonProvider", () => {
         ],
       },
     });
-
-    mockListProjectBranchEndpoints.mockResolvedValue({
-      data: {
-        endpoints: [{ host: "test-host.neon.tech" }],
-      },
-    });
-
-    mockCreateProjectBranchRole.mockResolvedValue({
-      data: {
-        role: { password: "test-password" },
-      },
-    });
-
-    mockCreateProjectBranchDatabase.mockResolvedValue({});
 
     await provider.createTenantDatabase("tenant-1");
 
