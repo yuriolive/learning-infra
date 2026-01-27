@@ -34,10 +34,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@4bb42022797e8841a41a425319808a38525b642e
 
       - name: Setup Turbo Remote Caching
-        uses: rharkor/caching-for-turbo@v2.3.5
+        uses: rharkor/caching-for-turbo@877d12f458569503463a5df6ec1770e281313e9a
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
