@@ -17,21 +17,29 @@
     "start": "medusa start",
     "dev": "TS_NODE_PROJECT=tsconfig.json medusa develop",
     "lint": "bun x eslint .",
-    "typecheck": "bun x tsc --noEmit"
+    "typecheck": "bun x tsc --noEmit",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest",
+    "db:migrate": "medusa db:migrate",
+    "db:seed": "medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "^2.13.0",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
-    "@vendin/analytics": "workspace:*"
+    "@vendin/analytics": "workspace:*",
+    "pg": "^8.17.2"
   },
   "devDependencies": {
     "@medusajs/cli": "^2.13.0",
     "@medusajs/test-utils": "^2.13.0",
     "@types/node": "^25.0.9",
+    "@vitest/coverage-v8": "^4.0.18",
     "ajv": "^8.17.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

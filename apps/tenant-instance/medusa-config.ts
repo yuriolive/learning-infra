@@ -5,6 +5,15 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd());
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
+    databaseDriverOptions: {
+      connection: {
+        ssl:
+          process.env.NODE_ENV === "production"
+            ? true
+            : { rejectUnauthorized: false },
+      },
+      clientUrl: process.env.DATABASE_URL,
+    },
     redisUrl: process.env.REDIS_URL,
     http: {
       storeCors: process.env.STORE_CORS!,
@@ -14,18 +23,18 @@ export default defineConfig({
       cookieSecret: process.env.COOKIE_SECRET!,
     },
   },
-  modules: {
-    cache: {
+  modules: [
+    {
       resolve: "@medusajs/medusa/cache-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
       },
     },
-    eventBus: {
+    {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
       },
     },
-  },
+  ],
 });
