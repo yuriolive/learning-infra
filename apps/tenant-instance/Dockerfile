@@ -1,47 +1,32 @@
-# Stage 1: Builder
-FROM node:20-slim as builder
+# Stage 1: Runner
+FROM node:20-alpine
 
-WORKDIR /app
+# Install pnpm globally
+RUN npm install pnpm -g
 
-# Install Bun for fast dependency installation
-RUN apt-get update && apt-get install -y curl unzip && \
-    curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:${PATH}"
+# Set working directory to /server
+WORKDIR /server
 
-# Copy workspace configuration
-COPY package.json bun.lock turbo.json ./
-COPY apps/tenant-instance/package.json ./apps/tenant-instance/
-COPY packages/analytics/package.json ./packages/analytics/
-COPY packages/config/package.json ./packages/config/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/medusa/plugins/medusa-plugin-bling/package.json ./packages/medusa/plugins/medusa-plugin-bling/
+# Copy entire context
+COPY . .
 
-# Install dependencies
-RUN bun install
+# Remove packageManager field to avoid pnpm error since root uses bun
+RUN sed -i '/"packageManager":/d' package.json
 
-# Copy application code
-COPY apps/tenant-instance ./apps/tenant-instance
-COPY packages/analytics ./packages/analytics
-COPY packages/config ./packages/config
-COPY packages/utils ./packages/utils
-COPY packages/medusa/plugins/medusa-plugin-bling ./packages/medusa/plugins/medusa-plugin-bling
+# Create pnpm-workspace.yaml to ensure pnpm identifies the monorepo
+RUN printf "packages:\n  - 'apps/*'\n  - 'packages/*'\n  - 'packages/*/plugins/*'\n" > pnpm-workspace.yaml
 
-# Build the application using npx/node
-WORKDIR /app/apps/tenant-instance
-ENV NODE_ENV=development
-RUN npx medusa build
+# Install dependencies using pnpm
+RUN pnpm install --no-frozen-lockfile
 
-# Stage 2: Runner
-FROM node:20-slim
-WORKDIR /app/apps/tenant-instance
+# Set working directory to the app
+WORKDIR /server/apps/tenant-instance
 
-# Copy the entire workspace from builder
-COPY --from=builder /app /app
+# Give execution permission to start.sh
+RUN chmod +x ./start.sh
 
-ENV NODE_ENV=development
-ENV MEDUSA_TELEMETRY_DISABLED=1
+# Expose backend and admin ports
+EXPOSE 9000 5173
 
-EXPOSE 9000
-
-# Run with node/npx to ensure correct metadata discovery
-CMD ["npx", "medusa", "start"]
+# Start with migrations and then the development server
+ENTRYPOINT ["./start.sh"]

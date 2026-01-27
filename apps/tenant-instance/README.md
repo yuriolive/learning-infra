@@ -5,80 +5,56 @@ This application is the MedusaJS backend for the tenant instance.
 ## Prerequisites
 
 - [Docker](https://www.docker.com/)
-- [Bun](https://bun.sh/)
-- [Medusa CLI](https://docs.medusajs.com/development/backend/install) (optional, but recommended: `npm install -g @medusajs/medusa-cli`)
+- [pnpm](https://pnpm.io/)
+- [Medusa CLI](https://docs.medusajs.com/development/backend/install) (optional: `npm install -g @medusajs/medusa-cli`)
 
-## Getting Started
+### 1. Start the Application
 
-### 1. Infrastructure
-
-Start the required infrastructure (PostgreSQL and Redis) using Docker Compose from the root directory:
+Everything is configured to run via Docker. From the **root** directory:
 
 ```bash
-docker compose up -d
+docker compose up tenant-instance
 ```
 
-### 2. Environment Configuration
+This will automatically:
 
-The `.env` file is already created for you in this directory with default local development values.
-If not, copy the template:
+- Start PostgreSQL and Redis.
+- Install dependencies via `pnpm`.
+- Run database migrations.
+- Attempt to seed the database.
+- Start the Medusa development server.
+
+### 2. Verify if it's running
+
+Once the logs show `Medusa server started`, you can access:
+
+- **Backend API**: `http://localhost:9000/health`
+- **Admin Dashboard**: `http://localhost:9000/app` (or `http://localhost:5173`)
+
+### 3. Create Admin User
+
+If you need to create an admin user manually:
 
 ```bash
-cp .env .env.template
+docker compose exec tenant-instance npx medusa user -e admin@vendin.store -p supersecret
 ```
-
-Ensure `DATABASE_URL` and `REDIS_URL` match your Docker configuration.
-
-### 3. Install Dependencies
-
-```bash
-bun install
-```
-
-### 4. Database Migrations
-
-Run the migrations to set up the database schema:
-
-```bash
-npx medusa db:migrate
-# or if you have the CLI installed
-medusa db:migrate
-```
-
-_Note: You might need to seed the database as well._
-
-### 5. Create Admin User (Optional)
-
-To create an admin user for the dashboard:
-
-```bash
-npx medusa user -e admin@vendin.store -p supersecret
-```
-
-### 6. Start the Application
-
-Start the development server:
-
-```bash
-bun run dev
-```
-
-The server should be running at `http://localhost:9000`.
 
 ## Testing
 
 We use [Vitest](https://vitest.dev/) for testing.
 
-Run unit tests:
+### Run tests inside Docker (Recommended)
+
+To ensure the test environment matches the runtime:
 
 ```bash
-bun run test
+docker compose exec tenant-instance pnpm run test
 ```
 
-Run tests with coverage:
+### Run tests locally
 
 ```bash
-bun run test:coverage
+pnpm run test
 ```
 
 ## Docker Compose

@@ -41,6 +41,7 @@ docs/
 
 ### MedusaJS
 
+- [Local Development Guide](../apps/tenant-instance/README.md) - Docker setup, verification, and testing
 - [Private Plugin Development](./medusa/PRIVATE_PLUGINS.md) - Guide for creating and linking plugins
 
 ### Setup

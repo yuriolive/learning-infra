@@ -8,7 +8,10 @@ export default defineConfig({
     databaseLogging: true,
     databaseDriverOptions:
       process.env.NODE_ENV === "development"
-        ? {}
+        ? {
+            ssl: false,
+            sslmode: "disable",
+          }
         : { connection: { ssl: { rejectUnauthorized: false } } },
     redisUrl: process.env.REDIS_URL,
     http: {
@@ -17,6 +20,21 @@ export default defineConfig({
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET!,
       cookieSecret: process.env.COOKIE_SECRET!,
+    },
+  },
+  admin: {
+    vite: (config) => {
+      return {
+        ...config,
+        server: {
+          host: "0.0.0.0",
+          allowedHosts: ["localhost", ".localhost", "127.0.0.1"],
+          hmr: {
+            port: 5173,
+            clientPort: 5173,
+          },
+        },
+      };
     },
   },
   modules: [
