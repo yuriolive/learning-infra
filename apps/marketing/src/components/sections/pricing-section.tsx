@@ -4,6 +4,7 @@ import { Switch, Chip, cn } from "@heroui/react";
 import { useState } from "react";
 
 import { PricingCard } from "../ui/pricing-card";
+import { SectionHeader } from "../ui/section-header";
 
 export const PricingSection = () => {
   const [period, setPeriod] = useState<"month" | "year">("month");
@@ -12,12 +13,12 @@ export const PricingSection = () => {
     <section id="pricing" className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 tracking-tight">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-xl text-default-500 mb-8">
-            Start for free, scale as you grow.
-          </p>
+          <SectionHeader
+            title="Simple, Transparent Pricing"
+            description="Start for free, scale as you grow."
+            className="mb-8"
+            descriptionClassName="mb-8"
+          />
 
           <div className="flex items-center justify-center gap-4">
             <span

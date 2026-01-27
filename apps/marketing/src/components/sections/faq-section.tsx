@@ -40,18 +40,16 @@ const faqs = [
   },
 ];
 
+import { SectionHeader } from "../ui/section-header";
+
 export const FAQSection = () => {
   return (
     <section className="py-24">
       <div className="container mx-auto px-6 max-w-3xl">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-xl text-default-500">
-            Have questions? We have answers.
-          </p>
-        </div>
+        <SectionHeader
+          title="Frequently Asked Questions"
+          description="Have questions? We have answers."
+        />
 
         <Accordion
           variant="splitted"

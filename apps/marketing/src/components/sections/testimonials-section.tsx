@@ -29,18 +29,16 @@ const testimonials = [
   },
 ];
 
+import { SectionHeader } from "../ui/section-header";
+
 export const TestimonialsSection = () => {
   return (
     <section className="py-24 bg-default-50">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 tracking-tight">
-            Trusted by Developers
-          </h2>
-          <p className="text-xl text-default-500">
-            Join thousands of developers building the future of commerce.
-          </p>
-        </div>
+        <SectionHeader
+          title="Trusted by Developers"
+          description="Join thousands of developers building the future of commerce."
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (

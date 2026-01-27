@@ -3,18 +3,22 @@
 import { Button } from "@heroui/react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const unsubscribe = () => {};
+const subscribe = () => unsubscribe;
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 export const ThemeSwitch = () => {
-  const [mounted, setMounted] = useState(false);
+  const isMounted = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
   const { theme, setTheme } = useTheme();
 
-  // useEffect only runs on the client, so now we can safely show the UI
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <div className="p-2 w-10 h-10" />;
+  if (!isMounted) return <div className="p-2 w-10 h-10" />;
 
   return (
     <Button

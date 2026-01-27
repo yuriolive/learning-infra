@@ -39,18 +39,16 @@ const specs = [
   { icon: Lock, title: "GDPR Ready", description: "EU data compliance" },
 ];
 
+import { SectionHeader } from "../ui/section-header";
+
 export const TechSpecsSection = () => {
   return (
     <section className="py-24 bg-background border-t border-default-100">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 tracking-tight">
-            Built for Scale
-          </h2>
-          <p className="text-xl text-default-500">
-            Technical specifications for the modern developer.
-          </p>
-        </div>
+        <SectionHeader
+          title="Built for Scale"
+          description="Technical specifications for the modern developer."
+        />
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {specs.map((spec, index) => (

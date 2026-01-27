@@ -43,18 +43,16 @@ const features = [
   },
 ];
 
+import { SectionHeader } from "../ui/section-header";
+
 export const FeaturesSection = () => {
   return (
     <section id="features" className="py-24 bg-background">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16 max-w-3xl mx-auto">
-          <h2 className="text-4xl font-bold mb-4 tracking-tight">
-            Everything You Need to Scale
-          </h2>
-          <p className="text-xl text-default-500">
-            Enterprise-grade infrastructure, simplified for everyone.
-          </p>
-        </div>
+        <SectionHeader
+          title="Everything You Need to Scale"
+          description="Enterprise-grade infrastructure, simplified for everyone."
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
