@@ -1,15 +1,67 @@
+"use client";
+
+import { Button, Input, Checkbox, Link } from "@heroui/react";
+
+import { AuthCardWrapper } from "../../components/auth/auth-card-wrapper";
+import { PasswordInput } from "../../components/auth/password-input";
+
 export default function SignupPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-default-50 p-4">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Sign Up</h1>
-        <p className="text-xl text-default-500 mb-8">
-          This is a placeholder for the signup flow.
-        </p>
-        <p className="text-sm text-default-400">
-          In a real application, this would contain the signup form that submits to the Control Plane API.
-        </p>
-      </div>
+      <AuthCardWrapper
+        title="Create an account"
+        subtitle="Enter your details to get started"
+        socialActionPrefix="Sign up with"
+        footerContent={
+          <p className="text-small text-default-500">
+            Already have an account?{" "}
+            <Link size="sm" href="/login">
+              Log in
+            </Link>
+          </p>
+        }
+      >
+        <form className="flex flex-col gap-4">
+          <Input
+            label="Full Name"
+            placeholder="John Doe"
+            type="text"
+            variant="bordered"
+          />
+          <Input
+            label="Store Name"
+            placeholder="my-awesome-store"
+            type="text"
+            variant="bordered"
+            description="This will be your subdomain"
+          />
+          <Input
+            label="Email"
+            placeholder="Enter your email"
+            type="email"
+            variant="bordered"
+          />
+          <PasswordInput label="Password" placeholder="Create a password" />
+          <Checkbox
+            classNames={{
+              label: "text-small",
+            }}
+            defaultSelected
+          >
+            I agree to the{" "}
+            <Link href="#" size="sm">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="#" size="sm">
+              Privacy Policy
+            </Link>
+          </Checkbox>
+          <Button color="primary" fullWidth size="lg">
+            Get Started
+          </Button>
+        </form>
+      </AuthCardWrapper>
     </div>
   );
 }
