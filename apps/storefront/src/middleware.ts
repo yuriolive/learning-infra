@@ -24,7 +24,7 @@ export default async function middleware(request: NextRequest) {
   if (hostname.includes("localhost")) {
     const devTenantId = process.env.DEVELOPMENT_TENANT_ID;
     if (devTenantId) {
-      return handleTenantById(request, devTenantId);
+  const rootDomain = process.env.ROOT_DOMAIN || "vendin.store";
     }
     return NextResponse.next();
   }

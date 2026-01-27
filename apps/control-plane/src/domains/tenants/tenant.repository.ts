@@ -56,7 +56,7 @@ export class TenantRepository {
       return mapToTenant(tenant);
     } catch (error: unknown) {
       // Check for Postgres unique constraint violation (23505)
-      const code = (error as any).code || (error as any).cause?.code;
+      const code = (error as unknown).code || (error as any).cause?.code;
       if (code === "23505") {
         throw new DuplicateError("Subdomain already in use");
       }
