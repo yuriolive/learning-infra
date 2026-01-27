@@ -10,7 +10,13 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["**/*.d.ts", "dist/**", "node_modules/**", "**/*.config.{ts,js,mjs}", ".next/**"],
+      exclude: [
+        "**/*.d.ts",
+        "dist/**",
+        "node_modules/**",
+        "**/*.config.{ts,js,mjs}",
+        ".next/**",
+      ],
     },
   },
 });

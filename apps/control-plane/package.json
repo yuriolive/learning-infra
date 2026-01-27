@@ -25,6 +25,7 @@
     "@neondatabase/api-client": "^2.6.0",
     "@neondatabase/serverless": "^1.0.2",
     "@scalar/api-reference": "^1.28.0",
+    "@vendin/analytics": "workspace:*",
     "@vendin/utils": "workspace:*",
     "axios": "^1.13.2",
     "cloudflare": "^5.2.0",
