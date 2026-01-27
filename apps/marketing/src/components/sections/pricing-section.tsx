@@ -30,7 +30,9 @@ export const PricingSection = () => {
             </span>
             <Switch
               isSelected={period === "year"}
-              onValueChange={(checked) => setPeriod(checked ? "year" : "month")}
+              onValueChange={(checked) => {
+                setPeriod(checked ? "year" : "month");
+              }}
               color="primary"
             />
             <span

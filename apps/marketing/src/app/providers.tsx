@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           router.push(path);
         }}
       >
-        <NextThemesProvider attribute="class" defaultTheme="dark">
+        <NextThemesProvider attribute="class" defaultTheme="light">
           {children}
         </NextThemesProvider>
       </HeroUIProvider>

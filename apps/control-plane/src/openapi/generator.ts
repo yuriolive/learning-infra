@@ -14,6 +14,12 @@ import {
 
 const registry = new OpenAPIRegistry();
 
+registry.registerComponent("securitySchemes", "bearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+});
+
 // Define schemas
 const tenantStatusSchema = z.enum(["active", "suspended", "deleted"]);
 
@@ -362,5 +368,6 @@ export const generateOpenAPISpec = (serverUrl: string) => {
         description: "Tenant management operations",
       },
     ],
+    security: [{ bearerAuth: [] }],
   });
 };
