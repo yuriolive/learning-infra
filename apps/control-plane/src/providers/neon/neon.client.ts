@@ -1,5 +1,6 @@
 import { createApiClient } from "@neondatabase/api-client";
 import { type createLogger } from "@vendin/utils/logger";
+import { LRUCache } from "lru-cache";
 
 import type { Api } from "@neondatabase/api-client";
 
@@ -9,6 +10,11 @@ interface NeonProviderConfig {
   defaultDatabase?: string;
   logger: ReturnType<typeof createLogger>;
 }
+
+const projectDefaultBranchCache = new LRUCache<string, string>({
+  max: 100,
+  ttl: 1000 * 60 * 5,
+});
 
 export class NeonProvider {
   private client: Api<unknown>;
@@ -26,7 +32,7 @@ export class NeonProvider {
   }
 
   /**
-   * Creates a new database for a tenant within the shared main branch.
+   * Creates a new database for a tenant within the shared default branch.
    * This ensures isolation at the database level while staying within branch limits.
    * @param tenantId - The unique identifier of the tenant
    * @returns The connection string for the new tenant database
@@ -35,18 +41,17 @@ export class NeonProvider {
     try {
       this.logger.info({ tenantId }, "Creating Neon database for tenant");
 
-      // We use a shared branch (main) for all tenant databases
-      // In a more advanced setup, this could be configurable
-      const branchId = "main";
+      // Resolve the default branch dynamically
+      const branchId = await this.getProjectDefaultBranch(this.projectId);
       const databaseName = `db_${tenantId.replaceAll("-", "_")}`;
 
-      // 1. Get the endpoint for the main branch to get the host
+      // 1. Get the endpoint for the branch to get the host
       const { data: endpointsData } =
         await this.client.listProjectBranchEndpoints(this.projectId, branchId);
 
       const endpoint = endpointsData.endpoints[0];
       if (!endpoint) {
-        throw new Error("No endpoint found for the main branch");
+        throw new Error(`No endpoint found for the branch: ${branchId}`);
       }
 
       // 2. We use a dedicated role for the tenant to maintain some isolation
@@ -102,6 +107,30 @@ export class NeonProvider {
       this.logger.error(
         { error, tenantId },
         "Failed to provision Neon database",
+      );
+      throw error;
+    }
+  }
+
+  private async getProjectDefaultBranch(projectId: string): Promise<string> {
+    const cached = projectDefaultBranchCache.get(projectId);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const { data } = await this.client.listProjectBranches(projectId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const defaultBranch = data.branches.find((b: any) => b.default);
+
+      const branchId = defaultBranch ? defaultBranch.id : "production";
+
+      projectDefaultBranchCache.set(projectId, branchId);
+      return branchId;
+    } catch (error) {
+      this.logger.error(
+        { error, projectId },
+        "Failed to list project branches",
       );
       throw error;
     }
