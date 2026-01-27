@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 
+import { DuplicateError } from "./tenant.errors";
 import {
   createTenantSchema,
   tenantIdSchema,
@@ -49,6 +50,10 @@ export function createTenantRoutes(context: RouteContext) {
         pathParts[0] === "api" &&
         pathParts[1] === "tenants"
       ) {
+        if (pathParts[2] === "lookup") {
+          return handleLookupTenant(request, tenantService, logger);
+        }
+
         const response = await handleResourceRequest(
           request,
           pathParts[2]!,
@@ -77,6 +82,44 @@ async function handleCollectionRequest(
     return response;
   }
   return new Response("Not found", { status: 404 });
+}
+
+async function handleLookupTenant(
+  request: Request,
+  service: TenantService,
+  logger: Logger,
+): Promise<Response> {
+  if (request.method !== "GET") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  try {
+    const url = new URL(request.url);
+    const subdomain = url.searchParams.get("subdomain");
+
+    if (!subdomain) {
+      return new Response(
+        JSON.stringify({ error: "Subdomain parameter is required" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
+    const tenant = await service.getTenantBySubdomain(subdomain);
+
+    return new Response(JSON.stringify(tenant), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    return handleError(error, logger);
+  }
 }
 
 async function handleResourceRequest(
@@ -315,6 +358,15 @@ function handleError(error: unknown, logger: Logger): Response {
         },
       },
     );
+  }
+
+  if (error instanceof DuplicateError) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 409,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   if (error instanceof Error) {
