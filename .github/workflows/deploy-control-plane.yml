@@ -13,6 +13,8 @@ on:
       - "packages/**"
       - "package.json"
       - "bun.lock"
+      - ".github/workflows/deploy-control-plane.yml"
+  workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -35,16 +37,25 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
-      - name: Fetch Database URL from Cloudflare Secrets Store
-        id: fetch-secrets
+      - name: Build dependencies
+        run: bun run build --filter=@vendin/control-plane...
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
+      # We use GCP Secret Manager here because Cloudflare Secrets Store (Beta) does not support
+      # retrieving the actual secret value via CLI/API, only metadata.
+      - name: Get database URL from Secret Manager
+        id: get-db-url
         run: |
-          DB_URL=$(bun wrangler secrets-store secret get ${{ vars.CLOUDFLARE_SECRETS_STORE_ID }} --secret-id ${{ vars.CLOUDFLARE_DB_URL_SECRET_ID }} --remote)
+          DB_URL=$(gcloud secrets versions access latest --secret="control-plane-db-url" --project="${{ env.PROJECT_ID }}")
           echo "::add-mask::$DB_URL"
           echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Run migrations
         run: bun run --cwd apps/control-plane db:migrate
@@ -63,11 +74,25 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
+
+      - name: Build dependencies
+        run: bun run build --filter=@vendin/control-plane...
+
+      - name: Inject Secret Store ID
+        working-directory: apps/control-plane
+        run: |
+          STORE_ID="${{ vars.CLOUDFLARE_SECRETS_STORE_ID }}"
+          if [ -z "$STORE_ID" ]; then
+            echo "Error: CLOUDFLARE_SECRETS_STORE_ID variable is not set."
+            exit 1
+          fi
+          sed -i "s/STORE_ID_PLACEHOLDER/$STORE_ID/g" wrangler.jsonc
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/control-plane
-          command: deploy
+          command: deploy --env production

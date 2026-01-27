@@ -1,6 +1,6 @@
 # Control Plane CD Pipeline
 
-**Last Updated**: 2026-01-23
+**Last Updated**: 2026-01-24
 **Status**: ✅ Active  
 **Component**: `apps/control-plane`  
 **Workflow**: `.github/workflows/deploy-control-plane.yml`
@@ -22,16 +22,11 @@ Automated deployment pipeline for the Control Plane application to Cloudflare Wo
    - Deploy to Cloudflare Workers
    - Routes: `control.vendin.store/*`
 
-## Required GitHub Secrets
+## Environment Variables & Secrets
 
-Configure these secrets in GitHub repository settings:
+For complete environment setup including secrets configuration, GitHub secrets, and local development:
 
-| Secret                        | Description                                          |
-| ----------------------------- | ---------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`        | API Token with Workers and Secrets Store permissions |
-| `CLOUDFLARE_ACCOUNT_ID`       | Your Cloudflare Account ID                           |
-| `CLOUDFLARE_SECRETS_STORE_ID` | (Variable) UUID of the Secrets Store                 |
-| `CLOUDFLARE_DB_URL_SECRET_ID` | (Variable) UUID of the database URL secret           |
+👉 **See [Environment Setup Guide](../ENVIRONMENT_SETUP.md)**
 
 ## Local Deployment
 
@@ -62,8 +57,9 @@ graph LR
     A[Push to main] --> B[Detect Changes]
     B --> C[Install Dependencies]
     C --> D[Run Database Migrations]
-    D --> E[Deploy to Cloudflare]
-    E --> F[Success]
+    D --> E[Inject Secrets Store ID]
+    E --> F[Deploy to Cloudflare]
+    F --> G[Success]
 ```
 
 ## Monitoring & Logs
@@ -78,6 +74,7 @@ bun wrangler tail
 
 ## Related Documentation
 
+- [Environment Setup Guide](../ENVIRONMENT_SETUP.md) - Secrets and environment variables
 - [Cloudflare Setup](../setup/CLOUDFLARE_SETUP.md)
 - [Control Plane API Development](../../.agent/rules/apps/control-plane/api-development.md)
 - [Database Infrastructure](../../.agent/rules/infrastructure/database.md)

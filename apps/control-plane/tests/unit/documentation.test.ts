@@ -1,0 +1,40 @@
+import { describe, expect, it, vi } from "vitest";
+
+// Mock database to avoid connection errors
+vi.mock("../../src/database/database", () => ({
+  createDatabase: () => ({}),
+}));
+
+import worker from "../../src/index";
+
+describe("Documentation Endpoints", () => {
+  const environment = {
+    DATABASE_URL: "postgres://mock:5432/mock",
+  };
+
+  it("should return documentation HTML at /docs", async () => {
+    const request = new Request("http://localhost/docs");
+    const response = await worker.fetch(request, environment as any);
+    const text = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("text/html");
+    // Verify the configuration structure
+    expect(text).toContain('url: "/openapi.json"');
+    expect(text).toContain("spec: {");
+    expect(text).toContain(
+      "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.28.0/dist/browser/standalone.js",
+    );
+  });
+
+  it("should return OpenAPI spec at /openapi.json", async () => {
+    const request = new Request("http://localhost/openapi.json");
+    const response = await worker.fetch(request, environment as any);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/json");
+    expect(data.openapi).toBe("3.1.0");
+    expect(data.info.title).toBe("Vendin Control Plane API");
+  });
+});

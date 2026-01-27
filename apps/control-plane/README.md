@@ -75,6 +75,10 @@ DELETE /api/tenants/{tenantId}
 - `DATABASE_URL` - PostgreSQL connection string.
   - For local: `postgres://postgres:postgres@localhost:5432/control_plane`
   - For production: Use a Neon connection string (uses HTTP driver automatically).
+- `ADMIN_API_KEY` - Secret token required for all `/api/tenants/*` endpoints.
+  - Clients must provide `Authorization: Bearer <ADMIN_API_KEY>`.
+- `ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins in production.
+  - In development, any origin is allowed by default.
 
 ### Local Database
 
@@ -176,7 +180,6 @@ bun run test:coverage
 
 - Uses PostgreSQL for tenant metadata via Drizzle ORM
 - Physical database isolation is handled per tenant as part of provisioning
-- All endpoints include CORS headers for development
-- Request validation is handled via Zod schemas
-- Error handling returns appropriate HTTP status codes
+- All endpoints under `/api/tenants/*` now require Bearer authentication.
+- CORS headers are dynamically controlled via `NODE_ENV` and `ALLOWED_ORIGINS`.
 - Comprehensive unit test suite (note: tests currently require DATABASE_URL or mocking)

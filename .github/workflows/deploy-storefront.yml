@@ -10,6 +10,7 @@ on:
       - "package.json"
       - "bun.lock"
       - "turbo.json"
+      - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
 
 jobs:
@@ -33,10 +34,16 @@ jobs:
 
       - name: Build Storefront
         run: bun run build --filter=storefront
+        env:
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
 
       - name: Build for Pages
         working-directory: apps/storefront
         run: bun run pages:build
+        env:
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
@@ -44,4 +51,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/storefront
-          command: run pages:deploy
+          command: deploy
