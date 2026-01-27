@@ -135,6 +135,12 @@ This document describes the agent architecture and guidelines for AI assistants 
 - Store connection strings securely (environment variables or secrets manager)
 - Never share database connections between tenants
 
+### File Naming
+
+- **Strictly use `kebab-case`** for all filenames (e.g., `step-card.tsx`, `hero-section.tsx`).
+- **DO NOT** use PascalCase (e.g., `StepCard.tsx`) or camelCase.
+- This rule applies to all files, including React components, utilities, and configuration files.
+
 ### API Design
 
 - Control Plane API: RESTful endpoints for tenant management

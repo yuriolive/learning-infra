@@ -1,36 +1,52 @@
 "use client";
 
+import { Switch, Chip, cn } from "@heroui/react";
 import { useState } from "react";
-import { PricingCard } from "../ui/PricingCard";
-import { Switch, cn } from "@heroui/react";
+
+import { PricingCard } from "../ui/pricing-card";
+import { SectionHeader } from "../ui/section-header";
 
 export const PricingSection = () => {
   const [period, setPeriod] = useState<"month" | "year">("month");
 
   return (
-    <section className="py-24 bg-default-50/50">
+    <section id="pricing" className="py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-xl text-default-500 mb-8">
-            Start for free, scale as you grow.
-          </p>
+          <SectionHeader
+            title="Simple, Transparent Pricing"
+            description="Start for free, scale as you grow."
+            className="mb-8"
+            descriptionClassName="mb-8"
+          />
 
           <div className="flex items-center justify-center gap-4">
-            <span className={cn("text-sm font-medium", period === "month" ? "text-foreground" : "text-default-400")}>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                period === "month" ? "text-foreground" : "text-default-400",
+              )}
+            >
               Monthly
             </span>
             <Switch
               isSelected={period === "year"}
-              onValueChange={(checked) => setPeriod(checked ? "year" : "month")}
+              onValueChange={(checked) => {
+                setPeriod(checked ? "year" : "month");
+              }}
               color="primary"
             />
-            <span className={cn("text-sm font-medium", period === "year" ? "text-foreground" : "text-default-400")}>
+            <span
+              className={cn(
+                "text-sm font-medium",
+                period === "year" ? "text-foreground" : "text-default-400",
+              )}
+            >
               Yearly
             </span>
-            <span className="text-xs font-bold text-success bg-success-50 px-2 py-1 rounded-full">
+            <Chip size="sm" color="success" variant="flat" className="ml-2">
               Save 20%
-            </span>
+            </Chip>
           </div>
         </div>
 
@@ -44,7 +60,7 @@ export const PricingSection = () => {
               "1,000 orders/month",
               "Community support",
               "All core features",
-              "Scale-to-zero infrastructure"
+              "Scale-to-zero infrastructure",
             ]}
             cta="Start Free"
             popular={true}
@@ -58,7 +74,7 @@ export const PricingSection = () => {
               "Unlimited orders",
               "Email support",
               "Custom domain",
-              "Advanced analytics"
+              "Advanced analytics",
             ]}
             cta="Start Trial"
           />
@@ -72,7 +88,7 @@ export const PricingSection = () => {
               "Priority support",
               "Dedicated infrastructure",
               "Multiple staff accounts",
-              "API access"
+              "API access",
             ]}
             cta="Contact Sales"
           />

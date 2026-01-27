@@ -3,6 +3,7 @@
 
 # GitHub App credentials
 gha-creds-*.json
+*.pem
 
 # Node.js
 node_modules
@@ -16,6 +17,8 @@ coverage
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnp
+.pnp.js
 
 # Turbo
 .turbo/
@@ -28,7 +31,9 @@ yarn-error.log*
 .env.local
 .env.development.local
 .env.test.local
+.env.test.local
 .env.production.local
+.env*.local
 
 # Logs
 logs
@@ -47,9 +52,11 @@ coverage/
 dist/
 build/
 .next/
+next-env.d.ts
 .open-next/
 out/
 .dev.vars
+.vercel
 
 # OS generated files
 .DS_Store
