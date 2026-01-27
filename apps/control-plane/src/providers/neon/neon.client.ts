@@ -2,7 +2,7 @@ import { createApiClient } from "@neondatabase/api-client";
 import { type createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
-import type { Api } from "@neondatabase/api-client";
+import type { Api, ProjectBranch } from "@neondatabase/api-client";
 
 interface NeonProviderConfig {
   apiKey: string;
@@ -120,8 +120,9 @@ export class NeonProvider {
 
     try {
       const { data } = await this.client.listProjectBranches(projectId);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const defaultBranch = data.branches.find((b: any) => b.default);
+      const defaultBranch = data.branches.find(
+        (b: ProjectBranch) => b.default,
+      );
 
       const branchId = defaultBranch ? defaultBranch.id : "production";
 
