@@ -23,7 +23,7 @@ describe("Documentation Endpoints", () => {
     expect(text).toContain('url: "/openapi.json"');
     expect(text).toContain("spec: {");
     expect(text).toContain(
-      "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.28.0/dist/browser/standalone.js",
+      "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.43.14",
     );
   });
 
