@@ -1,7 +1,8 @@
 services:
-  postgres:
+  medusa-db:
+    container_name: medusa-db
     image: postgres:17
-    command: "-d 1"
+    command: postgres -c max_connections=500 -c shared_buffers=256MB
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -15,32 +16,48 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - medusa-net
 
   neon-proxy:
     image: ghcr.io/timowilhelm/local-neon-http-proxy:main
     environment:
-      - PG_CONNECTION_STRING=postgres://postgres:postgres@postgres:5432/main
+      - PG_CONNECTION_STRING=postgres://postgres:postgres@medusa-db:5432/main
     ports:
       - "4444:4444"
     depends_on:
-      postgres:
+      medusa-db:
         condition: service_healthy
+    networks:
+      - medusa-net
 
-  redis:
+  medusa-redis:
+    container_name: medusa-redis
     image: redis:7
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - medusa-net
 
   tenant-instance:
+    container_name: medusa-app
     build:
       context: .
       dockerfile: apps/tenant-instance/Dockerfile
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/main
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgres://postgres:postgres@medusa-db:5432/main?sslmode=disable
+      - PGHOST=medusa-db
+      - PGPORT=5432
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - PGDATABASE=main
+      - REDIS_URL=redis://medusa-redis:6379
       - NODE_ENV=development
+      - NODE_OPTIONS=--max-old-space-size=4096
+      - __MEDUSA_DB_CONNECTION_MAX_RETRIES=20
+      - __MEDUSA_DB_CONNECTION_RETRY_DELAY=5000
       - STORE_CORS=http://localhost:8000
       - ADMIN_CORS=http://localhost:7000,http://localhost:7001
       - AUTH_CORS=http://localhost:7000,http://localhost:7001
@@ -48,11 +65,12 @@ services:
       - COOKIE_SECRET=supersecret
     ports:
       - "9000:9000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
+    networks:
+      - medusa-net
+
+networks:
+  medusa-net:
+    driver: bridge
 
 volumes:
   db_data:

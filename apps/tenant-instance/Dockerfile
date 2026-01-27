@@ -28,7 +28,7 @@ COPY packages/medusa/plugins/medusa-plugin-bling ./packages/medusa/plugins/medus
 
 # Build the application using npx/node
 WORKDIR /app/apps/tenant-instance
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 RUN npx medusa build
 
 # Stage 2: Runner
@@ -38,7 +38,7 @@ WORKDIR /app/apps/tenant-instance
 # Copy the entire workspace from builder
 COPY --from=builder /app /app
 
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 ENV MEDUSA_TELEMETRY_DISABLED=1
 
 EXPOSE 9000

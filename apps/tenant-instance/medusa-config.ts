@@ -5,7 +5,7 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd());
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
-    databaseLogging: process.env.NODE_ENV === "development",
+    databaseLogging: true,
     databaseDriverOptions:
       process.env.NODE_ENV === "development"
         ? {}

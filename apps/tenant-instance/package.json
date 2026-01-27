@@ -22,8 +22,8 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:watch": "vitest",
-    "db:migrate": "medusa db:migrate",
-    "db:seed": "medusa exec ./src/scripts/seed.ts"
+    "db:migrate": "TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
+    "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "^2.13.0",
