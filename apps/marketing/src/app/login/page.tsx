@@ -112,7 +112,14 @@ export default function LoginPage() {
                 </form>
             </Tab>
             <Tab key="whatsapp" title="WhatsApp">
-                <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); otpSent ? handleWhatsAppVerify() : handleWhatsAppSendOtp(); }}>
+                <form className="flex flex-col gap-4" onSubmit={(e) => {
+                    e.preventDefault();
+                    if (otpSent) {
+                        handleWhatsAppVerify();
+                    } else {
+                        handleWhatsAppSendOtp();
+                    }
+                }}>
                      <Input
                         label="Phone Number"
                         placeholder="+1234567890"
