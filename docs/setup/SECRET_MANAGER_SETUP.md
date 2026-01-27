@@ -43,6 +43,20 @@ echo -n "your-neon-project-id" | \
     --project=vendin-store \
     --data-file=- \
     --labels=environment=production,service=control-plane
+
+# Create Admin API Key secret
+echo -n "your-secure-admin-api-key" | \
+  gcloud secrets create control-plane-admin-api-key \
+    --project=vendin-store \
+    --data-file=- \
+    --labels=environment=production,service=control-plane
+
+# Create Cloudflare Zone ID secret
+echo -n "your-cloudflare-zone-id" | \
+  gcloud secrets create cloudflare-zone-id \
+    --project=vendin-store \
+    --data-file=- \
+    --labels=environment=production,service=control-plane
 ```
 
 ## Step 3: Grant Access to Service Account
@@ -62,6 +76,16 @@ gcloud secrets add-iam-policy-binding neon-api-key \
   --role="roles/secretmanager.secretAccessor"
 
 gcloud secrets add-iam-policy-binding neon-project-id \
+  --project=vendin-store \
+  --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding control-plane-admin-api-key \
+  --project=vendin-store \
+  --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
+  --role="roles/secretmanager.secretAccessor"
+
+gcloud secrets add-iam-policy-binding cloudflare-zone-id \
   --project=vendin-store \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/secretmanager.secretAccessor"

@@ -1,3 +1,4 @@
+import { captureError, initAnalytics } from "@vendin/analytics";
 import { createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
@@ -5,7 +6,10 @@ import { createDatabase } from "./database/database";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
+import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
+
+import type { MiddlewareOptions } from "./middleware";
 
 interface SecretBinding {
   get(): Promise<string>;
@@ -19,6 +23,10 @@ interface Environment {
   NODE_ENV?: string;
   NEON_API_KEY?: BoundSecret;
   NEON_PROJECT_ID?: BoundSecret;
+  ADMIN_API_KEY?: BoundSecret;
+  ALLOWED_ORIGINS?: string;
+  POSTHOG_API_KEY?: BoundSecret;
+  POSTHOG_HOST?: string;
 }
 
 const openApiSpecs = new LRUCache<
@@ -54,7 +62,7 @@ function getDocumentationHtml() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vendin Control Plane API - Documentation</title>
-  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@latest/dist/browser/standalone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.28.0/dist/browser/standalone.js"></script>
 </head>
 <body>
   <div id="api-reference"></div>
@@ -109,7 +117,6 @@ function handleApiRequest(
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
         },
       },
     );
@@ -121,7 +128,6 @@ function handleApiRequest(
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   }
@@ -131,24 +137,21 @@ function handleApiRequest(
       status: 200,
       headers: {
         "Content-Type": "text/html",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  }
-
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods":
-          "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
       },
     });
   }
 
   return tenantRoutes.handleRequest(request);
+}
+
+function resolveEnvironmentSecrets(environment: Environment) {
+  return Promise.all([
+    resolveSecret(environment.DATABASE_URL),
+    resolveSecret(environment.NEON_API_KEY),
+    resolveSecret(environment.NEON_PROJECT_ID),
+    resolveSecret(environment.ADMIN_API_KEY),
+    resolveSecret(environment.POSTHOG_API_KEY),
+  ]);
 }
 
 export default {
@@ -159,11 +162,43 @@ export default {
       nodeEnv: nodeEnvironment,
     });
 
-    const [databaseUrl, neonApiKey, neonProjectId] = await Promise.all([
-      resolveSecret(environment.DATABASE_URL),
-      resolveSecret(environment.NEON_API_KEY),
-      resolveSecret(environment.NEON_PROJECT_ID),
-    ]);
+    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey, postHogApiKey] =
+      await resolveEnvironmentSecrets(environment);
+
+    if (postHogApiKey) {
+      initAnalytics(
+        postHogApiKey,
+        environment.POSTHOG_HOST
+          ? { host: environment.POSTHOG_HOST }
+          : undefined,
+      );
+    }
+
+    const middlewareOptions: MiddlewareOptions = {
+      logger,
+      adminApiKey,
+      nodeEnv: nodeEnvironment,
+      allowedOrigins: environment.ALLOWED_ORIGINS
+        ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+        : [],
+    };
+
+    // Enforce ADMIN_API_KEY in production
+    if (nodeEnvironment === "production" && !adminApiKey) {
+      logger.error(
+        "ADMIN_API_KEY is required in production but was not configured",
+      );
+      return new Response(
+        JSON.stringify({
+          error: "Configuration Error",
+          message: "Service is not properly configured",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
 
     const database = createDatabase(databaseUrl, nodeEnvironment);
     const tenantRepository = new TenantRepository(database);
@@ -178,10 +213,42 @@ export default {
     const origin = `${url.protocol}//${url.host}`;
 
     try {
-      return await handleApiRequest(request, url, origin, tenantRoutes);
+      // Handle OPTIONS preflight requests
+      if (request.method === "OPTIONS") {
+        const response = new Response(null, { status: 204 });
+        return wrapResponse(response, request, middlewareOptions);
+      }
+
+      // Apply Auth Middleware for /api/tenants/*
+      if (url.pathname.startsWith("/api/tenants")) {
+        const authMiddleware = createAuthMiddleware(middlewareOptions);
+        const authResponse = authMiddleware(request);
+        if (authResponse) {
+          return wrapResponse(authResponse, request, middlewareOptions);
+        }
+      }
+
+      const response = await handleApiRequest(
+        request,
+        url,
+        origin,
+        tenantRoutes,
+      );
+      return wrapResponse(response, request, middlewareOptions);
     } catch (error: unknown) {
       logger.error({ error }, "Unhandled error in server");
-      return new Response("Internal server error", { status: 500 });
+      captureError(error, {
+        path: url.pathname,
+        method: request.method,
+      });
+      const errorResponse = new Response(
+        JSON.stringify({ error: "Internal server error" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      return wrapResponse(errorResponse, request, middlewareOptions);
     }
   },
 };
