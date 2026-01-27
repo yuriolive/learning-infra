@@ -7,10 +7,7 @@ export default defineConfig({
     databaseUrl: process.env.DATABASE_URL,
     databaseDriverOptions: {
       connection: {
-        ssl:
-          process.env.NODE_ENV === "production"
-            ? true
-            : { rejectUnauthorized: false },
+        ssl: process.env.NODE_ENV === "production" ? true : false,
       },
       clientUrl: process.env.DATABASE_URL,
     },
