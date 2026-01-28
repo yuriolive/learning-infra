@@ -168,7 +168,7 @@ jobs:
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: []
 
     permissions:
       contents: read
