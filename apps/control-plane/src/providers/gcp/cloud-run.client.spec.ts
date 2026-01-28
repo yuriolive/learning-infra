@@ -291,7 +291,10 @@ describe("CloudRunProvider", () => {
       const calls =
         mockRunClient.projects.locations.services.setIamPolicy.mock.calls;
       expect(calls.length).toBeGreaterThan(0);
-      const call = calls[0]![0];
+      const call = calls[0]?.[0];
+      if (!call) {
+        throw new Error("Expected setIamPolicy to have been called");
+      }
       const invokerBinding = call.requestBody.policy.bindings.find(
         (b: { role: string; members: string[] }) =>
           b.role === "roles/run.invoker",

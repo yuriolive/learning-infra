@@ -82,6 +82,24 @@ describe("TenantRoutes", () => {
       expect(response.status).toBe(409);
       expect(data.error).toBe("Subdomain already in use");
     });
+
+    it("should return 400 when subdomain is missing", async () => {
+      const request = new Request("http://localhost:3000/api/tenants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "No Subdomain Store",
+          merchantEmail: "test@example.com",
+          // subdomain is omitted
+        }),
+      });
+
+      const response = await routes.handleRequest(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe("Subdomain is required for deployment");
+    });
   });
 
   describe("GET /api/tenants", () => {

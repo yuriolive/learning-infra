@@ -448,7 +448,7 @@ export class BlingOrderMapper {
       const parsed = Number.parseFloat(value.replaceAll(",", "."));
       return Number.isNaN(parsed) ? 0 : parsed;
     }
-    if (value && typeof value === "object") {
+    if (typeof value === "object") {
       const v = value as { toNumber?: () => number; value?: unknown };
       if (typeof v.toNumber === "function") return v.toNumber();
       if ("value" in v) return this.safeNumber(v.value);
