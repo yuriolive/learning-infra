@@ -13,6 +13,7 @@ import type { Logger } from "@vendin/utils/logger";
 export interface RouteContext {
   logger: Logger;
   tenantService: TenantService;
+  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
 /**
@@ -24,7 +25,7 @@ export interface RouteContext {
  * @returns Object with handleRequest method for processing HTTP requests
  */
 export function createTenantRoutes(context: RouteContext) {
-  const { logger, tenantService } = context;
+  const { logger, tenantService, waitUntil } = context;
 
   return {
     async handleRequest(request: Request): Promise<Response> {
@@ -40,6 +41,7 @@ export function createTenantRoutes(context: RouteContext) {
           request,
           tenantService,
           logger,
+          waitUntil,
         );
         return response;
       }
@@ -67,9 +69,15 @@ async function handleCollectionRequest(
   request: Request,
   service: TenantService,
   logger: Logger,
+  waitUntil?: (promise: Promise<unknown>) => void,
 ): Promise<Response> {
   if (request.method === "POST") {
-    const response = await handleCreateTenant(request, service, logger);
+    const response = await handleCreateTenant(
+      request,
+      service,
+      logger,
+      waitUntil,
+    );
     return response;
   }
   if (request.method === "GET") {
@@ -112,6 +120,7 @@ async function handleResourceRequest(
  * @param request - HTTP request containing tenant data in JSON body
  * @param service - Tenant service instance for business logic
  * @param logger - Logger instance for error tracking
+ * @param waitUntil - Optional callback to schedule background work
  * @returns HTTP response with created tenant (201) or error (400/409/500)
  * @throws ZodError when validation fails (returns 400)
  * @example
@@ -128,12 +137,16 @@ async function handleCreateTenant(
   request: Request,
   service: TenantService,
   logger: Logger,
+  waitUntil?: (promise: Promise<unknown>) => void,
 ): Promise<Response> {
   try {
     const body = await request.json();
     const validated = createTenantSchema.parse(body);
 
-    const tenant = await service.createTenant(validated as CreateTenantInput);
+    const tenant = await service.createTenant(
+      validated as CreateTenantInput,
+      waitUntil,
+    );
 
     return new Response(JSON.stringify(tenant), {
       status: 201,
@@ -329,6 +342,14 @@ function handleError(error: unknown, logger: Logger): Response {
     if (error.message === "Subdomain already in use") {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 409,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+    if (error.message === "Subdomain is required for deployment") {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 400,
         headers: {
           "Content-Type": "application/json",
         },

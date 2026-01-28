@@ -52,13 +52,26 @@
           "binding": "POSTHOG_API_KEY",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "posthog-api-key"
+        },
+        {
+          "binding": "UPSTASH_REDIS_URL",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "upstash-redis-url"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials"
         }
       ],
       "vars": {
         "ALLOWED_ORIGINS": "https://vendin.store,https://www.vendin.store",
         "LOG_LEVEL": "info",
         "NODE_ENV": "production",
-        "POSTHOG_HOST": "https://us.i.posthog.com"
+        "POSTHOG_HOST": "https://us.i.posthog.com",
+        "GCP_PROJECT_ID": "VALUE_PLACEHOLDER",
+        "GCP_REGION": "us-central1",
+        "TENANT_IMAGE_TAG": "europe-docker.pkg.dev/VALUE_PLACEHOLDER/repo/tenant-instance:latest"
       }
     }
   }

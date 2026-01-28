@@ -27,6 +27,11 @@ interface Environment {
   ALLOWED_ORIGINS?: string;
   POSTHOG_API_KEY?: BoundSecret;
   POSTHOG_HOST?: string;
+  GCP_PROJECT_ID?: string;
+  GCP_REGION?: string;
+  TENANT_IMAGE_TAG?: string;
+  UPSTASH_REDIS_URL?: BoundSecret;
+  GOOGLE_APPLICATION_CREDENTIALS?: BoundSecret;
 }
 
 const openApiSpecs = new LRUCache<
@@ -151,19 +156,32 @@ function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.NEON_PROJECT_ID),
     resolveSecret(environment.ADMIN_API_KEY),
     resolveSecret(environment.POSTHOG_API_KEY),
+    resolveSecret(environment.UPSTASH_REDIS_URL),
+    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS),
   ]);
 }
 
 export default {
-  async fetch(request: Request, environment: Environment): Promise<Response> {
+  async fetch(
+    request: Request,
+    environment: Environment,
+    context?: { waitUntil: (promise: Promise<unknown>) => void },
+  ): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
     const logger = createLogger({
       logLevel: environment.LOG_LEVEL,
       nodeEnv: nodeEnvironment,
     });
 
-    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey, postHogApiKey] =
-      await resolveEnvironmentSecrets(environment);
+    const [
+      databaseUrl,
+      neonApiKey,
+      neonProjectId,
+      adminApiKey,
+      postHogApiKey,
+      upstashRedisUrl,
+      googleApplicationCredentials,
+    ] = await resolveEnvironmentSecrets(environment);
 
     if (postHogApiKey) {
       initAnalytics(
@@ -206,8 +224,18 @@ export default {
       logger,
       neonApiKey,
       neonProjectId,
+      gcpCredentialsJson: googleApplicationCredentials,
+      gcpProjectId: environment.GCP_PROJECT_ID,
+      gcpRegion: environment.GCP_REGION,
+      tenantImageTag: environment.TENANT_IMAGE_TAG,
+      upstashRedisUrl,
     });
-    const tenantRoutes = createTenantRoutes({ logger, tenantService });
+    const waitUntil = context?.waitUntil.bind(context);
+    const tenantRoutes = createTenantRoutes({
+      logger,
+      tenantService,
+      ...(waitUntil ? { waitUntil } : {}),
+    });
 
     const url = new URL(request.url);
     const origin = `${url.protocol}//${url.host}`;

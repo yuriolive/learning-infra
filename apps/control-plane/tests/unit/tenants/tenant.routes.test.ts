@@ -89,10 +89,12 @@ describe("TenantRoutes", () => {
       await service.createTenant({
         name: "Store 1",
         merchantEmail: "store1@example.com",
+        subdomain: "store1",
       });
       await service.createTenant({
         name: "Store 2",
         merchantEmail: "store2@example.com",
+        subdomain: "store2",
       });
 
       const request = new Request("http://localhost:3000/api/tenants", {
@@ -124,6 +126,7 @@ describe("TenantRoutes", () => {
       const created = await service.createTenant({
         name: "Test Store",
         merchantEmail: "test@example.com",
+        subdomain: "teststore",
       });
 
       const request = new Request(
@@ -177,6 +180,7 @@ describe("TenantRoutes", () => {
       const created = await service.createTenant({
         name: "Original Name",
         merchantEmail: "test@example.com",
+        subdomain: "original",
       });
 
       const request = new Request(
@@ -223,6 +227,7 @@ describe("TenantRoutes", () => {
       const created = await service.createTenant({
         name: "Test Store",
         merchantEmail: "test@example.com",
+        subdomain: "teststore",
       });
 
       const request = new Request(
