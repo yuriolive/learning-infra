@@ -7,7 +7,8 @@ import { fetchBlingProductsStep } from "./steps/fetch-bling-products-step.js";
 import { updateInventoryStep } from "./steps/update-inventory-step.js";
 import { upsertMedusaProductsStep } from "./steps/upsert-medusa-products-step.js";
 
-export const syncProductsFromBlingWorkflow = createWorkflow(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const syncProductsFromBlingWorkflow: any = createWorkflow(
   "sync-products-from-bling",
   () => {
     // 1. Fetch

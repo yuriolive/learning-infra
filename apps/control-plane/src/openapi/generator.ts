@@ -334,7 +334,8 @@ registry.registerPath({
 
 const generator = new OpenApiGeneratorV3(registry.definitions);
 
-export const generateOpenAPISpec = (serverUrl: string) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const generateOpenAPISpec = (serverUrl: string): any => {
   return generator.generateDocument({
     openapi: "3.1.0",
     info: {

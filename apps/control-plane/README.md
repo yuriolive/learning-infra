@@ -67,7 +67,7 @@ DELETE /api/tenants/{tenantId}
 
 ### Prerequisites
 
-- Bun runtime installed
+- Node.js runtime installed
 - PostgreSQL database (or Neon connection string)
 
 ### Environment Variables
@@ -86,12 +86,12 @@ The project uses Docker Compose to run a local PostgreSQL instance.
 
 1. Run `docker-compose up -d` at the root.
 2. Ensure `DATABASE_URL` is set in `.env`.
-3. Push schema: `bun run db:push`.
+3. Push schema: `pnpm run db:push`.
 
 ### Running the Server
 
 ```bash
-bun dev
+pnpm run dev
 ```
 
 The server will start on `http://localhost:3000` (or the port specified in `PORT` environment variable).
@@ -100,41 +100,41 @@ The server will start on `http://localhost:3000` (or the port specified in `PORT
 
 ```bash
 # Generate migration files
-bun run db:generate
+pnpm run db:generate
 
 # Apply migrations to database
-bun run db:migrate
+pnpm run db:migrate
 
 # Push schema changes directly (for development)
-bun run db:push
+pnpm run db:push
 
 # Open Drizzle Studio
-bun run db:studio
+pnpm run db:studio
 ```
 
 ### Building
 
 ```bash
-bun run build
+pnpm run build
 ```
 
 ### Type Checking
 
 ```bash
-bun run typecheck
+pnpm run typecheck
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-bun run test
+pnpm run test
 
 # Run tests in watch mode
-bun run test:watch
+pnpm run test:watch
 
 # Run tests with coverage
-bun run test:coverage
+pnpm run test:coverage
 ```
 
 ## Architecture
@@ -167,13 +167,13 @@ Current test coverage: **96%**
 
 ```bash
 # Run all tests
-bun run test
+pnpm run test
 
 # Watch mode for development
-bun run test:watch
+pnpm run test:watch
 
 # Generate coverage report
-bun run test:coverage
+pnpm run test:coverage
 ```
 
 ## Notes

@@ -1,0 +1,78 @@
+"use client";
+
+import { Card, CardBody } from "@heroui/react";
+import {
+  Check,
+  Zap,
+  Database,
+  Cloud,
+  Globe,
+  Plug,
+  Save,
+  Lock,
+} from "lucide-react";
+
+const specs = [
+  {
+    icon: Check,
+    title: "99.9% Uptime SLA",
+    description: "Guaranteed availability",
+  },
+  {
+    icon: Zap,
+    title: "< 2s Cold Start",
+    description: "Instant wake from idle",
+  },
+  {
+    icon: Database,
+    title: "Neon Serverless PostgreSQL",
+    description: "Auto-scaling database",
+  },
+  {
+    icon: Cloud,
+    title: "Google Cloud Run",
+    description: "Container-based compute",
+  },
+  { icon: Globe, title: "Cloudflare Edge", description: "Global CDN network" },
+  { icon: Plug, title: "REST & GraphQL APIs", description: "Full API access" },
+  { icon: Save, title: "Automatic Backups", description: "Daily snapshots" },
+  { icon: Lock, title: "GDPR Ready", description: "EU data compliance" },
+];
+
+import { SectionHeader } from "../ui/section-header";
+
+export const TechSpecsSection = () => {
+  return (
+    <section className="py-24 bg-background border-t border-default-100">
+      <div className="container mx-auto px-6">
+        <SectionHeader
+          title="Built for Scale"
+          description="Technical specifications for the modern developer."
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {specs.map((spec, index) => (
+            <Card
+              key={index}
+              shadow="sm"
+              className="border border-default-200"
+              isPressable
+            >
+              <CardBody className="gap-3 p-6 items-center text-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                  <spec.icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">{spec.title}</h3>
+                  <p className="text-tiny text-default-500 mt-1">
+                    {spec.description}
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};

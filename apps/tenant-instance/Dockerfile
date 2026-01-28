@@ -1,41 +1,33 @@
-FROM oven/bun:1.2.20
+# Stage 1: Base
+FROM node:20-alpine AS base
+RUN npm install -g pnpm
+WORKDIR /server
 
-WORKDIR /app
+# Stage 2: Builder
+FROM base AS builder
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @vendin/tenant-instance build
 
-# Install Node.js for MedusaJS build (fixes source map issue with Bun)
-# Bun image is based on Debian, so we can install Node.js via apt
-RUN apt-get update && \
-    apt-get install -y curl ca-certificates && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Stage 3: Production Deploy
+FROM base AS deploy
+COPY . .
+RUN pnpm install --frozen-lockfile
+# Use pnpm deploy to isolate the app and its production dependencies
+RUN pnpm --filter @vendin/tenant-instance --prod deploy /server/app
 
-# Copy package.json files
-COPY package.json bun.lock turbo.json ./
-COPY apps/tenant-instance/package.json ./apps/tenant-instance/
-COPY packages/analytics/package.json ./packages/analytics/
-COPY packages/config/package.json ./packages/config/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/medusa/plugins/medusa-plugin-bling/package.json ./packages/medusa/plugins/medusa-plugin-bling/
+# Stage 4: Runner (Production optimized)
+FROM node:20-alpine AS runner
+WORKDIR /server
 
-# Install dependencies
-RUN bun install
+# Copy the deployed bundle (flattened)
+COPY --from=deploy /server/app .
 
-# Copy application code and workspace dependencies
-COPY apps/tenant-instance ./apps/tenant-instance
-COPY packages/analytics ./packages/analytics
-COPY packages/config ./packages/config
-COPY packages/utils ./packages/utils
-COPY packages/medusa/plugins/medusa-plugin-bling ./packages/medusa/plugins/medusa-plugin-bling
+# Expose backend and admin ports
+EXPOSE 9000 5173
 
-# Build the application
-WORKDIR /app/apps/tenant-instance
-ENV NODE_ENV=production
-ENV MEDUSA_TELEMETRY_DISABLED=1
-# Use npm/npx for build (fixes Bun source map issue with MedusaJS decorators)
-# npx will use the installed Node.js instead of Bun
-RUN bun run build
+# Ensure start.sh is executable
+RUN chmod +x ./start.sh
 
-EXPOSE 9000
-
-CMD ["bun", "run", "start"]
+# Start with our script
+ENTRYPOINT ["./start.sh"]

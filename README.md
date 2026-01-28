@@ -4,7 +4,7 @@ Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisio
 
 ## Overview
 
-This project uses a **monorepo architecture** with Turborepo and Bun workspaces to manage multiple applications and shared packages.
+This project uses a **monorepo architecture** with Turborepo and PNPM workspaces to manage multiple applications and shared packages.
 
 ## Monorepo Structure
 
@@ -22,7 +22,7 @@ This project uses a **monorepo architecture** with Turborepo and Bun workspaces 
 
 ## Prerequisites
 
-- **Bun** >= 1.2.20 (package manager and runtime)
+- **PNPM** >= 9.15.4 (package manager)
 - Node.js >= 24.0.0
 
 ## Local Development
@@ -45,44 +45,44 @@ docker-compose down
    ```
 2. Apply migrations:
    ```bash
-   bun run db:push --filter=@vendin/control-plane
+   pnpm run db:push --filter=@vendin/control-plane
    ```
 
 ## Quick Start
 
 ```bash
 # Install dependencies
-bun install
+pnpm install
 
 # Run all apps in development mode
-bun run dev
+pnpm run dev
 
 # Build all apps and packages
-bun run build
+pnpm run build
 
 # Run all tests
-bun run test
+pnpm run test
 
 # Type check all apps and packages
-bun run typecheck
+pnpm run typecheck
 
 # Lint all apps and packages
-bun run lint
+pnpm run lint
 
 # Auto-fix linting issues
-bun run lint:fix
+pnpm run lint:fix
 ```
 
 ## Commands
 
-| Command             | Description                        |
-| ------------------- | ---------------------------------- |
-| `bun run dev`       | Start all apps in development mode |
-| `bun run build`     | Build all apps and packages        |
-| `bun run lint`      | Lint all apps and packages         |
-| `bun run lint:fix`  | Auto-fix lint issues               |
-| `bun run test`      | Run all tests                      |
-| `bun run typecheck` | Type check all apps and packages   |
+| Command              | Description                        |
+| -------------------- | ---------------------------------- |
+| `pnpm run dev`       | Start all apps in development mode |
+| `pnpm run build`     | Build all apps and packages        |
+| `pnpm run lint`      | Lint all apps and packages         |
+| `pnpm run lint:fix`  | Auto-fix lint issues               |
+| `pnpm run test`      | Run all tests                      |
+| `pnpm run typecheck` | Type check all apps and packages   |
 
 ## Applications
 
@@ -136,7 +136,7 @@ Shared configuration for all apps and packages:
 
 ## Technology Stack
 
-- **Package Manager**: Bun
+- **Package Manager**: PNPM
 - **Monorepo**: Turborepo
 - **Language**: TypeScript (strict mode)
 - **Testing**: Vitest

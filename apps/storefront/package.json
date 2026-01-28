@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "bun x tsc --noEmit",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
     "pages:build": "opennextjs-cloudflare build",
     "pages:preview": "opennextjs-cloudflare dev",
     "pages:deploy": "opennextjs-cloudflare deploy"
@@ -17,7 +18,7 @@
     "@heroui/react": "^2.8.7",
     "@vendin/analytics": "workspace:*",
     "framer-motion": "^12.27.2",
-    "next": "16.1.4",
+    "next": "16.1.5",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
@@ -28,7 +29,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.4",
+    "eslint-config-next": "16.1.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.60.0"

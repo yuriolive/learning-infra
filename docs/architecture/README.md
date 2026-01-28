@@ -79,6 +79,7 @@ Merchant → awesome-store-my.vendin.store/admin
 
 ## Related Documentation
 
+- [Architectural Decisions](./DECISIONS.md)
 - [User Experiences](./USER_EXPERIENCES.md)
 - [Cloudflare Setup](../setup/CLOUDFLARE_SETUP.md)
 - [Tenant Provisioning](../setup/TENANT_PROVISIONING_SETUP.md)

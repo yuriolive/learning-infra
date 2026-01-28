@@ -12,26 +12,42 @@
     "typescript"
   ],
   "scripts": {
-    "build": "npx medusa build",
-    "build:bun": "medusa build",
+    "build": "medusa build",
     "start": "medusa start",
-    "dev": "TS_NODE_PROJECT=tsconfig.json medusa develop",
-    "lint": "bun x eslint .",
-    "typecheck": "bun x tsc --noEmit"
+    "dev": "medusa develop",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --passWithNoTests",
+    "test:coverage": "vitest --coverage --passWithNoTests",
+    "test:watch": "vitest --passWithNoTests",
+    "db:migrate": "TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
+    "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "^2.13.0",
+    "@medusajs/admin-shared": "^2.13.1",
+    "@medusajs/cli": "^2.13.0",
+    "@medusajs/dashboard": "^2.13.0",
+    "@medusajs/draft-order": "^2.13.0",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
-    "@vendin/analytics": "workspace:*"
+    "@vendin/analytics": "workspace:*",
+    "pg": "^8.17.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@medusajs/cli": "^2.13.0",
     "@medusajs/test-utils": "^2.13.0",
-    "@types/node": "^25.0.9",
+    "@types/node": "^20.12.11",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.2.25",
+    "@vitest/coverage-v8": "^4.0.18",
     "ajv": "^8.17.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.6.2",
+    "vite": "^5.4.14",
+    "vitest": "^4.0.18"
   }
 }
