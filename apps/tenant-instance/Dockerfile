@@ -1,29 +1,33 @@
-# Stage 1: Runner
-FROM node:20-alpine
-
-# Install pnpm globally via Corepack (or npm)
+# Stage 1: Base
+FROM node:20-alpine AS base
 RUN npm install -g pnpm
-
-# Set working directory to /server
 WORKDIR /server
 
-# Copy entire context
+# Stage 2: Builder
+FROM base AS builder
 COPY . .
-
-# Create pnpm-workspace.yaml if not exists (though it should exist now) or ensure correct context
-# (Assuming pnpm-workspace.yaml is copied with COPY . .)
-
-# Install dependencies using pnpm
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @vendin/tenant-instance build
 
-# Set working directory to the app
-WORKDIR /server/apps/tenant-instance
+# Stage 3: Production Deploy
+FROM base AS deploy
+COPY . .
+RUN pnpm install --frozen-lockfile
+# Use pnpm deploy to isolate the app and its production dependencies
+RUN pnpm --filter @vendin/tenant-instance --prod deploy /server/app
 
-# Give execution permission to start.sh
-RUN chmod +x ./start.sh
+# Stage 4: Runner (Production optimized)
+FROM node:20-alpine AS runner
+WORKDIR /server
+
+# Copy the deployed bundle (flattened)
+COPY --from=deploy /server/app .
 
 # Expose backend and admin ports
 EXPOSE 9000 5173
 
-# Start with migrations and then the development server
+# Ensure start.sh is executable
+RUN chmod +x ./start.sh
+
+# Start with our script
 ENTRYPOINT ["./start.sh"]
