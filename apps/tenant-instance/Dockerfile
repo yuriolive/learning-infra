@@ -1,6 +1,6 @@
 # Stage 1: Base
 FROM node:20-alpine AS base
-RUN npm install -g pnpm turbo
+RUN npm install -g pnpm turbo@2.6.1
 WORKDIR /app
 
 # Stage 2: Pruner

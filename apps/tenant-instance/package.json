@@ -45,6 +45,7 @@
     "@vendin/config": "workspace:*",
     "@vitest/coverage-v8": "^4.0.18",
     "ajv": "^8.17.1",
+    "next": "16.1.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.2",
