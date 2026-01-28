@@ -63,7 +63,7 @@ description: [What it does for Control Plane]. Use when [trigger conditions]. Co
 
 ## Tech Stack
 
-- Runtime: Bun
+- Runtime: Node.js
 - Language: TypeScript (strict)
 - API: RESTful (JSON)
 - DB: PostgreSQL + Drizzle ORM

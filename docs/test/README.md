@@ -44,18 +44,18 @@ Future test architecture improvements, including:
 
 ```bash
 # Run all tests
-bun run test
+pnpm run test
 
 # Watch mode
-bun run test:watch
+pnpm run test:watch
 
 # Coverage report
-bun run test:coverage
+pnpm run test:coverage
 
 # Future commands (Phase 2)
-bun run test:unit           # Unit tests only (~10s)
-bun run test:integration    # Integration tests (~3min)
-bun run test:e2e            # E2E tests (~10min)
+pnpm run test:unit           # Unit tests only (~10s)
+pnpm run test:integration    # Integration tests (~3min)
+pnpm run test:e2e            # E2E tests (~10min)
 ```
 
 ## Related Documentation

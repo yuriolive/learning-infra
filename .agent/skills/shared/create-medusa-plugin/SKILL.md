@@ -587,7 +587,7 @@ describe("{Service} Product Mapper", () => {
 
 After creating the plugin:
 
-1. **Build the plugin:** `bun run build` in the plugin directory
+1. **Build the plugin:** `pnpm run build` in the plugin directory
 2. **Add to tenant instance:** Update `apps/tenant-instance/medusa-config.ts`
 3. **Run migrations:** The plugin will auto-create tables on first run
 4. **Test API routes:** Use the admin dashboard or API client
