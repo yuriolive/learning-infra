@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.2.20",
+  "packageManager": "pnpm@9.15.4",
   "workspaces": [
     "apps/*",
     "packages/*",
@@ -18,21 +18,20 @@
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "typecheck": "turbo run typecheck",
-    "deploy:control-plane": "bun run --cwd apps/control-plane deploy",
-    "deploy:storefront": "cd apps/storefront && bun run pages:deploy"
+    "deploy:control-plane": "pnpm run --filter control-plane deploy",
+    "deploy:storefront": "cd apps/storefront && pnpm run pages:deploy"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
-      "bun x eslint --fix",
-      "bun x prettier --write"
+      "eslint --fix",
+      "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
-      "bun x prettier --write"
+      "prettier --write"
     ]
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
-    "@types/bun": "^1.1.10",
     "@types/node": "^24.7.1",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
@@ -54,6 +53,8 @@
     "wrangler": "^4.60.0"
   },
   "overrides": {
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
   }
 }

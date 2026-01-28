@@ -1,8 +1,8 @@
 # Stage 1: Runner
 FROM node:20-alpine
 
-# Install pnpm globally
-RUN npm install pnpm -g
+# Install pnpm globally via Corepack (or npm)
+RUN npm install -g pnpm
 
 # Set working directory to /server
 WORKDIR /server
@@ -10,14 +10,11 @@ WORKDIR /server
 # Copy entire context
 COPY . .
 
-# Remove packageManager field to avoid pnpm error since root uses bun
-RUN sed -i '/"packageManager":/d' package.json
-
-# Create pnpm-workspace.yaml to ensure pnpm identifies the monorepo
-RUN printf "packages:\n  - 'apps/*'\n  - 'packages/*'\n  - 'packages/*/plugins/*'\n" > pnpm-workspace.yaml
+# Create pnpm-workspace.yaml if not exists (though it should exist now) or ensure correct context
+# (Assuming pnpm-workspace.yaml is copied with COPY . .)
 
 # Install dependencies using pnpm
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Set working directory to the app
 WORKDIR /server/apps/tenant-instance

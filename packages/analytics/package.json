@@ -16,10 +16,10 @@
     }
   },
   "scripts": {
-    "build": "bun x tsc",
-    "lint": "bun x eslint .",
-    "lint:fix": "bun x eslint . --fix",
-    "typecheck": "bun x tsc --noEmit"
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "posthog-js": "^1.200.0",
@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@vendin/config": "workspace:*",
-    "@types/bun": "^1.1.10",
     "@types/react": "^19.0.0",
     "eslint": "^9.37.0",
     "typescript": "^5.9.3"

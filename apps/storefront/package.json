@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "bun x tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "pages:build": "opennextjs-cloudflare build",
     "pages:preview": "opennextjs-cloudflare dev",
     "pages:deploy": "opennextjs-cloudflare deploy"

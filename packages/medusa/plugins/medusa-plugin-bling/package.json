@@ -36,10 +36,11 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@medusajs/cli": "^2.13.0",
+    "@medusajs/orchestration": "^2.13.1",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^1.0.0",
-    "@medusajs/cli": "^2.13.0"
+    "vitest": "^1.0.0"
   },
   "peerDependencies": {
     "@medusajs/framework": "^2.0.0"

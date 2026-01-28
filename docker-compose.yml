@@ -54,7 +54,6 @@ services:
     volumes:
       - .:/server
       - /server/node_modules
-      - /server/apps/tenant-instance/node_modules
     depends_on:
       postgres:
         condition: service_healthy
