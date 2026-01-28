@@ -60,9 +60,10 @@ describe("CloudflareProvider", () => {
   describe("createCustomHostname", () => {
     it("should create a custom hostname successfully with defaults", async () => {
       const provider = new CloudflareProvider();
-      // Access private client via any cast for testing
-      const mockCreate = (provider as any).client.customHostnames.create;
-      mockCreate.mockResolvedValue({} as any);
+      // Access private client via casting for testing
+      const mockCreate = (provider as unknown as { client: Cloudflare }).client
+        .customHostnames.create as any;
+      mockCreate.mockResolvedValue({});
 
       await provider.createCustomHostname("tenant-1", "test.example.com");
 
@@ -110,7 +111,8 @@ describe("CloudflareProvider", () => {
   describe("getHostnameStatus", () => {
     it("should return status and verification errors", async () => {
       const provider = new CloudflareProvider();
-      const mockList = (provider as any).client.customHostnames.list;
+      const mockList = (provider as unknown as { client: Cloudflare }).client
+        .customHostnames.list as any;
 
       const mockResponse = {
         result: [
@@ -122,7 +124,7 @@ describe("CloudflareProvider", () => {
         ],
       };
 
-      mockList.mockResolvedValue(mockResponse as any);
+      mockList.mockResolvedValue(mockResponse);
 
       const result = await provider.getHostnameStatus(
         "tenant-1",

@@ -109,8 +109,8 @@ export class BlingOrderMapper {
     }
 
     const addressMetadata =
-      (shippingAddress.metadata as Record<string, any>) ?? {};
-    const orderMetadata = (order.metadata as Record<string, any>) ?? {};
+      (shippingAddress.metadata as Record<string, unknown>) || {};
+    const orderMetadata = (order.metadata as Record<string, unknown>) || {};
 
     const nomeCliente = this.composeCustomerName(order);
     const telefone = this.pickString(
@@ -193,7 +193,7 @@ export class BlingOrderMapper {
       order.shipping_total ?? shippingMethod?.amount,
     );
     const shippingMetadata =
-      (shippingMethod?.metadata as Record<string, any>) ?? {};
+      (shippingMethod?.metadata as Record<string, unknown>) || {};
 
     const payload: BlingOrderPayload = {
       numeroPedidoLoja: order.id,
@@ -248,7 +248,7 @@ export class BlingOrderMapper {
     // We'll skip complex installment logic for now or implement basic if needed.
 
     // Transport/Shipping Label Data
-    const enderecoEntrega: any = {
+    const enderecoEntrega: Record<string, unknown> = {
       nome: cliente.nome,
       endereco: cliente.endereco,
       numero: cliente.numero,
@@ -260,7 +260,7 @@ export class BlingOrderMapper {
     if (cliente.uf) enderecoEntrega.uf = cliente.uf;
     if (cliente.cep) enderecoEntrega.cep = cliente.cep;
 
-    const transporte: any = {
+    const transporte: Record<string, unknown> = {
       dados_etiqueta: enderecoEntrega,
     };
 
@@ -283,11 +283,14 @@ export class BlingOrderMapper {
     return payload;
   }
 
-  private static extractDocument(order: OrderDTO, address: any): string | null {
-    const addressMetadata = (address.metadata as Record<string, any>) ?? {};
+  private static extractDocument(
+    order: OrderDTO,
+    address: { metadata?: unknown },
+  ): string | null {
+    const addressMetadata = (address.metadata as Record<string, unknown>) || {};
     const billingMetadata =
-      (order.billing_address?.metadata as Record<string, any>) ?? {};
-    const orderMetadata = (order.metadata as Record<string, any>) ?? {};
+      (order.billing_address?.metadata as Record<string, unknown>) || {};
+    const orderMetadata = (order.metadata as Record<string, unknown>) || {};
 
     const candidates = [
       addressMetadata.document,
@@ -309,14 +312,36 @@ export class BlingOrderMapper {
     return null;
   }
 
-  private static buildItemsPayload(items: any[], warnings: string[]) {
+  private static buildItemsPayload(
+    items: Array<{
+      metadata?: unknown;
+      title?: string;
+      id?: string;
+      quantity?: number;
+      subtotal?: unknown;
+      discount_total?: unknown;
+      variant_sku?: string | null;
+    }>,
+    warnings: string[],
+  ): BlingOrderPayload["itens"] {
     return items
       .map((item) => this.mapItemToBlingPayload(item, warnings))
       .filter((item): item is NonNullable<typeof item> => item !== null);
   }
 
-  private static mapItemToBlingPayload(item: any, warnings: string[]) {
-    const metadata = (item.metadata as Record<string, any>) ?? {};
+  private static mapItemToBlingPayload(
+    item: {
+      metadata?: unknown;
+      title?: string;
+      id?: string;
+      quantity?: number;
+      subtotal?: unknown;
+      discount_total?: unknown;
+      variant_sku?: string | null;
+    },
+    warnings: string[],
+  ): BlingOrderPayload["itens"][0] | null {
+    const metadata = (item.metadata as Record<string, unknown>) || {};
     const externalId = this.pickString(
       metadata.bling_external_id,
       metadata.external_id,
@@ -366,9 +391,9 @@ export class BlingOrderMapper {
 
     const discount = this.safeNumber(item.discount_total) / 100;
 
-    const payload: any = {
+    const payload: BlingOrderPayload["itens"][0] = {
       codigo: externalId,
-      descricao: item.title,
+      descricao: item.title ?? "Item sem título",
       quantidade: quantity,
       valor: finalUnitPrice,
     };
@@ -392,8 +417,12 @@ export class BlingOrderMapper {
     return order.email ?? "Cliente";
   }
 
-  private static extractHouseNumber(address: any): string | undefined {
-    const metadata = (address.metadata as Record<string, any>) ?? {};
+  private static extractHouseNumber(address: {
+    metadata?: unknown;
+    address_1?: string;
+    address_2?: string;
+  }): string | undefined {
+    const metadata = (address.metadata as Record<string, unknown>) || {};
     const candidates = [metadata.number, metadata.numero, address.address_2];
 
     for (const candidate of candidates) {
@@ -409,28 +438,22 @@ export class BlingOrderMapper {
     return undefined;
   }
 
-  private static safeNumber(value: any): number {
+  private static safeNumber(value: unknown): number {
     if (value == null) return 0;
     if (typeof value === "number") return Number.isNaN(value) ? 0 : value;
     if (typeof value === "string") {
-      const normalized = value.replaceAll(",", ".");
-      const parsed = Number.parseFloat(normalized);
+      const parsed = Number.parseFloat(value.replaceAll(",", "."));
       return Number.isNaN(parsed) ? 0 : parsed;
     }
-    // Handle BigNumber-like objects often found in Medusa
     if (value && typeof value === "object") {
-      if (
-        "toNumber" in value &&
-        typeof (value as any).toNumber === "function"
-      ) {
-        return (value as any).toNumber();
-      }
-      if ("value" in value) return this.safeNumber((value as any).value);
+      const v = value as { toNumber?: () => number; value?: unknown };
+      if (typeof v.toNumber === "function") return v.toNumber();
+      if ("value" in v) return this.safeNumber(v.value);
     }
     return 0;
   }
 
-  private static pickString(...values: any[]): string | undefined {
+  private static pickString(...values: unknown[]): string | undefined {
     for (const value of values) {
       if (typeof value === "string" && value.trim().length > 0) {
         return value.trim();

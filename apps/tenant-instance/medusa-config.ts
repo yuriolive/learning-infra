@@ -15,11 +15,11 @@ export default defineConfig({
         : { connection: { ssl: true } },
     redisUrl: process.env.REDIS_URL,
     http: {
-      storeCors: process.env.STORE_CORS!,
-      adminCors: process.env.ADMIN_CORS!,
-      authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET!,
-      cookieSecret: process.env.COOKIE_SECRET!,
+      storeCors: process.env.STORE_CORS || "",
+      adminCors: process.env.ADMIN_CORS || "",
+      authCors: process.env.AUTH_CORS || "",
+      jwtSecret: process.env.JWT_SECRET || "default_jwt_secret",
+      cookieSecret: process.env.COOKIE_SECRET || "default_cookie_secret",
     },
   },
   admin: {

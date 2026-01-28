@@ -6,7 +6,8 @@ export const createTenantSchema = z.object({
   subdomain: z
     .string()
     .regex(
-      /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/,
+      // eslint-disable-next-line security/detect-unsafe-regex
+      /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
       "Invalid domain format",
     )
     .optional(),
@@ -19,7 +20,8 @@ export const updateTenantSchema = z.object({
   subdomain: z
     .string()
     .regex(
-      /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/,
+      // eslint-disable-next-line security/detect-unsafe-regex
+      /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
       "Invalid domain format",
     )
     .optional(),

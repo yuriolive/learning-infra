@@ -76,8 +76,12 @@ export class CloudRunProvider {
           name: servicePath,
         });
         exists = true;
-      } catch (error: any) {
-        if (error.code !== 404) {
+      } catch (error: unknown) {
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          (error as { code?: number }).code !== 404
+        ) {
           throw error;
         }
       }
@@ -175,7 +179,8 @@ export class CloudRunProvider {
     policy.bindings = policy.bindings || [];
 
     const publicBinding = policy.bindings.find(
-      (b) => b.role === "roles/run.invoker",
+      (b: { role?: string | null; members?: string[] | null }) =>
+        b.role === "roles/run.invoker",
     );
     if (publicBinding) {
       if (publicBinding.members?.includes("allUsers")) {
