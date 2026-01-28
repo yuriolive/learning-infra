@@ -20,8 +20,8 @@ export const auth = betterAuth({
         const apiVersion = process.env.WHATSAPP_API_VERSION || "v21.0";
 
         if (!token || !phoneNumberId) {
-          console.error("WhatsApp credentials missing");
-          return;
+          console.error("WhatsApp credentials missing. OTP will not be sent.");
+          throw new Error("WhatsApp credentials not configured.");
         }
 
         // WhatsApp API requires phone number without leading '+'

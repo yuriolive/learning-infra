@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+
+import { useAuthCallbacks } from "./use-auth-callbacks";
 
 type AuthMode = "login" | "signup";
 
@@ -10,7 +11,19 @@ export const useEmailAuth = (mode: AuthMode) => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  
+  const { handleSuccess: handleLoginSuccess, handleError: handleAuthError } = useAuthCallbacks({
+    setLoading,
+    successMessage: "Logged in successfully",
+    redirectUrl: "/",
+  });
+
+  const { handleSuccess: handleSignupSuccess } = useAuthCallbacks({
+    setLoading,
+    successMessage: "Account created successfully",
+    redirectUrl: "/",
+    onError: (ctx) => handleAuthError(ctx), // Re-use error handler
+  });
 
   const submit = async () => {
     setLoading(true);
@@ -23,15 +36,8 @@ export const useEmailAuth = (mode: AuthMode) => {
             callbackURL: "/",
           },
           {
-            onSuccess: () => {
-              setLoading(false);
-              toast.success("Logged in successfully");
-              router.push("/");
-            },
-            onError: (ctx) => {
-              setLoading(false);
-              toast.error(ctx.error.message);
-            },
+            onSuccess: handleLoginSuccess,
+            onError: handleAuthError,
           }
         );
       } else {
@@ -43,15 +49,8 @@ export const useEmailAuth = (mode: AuthMode) => {
             callbackURL: "/",
           },
           {
-            onSuccess: () => {
-              setLoading(false);
-              toast.success("Account created successfully");
-              router.push("/");
-            },
-            onError: (ctx) => {
-              setLoading(false);
-              toast.error(ctx.error.message);
-            },
+            onSuccess: handleSignupSuccess,
+            onError: handleAuthError,
           }
         );
       }

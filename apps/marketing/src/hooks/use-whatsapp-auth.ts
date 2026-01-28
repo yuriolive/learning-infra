@@ -1,14 +1,26 @@
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+
+import { useAuthCallbacks } from "./use-auth-callbacks";
 
 export const useWhatsAppAuth = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+
+  const { handleSuccess: handleSendOtpSuccess, handleError: handleSendOtpError } = useAuthCallbacks({
+    setLoading,
+    successMessage: "OTP sent successfully",
+    redirectUrl: "", // No redirect on send OTP
+    onSuccess: () => setOtpSent(true),
+  });
+
+  const { handleSuccess: handleVerifySuccess, handleError: handleVerifyError } = useAuthCallbacks({
+    setLoading,
+    successMessage: "Logged in successfully",
+    redirectUrl: "/",
+  });
 
   const sendOtp = async () => {
     setLoading(true);
@@ -17,15 +29,8 @@ export const useWhatsAppAuth = () => {
         phoneNumber: phone,
       },
       {
-        onSuccess: () => {
-          setLoading(false);
-          setOtpSent(true);
-          toast.success("OTP sent successfully");
-        },
-        onError: (ctx) => {
-          setLoading(false);
-          toast.error(ctx.error.message);
-        },
+        onSuccess: handleSendOtpSuccess,
+        onError: handleSendOtpError,
       }
     );
   };
@@ -38,15 +43,8 @@ export const useWhatsAppAuth = () => {
         code: otp,
       },
       {
-        onSuccess: () => {
-          setLoading(false);
-          toast.success("Logged in successfully");
-          router.push("/");
-        },
-        onError: (ctx) => {
-          setLoading(false);
-          toast.error(ctx.error.message);
-        },
+        onSuccess: handleVerifySuccess,
+        onError: handleVerifyError,
       }
     );
   };
