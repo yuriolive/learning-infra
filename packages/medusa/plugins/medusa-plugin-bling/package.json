@@ -21,8 +21,8 @@
     "build": "medusa plugin:build",
     "watch": "tsc --watch",
     "clean": "rm -rf dist .medusa",
-    "test": "vitest --passWithNoTests",
-    "test:coverage": "vitest --coverage --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -42,9 +42,9 @@
     "@medusajs/orchestration": "^2.13.1",
     "@types/node": "^20.0.0",
     "@vendin/config": "workspace:*",
-    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "@medusajs/framework": "^2.0.0"
