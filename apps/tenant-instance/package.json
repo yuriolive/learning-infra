@@ -19,8 +19,12 @@
     "lint": "bun x eslint .",
     "typecheck": "bun x tsc --noEmit"
   },
+  "resolutions": {
+    "@aws-sdk/client-s3": "3.723.0"
+  },
   "dependencies": {
     "@medusajs/admin-sdk": "^2.13.0",
+    "@medusajs/file-s3": "^2.13.1",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
     "@vendin/analytics": "workspace:*"
