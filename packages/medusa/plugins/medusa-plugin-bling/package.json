@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@medusajs/admin-sdk": "^2.13.0",
+    "@medusajs/admin-shared": "^2.13.0",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
     "@medusajs/types": "^2.13.0",

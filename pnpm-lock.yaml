@@ -414,6 +414,9 @@ importers:
       "@medusajs/admin-sdk":
         specifier: ^2.13.0
         version: 2.13.1
+      "@medusajs/admin-shared":
+        specifier: ^2.13.0
+        version: 2.13.1
       "@medusajs/framework":
         specifier: ^2.13.0
         version: 2.13.1(@aws-sdk/client-dynamodb@3.975.0)(@medusajs/cli@2.13.1(@types/node@20.19.30))(@types/node@20.19.30)(ioredis@5.9.2)(vite@5.4.21(@types/node@20.19.30)(lightningcss@1.30.2)(terser@5.16.9))(zod@3.25.76)
