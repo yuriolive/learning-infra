@@ -100,8 +100,8 @@ flowchart TB
 
 - Isolated MedusaJS 2.0 instances per tenant
 - Each tenant has dedicated database and compute
-- Serves custom storefront UI (per-tenant themes/customizations)
-- Serves MedusaJS Store API and Admin UI
+- Headless MedusaJS API (Store API and Admin UI)
+- Does **NOT** render customer UI
 - Location: `apps/tenant-instance/` (template)
 
 **Marketing App**
@@ -111,13 +111,13 @@ flowchart TB
 - Location: `apps/marketing/`
 - Deployed to Cloudflare Pages
 
-**Storefront Router**
+**Multi-Tenant Storefront**
 
-- Router-only Next.js application
-- Resolves tenant by hostname and redirects/proxies to tenant instances
+- Single Next.js application that renders the shopping UI for all tenants
+- Resolves tenant by hostname and adapts theme/content dynamically
+- Connects to the respective tenant's backend Medusa API
 - Location: `apps/storefront/`
-- Deployed to Cloudflare Pages for tenant domains
-- Does not render customer UI (tenant instances serve custom UI)
+- Deployed to Cloudflare Pages
 
 ---
 
@@ -230,7 +230,7 @@ flowchart TB
 
 - Provider: Cloudflare Pages
 - Marketing App: Next.js on root domain (`vendin.store`)
-- Storefront Router: Next.js for tenant domains (router-only, no UI rendering)
+- Storefront UI: Next.js multi-tenant application
 - Routing: Hostname-based tenant resolution
 - CDN: Global edge caching
 
@@ -394,7 +394,7 @@ interface TenantConfig {
 
 **AC3: Hostname Routing**
 
-- The storefront must resolve the correct merchant API based on incoming hostname or subdomain
+- The storefront must resolve the correct merchant API and theme based on incoming hostname or subdomain
 - Support for custom domains via Cloudflare for SaaS
 - Graceful fallback to error page for unknown domains
 - Response time: < 50ms for routing decision
