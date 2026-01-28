@@ -159,19 +159,19 @@ Tasks follow dependency patterns similar to `turbo.json`:
 
 **Dependencies**: `^build` (packages), Tenant Instance API
 
-- [ ] **Multi-Tenant Next.js Application** (`apps/storefront/`)
-  - Next.js setup with edge runtime
-  - Hostname-based tenant resolution
-  - Subdomain routing logic
-  - Tenant API URL resolution
+- [ ] **Multi-Tenant Storefront Application** (`apps/storefront/`)
+  - Next.js setup with App Router
+  - Hostname-based tenant resolution (Middleware)
+  - Dynamic API Client Factory (Targets correct tenant backend)
+  - Tenant Context Provider (Injects name, logo, theme)
+  - CSS Variables for dynamic theming
   - **Depends on**: `^build` (packages), Control Plane API (for tenant lookup)
 
-- [ ] **Basic Storefront Features** (`apps/storefront/src/app/`)
-  - Product listing page
-  - Product detail page
+- [ ] **Core Storefront Features** (`apps/storefront/src/app/`)
+  - Product listing and details
   - Shopping cart functionality
-  - Basic checkout flow
-  - **Depends on**: Multi-Tenant Next.js Application, Tenant Instance API
+  - Checkout flow integration
+  - **Depends on**: Multi-Tenant Storefront Application, Tenant Instance API
 
 ### `infrastructure/` - Infrastructure as Code
 
