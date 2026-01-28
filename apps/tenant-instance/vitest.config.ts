@@ -9,15 +9,8 @@ export default mergeConfig(
     plugins: [tsconfigPaths()],
     test: {
       coverage: {
-        exclude: ["src/index.ts", "tests/"],
+        exclude: ["src/scripts/"],
       },
-      env: {
-        DATABASE_URL: "postgres://postgres:postgres@localhost:5432/postgres",
-      },
-      include: [
-        "src/**/*.{test,spec}.{ts,js}",
-        "tests/**/*.{test,spec}.{ts,js}",
-      ],
     },
   }),
 );

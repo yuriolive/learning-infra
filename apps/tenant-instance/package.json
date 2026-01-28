@@ -18,8 +18,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test": "vitest --passWithNoTests",
-    "test:coverage": "vitest --coverage --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
     "db:migrate": "TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
     "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
@@ -42,12 +42,14 @@
     "@types/node": "^20.12.11",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.2.25",
+    "@vendin/config": "workspace:*",
     "@vitest/coverage-v8": "^4.0.18",
     "ajv": "^8.17.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.2",
-    "vite": "^5.4.14",
+    "vite": "^6.0.7",
+    "vite-tsconfig-paths": "^6.0.5",
     "vitest": "^4.0.18"
   }
 }
