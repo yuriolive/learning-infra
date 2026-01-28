@@ -62,7 +62,7 @@ jobs:
           echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
 
       - name: Run migrations
-        run: pnpm run db:migrate --filter control-plane
+        run: pnpm --filter @vendin/control-plane run db:migrate
 
   deploy:
     name: Deploy to Cloudflare Workers
