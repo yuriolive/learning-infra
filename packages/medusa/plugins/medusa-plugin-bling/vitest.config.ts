@@ -1,19 +1,13 @@
-import { defineConfig } from "vitest/config";
+import { vitestBaseConfig } from "@vendin/config/vitest.base.ts";
+import { mergeConfig, defineConfig } from "vitest/config";
 
-export default defineConfig({
-  test: {
-    coverage: {
-      exclude: [
-        "dist/",
-        "**/*.d.ts",
-        "**/*.config.{ts,js}",
-        "src/api/index.ts",
-      ],
-      provider: "v8",
-      reporter: ["text", "lcov"],
+export default mergeConfig(
+  vitestBaseConfig,
+  defineConfig({
+    test: {
+      coverage: {
+        exclude: ["src/api/index.ts"],
+      },
     },
-    environment: "node",
-    exclude: ["node_modules", "dist", ".medusa"],
-    globals: true,
-  },
-});
+  }),
+);

@@ -1,28 +1,15 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
+import { vitestBaseConfig } from "@vendin/config/vitest.base.ts";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { defineConfig } from "vitest/config";
+import { mergeConfig, defineConfig } from "vitest/config";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export default defineConfig({
-  plugins: [tsconfigPaths()],
-  test: {
-    coverage: {
-      exclude: [
-        ".agent/",
-        "node_modules/",
-        "dist/",
-        "**/*.d.ts",
-        "**/*.config.{ts,js}",
-        "src/scripts/",
-      ],
-      provider: "v8",
-      reporter: ["text", "lcov", "html"],
+export default mergeConfig(
+  vitestBaseConfig,
+  defineConfig({
+    plugins: [tsconfigPaths()],
+    test: {
+      coverage: {
+        exclude: ["src/scripts/"],
+      },
     },
-    environment: "node",
-    exclude: ["node_modules", "dist", ".medusa"],
-    globals: true,
-  },
-});
+  }),
+);

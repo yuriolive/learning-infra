@@ -9,6 +9,11 @@
   "exports": {
     "./eslint.config.js": "./eslint.config.js",
     "./tsconfig.base.json": "./tsconfig.base.json",
-    "./prettier.config.js": "./prettier.config.js"
+    "./prettier.config.js": "./prettier.config.js",
+    "./vitest.base.ts": "./vitest.base.ts"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3.2.4"
   }
 }
