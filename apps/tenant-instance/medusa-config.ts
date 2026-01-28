@@ -12,7 +12,7 @@ export default defineConfig({
             ssl: false,
             sslmode: "disable",
           }
-        : { connection: { ssl: { rejectUnauthorized: false } } },
+        : { connection: { ssl: true } },
     redisUrl: process.env.REDIS_URL,
     http: {
       storeCors: process.env.STORE_CORS!,

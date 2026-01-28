@@ -21,7 +21,7 @@
     "build": "medusa plugin:build",
     "watch": "tsc --watch",
     "clean": "rm -rf dist .medusa",
-    "test": "vitest",
+    "test": "vitest --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

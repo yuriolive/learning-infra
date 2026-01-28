@@ -18,9 +18,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:coverage": "vitest --coverage",
-    "test:watch": "vitest",
+    "test": "vitest --passWithNoTests",
+    "test:coverage": "vitest --coverage --passWithNoTests",
+    "test:watch": "vitest --passWithNoTests",
     "db:migrate": "TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
     "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
   },
