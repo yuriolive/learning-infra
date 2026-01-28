@@ -62,7 +62,7 @@ describe("CloudflareProvider", () => {
       const provider = new CloudflareProvider();
       // Access private client via casting for testing
       const mockCreate = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.create as any;
+        .customHostnames.create as unknown;
       mockCreate.mockResolvedValue({});
 
       await provider.createCustomHostname("tenant-1", "test.example.com");
