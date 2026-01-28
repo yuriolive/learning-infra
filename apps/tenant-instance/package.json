@@ -27,6 +27,7 @@
   "dependencies": {
     "@medusajs/admin-sdk": "^2.13.0",
     "@medusajs/cli": "^2.13.0",
+    "@medusajs/dashboard": "^2.13.0",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
     "@vendin/analytics": "workspace:*",
