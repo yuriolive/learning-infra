@@ -12,6 +12,7 @@ interface AuthCardWrapperProperties {
   children: ReactNode;
   footerContent?: ReactNode;
   socialActionPrefix?: string;
+  showSocial?: boolean;
 }
 
 export const AuthCardWrapper = ({
@@ -20,6 +21,7 @@ export const AuthCardWrapper = ({
   children,
   footerContent,
   socialActionPrefix,
+  showSocial = false,
 }: AuthCardWrapperProperties) => {
   return (
     <Card className="w-full max-w-md">
@@ -29,13 +31,17 @@ export const AuthCardWrapper = ({
       </CardHeader>
 
       <CardBody className="gap-4 px-8 py-8">
-        <SocialLoginButtons actionPrefix={socialActionPrefix} />
+        {showSocial && (
+          <>
+            <SocialLoginButtons actionPrefix={socialActionPrefix} />
 
-        <div className="flex items-center gap-4 py-2">
-          <Divider className="flex-1" />
-          <p className="text-tiny text-default-400">OR</p>
-          <Divider className="flex-1" />
-        </div>
+            <div className="flex items-center gap-4 py-2">
+              <Divider className="flex-1" />
+              <p className="text-tiny text-default-400">OR</p>
+              <Divider className="flex-1" />
+            </div>
+          </>
+        )}
 
         {children}
       </CardBody>

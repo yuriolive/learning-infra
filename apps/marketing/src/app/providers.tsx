@@ -4,6 +4,7 @@ import { HeroUIProvider } from "@heroui/react";
 import { PostHogProvider } from "@vendin/analytics/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useRouter } from "next/navigation";
+import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -17,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         <NextThemesProvider attribute="class" defaultTheme="light">
           {children}
+          <Toaster />
         </NextThemesProvider>
       </HeroUIProvider>
     </PostHogProvider>
