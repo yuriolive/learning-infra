@@ -23,6 +23,11 @@ vi.mock("../../../src/providers/gcp/cloud-run.client", () => {
   };
 });
 
+import {
+  SubdomainInUseError,
+  SubdomainRequiredError,
+  TenantNotFoundError,
+} from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
@@ -155,7 +160,7 @@ describe("TenantService", () => {
       await service.createTenant(input);
 
       await expect(service.createTenant(input)).rejects.toThrow(
-        "Subdomain already in use",
+        SubdomainInUseError,
       );
     });
 
@@ -167,7 +172,7 @@ describe("TenantService", () => {
       };
 
       await expect(service.createTenant(input)).rejects.toThrow(
-        "Subdomain is required",
+        SubdomainRequiredError,
       );
     });
   });
@@ -188,7 +193,7 @@ describe("TenantService", () => {
 
     it("should throw error when tenant not found", async () => {
       await expect(service.getTenant(randomUUID())).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
   });
@@ -219,7 +224,7 @@ describe("TenantService", () => {
       };
 
       await expect(service.updateTenant(randomUUID(), input)).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
 
@@ -240,7 +245,7 @@ describe("TenantService", () => {
       };
 
       await expect(service.updateTenant(store2.id, input)).rejects.toThrow(
-        "Subdomain already in use",
+        SubdomainInUseError,
       );
     });
 
@@ -274,13 +279,13 @@ describe("TenantService", () => {
       await expect(service.deleteTenant(created.id)).resolves.toBeUndefined();
 
       await expect(service.getTenant(created.id)).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
 
     it("should throw error when tenant not found", async () => {
       await expect(service.deleteTenant(randomUUID())).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
   });

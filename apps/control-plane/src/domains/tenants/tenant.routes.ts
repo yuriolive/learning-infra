@@ -1,6 +1,11 @@
 import { ZodError } from "zod";
 
 import {
+  SubdomainInUseError,
+  SubdomainRequiredError,
+  TenantNotFoundError,
+} from "./tenant.errors";
+import {
   createTenantSchema,
   tenantIdSchema,
   updateTenantSchema,
@@ -334,31 +339,31 @@ function handleError(error: unknown, logger: Logger): Response {
     );
   }
 
-  if (error instanceof Error) {
-    if (error.message === "Tenant not found") {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 404,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
-    if (error.message === "Subdomain already in use") {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 409,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
-    if (error.message === "Subdomain is required for deployment") {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
+  if (error instanceof TenantNotFoundError) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 404,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  if (error instanceof SubdomainInUseError) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 409,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  if (error instanceof SubdomainRequiredError) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   logger.error({ error }, "Unhandled error in tenant routes");

@@ -5,6 +5,12 @@ import { type createLogger } from "@vendin/utils/logger";
 import { CloudRunProvider } from "../../providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../providers/neon/neon.client";
 
+import {
+  SubdomainInUseError,
+  SubdomainRequiredError,
+  TenantNotFoundError,
+} from "./tenant.errors";
+
 import type { TenantRepository } from "./tenant.repository";
 import type {
   CreateTenantInput,
@@ -79,10 +85,10 @@ export class TenantService {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing) {
-        throw new Error("Subdomain already in use");
+        throw new SubdomainInUseError();
       }
     } else {
-      throw new Error("Subdomain is required for deployment");
+      throw new SubdomainRequiredError();
     }
 
     // 1. Create tenant record with status 'provisioning'
@@ -157,7 +163,7 @@ export class TenantService {
   async getTenant(id: string): Promise<Tenant> {
     const tenant = await this.repository.findById(id);
     if (!tenant) {
-      throw new Error("Tenant not found");
+      throw new TenantNotFoundError();
     }
     return tenant;
   }
@@ -166,13 +172,13 @@ export class TenantService {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing && existing.id !== id) {
-        throw new Error("Subdomain already in use");
+        throw new SubdomainInUseError();
       }
     }
 
     const updated = await this.repository.update(id, input);
     if (!updated) {
-      throw new Error("Tenant not found");
+      throw new TenantNotFoundError();
     }
     return updated;
   }
@@ -180,7 +186,7 @@ export class TenantService {
   async deleteTenant(id: string): Promise<void> {
     const deleted = await this.repository.softDelete(id);
     if (!deleted) {
-      throw new Error("Tenant not found");
+      throw new TenantNotFoundError();
     }
     // TODO: Trigger resource cleanup (database, etc.)
   }
