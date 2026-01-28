@@ -47,6 +47,25 @@ vi.mock("@vendin/utils/logger", () => ({
   }),
 }));
 
+type MockedFunction = ReturnType<typeof vi.fn>;
+
+interface MockRunClient {
+  projects: {
+    locations: {
+      services: {
+        get: MockedFunction;
+        create: MockedFunction;
+        patch: MockedFunction;
+        getIamPolicy: MockedFunction;
+        setIamPolicy: MockedFunction;
+      };
+      operations: {
+        get: MockedFunction;
+      };
+    };
+  };
+}
+
 describe("CloudRunProvider", () => {
   const config = {
     credentialsJson: JSON.stringify({ project_id: "test-project" }),
@@ -65,55 +84,48 @@ describe("CloudRunProvider", () => {
   });
 
   let provider: CloudRunProvider;
-  let mockRunClient: unknown;
+  let mockRunClient: MockRunClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     provider = new CloudRunProvider(
       config as unknown as ConstructorParameters<typeof CloudRunProvider>[0],
     );
-    mockRunClient = (provider as unknown as { runClient: unknown }).runClient;
+    mockRunClient = (provider as unknown as { runClient: unknown })
+      .runClient as MockRunClient;
   });
 
   describe("deployTenantInstance", () => {
     it("should create a new service if it does not exist", async () => {
       // Mock service not found
-      (
-        mockRunClient as any
-      ).projects.locations.services.get.mockRejectedValueOnce({
+      mockRunClient.projects.locations.services.get.mockRejectedValueOnce({
         code: 404,
       });
 
       // Mock create response
-      (
-        mockRunClient as any
-      ).projects.locations.services.create.mockResolvedValueOnce({
+      mockRunClient.projects.locations.services.create.mockResolvedValueOnce({
         data: {
           name: "projects/test-project/locations/us-central1/operations/op-1",
         },
       });
 
       // Mock operation completion
-      (
-        mockRunClient as any
-      ).projects.locations.operations.get.mockResolvedValueOnce({
+      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
         data: { done: true },
       });
 
       // Mock IAM policy
-      (
-        mockRunClient as any
-      ).projects.locations.services.getIamPolicy.mockResolvedValueOnce({
-        data: { bindings: [] },
-      });
-      (
-        mockRunClient as any
-      ).projects.locations.services.setIamPolicy.mockResolvedValueOnce({});
+      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValueOnce(
+        {
+          data: { bindings: [] },
+        },
+      );
+      mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValueOnce(
+        {},
+      );
 
       // Mock final service get to retrieve URI
-      (
-        mockRunClient as any
-      ).projects.locations.services.get.mockResolvedValueOnce({
+      mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { uri: "https://tenant-1.a.run.app" },
       });
 
@@ -123,7 +135,7 @@ describe("CloudRunProvider", () => {
 
       expect(uri).toBe("https://tenant-1.a.run.app");
       expect(
-        (mockRunClient as any).projects.locations.services.create,
+        mockRunClient.projects.locations.services.create,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceId: "tenant-1",
@@ -133,41 +145,33 @@ describe("CloudRunProvider", () => {
 
     it("should patch existing service if it exists", async () => {
       // Mock service exists
-      (
-        mockRunClient as any
-      ).projects.locations.services.get.mockResolvedValueOnce({
+      mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { name: "existing-service" },
       });
 
       // Mock patch response
-      (
-        mockRunClient as any
-      ).projects.locations.services.patch.mockResolvedValueOnce({
+      mockRunClient.projects.locations.services.patch.mockResolvedValueOnce({
         data: {
           name: "projects/test-project/locations/us-central1/operations/op-2",
         },
       });
 
       // Mock operation completion
-      (
-        mockRunClient as any
-      ).projects.locations.operations.get.mockResolvedValueOnce({
+      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
         data: { done: true },
       });
 
       // Mock IAM policy
-      (
-        mockRunClient as any
-      ).projects.locations.services.getIamPolicy.mockResolvedValueOnce({
-        data: {
-          bindings: [{ role: "roles/run.invoker", members: ["allUsers"] }],
+      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValueOnce(
+        {
+          data: {
+            bindings: [{ role: "roles/run.invoker", members: ["allUsers"] }],
+          },
         },
-      });
+      );
 
       // Mock final service get to retrieve URI
-      (
-        mockRunClient as any
-      ).projects.locations.services.get.mockResolvedValueOnce({
+      mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { uri: "https://tenant-1-updated.a.run.app" },
       });
 
@@ -177,26 +181,20 @@ describe("CloudRunProvider", () => {
 
       expect(uri).toBe("https://tenant-1-updated.a.run.app");
       expect(
-        (mockRunClient as any).projects.locations.services.patch,
+        mockRunClient.projects.locations.services.patch,
       ).toHaveBeenCalled();
     });
 
     it("should throw error if deployment operation fails", async () => {
-      (
-        mockRunClient as any
-      ).projects.locations.services.get.mockRejectedValueOnce({
+      mockRunClient.projects.locations.services.get.mockRejectedValueOnce({
         code: 404,
       });
-      (
-        mockRunClient as any
-      ).projects.locations.services.create.mockResolvedValueOnce({
+      mockRunClient.projects.locations.services.create.mockResolvedValueOnce({
         data: { name: "op-fail" },
       });
 
       // Mock operation failure
-      (
-        mockRunClient as any
-      ).projects.locations.operations.get.mockResolvedValueOnce({
+      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
         data: { done: true, error: { message: "Internal error" } },
       });
 
@@ -211,9 +209,7 @@ describe("CloudRunProvider", () => {
       vi.useFakeTimers();
 
       // Mock operation never done
-      (
-        mockRunClient as any
-      ).projects.locations.operations.get.mockResolvedValue({
+      mockRunClient.projects.locations.operations.get.mockResolvedValue({
         data: { done: false },
       });
 
@@ -240,14 +236,12 @@ describe("CloudRunProvider", () => {
 
   describe("makeServicePublic", () => {
     it("should add public binding if not present", async () => {
-      (
-        mockRunClient as any
-      ).projects.locations.services.getIamPolicy.mockResolvedValue({
+      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
         data: { bindings: [] },
       });
-      (
-        mockRunClient as any
-      ).projects.locations.services.setIamPolicy.mockResolvedValue({});
+      mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
+        {},
+      );
 
       await (
         provider as unknown as {
@@ -256,7 +250,7 @@ describe("CloudRunProvider", () => {
       ).makeServicePublic("test-service");
 
       expect(
-        (mockRunClient as any).projects.locations.services.setIamPolicy,
+        mockRunClient.projects.locations.services.setIamPolicy,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           requestBody: {
@@ -274,9 +268,7 @@ describe("CloudRunProvider", () => {
     });
 
     it("should update existing invoker binding to include allUsers", async () => {
-      (
-        mockRunClient as any
-      ).projects.locations.services.getIamPolicy.mockResolvedValue({
+      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
         data: {
           bindings: [
             {
@@ -286,9 +278,9 @@ describe("CloudRunProvider", () => {
           ],
         },
       });
-      (
-        mockRunClient as any
-      ).projects.locations.services.setIamPolicy.mockResolvedValue({});
+      mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
+        {},
+      );
 
       await (
         provider as unknown as {
@@ -296,10 +288,13 @@ describe("CloudRunProvider", () => {
         }
       ).makeServicePublic("test-service");
 
-      const call = (mockRunClient as any).projects.locations.services
-        .setIamPolicy.mock.calls[0][0];
+      const calls =
+        mockRunClient.projects.locations.services.setIamPolicy.mock.calls;
+      expect(calls.length).toBeGreaterThan(0);
+      const call = calls[0]![0];
       const invokerBinding = call.requestBody.policy.bindings.find(
-        (b: any) => b.role === "roles/run.invoker",
+        (b: { role: string; members: string[] }) =>
+          b.role === "roles/run.invoker",
       );
       expect(invokerBinding.members).toContain("allUsers");
       expect(invokerBinding.members).toContain("user:special@example.com");

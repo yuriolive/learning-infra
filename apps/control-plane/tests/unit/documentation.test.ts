@@ -14,7 +14,7 @@ describe("Documentation Endpoints", () => {
 
   it("should return documentation HTML at /docs", async () => {
     const request = new Request("http://localhost/docs");
-    const response = await worker.fetch(request, environment as any);
+    const response = await worker.fetch(request, environment as unknown);
     const text = await response.text();
 
     expect(response.status).toBe(200);
@@ -29,7 +29,7 @@ describe("Documentation Endpoints", () => {
 
   it("should return OpenAPI spec at /openapi.json", async () => {
     const request = new Request("http://localhost/openapi.json");
-    const response = await worker.fetch(request, environment as any);
+    const response = await worker.fetch(request, environment as unknown);
     const data = await response.json();
 
     expect(response.status).toBe(200);

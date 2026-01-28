@@ -13,8 +13,8 @@ vi.mock("../../../src/providers/gcp/cloud-run.client");
 describe("TenantService Deployment", () => {
   let service: TenantService;
   let repository: TenantRepository;
-  let mockNeonProvider: { createTenantDatabase: any };
-  let mockCloudRunProvider: { deployTenantInstance: any };
+  let mockNeonProvider: { createTenantDatabase: unknown };
+  let mockCloudRunProvider: { deployTenantInstance: ReturnType<typeof vi.fn> };
   const logger = createLogger({ logLevel: "silent" });
 
   beforeEach(() => {
