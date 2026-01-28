@@ -109,8 +109,9 @@ export class BlingOrderMapper {
     }
 
     const addressMetadata =
-      (shippingAddress.metadata as Record<string, unknown>) || {};
-    const orderMetadata = (order.metadata as Record<string, unknown>) || {};
+      (shippingAddress.metadata as Record<string, unknown> | null) || {};
+    const orderMetadata =
+      (order.metadata as Record<string, unknown> | null) || {};
 
     const nomeCliente = this.composeCustomerName(order);
     const telefone = this.pickString(
@@ -193,7 +194,7 @@ export class BlingOrderMapper {
       order.shipping_total ?? shippingMethod?.amount,
     );
     const shippingMetadata =
-      (shippingMethod?.metadata as Record<string, unknown>) || {};
+      (shippingMethod?.metadata as Record<string, unknown> | null) || {};
 
     const payload: BlingOrderPayload = {
       numeroPedidoLoja: order.id,
@@ -287,10 +288,12 @@ export class BlingOrderMapper {
     order: OrderDTO,
     address: { metadata?: unknown },
   ): string | null {
-    const addressMetadata = (address.metadata as Record<string, unknown>) || {};
+    const addressMetadata =
+      (address.metadata as Record<string, unknown> | null) || {};
     const billingMetadata =
-      (order.billing_address?.metadata as Record<string, unknown>) || {};
-    const orderMetadata = (order.metadata as Record<string, unknown>) || {};
+      (order.billing_address?.metadata as Record<string, unknown> | null) || {};
+    const orderMetadata =
+      (order.metadata as Record<string, unknown> | null) || {};
 
     const candidates = [
       addressMetadata.document,
@@ -341,7 +344,7 @@ export class BlingOrderMapper {
     },
     warnings: string[],
   ): BlingOrderPayload["itens"][0] | null {
-    const metadata = (item.metadata as Record<string, unknown>) || {};
+    const metadata = (item.metadata as Record<string, unknown> | null) || {};
     const externalId = this.pickString(
       metadata.bling_external_id,
       metadata.external_id,
@@ -422,7 +425,7 @@ export class BlingOrderMapper {
     address_1?: string;
     address_2?: string;
   }): string | undefined {
-    const metadata = (address.metadata as Record<string, unknown>) || {};
+    const metadata = (address.metadata as Record<string, unknown> | null) || {};
     const candidates = [metadata.number, metadata.numero, address.address_2];
 
     for (const candidate of candidates) {

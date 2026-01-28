@@ -62,7 +62,9 @@ describe("CloudflareProvider", () => {
       const provider = new CloudflareProvider();
       // Access private client via casting for testing
       const mockCreate = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.create as any;
+        .customHostnames.create as unknown as {
+        mockResolvedValue: (value: unknown) => void;
+      };
       mockCreate.mockResolvedValue({});
 
       await provider.createCustomHostname("tenant-1", "test.example.com");
@@ -79,8 +81,11 @@ describe("CloudflareProvider", () => {
 
     it("should allow overriding SSL settings", async () => {
       const provider = new CloudflareProvider();
-      const mockCreate = (provider as any).client.customHostnames.create;
-      mockCreate.mockResolvedValue({} as any);
+      const mockCreate = (provider as unknown as { client: Cloudflare }).client
+        .customHostnames.create as unknown as {
+        mockResolvedValue: (value: unknown) => void;
+      };
+      mockCreate.mockResolvedValue({});
 
       await provider.createCustomHostname("tenant-1", "test.example.com", {
         ssl: { method: "txt", type: "dv" },
@@ -98,7 +103,10 @@ describe("CloudflareProvider", () => {
 
     it("should propagate errors from SDK", async () => {
       const provider = new CloudflareProvider();
-      const mockCreate = (provider as any).client.customHostnames.create;
+      const mockCreate = (provider as unknown as { client: Cloudflare }).client
+        .customHostnames.create as unknown as {
+        mockRejectedValue: (value: unknown) => void;
+      };
       const error = new Error("API Error");
       mockCreate.mockRejectedValue(error);
 
@@ -112,7 +120,9 @@ describe("CloudflareProvider", () => {
     it("should return status and verification errors", async () => {
       const provider = new CloudflareProvider();
       const mockList = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.list as any;
+        .customHostnames.list as unknown as {
+        mockResolvedValue: (value: unknown) => void;
+      };
 
       const mockResponse = {
         result: [
@@ -143,13 +153,16 @@ describe("CloudflareProvider", () => {
 
     it("should throw error if hostname not found", async () => {
       const provider = new CloudflareProvider();
-      const mockList = (provider as any).client.customHostnames.list;
+      const mockList = (provider as unknown as { client: Cloudflare }).client
+        .customHostnames.list as unknown as {
+        mockResolvedValue: (value: unknown) => void;
+      };
 
       const mockResponse = {
         result: [],
       };
 
-      mockList.mockResolvedValue(mockResponse as any);
+      mockList.mockResolvedValue(mockResponse);
 
       await expect(
         provider.getHostnameStatus("tenant-1", "test.example.com"),
