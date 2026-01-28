@@ -110,9 +110,9 @@ Check for common issues:
 1. **Run Quality Checks**:
 
    ```bash
-   bun run lint
-   bun run typecheck
-   bun run test
+   pnpm run lint
+   pnpm run typecheck
+   pnpm run test
    ```
 
 2. **Verify**:

@@ -59,7 +59,7 @@ Save this value - you'll need it for both Cloudflare Secrets Store and GitHub Se
 
 ```bash
 # Create a new Secrets Store for Control Plane
-bun wrangler secrets-store create control-plane-secrets
+pnpm wrangler secrets-store create control-plane-secrets
 
 # Copy the UUID that's returned - you'll need it for wrangler.jsonc
 ```
@@ -71,20 +71,20 @@ bun wrangler secrets-store create control-plane-secrets
 export SECRETS_STORE_ID="your-secrets-store-uuid-here"
 
 # Add each secret
-echo -n "postgresql://user:pass@host:5432/db" | bun wrangler secrets-store secret put control-plane-db-url --secrets-store-id=$SECRETS_STORE_ID
-echo -n "your-neon-api-key" | bun wrangler secrets-store secret put neon-api-key --secrets-store-id=$SECRETS_STORE_ID
-echo -n "your-neon-project-id" | bun wrangler secrets-store secret put neon-project-id --secrets-store-id=$SECRETS_STORE_ID
-echo -n "$(openssl rand -base64 32)" | bun wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
-echo -n "your-cloudflare-api-token" | bun wrangler secrets-store secret put cloudflare-api-token --secrets-store-id=$SECRETS_STORE_ID
-echo -n "your-cloudflare-zone-id" | bun wrangler secrets-store secret put cloudflare-zone-id --secrets-store-id=$SECRETS_STORE_ID
-echo -n "your-posthog-api-key" | bun wrangler secrets-store secret put posthog-api-key --secrets-store-id=$SECRETS_STORE_ID
+echo -n "postgresql://user:pass@host:5432/db" | pnpm wrangler secrets-store secret put control-plane-db-url --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-neon-api-key" | pnpm wrangler secrets-store secret put neon-api-key --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-neon-project-id" | pnpm wrangler secrets-store secret put neon-project-id --secrets-store-id=$SECRETS_STORE_ID
+echo -n "$(openssl rand -base64 32)" | pnpm wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-cloudflare-api-token" | pnpm wrangler secrets-store secret put cloudflare-api-token --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-cloudflare-zone-id" | pnpm wrangler secrets-store secret put cloudflare-zone-id --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-posthog-api-key" | pnpm wrangler secrets-store secret put posthog-api-key --secrets-store-id=$SECRETS_STORE_ID
 ```
 
 ### 2.3 Verify Secrets
 
 ```bash
 # List all secrets in the store
-bun wrangler secrets-store secret list --secrets-store-id=$SECRETS_STORE_ID
+pnpm wrangler secrets-store secret list --secrets-store-id=$SECRETS_STORE_ID
 ```
 
 ---
@@ -175,7 +175,7 @@ NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
 
 ```bash
 cd apps/control-plane
-bun run dev
+pnpm run dev
 ```
 
 ---
@@ -186,11 +186,11 @@ bun run dev
 
 ```bash
 # From project root
-bun run deploy:control-plane
+pnpm run deploy:control-plane
 
 # Or from apps/control-plane
 cd apps/control-plane
-bun run deploy
+pnpm run deploy
 ```
 
 ### CI/CD Deployment
@@ -211,7 +211,7 @@ All requests to `/api/tenants/*` require the Admin API key:
 
 ```bash
 # Get admin API key from Secrets Store
-ADMIN_KEY=$(bun wrangler secrets-store secret get control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID)
+ADMIN_KEY=$(pnpm wrangler secrets-store secret get control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID)
 
 # Make authenticated request
 curl -H "Authorization: Bearer $ADMIN_KEY" \
@@ -225,7 +225,7 @@ curl -H "Authorization: Bearer $ADMIN_KEY" \
 NEW_KEY=$(openssl rand -base64 32)
 
 # Update in Secrets Store
-echo -n "$NEW_KEY" | bun wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
+echo -n "$NEW_KEY" | pnpm wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
 
 # Update GitHub Secret (manual via UI or GitHub CLI)
 gh secret set ADMIN_API_KEY --body "$NEW_KEY"
@@ -241,7 +241,7 @@ gh secret set ADMIN_API_KEY --body "$NEW_KEY"
 
 - Verify Secrets Store ID in `wrangler.jsonc` is correct
 - Check secret names match exactly (case-sensitive)
-- Run `bun wrangler secrets-store secret list` to verify secrets exist
+- Run `pnpm wrangler secrets-store secret list` to verify secrets exist
 
 **"Unauthorized" when calling API**
 

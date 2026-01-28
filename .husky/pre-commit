@@ -1,5 +1,6 @@
 # Run staged linters and checks
-bun x lint-staged
+# Run staged linters and checks
+pnpm exec lint-staged
 
 # Run typecheck on affected packages (only checks packages with staged changes)
-bun run typecheck --filter='[HEAD^1]'
+pnpm run typecheck --filter="[HEAD]"

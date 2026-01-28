@@ -1,41 +1,29 @@
-FROM oven/bun:1.2.20
+# Stage 1: Runner
+FROM node:20-alpine
 
-WORKDIR /app
+# Install pnpm globally via Corepack (or npm)
+RUN npm install -g pnpm
 
-# Install Node.js for MedusaJS build (fixes source map issue with Bun)
-# Bun image is based on Debian, so we can install Node.js via apt
-RUN apt-get update && \
-    apt-get install -y curl ca-certificates && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Set working directory to /server
+WORKDIR /server
 
-# Copy package.json files
-COPY package.json bun.lock turbo.json ./
-COPY apps/tenant-instance/package.json ./apps/tenant-instance/
-COPY packages/analytics/package.json ./packages/analytics/
-COPY packages/config/package.json ./packages/config/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/medusa/plugins/medusa-plugin-bling/package.json ./packages/medusa/plugins/medusa-plugin-bling/
+# Copy entire context
+COPY . .
 
-# Install dependencies
-RUN bun install
+# Create pnpm-workspace.yaml if not exists (though it should exist now) or ensure correct context
+# (Assuming pnpm-workspace.yaml is copied with COPY . .)
 
-# Copy application code and workspace dependencies
-COPY apps/tenant-instance ./apps/tenant-instance
-COPY packages/analytics ./packages/analytics
-COPY packages/config ./packages/config
-COPY packages/utils ./packages/utils
-COPY packages/medusa/plugins/medusa-plugin-bling ./packages/medusa/plugins/medusa-plugin-bling
+# Install dependencies using pnpm
+RUN pnpm install --frozen-lockfile
 
-# Build the application
-WORKDIR /app/apps/tenant-instance
-ENV NODE_ENV=production
-ENV MEDUSA_TELEMETRY_DISABLED=1
-# Use npm/npx for build (fixes Bun source map issue with MedusaJS decorators)
-# npx will use the installed Node.js instead of Bun
-RUN bun run build
+# Set working directory to the app
+WORKDIR /server/apps/tenant-instance
 
-EXPOSE 9000
+# Give execution permission to start.sh
+RUN chmod +x ./start.sh
 
-CMD ["bun", "run", "start"]
+# Expose backend and admin ports
+EXPOSE 9000 5173
+
+# Start with migrations and then the development server
+ENTRYPOINT ["./start.sh"]

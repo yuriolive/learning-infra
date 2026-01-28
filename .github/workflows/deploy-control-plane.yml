@@ -12,7 +12,7 @@ on:
       - "apps/control-plane/**"
       - "packages/**"
       - "package.json"
-      - "bun.lock"
+      - "pnpm-lock.yaml"
       - ".github/workflows/deploy-control-plane.yml"
   workflow_dispatch:
 
@@ -31,16 +31,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 20
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: bun run build --filter=@vendin/control-plane...
+        run: npx turbo run build --filter=@vendin/control-plane...
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -58,7 +62,7 @@ jobs:
           echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
 
       - name: Run migrations
-        run: bun run --cwd apps/control-plane db:migrate
+        run: pnpm run db:migrate --filter control-plane
 
   deploy:
     name: Deploy to Cloudflare Workers
@@ -68,16 +72,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 20
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build dependencies
-        run: bun run build --filter=@vendin/control-plane...
+        run: npx turbo run build --filter=@vendin/control-plane...
 
       - name: Inject Secret Store ID
         working-directory: apps/control-plane

@@ -16,17 +16,16 @@
     }
   },
   "scripts": {
-    "build": "bun x tsc",
-    "lint": "bun x eslint .",
-    "lint:fix": "bun x eslint . --fix",
-    "typecheck": "bun x tsc --noEmit"
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "pino": "^10.1.0"
   },
   "devDependencies": {
     "@vendin/config": "workspace:*",
-    "@types/bun": "^1.1.10",
     "eslint": "^9.37.0",
     "pino-pretty": "^13.1.2",
     "typescript": "^5.9.3"

@@ -1,0 +1,16 @@
+.git
+node_modules
+dist
+.medusa
+.env
+.env.*
+!.env.template
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+**/.medusa
+.turbo
+**/log
+**/logs
+*.log
