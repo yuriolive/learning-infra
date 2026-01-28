@@ -304,6 +304,9 @@ importers:
       "@medusajs/admin-sdk":
         specifier: ^2.13.0
         version: 2.13.1
+      "@medusajs/admin-shared":
+        specifier: ^2.13.1
+        version: 2.13.1
       "@medusajs/cli":
         specifier: ^2.13.0
         version: 2.13.1(@types/node@20.19.30)
