@@ -11,13 +11,13 @@ import { generateOpenAPISpec } from "./openapi/generator";
 
 import type { MiddlewareOptions } from "./middleware";
 
-interface SecretBinding {
+export interface SecretBinding {
   get(): Promise<string>;
 }
 
-type BoundSecret = string | SecretBinding;
+export type BoundSecret = string | SecretBinding;
 
-interface Environment {
+export interface Environment {
   DATABASE_URL: BoundSecret;
   LOG_LEVEL?: string;
   NODE_ENV?: string;
