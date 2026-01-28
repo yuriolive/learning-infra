@@ -22,6 +22,7 @@
     "watch": "tsc --watch",
     "clean": "rm -rf dist .medusa",
     "test": "vitest --passWithNoTests",
+    "test:coverage": "vitest --coverage --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
     "@medusajs/cli": "^2.13.0",
     "@medusajs/orchestration": "^2.13.1",
     "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },
