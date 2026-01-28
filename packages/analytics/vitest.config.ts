@@ -1,7 +1,5 @@
-import { defineConfig } from "vitest/config";
+import { mergeConfig, defineConfig } from "vitest/config";
 
-export default defineConfig({
-  test: {
-    exclude: ["dist/**", "node_modules/**"],
-  },
-});
+import { vitestBaseConfig } from "../config/vitest.base.ts";
+
+export default mergeConfig(vitestBaseConfig, defineConfig({}));
