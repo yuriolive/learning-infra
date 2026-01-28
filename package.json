@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@vendin/config": "workspace:*",
     "@types/node": "^24.7.1",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
