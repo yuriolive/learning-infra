@@ -381,6 +381,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/assets:
     dependencies:
@@ -29593,7 +29596,6 @@ snapshots:
       magic-string: 0.30.21
     optionalDependencies:
       vite: 7.3.1(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2)
-    optional: true
 
   "@vitest/pretty-format@3.2.4":
     dependencies:
@@ -35778,7 +35780,6 @@ snapshots:
       - terser
       - tsx
       - yaml
-    optional: true
 
   void-elements@3.1.0: {}
 

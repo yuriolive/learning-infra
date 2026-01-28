@@ -1,15 +1,13 @@
-import { describe, it, expect, beforeEach, mock } from "bun:test";
 import { PostHog } from "posthog-node";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
 import { initAnalytics, captureError, shutdown, __resetClient } from "./index";
 
-void mock.module("posthog-node", () => {
-  return {
-    PostHog: mock(() => ({
-      capture: mock(),
-      shutdown: mock().mockResolvedValue(void 0),
-    })),
-  };
+vi.mock("posthog-node", () => {
+  const PostHogMock = vi.fn();
+  PostHogMock.prototype.capture = vi.fn();
+  PostHogMock.prototype.shutdown = vi.fn().mockResolvedValue(void 0);
+  return { PostHog: PostHogMock };
 });
 
 describe("analytics", () => {
