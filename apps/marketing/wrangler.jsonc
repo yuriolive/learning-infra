@@ -22,6 +22,7 @@
     {
       "binding": "DB",
       "database_name": "marketing-db",
+      // This ID is replaced by the CI/CD pipeline during deployment
       "database_id": "PLACEHOLDER_DB_ID"
     }
   ],

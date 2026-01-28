@@ -1,46 +1,18 @@
 "use client";
 
 import { Button, Checkbox, Input, Link } from "@heroui/react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { authClient } from "../../lib/auth-client";
+import { useEmailAuth } from "../../hooks/use-email-auth";
 import { PasswordInput } from "./password-input";
 
 export const EmailLoginForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handleEmailLogin = async () => {
-    setLoading(true);
-    await authClient.signIn.email(
-      {
-        email,
-        password,
-        callbackURL: "/",
-      },
-      {
-        onSuccess: () => {
-          setLoading(false);
-          toast.success("Logged in successfully");
-          router.push("/");
-        },
-        onError: (ctx) => {
-          setLoading(false);
-          toast.error(ctx.error.message);
-        },
-      }
-    );
-  };
+  const { email, setEmail, password, setPassword, loading, submit } = useEmailAuth("login");
 
   return (
     <form
       className="flex flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault();
-        void handleEmailLogin();
+        void submit();
       }}
     >
       <Input
