@@ -8,13 +8,13 @@
 echo "Running database migrations..."
 pnpm run db:migrate
 
-echo "Seeding database..."
-pnpm run db:seed || echo "Seeding failed, continuing..."
-
 if [ "$NODE_ENV" = "production" ]; then
   echo "Starting Medusa production server..."
   pnpm start
 else
+  echo "Seeding database..."
+  pnpm run db:seed || echo "Seeding failed, continuing..."
+
   echo "Starting Medusa development server..."
   pnpm run dev
 fi
