@@ -66,4 +66,4 @@ The root `docker-compose.yml` includes:
 - **Neon Proxy**: For simulating Neon serverless environment locally.
 
 If you need to access the database directly, use:
-`postgres://postgres:postgres@localhost:5432/main`
+`postgres://postgres:postgres@localhost:5432/main` (The `.env` is also configured to use this by default for local development).
