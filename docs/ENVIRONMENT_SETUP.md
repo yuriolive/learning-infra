@@ -13,19 +13,24 @@ This document consolidates all environment variable and secrets management for t
 
 ### Control Plane Environment Variables
 
-| Variable               | Type      | Source           | Purpose                          |
-| ---------------------- | --------- | ---------------- | -------------------------------- |
-| `DATABASE_URL`         | Secret    | Secrets Store    | PostgreSQL connection string     |
-| `NEON_API_KEY`         | Secret    | Secrets Store    | Neon API authentication          |
-| `NEON_PROJECT_ID`      | Secret    | Secrets Store    | Neon project identifier          |
-| `ADMIN_API_KEY`        | Secret    | Secrets Store    | API authentication (Bearer)      |
-| `CLOUDFLARE_API_TOKEN` | Secret    | Secrets Store    | Cloudflare API access            |
-| `CLOUDFLARE_ZONE_ID`   | Secret    | Secrets Store    | Zone ID for vendin.store         |
-| `ALLOWED_ORIGINS`      | Plain Var | `wrangler.jsonc` | CORS allowed origins             |
-| `LOG_LEVEL`            | Plain Var | `wrangler.jsonc` | Logging verbosity (info/debug)   |
-| `NODE_ENV`             | Plain Var | `wrangler.jsonc` | Runtime environment (production) |
-| `POSTHOG_API_KEY`      | Secret    | Secrets Store    | PostHog project API key          |
-| `POSTHOG_HOST`         | Plain Var | `wrangler.jsonc` | PostHog API host                 |
+| Variable                         | Type      | Source           | Purpose                          |
+| -------------------------------- | --------- | ---------------- | -------------------------------- |
+| `DATABASE_URL`                   | Secret    | Secrets Store    | PostgreSQL connection string     |
+| `NEON_API_KEY`                   | Secret    | Secrets Store    | Neon API authentication          |
+| `NEON_PROJECT_ID`                | Secret    | Secrets Store    | Neon project identifier          |
+| `ADMIN_API_KEY`                  | Secret    | Secrets Store    | API authentication (Bearer)      |
+| `CLOUDFLARE_API_TOKEN`           | Secret    | Secrets Store    | Cloudflare API access            |
+| `CLOUDFLARE_ZONE_ID`             | Secret    | Secrets Store    | Zone ID for vendin.store         |
+| `ALLOWED_ORIGINS`                | Plain Var | `wrangler.jsonc` | CORS allowed origins             |
+| `LOG_LEVEL`                      | Plain Var | `wrangler.jsonc` | Logging verbosity (info/debug)   |
+| `NODE_ENV`                       | Plain Var | `wrangler.jsonc` | Runtime environment (production) |
+| `POSTHOG_API_KEY`                | Secret    | Secrets Store    | PostHog project API key          |
+| `POSTHOG_HOST`                   | Plain Var | `wrangler.jsonc` | PostHog API host                 |
+| `UPSTASH_REDIS_URL`              | Secret    | Secrets Store    | Redis connection string          |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials  |
+| `GCP_PROJECT_ID`                 | Plain Var | `wrangler.jsonc` | Google Cloud Project ID          |
+| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region              |
+| `TENANT_IMAGE_TAG`               | Plain Var | `wrangler.jsonc` | Docker image tag for tenant      |
 
 ---
 
@@ -50,6 +55,11 @@ Save this value - you'll need it for both Cloudflare Secrets Store and GitHub Se
 - **CLOUDFLARE_ZONE_ID**: From Cloudflare dashboard → vendin.store → Overview → Zone ID
 - **POSTHOG_API_KEY**: From PostHog Dashboard → Project Settings → Project API Key
 - **POSTHOG_HOST**: Use `https://us.i.posthog.com` for US Cloud or `https://eu.i.posthog.com` for EU.
+- **UPSTASH_REDIS_URL**: From [Upstash Console](https://console.upstash.com) (Redis Connection String)
+- **GOOGLE_APPLICATION_CREDENTIALS**: JSON key file content for GCP Service Account (minified)
+- **GCP_PROJECT_ID**: Your Google Cloud Project ID
+- **GCP_REGION**: e.g., `us-central1`
+- **TENANT_IMAGE_TAG**: Full Docker image path (e.g., `europe-docker.pkg.dev/...`)
 
 ---
 
@@ -78,6 +88,8 @@ echo -n "$(openssl rand -base64 32)" | pnpm wrangler secrets-store secret put co
 echo -n "your-cloudflare-api-token" | pnpm wrangler secrets-store secret put cloudflare-api-token --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-cloudflare-zone-id" | pnpm wrangler secrets-store secret put cloudflare-zone-id --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-posthog-api-key" | pnpm wrangler secrets-store secret put posthog-api-key --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-upstash-redis-url" | pnpm wrangler secrets-store secret put upstash-redis-url --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-google-creds-json" | pnpm wrangler secrets-store secret put google-application-credentials --secrets-store-id=$SECRETS_STORE_ID
 ```
 
 ### 2.3 Verify Secrets
@@ -110,6 +122,11 @@ Update `apps/control-plane/wrangler.jsonc`:
       { "binding": "CLOUDFLARE_API_TOKEN", "name": "cloudflare-api-token" },
       { "binding": "CLOUDFLARE_ZONE_ID", "name": "cloudflare-zone-id" },
       { "binding": "POSTHOG_API_KEY", "name": "posthog-api-key" },
+      { "binding": "UPSTASH_REDIS_URL", "name": "upstash-redis-url" },
+      {
+        "binding": "GOOGLE_APPLICATION_CREDENTIALS",
+        "name": "google-application-credentials",
+      },
     ],
   },
 
@@ -118,6 +135,9 @@ Update `apps/control-plane/wrangler.jsonc`:
     "LOG_LEVEL": "info",
     "NODE_ENV": "production",
     "POSTHOG_HOST": "https://us.i.posthog.com",
+    "GCP_PROJECT_ID": "VALUE_PLACEHOLDER",
+    "GCP_REGION": "us-central1",
+    "TENANT_IMAGE_TAG": "europe-docker.pkg.dev/VALUE_PLACEHOLDER/repo/tenant-instance:latest",
   },
 }
 ```
@@ -167,6 +187,11 @@ POSTHOG_API_KEY="your-posthog-api-key"
 POSTHOG_HOST="https://us.i.posthog.com"
 NEXT_PUBLIC_POSTHOG_KEY="your-posthog-api-key"
 NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
+UPSTASH_REDIS_URL="redis://default:token@region.upstash.io:port"
+GOOGLE_APPLICATION_CREDENTIALS="{}"
+GCP_PROJECT_ID="your-gcp-project-id"
+GCP_REGION="us-central1"
+TENANT_IMAGE_TAG="europe-docker.pkg.dev/project/repo/tenant-instance:latest"
 ```
 
 > ⚠️ **Important**: `.dev.vars` is gitignored. Never commit secrets to version control.
