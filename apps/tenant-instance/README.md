@@ -36,7 +36,7 @@ Once the logs show `Medusa server started`, you can access:
 If you need to create an admin user manually:
 
 ```bash
-docker compose exec tenant-instance npx medusa user -e admin@vendin.store -p supersecret
+docker compose exec -w /server/apps/tenant-instance tenant-instance pnpm medusa user -e admin@vendin.store -p supersecret
 ```
 
 ## Testing
