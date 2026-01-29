@@ -1,38 +1,34 @@
 ---
-description: Hostname-based tenant routing patterns for storefront.
+description: Middleware-based tenant routing for Shared Storefront.
 globs: apps/storefront/**/*
 ---
-# Storefront Routing Patterns
+# Storefront Routing Rules
 
-## Hostname Resolution
+## Core Principle: Middleware-First
 
-The storefront is **router-only**. It resolves tenants from incoming hostname and redirects/proxies to tenant instances. It does not render customer UI.
+The Shared Storefront uses Next.js Middleware to handle multi-tenancy. **Never** hardcode tenant IDs or backend URLs.
 
-See [docs/examples/hostname-routing.ts](../../../docs/examples/hostname-routing.ts) for implementation patterns.
+## Rules
 
-## Routing Logic
+1.  **Hostname as Source of Truth**:
+    - Always resolve context from the `Host` header.
+    - Never rely on query params (e.g., `?tenant=123`) for public URLs.
 
-### Root Domain (vendin.store)
-Root domain is served by the **marketing app**. If a root-domain request hits the storefront, redirect to the marketing site.
+2.  **Clean URLs**:
+    - Public: `cool-store.com/products/hat`
+    - Internal (Rewritten): `/_tenant/tenant_123/products/hat`
+    - **Rule**: Users must NEVER see the internal URL structure.
 
-### Control Plane API (control.vendin.store)
-Should be handled by Cloud Run domain mapping, not storefront. Redirect or return 404.
+3.  **Data Fetching**:
+    - Server Components: Must read `tenantId` from the rewritten headers or path params.
+    - Client Components: Must read `tenantId` from `TenantContext`.
 
-### Tenant Store
-Resolve tenant from hostname. If tenant not found or inactive, redirect to marketing site or show suspended page. Redirect/proxy to tenant instance for active tenants.
+4.  **404 Handling**:
+    - If a hostname is not recognized, Rewrite to a generic "Store Not Found" or "Landing Page" (marketing).
+    - Do not throw a 500 error.
 
-## Middleware Pattern (Next.js)
+## Headers
 
-Use Next.js middleware for hostname-based routing. See [docs/examples/hostname-routing.ts](../../../docs/examples/hostname-routing.ts) for middleware implementation.
-
-## Caching
-
-- Cache tenant lookups (TTL: 5 minutes)
-- Invalidate cache on tenant status changes
-- Use Redis for distributed caching
-
-## References
-
-- **Subdomain structure**: See [@project-overview.md](../../shared/project/project-overview.md)
-- **Reserved subdomains**: See [@references.md](../../shared/references.md)
-- **Code examples**: See [docs/examples/hostname-routing.ts](../../../docs/examples/hostname-routing.ts)
+The Middleware should inject these headers for downstream use:
+- `x-vendin-tenant-id`: The resolved ID.
+- `x-vendin-backend-url`: The URL of the tenant's dedicated backend.

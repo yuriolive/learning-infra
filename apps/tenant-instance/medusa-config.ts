@@ -2,6 +2,15 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
+const jwtSecret = process.env.JWT_SECRET;
+const cookieSecret = process.env.COOKIE_SECRET;
+
+if (!jwtSecret || !cookieSecret) {
+  throw new Error("Missing JWT_SECRET or COOKIE_SECRET environment variables.");
+}
+
+const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -15,11 +24,11 @@ export default defineConfig({
         : { connection: { ssl: true } },
     redisUrl: process.env.REDIS_URL,
     http: {
-      storeCors: process.env.STORE_CORS!,
-      adminCors: process.env.ADMIN_CORS!,
-      authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET!,
-      cookieSecret: process.env.COOKIE_SECRET!,
+      storeCors: process.env.STORE_CORS || "",
+      adminCors: process.env.ADMIN_CORS || "",
+      authCors: process.env.AUTH_CORS || "",
+      jwtSecret,
+      cookieSecret,
     },
   },
   admin: {
@@ -42,12 +51,16 @@ export default defineConfig({
       resolve: "@medusajs/medusa/cache-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
+        namespace: redisPrefix,
       },
     },
     {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
+        queueOptions: {
+          prefix: redisPrefix,
+        },
       },
     },
   ],

@@ -9,15 +9,13 @@ import { TenantService } from "./domains/tenants/tenant.service";
 import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
 
-import type { MiddlewareOptions } from "./middleware";
-
 interface SecretBinding {
   get(): Promise<string>;
 }
 
 type BoundSecret = string | SecretBinding;
 
-interface Environment {
+export interface Environment {
   DATABASE_URL: BoundSecret;
   LOG_LEVEL?: string;
   NODE_ENV?: string;
@@ -27,6 +25,11 @@ interface Environment {
   ALLOWED_ORIGINS?: string;
   POSTHOG_API_KEY?: BoundSecret;
   POSTHOG_HOST?: string;
+  GCP_PROJECT_ID?: string;
+  GCP_REGION?: string;
+  TENANT_IMAGE_TAG?: string;
+  UPSTASH_REDIS_URL?: BoundSecret;
+  GOOGLE_APPLICATION_CREDENTIALS?: BoundSecret;
 }
 
 const openApiSpecs = new LRUCache<
@@ -151,63 +154,158 @@ function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.NEON_PROJECT_ID),
     resolveSecret(environment.ADMIN_API_KEY),
     resolveSecret(environment.POSTHOG_API_KEY),
+    resolveSecret(environment.UPSTASH_REDIS_URL),
+    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS),
   ]);
 }
 
+function initApplicationAnalytics(
+  postHogApiKey: string | undefined,
+  postHogHost: string | undefined,
+) {
+  if (postHogApiKey) {
+    initAnalytics(
+      postHogApiKey,
+      postHogHost ? { host: postHogHost } : undefined,
+    );
+  }
+}
+
+function createMiddlewareOptions(
+  logger: ReturnType<typeof createLogger>,
+  adminApiKey: string | undefined,
+  nodeEnvironment: string,
+  allowedOrigins: string | undefined,
+) {
+  return {
+    logger,
+    adminApiKey,
+    nodeEnv: nodeEnvironment,
+    allowedOrigins: allowedOrigins
+      ? allowedOrigins.split(",").map((o) => o.trim())
+      : [],
+  };
+}
+
+function createServices(
+  logger: ReturnType<typeof createLogger>,
+  databaseUrl: string,
+  nodeEnvironment: string,
+  environment: Environment,
+  neonApiKey: string | undefined,
+  neonProjectId: string | undefined,
+  googleApplicationCredentials: string | undefined,
+) {
+  const database = createDatabase(databaseUrl, nodeEnvironment);
+  const tenantRepository = new TenantRepository(database);
+  const tenantService = new TenantService(tenantRepository, {
+    logger,
+    neonApiKey,
+    neonProjectId,
+    gcpCredentialsJson: googleApplicationCredentials,
+    gcpProjectId: environment.GCP_PROJECT_ID,
+    gcpRegion: environment.GCP_REGION,
+    tenantImageTag: environment.TENANT_IMAGE_TAG,
+    upstashRedisUrl: environment.UPSTASH_REDIS_URL as string | undefined,
+  });
+  return { tenantService };
+}
+
+function validateConfiguration(
+  logger: ReturnType<typeof createLogger>,
+  databaseUrl: string | undefined,
+  adminApiKey: string | undefined,
+  nodeEnvironment: string,
+): Response | undefined {
+  if (!databaseUrl) {
+    logger.error("DATABASE_URL is required but was not configured");
+    return new Response(
+      JSON.stringify({
+        error: "Configuration Error",
+        message: "Database configuration is missing",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  if (nodeEnvironment === "production" && !adminApiKey) {
+    logger.error(
+      "ADMIN_API_KEY is required in production but was not configured",
+    );
+    return new Response(
+      JSON.stringify({
+        error: "Configuration Error",
+        message: "Service is not properly configured",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  return undefined;
+}
+
 export default {
-  async fetch(request: Request, environment: Environment): Promise<Response> {
+  async fetch(
+    request: Request,
+    environment: Environment,
+    context?: { waitUntil: (promise: Promise<unknown>) => void },
+  ): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
     const logger = createLogger({
       logLevel: environment.LOG_LEVEL,
       nodeEnv: nodeEnvironment,
     });
 
-    const [databaseUrl, neonApiKey, neonProjectId, adminApiKey, postHogApiKey] =
-      await resolveEnvironmentSecrets(environment);
-
-    if (postHogApiKey) {
-      initAnalytics(
-        postHogApiKey,
-        environment.POSTHOG_HOST
-          ? { host: environment.POSTHOG_HOST }
-          : undefined,
-      );
-    }
-
-    const middlewareOptions: MiddlewareOptions = {
-      logger,
-      adminApiKey,
-      nodeEnv: nodeEnvironment,
-      allowedOrigins: environment.ALLOWED_ORIGINS
-        ? environment.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-        : [],
-    };
-
-    // Enforce ADMIN_API_KEY in production
-    if (nodeEnvironment === "production" && !adminApiKey) {
-      logger.error(
-        "ADMIN_API_KEY is required in production but was not configured",
-      );
-      return new Response(
-        JSON.stringify({
-          error: "Configuration Error",
-          message: "Service is not properly configured",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    const database = createDatabase(databaseUrl, nodeEnvironment);
-    const tenantRepository = new TenantRepository(database);
-    const tenantService = new TenantService(tenantRepository, {
-      logger,
+    const [
+      databaseUrl,
       neonApiKey,
       neonProjectId,
+      adminApiKey,
+      postHogApiKey,
+      _upstashRedisUrl,
+      googleApplicationCredentials,
+    ] = await resolveEnvironmentSecrets(environment);
+
+    initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
+
+    const middlewareOptions = createMiddlewareOptions(
+      logger,
+      adminApiKey,
+      nodeEnvironment,
+      environment.ALLOWED_ORIGINS,
+    );
+
+    const configError = validateConfiguration(
+      logger,
+      databaseUrl,
+      adminApiKey,
+      nodeEnvironment,
+    );
+    if (configError) return configError;
+
+    const { tenantService } = createServices(
+      logger,
+      databaseUrl as string,
+      nodeEnvironment,
+      environment,
+      neonApiKey,
+      neonProjectId,
+      googleApplicationCredentials,
+    );
+
+    const tenantRoutes = createTenantRoutes({
+      logger,
+      tenantService,
+      ...(context?.waitUntil
+        ? { waitUntil: context.waitUntil.bind(context) }
+        : {}),
     });
-    const tenantRoutes = createTenantRoutes({ logger, tenantService });
 
     const url = new URL(request.url);
     const origin = `${url.protocol}//${url.host}`;

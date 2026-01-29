@@ -1,6 +1,15 @@
+import { createHash, randomBytes } from "node:crypto";
+
 import { type createLogger } from "@vendin/utils/logger";
 
+import { CloudRunProvider } from "../../providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../providers/neon/neon.client";
+
+import {
+  SubdomainInUseError,
+  SubdomainRequiredError,
+  TenantNotFoundError,
+} from "./tenant.errors";
 
 import type { TenantRepository } from "./tenant.repository";
 import type {
@@ -12,11 +21,18 @@ import type {
 interface TenantServiceConfig {
   neonApiKey?: string | undefined;
   neonProjectId?: string | undefined;
+  gcpCredentialsJson?: string | undefined;
+  gcpProjectId?: string | undefined;
+  gcpRegion?: string | undefined;
+  tenantImageTag?: string | undefined;
+  upstashRedisUrl?: string | undefined;
   logger: ReturnType<typeof createLogger>;
 }
 
 export class TenantService {
   private neonProvider: NeonProvider | null = null;
+  private cloudRunProvider: CloudRunProvider | null = null;
+  private upstashRedisUrl: string | undefined;
   private logger: ReturnType<typeof createLogger>;
 
   constructor(
@@ -24,6 +40,8 @@ export class TenantService {
     config: TenantServiceConfig,
   ) {
     this.logger = config.logger;
+    this.upstashRedisUrl = config.upstashRedisUrl;
+
     try {
       if (config.neonApiKey && config.neonProjectId) {
         this.neonProvider = new NeonProvider({
@@ -36,17 +54,41 @@ export class TenantService {
           "Neon credentials not found. Database provisioning will be skipped.",
         );
       }
+
+      if (
+        config.gcpCredentialsJson &&
+        config.gcpProjectId &&
+        config.gcpRegion &&
+        config.tenantImageTag
+      ) {
+        this.cloudRunProvider = new CloudRunProvider({
+          credentialsJson: config.gcpCredentialsJson,
+          projectId: config.gcpProjectId,
+          region: config.gcpRegion,
+          tenantImageTag: config.tenantImageTag,
+          logger: this.logger,
+        });
+      } else {
+        this.logger.warn(
+          "GCP credentials or config not found. Cloud Run deployment will be skipped.",
+        );
+      }
     } catch (error) {
-      this.logger.error({ error }, "Failed to initialize NeonProvider");
+      this.logger.error({ error }, "Failed to initialize providers");
     }
   }
 
-  async createTenant(input: CreateTenantInput): Promise<Tenant> {
+  async createTenant(
+    input: CreateTenantInput,
+    waitUntil?: (promise: Promise<unknown>) => void,
+  ): Promise<Tenant> {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing) {
-        throw new Error("Subdomain already in use");
+        throw new SubdomainInUseError();
       }
+    } else {
+      throw new SubdomainRequiredError();
     }
 
     // 1. Create tenant record with status 'provisioning'
@@ -55,57 +97,91 @@ export class TenantService {
       // status will default to 'provisioning' via schema default
     });
 
-    // 2. Provision Database (Background process or sync)
-    // For MVP we do it synchronously to ensure valid state or fail fast
-    if (this.neonProvider) {
-      try {
-        this.logger.info(
-          { tenantId: tenant.id },
-          "Provisioning database for tenant",
-        );
-
-        const databaseUrl = await this.neonProvider.createTenantDatabase(
-          tenant.id,
-        );
-
-        // 3. Update tenant with database URL and set status to active (or 'provisioning' if more steps)
-        // Since we don't have Cloud Run provisioning yet, we might keep it 'provisioning'
-        // OR set it to 'active' for the database part.
-        // The PRD says "Single tenant can be provisioned end-to-end".
-        // For now, let's update the databaseUrl. Status update might depend on other steps.
-        // We will keep status as 'provisioning' until the full flow is ready,
-        // OR set to 'active' if this is the only step we have for now and want to test.
-        // Let's update databaseUrl.
-
-        const updated = await this.repository.update(tenant.id, {
-          databaseUrl,
-          // We keep status as provisioning because API url is still missing
-          // status: "active"
-        });
-
-        if (updated) {
-          return updated;
-        }
-      } catch (error) {
-        this.logger.error(
-          { error, tenantId: tenant.id },
-          "Failed to provision database",
-        );
-        // Rollback: Mark as provisioning_failed
-        await this.repository.update(tenant.id, {
-          status: "provisioning_failed",
-        });
-        throw new Error("Failed to provision database resource");
-      }
+    // 2. Trigger background provisioning
+    if (this.neonProvider && this.cloudRunProvider && waitUntil) {
+      waitUntil(this.provisionResources(tenant.id, input.subdomain));
+    } else {
+      this.logger.warn(
+        { tenantId: tenant.id },
+        "Provisioning skipped due to missing providers or waitUntil context",
+      );
     }
 
     return tenant;
   }
 
+  private async provisionResources(tenantId: string, subdomain: string) {
+    if (!this.neonProvider || !this.cloudRunProvider) {
+      return;
+    }
+
+    if (!this.upstashRedisUrl) {
+      this.logger.error(
+        { tenantId },
+        "Provisioning aborted: Missing Upstash Redis URL",
+      );
+      await this.repository.update(tenantId, {
+        status: "provisioning_failed",
+      });
+      return;
+    }
+
+    try {
+      this.logger.info({ tenantId }, "Starting background provisioning");
+
+      // 1. Provision Database
+      const databaseUrl =
+        await this.neonProvider.createTenantDatabase(tenantId);
+
+      // 2. Generate Secrets
+      const cookieSecret = randomBytes(32).toString("hex");
+      const jwtSecret = randomBytes(32).toString("hex");
+
+      // 3. Deploy Cloud Run
+      const redisHash = createHash("sha256")
+        .update(tenantId)
+        .digest("hex")
+        .slice(0, 12);
+      const redisPrefix = `t_${redisHash}:`;
+      const environmentVariables = {
+        DATABASE_URL: databaseUrl,
+        REDIS_URL: this.upstashRedisUrl,
+        REDIS_PREFIX: redisPrefix,
+        COOKIE_SECRET: cookieSecret,
+        JWT_SECRET: jwtSecret,
+        STORE_CORS: `https://${subdomain}.vendin.store,http://localhost:3000`,
+        ADMIN_CORS: `https://admin.vendin.store,http://localhost:7001`,
+      };
+
+      // Filter out empty env vars if needed, but REDIS_URL might be required by Medusa.
+      // If REDIS_URL is empty, we pass it empty string.
+
+      const apiUrl = await this.cloudRunProvider.deployTenantInstance(
+        tenantId,
+        environmentVariables,
+      );
+
+      // 4. Update Tenant
+      await this.repository.update(tenantId, {
+        databaseUrl,
+        apiUrl,
+        redisHash,
+        status: "active",
+      });
+
+      this.logger.info({ tenantId }, "Successfully provisioned resources");
+    } catch (error) {
+      this.logger.error({ error, tenantId }, "Provisioning resources failed");
+      await this.repository.update(tenantId, {
+        status: "provisioning_failed",
+      });
+    }
+  }
+
   async getTenant(id: string): Promise<Tenant> {
     const tenant = await this.repository.findById(id);
     if (!tenant) {
-      throw new Error("Tenant not found");
+      throw new TenantNotFoundError();
     }
     return tenant;
   }
@@ -114,13 +190,13 @@ export class TenantService {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing && existing.id !== id) {
-        throw new Error("Subdomain already in use");
+        throw new SubdomainInUseError();
       }
     }
 
     const updated = await this.repository.update(id, input);
     if (!updated) {
-      throw new Error("Tenant not found");
+      throw new TenantNotFoundError();
     }
     return updated;
   }
@@ -128,7 +204,7 @@ export class TenantService {
   async deleteTenant(id: string): Promise<void> {
     const deleted = await this.repository.softDelete(id);
     if (!deleted) {
-      throw new Error("Tenant not found");
+      throw new TenantNotFoundError();
     }
     // TODO: Trigger resource cleanup (database, etc.)
   }

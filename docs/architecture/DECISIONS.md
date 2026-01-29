@@ -2,6 +2,27 @@
 
 This document records significant architectural decisions for the platform, including context, rationale, and consequences.
 
+## 2026-01-28: Adopt Lockstep MVP Architecture
+
+### Context
+
+Scaling "Router + Isolated Frontend" was adding complexity. We needed a way to support tenant-specific integrations (ERPs, Payments) without managing hundreds of UI deployments or codebases.
+
+### Decision
+
+Move to a **Single Shared Storefront** (UI) + **Multi-Instance Backend** (Logic).
+
+- **Frontend**: One Next.js app serving all tenants.
+- **Backend**: Isolated Cloud Run instances.
+- **Versions**: "Lockstep" policy (everyone on same version).
+- **Features**: "Mega-Image" with all plugins installed, toggled via Env Vars.
+
+### Consequences
+
+- **Positive**: Drastically reduced CI/CD complexity. Single UI to maintain.
+- **Negative**: Less flexibility for "custom React code" per tenant (must be config-driven).
+- **Action**: Deprecate Storefront Router.
+
 ## 2026-01-27: Use PNPM Package Manager
 
 ### Context
