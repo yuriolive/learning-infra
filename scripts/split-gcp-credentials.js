@@ -7,8 +7,9 @@
  * Usage: node scripts/split-gcp-credentials.js <path-to-json-file>
  */
 
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
 
 const filePath = process.argv[2];
 
@@ -20,7 +21,13 @@ if (!filePath) {
 }
 
 try {
-  const absolutePath = path.resolve(process.cwd(), filePath);
+  const normalizedPath = path.normalize(filePath);
+  if (normalizedPath.includes("..")) {
+    console.error("Error: Access denied. Path traversal detected.");
+    process.exit(1);
+  }
+
+  const absolutePath = path.resolve(process.cwd(), normalizedPath);
 
   // Security: Prevent path traversal by ensuring the resolved path is within the project directory
   if (!absolutePath.startsWith(process.cwd())) {
@@ -30,7 +37,7 @@ try {
     process.exit(1);
   }
 
-  if (!fs.existsSync(absolutePath)) {
+  if (!fs.statSync(absolutePath).isFile()) {
     console.error(`Error: File not found at ${absolutePath}`);
     process.exit(1);
   }
