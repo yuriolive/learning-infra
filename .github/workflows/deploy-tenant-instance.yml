@@ -11,8 +11,9 @@ on:
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "turbo.json"
-  workflow_dispatch:
       - ".github/workflows/deploy-tenant-instance.yml"
+  workflow_dispatch:
+
 jobs:
   deploy:
     name: Build and Push Docker Image
