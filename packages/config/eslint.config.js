@@ -58,7 +58,7 @@ export default [
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-module-boundary-types": "off",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": ["error", { fixToUnknown: true }],
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
       "@typescript-eslint/no-unused-vars": [
@@ -166,7 +166,7 @@ export default [
       ...tseslint.configs.recommended.rules,
       ...vitest.configs.recommended.rules,
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
-      "@typescript-eslint/no-explicit-any": ["warn", { fixToUnknown: true }],
+      "@typescript-eslint/no-explicit-any": ["error", { fixToUnknown: true }],
       "max-lines-per-function": "off",
       "no-console": "off",
     },

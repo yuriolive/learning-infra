@@ -154,7 +154,7 @@ export class CloudRunProvider {
     serviceId: string,
     servicePath: string,
     parent: string,
-    serviceRequest: any,
+    serviceRequest: run_v2.Schema$GoogleCloudRunV2Service,
     tenantId: string,
   ): Promise<string | undefined> {
     // Try to get service to decide between create or patch
@@ -194,7 +194,7 @@ export class CloudRunProvider {
 
   private prepareServiceRequest(
     environmentVariables: Record<string, string>,
-  ): any {
+  ): run_v2.Schema$GoogleCloudRunV2Service {
     const container = {
       image: this.tenantImageTag,
       env: Object.entries(environmentVariables).map(([name, value]) => ({
