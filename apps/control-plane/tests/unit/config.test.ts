@@ -33,6 +33,7 @@ describe("validateConfiguration", () => {
       "gcp-region",
       "tenant-image-tag",
       "google-app-creds",
+      "mock-sa",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
