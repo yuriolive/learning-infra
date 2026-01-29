@@ -56,10 +56,7 @@ export function createTenantRoutes(context: RouteContext) {
         pathParts[0] === "api" &&
         pathParts[1] === "tenants"
       ) {
-        const tenantId = pathParts[2];
-        if (!tenantId) {
-          return new Response("Not found", { status: 404 });
-        }
+        const tenantId = pathParts[2] as string;
         const response = await handleResourceRequest(
           request,
           tenantId,
