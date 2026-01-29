@@ -74,7 +74,8 @@
         "eslint": "9.x",
         "react": "18.x",
         "react-dom": "18.x",
-        "vite": "6.x"
+        "vite": "6.x",
+        "picomatch": "4.x"
       }
     }
   }
