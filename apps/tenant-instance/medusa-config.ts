@@ -2,6 +2,13 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
+const jwtSecret = process.env.JWT_SECRET;
+const cookieSecret = process.env.COOKIE_SECRET;
+
+if (!jwtSecret || !cookieSecret) {
+  throw new Error("Missing JWT_SECRET or COOKIE_SECRET environment variables.");
+}
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -18,8 +25,8 @@ export default defineConfig({
       storeCors: process.env.STORE_CORS || "",
       adminCors: process.env.ADMIN_CORS || "",
       authCors: process.env.AUTH_CORS || "",
-      jwtSecret: process.env.JWT_SECRET || "default_jwt_secret",
-      cookieSecret: process.env.COOKIE_SECRET || "default_cookie_secret",
+      jwtSecret,
+      cookieSecret,
     },
   },
   admin: {
