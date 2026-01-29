@@ -2,12 +2,8 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
-const jwtSecret = process.env.JWT_SECRET;
-const cookieSecret = process.env.COOKIE_SECRET;
-
-if (!jwtSecret || !cookieSecret) {
-  throw new Error("Missing JWT_SECRET or COOKIE_SECRET environment variables.");
-}
+const jwtSecret = process.env.JWT_SECRET || "supersecret";
+const cookieSecret = process.env.COOKIE_SECRET || "supersecret";
 
 const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
 
