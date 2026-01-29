@@ -29,7 +29,7 @@ export interface Environment {
 function resolveSecret(
   secret: BoundSecret | undefined,
 ): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null && "get" in secret) {
+  if (typeof secret === "object" && secret !== null) {
     return secret.get();
   }
   return Promise.resolve(secret as string | undefined);
@@ -84,6 +84,22 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
   };
 }
 
+function createErrorResponse(
+  message: string,
+  error = "Configuration Error",
+): Response {
+  return new Response(
+    JSON.stringify({
+      error,
+      message,
+    }),
+    {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+}
+
 // Helper to validate production-specific configuration to reduce complexity
 function validateProductionConfig(
   logger: ReturnType<typeof createLogger>,
@@ -99,16 +115,7 @@ function validateProductionConfig(
     logger.error(
       "ADMIN_API_KEY is required in production but was not configured",
     );
-    return new Response(
-      JSON.stringify({
-        error: "Configuration Error",
-        message: "Service is not properly configured",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createErrorResponse("Service is not properly configured");
   }
 
   const missingVariables: string[] = [];
@@ -125,15 +132,8 @@ function validateProductionConfig(
       { missingVariables },
       "Critical infrastructure keys are missing in production",
     );
-    return new Response(
-      JSON.stringify({
-        error: "Configuration Error",
-        message: `Missing infrastructure configuration: ${missingVariables.join(", ")}`,
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
+    return createErrorResponse(
+      `Missing infrastructure configuration: ${missingVariables.join(", ")}`,
     );
   }
 
@@ -155,30 +155,12 @@ export function validateConfiguration(
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
-    return new Response(
-      JSON.stringify({
-        error: "Configuration Error",
-        message: "Database configuration is missing",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createErrorResponse("Database configuration is missing");
   }
 
   if (!upstashRedisUrl) {
     logger.error("UPSTASH_REDIS_URL is required but was not configured");
-    return new Response(
-      JSON.stringify({
-        error: "Configuration Error",
-        message: "Redis configuration is missing",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return createErrorResponse("Redis configuration is missing");
   }
 
   if (nodeEnvironment === "production") {

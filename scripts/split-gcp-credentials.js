@@ -21,11 +21,19 @@ if (!filePath) {
 }
 
 try {
-  const normalizedPath = path.normalize(filePath);
-  if (normalizedPath.includes("..")) {
-    console.error("Error: Access denied. Path traversal detected.");
+  // Stricter initial validation of the input argument
+  if (path.isAbsolute(filePath)) {
+    console.error("Error: Absolute paths are not allowed.");
     process.exit(1);
   }
+
+  // Ensure it looks like a relative path and doesn't contain suspicious characters
+  if (filePath.includes("..") || filePath.includes("\0")) {
+    console.error("Error: Invalid characters or path traversal detected.");
+    process.exit(1);
+  }
+
+  const normalizedPath = path.normalize(filePath);
 
   const absolutePath = path.resolve(process.cwd(), normalizedPath);
 
