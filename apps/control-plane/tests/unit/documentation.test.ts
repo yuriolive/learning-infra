@@ -5,11 +5,13 @@ vi.mock("../../src/database/database", () => ({
   createDatabase: () => ({}),
 }));
 
-import worker, { type Environment } from "../../src/index";
+import { type Environment } from "../../src/config";
+import worker from "../../src/index";
 
 describe("Documentation Endpoints", () => {
   const environment = {
     DATABASE_URL: "postgres://mock:5432/mock",
+    UPSTASH_REDIS_URL: "redis://mock:5432",
   };
 
   it("should return documentation HTML at /docs", async () => {

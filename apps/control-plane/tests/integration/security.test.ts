@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest";
 
-import server, { type Environment } from "../../src/index";
+import { type Environment } from "../../src/config";
+import server from "../../src/index";
 
 const MOCK_ENV = {
   DATABASE_URL: "postgres://mock:mock@localhost:5432/mock",
   ADMIN_API_KEY: "test-admin-key",
   NODE_ENV: "development",
   LOG_LEVEL: "silent",
+  UPSTASH_REDIS_URL: "redis://mock:mock@localhost:6379",
 };
 
 describe("Security Integration Tests", () => {
@@ -102,6 +104,12 @@ describe("Security Integration Tests", () => {
         NODE_ENV: "production",
         ALLOWED_ORIGINS:
           "https://admin.vendin.store,https://dashboard.vendin.store",
+        NEON_API_KEY: "prod-neon-key",
+        NEON_PROJECT_ID: "prod-neon-project-id",
+        GCP_PROJECT_ID: "prod-gcp-project-id",
+        GCP_REGION: "us-central1",
+        TENANT_IMAGE_TAG: "latest",
+        GOOGLE_APPLICATION_CREDENTIALS: "{}",
       };
 
       const request = new Request(`${origin}/health`, {
@@ -125,6 +133,12 @@ describe("Security Integration Tests", () => {
         ...MOCK_ENV,
         NODE_ENV: "production",
         ALLOWED_ORIGINS: "https://admin.vendin.store",
+        NEON_API_KEY: "prod-neon-key",
+        NEON_PROJECT_ID: "prod-neon-project-id",
+        GCP_PROJECT_ID: "prod-gcp-project-id",
+        GCP_REGION: "us-central1",
+        TENANT_IMAGE_TAG: "latest",
+        GOOGLE_APPLICATION_CREDENTIALS: "{}",
       };
 
       const request = new Request(`${origin}/health`, {

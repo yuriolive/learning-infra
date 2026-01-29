@@ -59,9 +59,19 @@
           "secret_name": "upstash-redis-url"
         },
         {
-          "binding": "GOOGLE_APPLICATION_CREDENTIALS",
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_1",
           "store_id": "STORE_ID_PLACEHOLDER",
-          "secret_name": "google-application-credentials"
+          "secret_name": "google-application-credentials-part-1"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_2",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-2"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-3"
         }
       ],
       "vars": {
