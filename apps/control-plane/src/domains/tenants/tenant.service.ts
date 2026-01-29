@@ -172,9 +172,36 @@ export class TenantService {
       this.logger.info({ tenantId }, "Successfully provisioned resources");
     } catch (error) {
       this.logger.error({ error, tenantId }, "Provisioning resources failed");
+
+      await this.rollbackProvisioning(tenantId);
+
       await this.repository.update(tenantId, {
         status: "provisioning_failed",
       });
+    }
+  }
+
+  private async rollbackProvisioning(tenantId: string) {
+    this.logger.info({ tenantId }, "Rolling back provisioned resources");
+
+    if (this.neonProvider && this.cloudRunProvider) {
+      const results = await Promise.allSettled([
+        this.neonProvider.deleteTenantDatabase(tenantId),
+        this.cloudRunProvider.deleteTenantInstance(tenantId),
+      ]);
+
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        this.logger.error(
+          {
+            tenantId,
+            errors: failed.map((r) => (r as PromiseRejectedResult).reason),
+          },
+          "Rollback partially failed",
+        );
+      } else {
+        this.logger.info({ tenantId }, "Rollback successful");
+      }
     }
   }
 

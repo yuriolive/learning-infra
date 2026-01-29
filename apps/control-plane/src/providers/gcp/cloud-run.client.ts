@@ -84,6 +84,45 @@ export class CloudRunProvider {
     }
   }
 
+  async deleteTenantInstance(tenantId: string): Promise<void> {
+    const serviceName = `tenant-${tenantId}`;
+    const parent = `projects/${this.projectId}/locations/${this.region}`;
+    const servicePath = `${parent}/services/${serviceName}`;
+
+    this.logger.info({ tenantId }, "Deleting Cloud Run service");
+
+    try {
+      const operation = await this.runClient.projects.locations.services.delete(
+        {
+          name: servicePath,
+        },
+      );
+
+      if (operation.data.name) {
+        await this.waitForOperation(operation.data.name);
+      }
+
+      this.logger.info({ tenantId }, "Deleted Cloud Run service");
+    } catch (error: unknown) {
+      // Ignore if not found
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        (error as { code?: number }).code !== 404
+      ) {
+        this.logger.warn(
+          { error, tenantId },
+          "Failed to delete Cloud Run service",
+        );
+      } else {
+        this.logger.info(
+          { tenantId },
+          "Cloud Run service not found, skipping delete",
+        );
+      }
+    }
+  }
+
   private async waitForOperation(operationName: string): Promise<void> {
     const startTime = Date.now();
     const timeout = 300_000; // 5 minutes

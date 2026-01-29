@@ -144,4 +144,65 @@ export class NeonProvider {
   private getRoleNameForTenant(tenantId: string): string {
     return `user_${tenantId.replaceAll("-", "_")}`;
   }
+
+  /**
+   * Deletes the tenant's database and role.
+   * Used for rollback in case of provisioning failures.
+   * @param tenantId - The unique identifier of the tenant
+   */
+  async deleteTenantDatabase(tenantId: string): Promise<void> {
+    try {
+      this.logger.info({ tenantId }, "Deleting Neon database for tenant");
+
+      const branchId = await this.getProjectDefaultBranch(this.projectId);
+      const databaseName = `db_${tenantId.replaceAll("-", "_")}`;
+      const roleName = this.getRoleNameForTenant(tenantId);
+
+      // Best effort cleanup: try to delete database first, then role
+      try {
+        await this.client.deleteProjectBranchDatabase(
+          this.projectId,
+          branchId,
+          databaseName,
+        );
+        this.logger.info({ databaseName }, "Deleted tenant database");
+      } catch (error: unknown) {
+        // Ignore if not found
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          (error as { status?: number }).status !== 404
+        ) {
+          this.logger.warn(
+            { error, databaseName },
+            "Failed to delete database",
+          );
+        }
+      }
+
+      try {
+        await this.client.deleteProjectBranchRole(
+          this.projectId,
+          branchId,
+          roleName,
+        );
+        this.logger.info({ roleName }, "Deleted tenant role");
+      } catch (error: unknown) {
+        // Ignore if not found
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          (error as { status?: number }).status !== 404
+        ) {
+          this.logger.warn({ error, roleName }, "Failed to delete role");
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        { error, tenantId },
+        "Failed to cleanup Neon resources during rollback",
+      );
+      // We don't throw here to allow other cleanup tasks to proceed
+    }
+  }
 }

@@ -8,6 +8,7 @@ vi.mock("../../../src/providers/neon/neon.client", () => {
   return {
     NeonProvider: vi.fn().mockImplementation(() => ({
       createTenantDatabase: vi.fn().mockResolvedValue("postgres://mock-db-url"),
+      deleteTenantDatabase: vi.fn().mockResolvedValue(void 0),
     })),
   };
 });
@@ -19,6 +20,7 @@ vi.mock("../../../src/providers/gcp/cloud-run.client", () => {
       deployTenantInstance: vi
         .fn()
         .mockResolvedValue("https://mock-service-url"),
+      deleteTenantInstance: vi.fn().mockResolvedValue(void 0),
     })),
   };
 });
@@ -30,6 +32,7 @@ import {
 } from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
 
@@ -152,6 +155,7 @@ describe("TenantService", () => {
       // @ts-expect-error Mocking for test purposes
       NeonProvider.mockImplementationOnce(() => ({
         createTenantDatabase: mockCreateTenantDatabase,
+        deleteTenantDatabase: vi.fn().mockResolvedValue(void 0),
       }));
 
       // Re-initialize service with failed provider
@@ -221,6 +225,74 @@ describe("TenantService", () => {
       await expect(service.createTenant(input)).rejects.toThrow(
         SubdomainRequiredError,
       );
+    });
+    it("should rollback resources if provisioning fails", async () => {
+      // Mock failure in cloud run deployment
+      const mockDeployTenantInstance = vi
+        .fn()
+        .mockRejectedValue(new Error("Deployment failed"));
+
+      const mockDeleteTenantDatabase = vi.fn().mockResolvedValue(void 0);
+      const mockDeleteTenantInstance = vi.fn().mockResolvedValue(void 0);
+
+      // @ts-expect-error Mocking for test purposes
+      NeonProvider.mockImplementationOnce(() => ({
+        createTenantDatabase: vi
+          .fn()
+          .mockResolvedValue("postgres://mock-db-url"),
+        deleteTenantDatabase: mockDeleteTenantDatabase,
+      }));
+
+      // @ts-expect-error Mocking for test purposes
+      vi.mocked(CloudRunProvider).mockImplementationOnce(() => ({
+        deployTenantInstance: mockDeployTenantInstance,
+        deleteTenantInstance: mockDeleteTenantInstance,
+      }));
+
+      // Re-initialize service with custom mocks
+      const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
+      const database = await createMockDatabase();
+      repository = new TenantRepository(database);
+      service = new TenantService(repository, {
+        logger,
+        neonApiKey: "mock-key",
+        neonProjectId: "mock-project",
+        gcpCredentialsJson: "{}",
+        gcpProjectId: "mock-gcp-project",
+        gcpRegion: "mock-region",
+        tenantImageTag: "mock-tag",
+        upstashRedisUrl: "redis://mock",
+      });
+
+      const input: CreateTenantInput = {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
+      };
+
+      let backgroundTask: Promise<unknown> | undefined;
+      const waitUntil = (p: Promise<unknown>) => {
+        backgroundTask = p;
+      };
+
+      await service.createTenant(input, waitUntil);
+
+      // Await background task
+      if (backgroundTask) {
+        try {
+          await backgroundTask;
+        } catch {
+          // ignore
+        }
+      }
+
+      // Verify rollback methods were called
+      expect(mockDeleteTenantDatabase).toHaveBeenCalledWith(expect.any(String));
+      expect(mockDeleteTenantInstance).toHaveBeenCalledWith(expect.any(String));
+
+      // Verify final status
+      const tenants = await service.listTenants();
+      expect(tenants[0]?.status).toBe("provisioning_failed");
     });
   });
 
