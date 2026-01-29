@@ -61,7 +61,20 @@
       "react": "18.3.1",
       "react-dom": "18.3.1",
       "@types/react": "^18.3.2",
-      "@types/react-dom": "^18.2.25"
+      "@types/react-dom": "^18.2.25",
+      "vite": "^6.0.0"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "allowedVersions": {
+        "eslint": "9.x",
+        "react": "18.x",
+        "react-dom": "18.x",
+        "vite": "6.x"
+      }
     }
   }
 }
