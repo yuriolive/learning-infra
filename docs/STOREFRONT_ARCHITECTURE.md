@@ -1,97 +1,74 @@
-# Multi-Tenant Storefront Architecture
+# Shared Storefront Architecture
 
-This document outlines the strategy for serving multiple tenants from a single **Next.js Storefront** deployment.
+**Status**: Active  
+**Type**: Single Next.js Application (Multi-Tenant)
 
-## 1. Core Principle: Single Deployment, Dynamic Context
+This document outlines the architecture for the **Shared Storefront** that serves all tenants from a single deployment.
 
-We do **not** build separate frontends for each tenant. Instead, we deploy a single "Shell" application that adapts its content, logic, and theme based on the request's hostname.
+## 1. Core Logic: "The Shell"
 
-### Flow Overview
+The Storefront is a "Shell" that adapts its content and style based on the **Hostname**.
 
-1.  **Request**: User visits `acme.vendin.store`
-2.  **Middleware**: Intercepts request, parses hostname, resolves `tenantId`.
-3.  **Data Fetch**: Server Component fetches Tenant Config (colors, backend URL) from Control Plane.
-4.  **Hydration**: Root Layout injects Tenant Config into a Client Context provider.
-5.  **Render**: UI components read from Context to style themselves and fetch data.
+- **One Codebase**: `apps/storefront`
+- **One Deployment**: Vercel / Cloudflare Pages
+- **Many Tenants**: infinite scale
 
----
+## 2. Request Lifecycle
 
-## 2. Technical Implementation
+1.  **Incoming Request**: `https://cool-shoes.vendin.store/products/sneakers`
+2.  **Middleware (`middleware.ts`)**:
+    - Detects Hostname: `cool-shoes.vendin.store`
+    - Resolves Tenant ID: `tenant_123` (from Cache/Redis)
+    - Rewrites URL: `/_mnt/tenant_123/products/sneakers` (internal routing)
+    - Sets Header: `x-medusa-tenant-id: tenant_123`
+3.  **Page Render (`server`)**:
+    - Reads Tenant ID from headers/params.
+    - Fetches **Tenant Config** (Name, Logo, Colors, Backend URL).
+    - Fetches **Products** from that specific Backend URL.
+4.  **Client Hydration**:
+    - `TenantProvider` injects CSS Variables for the theme.
+    - `MedusaProvider` configures the API client to point to the Tenant's Backend.
 
-### 2.1 Middleware (`middleware.ts`)
+## 3. Connecting to Backends
 
-The middleware is the entry point. It handles the **Routing Strategy**.
+The Storefront is **Headless**. It does not have a local database. It connects to **Isolated Cloud Run Instances**.
 
-- **Subdomains**: `*.vendin.store` -> Extract subdomain as `tenantId`.
-- **Custom Domains**: `www.acmeshop.com` -> Lookup `tenantId` via Control Plane (Redis/Cache).
+- **API Host**: Dynamic. Determined by Tenant Config.
+- **Headers**:
+  - `x-publishable-api-key`: Tenant's public key.
 
-The middleware rewrites the URL to include the tenant ID for internal routing, e.g., `/acme/products`, but keeps the user-facing URL clean.
-
-### 2.2 Tenant Context (`TenantProvider`)
-
-We create a React Context to make tenant data available app-wide.
-
-```tsx
-// src/providers/tenant-provider.tsx
-"use client";
-
-const TenantContext = createContext<Tenant | null>(null);
-
-export function TenantProvider({ tenant, children }) {
-  // 1. Apply CSS Variables for Theming
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--primary",
-      tenant.colors.primary,
-    );
-    document.documentElement.style.setProperty(
-      "--font-main",
-      tenant.fonts.body,
-    );
-  }, [tenant]);
-
-  return (
-    <TenantContext.Provider value={tenant}>{children}</TenantContext.Provider>
-  );
-}
+```typescript
+// Example: Dynamic Client
+const medusa = new MedusaClient({
+  baseUrl: tenantConfig.backendUrl, // e.g., https://tenant-123-xyz.run.app
+  publishableKey: tenantConfig.publishableKey,
+});
 ```
 
-### 2.3 Dynamic API Client (`useMedusa`)
+## 4. Middleware & Routing
 
-Accessing the correct backend is critical. Standard Medusa clients expect a static `baseUrl`. We must wrap this.
+We use Next.js Middleware to keep URLs clean (`/products` instead of `/tenant/123/products`).
+
+### Middleware Responsibilities
+
+1.  **Hostname Normalization**: Handle `www`, custom domains, and subdomains.
+2.  **Tenant Resolution**: Map `hostname` -> `tenant_id`.
+3.  **Rewrites**: mask the internal multi-tenant routing structure.
+
+## 5. Theming (CSS Variables)
+
+We do not compile separate CSS per tenant. We use **Runtime Theming**.
+
+- **Tailwind Config**: Uses CSS variables (e.g., `bg-primary` -> `var(--color-primary)`).
+- **Injection**: `TenantProvider` writes these variables to the `<body>` tag style attribute on mount.
 
 ```tsx
-// src/lib/medusa-client.ts
-export function useMedusa() {
-  const { backendUrl } = useTenant();
-
-  // Returns a client instance configured for THIS tenant
-  return useMemo(() => new MedusaClient({ baseUrl: backendUrl }), [backendUrl]);
-}
+<body style={{
+  "--color-primary": tenant.colors.primary,
+  "--font-heading": tenant.fonts.heading
+}}>
 ```
 
----
-
-## 3. Theming & Customization
-
-### 3.1 CSS Variables
-
-We use CSS variables for all design tokens (colors, spacing, fonts).
-
-- `globals.css` defines **defaults** (fallback).
-- `TenantProvider` overrides these values at runtime based on the fetched configuration.
-
-### 3.2 Component Overrides (Advanced)
-
-For clients requiring drastically different layouts, we can use **Slot Pattern**:
-
-- Define `slots.Header`, `slots.ProductCard`.
-- Load specific components dynamically if the tenant config specifies a "Premium" theme.
-
----
-
-## 4. Build & Deployment
-
-- **Build**: One single build. `pnpm build`.
-- **Deploy**: To Cloudflare Pages / Vercel.
-- **Scale**: CDNs handle the asset caching. Since the app is just a shell, it scales indefinitely.
+- **Custom Themes**: For clients requiring drastically different layouts, we can use **Slot Pattern**:
+  - Define `slots.Header`, `slots.ProductCard`.
+  - Load specific components dynamically if the tenant config specifies a "Premium" theme.

@@ -17,23 +17,26 @@ This platform uses a **multi-instance provisioning model** where each merchant g
 
 ### 2. Storefront Router (Shared)
 
-- **Type**: Next.js router on Cloudflare Pages
-- **Purpose**: Resolve tenant by hostname and redirect/proxy
+- **Type**: Single Next.js Application
+- **Purpose**: Resolve tenant by hostname and renders the shopping experience for ALL tenants
 - **Location**: `apps/storefront/`
 - **Domains**: `*-my.vendin.store` (default subdomains) and custom domains
-- **Note**: Does **not** render customer UI
+- **Mechanism**:
+  - Middleware resolves `tenantId` from hostname.
+  - Fetches tenant-specific config (colors, backend URL).
+  - Connects to the specific Tenant Instance for data.
 
-### 3. Tenant Instances (Per-Tenant)
+### 3. Tenant Instances (Per-Tenant Backends)
 
 - **Type**: Dedicated Cloud Run service per merchant
-- **Purpose**: Custom storefront UI + MedusaJS APIs + Admin UI
-- **Location**: `apps/tenant-instance/` (template)
+- **Purpose**: Headless MedusaJS API + Admin UI
+- **Location**: `apps/tenant-instance/`
 - **Service Naming**: `tenant-{tenantId}`
 - **Responsibilities**:
-  - Custom storefront UI (per-tenant themes/customizations)
-  - MedusaJS Store API (`/store`)
-  - MedusaJS Admin UI (`/admin`) and API
+  - **Headless Store API** (consumed by Shared Storefront)
+  - MedusaJS Admin UI (`/app`)
   - Dedicated Neon PostgreSQL database
+  - **Config-Driven Features**: Plugins enabled via Env Vars
 
 ## Domain Structure
 
@@ -62,23 +65,25 @@ Customer → vendin.store
 **Tenant Store (Default Subdomain or Custom Domain):**
 
 ```
-Customer → awesome-store-my.vendin.store OR shop.merchant.com
-        → Storefront router (Cloudflare Pages)
-        → Resolve tenant from hostname
-        → Redirect/proxy to tenant-{id} (Cloud Run)
-        → Tenant instance serves custom UI + APIs
+Customer → awesome-store-my.vendin.store
+        → **Shared Storefront** (Next.js)
+        → Middleware identifies Tenant "A"
+        → App fetches config & theme for Tenant "A"
+        → App calls API: `tenant-a-xyz.a.run.app/store/*`
+        → Renders UI with Tenant A's data
 ```
 
 **Merchant Admin:**
 
 ```
-Merchant → awesome-store-my.vendin.store/admin
-        → Storefront router
-        → Tenant instance (MedusaJS admin)
+Merchant → awesome-store-my.vendin.store/app
+        → Shared Storefront Middleware (optional proxy) OR Direct Backend URL
+        → Tenant Instance (MedusaJS Admin)
 ```
 
 ## Related Documentation
 
+- [Strategy & Pivot Plan](../STRATEGY.md)
 - [Architectural Decisions](./DECISIONS.md)
 - [User Experiences](./USER_EXPERIENCES.md)
 - [Cloudflare Setup](../setup/CLOUDFLARE_SETUP.md)
