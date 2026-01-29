@@ -84,11 +84,74 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
   };
 }
 
+// Helper to validate production-specific configuration to reduce complexity
+function validateProductionConfig(
+  logger: ReturnType<typeof createLogger>,
+  adminApiKey: string | undefined,
+  neonApiKey?: string,
+  neonProjectId?: string,
+  gcpProjectId?: string,
+  gcpRegion?: string,
+  tenantImageTag?: string,
+  googleApplicationCredentials?: string,
+): Response | undefined {
+  if (!adminApiKey) {
+    logger.error(
+      "ADMIN_API_KEY is required in production but was not configured",
+    );
+    return new Response(
+      JSON.stringify({
+        error: "Configuration Error",
+        message: "Service is not properly configured",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  const missingVariables: string[] = [];
+  if (!neonApiKey) missingVariables.push("NEON_API_KEY");
+  if (!neonProjectId) missingVariables.push("NEON_PROJECT_ID");
+  if (!gcpProjectId) missingVariables.push("GCP_PROJECT_ID");
+  if (!gcpRegion) missingVariables.push("GCP_REGION");
+  if (!tenantImageTag) missingVariables.push("TENANT_IMAGE_TAG");
+  if (!googleApplicationCredentials)
+    missingVariables.push("GOOGLE_APPLICATION_CREDENTIALS");
+
+  if (missingVariables.length > 0) {
+    logger.error(
+      { missingVariables },
+      "Critical infrastructure keys are missing in production",
+    );
+    return new Response(
+      JSON.stringify({
+        error: "Configuration Error",
+        message: `Missing infrastructure configuration: ${missingVariables.join(", ")}`,
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  return undefined;
+}
+
 export function validateConfiguration(
   logger: ReturnType<typeof createLogger>,
   databaseUrl: string | undefined,
   adminApiKey: string | undefined,
   nodeEnvironment: string,
+  upstashRedisUrl?: string,
+  neonApiKey?: string,
+  neonProjectId?: string,
+  gcpProjectId?: string,
+  gcpRegion?: string,
+  tenantImageTag?: string,
+  googleApplicationCredentials?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -104,19 +167,30 @@ export function validateConfiguration(
     );
   }
 
-  if (nodeEnvironment === "production" && !adminApiKey) {
-    logger.error(
-      "ADMIN_API_KEY is required in production but was not configured",
-    );
+  if (!upstashRedisUrl) {
+    logger.error("UPSTASH_REDIS_URL is required but was not configured");
     return new Response(
       JSON.stringify({
         error: "Configuration Error",
-        message: "Service is not properly configured",
+        message: "Redis configuration is missing",
       }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
       },
+    );
+  }
+
+  if (nodeEnvironment === "production") {
+    return validateProductionConfig(
+      logger,
+      adminApiKey,
+      neonApiKey,
+      neonProjectId,
+      gcpProjectId,
+      gcpRegion,
+      tenantImageTag,
+      googleApplicationCredentials,
     );
   }
 

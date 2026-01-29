@@ -209,6 +209,13 @@ export default {
       databaseUrl,
       adminApiKey,
       nodeEnvironment,
+      upstashRedisUrl,
+      neonApiKey,
+      neonProjectId,
+      environment.GCP_PROJECT_ID,
+      environment.GCP_REGION,
+      environment.TENANT_IMAGE_TAG,
+      googleApplicationCredentials,
     );
     if (configError) return configError;
 

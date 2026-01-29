@@ -26,6 +26,13 @@ describe("validateConfiguration", () => {
       "postgres://localhost:5432/db",
       "admin-api-key",
       "production",
+      "redis://localhost:6379",
+      "neon-api-key",
+      "neon-project-id",
+      "gcp-project-id",
+      "gcp-region",
+      "tenant-image-tag",
+      "google-app-creds",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -37,6 +44,13 @@ describe("validateConfiguration", () => {
       undefined,
       "admin-api-key",
       "production",
+      "redis://localhost:6379",
+      "neon-api-key",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "google-app-creds",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -46,12 +60,37 @@ describe("validateConfiguration", () => {
     );
   });
 
+  it("should return 500 Response if UPSTASH_REDIS_URL is missing", () => {
+    const result = validateConfiguration(
+      mockLogger,
+      "postgres://localhost:5432/db",
+      "admin-api-key",
+      "production",
+      undefined,
+      undefined,
+      "neon-api-key",
+    );
+
+    expect(result).toBeInstanceOf(Response);
+    expect(result?.status).toBe(500);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "UPSTASH_REDIS_URL is required but was not configured",
+    );
+  });
+
   it("should return 500 Response if NODE_ENV is production and ADMIN_API_KEY is missing", () => {
     const result = validateConfiguration(
       mockLogger,
       "postgres://localhost:5432/db",
       undefined,
       "production",
+      "redis://localhost:6379",
+      "neon-api-key",
+      "neon-project-id",
+      "gcp-project-id",
+      "gcp-region",
+      "tenant-image-tag",
+      "google-app-creds",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -67,10 +106,60 @@ describe("validateConfiguration", () => {
       "postgres://localhost:5432/db",
       undefined,
       "development",
+      "redis://localhost:6379",
+      // Optional vars can be undefined in dev
     );
 
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  it("should return 500 Response if NEON_API_KEY is missing in production", () => {
+    const result = validateConfiguration(
+      mockLogger,
+      "postgres://localhost:5432/db",
+      "admin-api-key",
+      "production",
+      "redis://localhost:6379",
+      undefined, // neonApiKey missing
+      "neon-project-id",
+      "gcp-project-id",
+      "gcp-region",
+      "tenant-image-tag",
+      "google-app-creds",
+    );
+
+    expect(result).toBeInstanceOf(Response);
+    expect(result?.status).toBe(500);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ missingVariables: ["NEON_API_KEY"] }),
+      "Critical infrastructure keys are missing in production",
+    );
+  });
+
+  it("should return 500 Response if multiple critical keys are missing in production", () => {
+    const result = validateConfiguration(
+      mockLogger,
+      "postgres://localhost:5432/db",
+      "admin-api-key",
+      "production",
+      "redis://localhost:6379",
+      "neon-api-key",
+      undefined, // neonProjectId missing
+      undefined, // gcpProjectId missing
+      "gcp-region",
+      "tenant-image-tag",
+      "google-app-creds",
+    );
+
+    expect(result).toBeInstanceOf(Response);
+    expect(result?.status).toBe(500);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        missingVariables: ["NEON_PROJECT_ID", "GCP_PROJECT_ID"],
+      }),
+      "Critical infrastructure keys are missing in production",
+    );
   });
 });
 
