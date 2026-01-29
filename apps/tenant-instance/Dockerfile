@@ -1,15 +1,12 @@
 # Stage 1: Base
 FROM node:20-alpine AS base
-RUN npm install -g pnpm turbo@2.6.1
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate && corepack prepare turbo@2.6.1 --activate
 WORKDIR /app
 
 # Stage 2: Pruner
 FROM base AS pruner
 COPY . .
 RUN turbo prune --scope=@vendin/tenant-instance --docker
-
-# Extract pnpm version from package.json
-RUN node -p "require('./package.json').packageManager.split('@')[1]" > pnpm-version.txt
 
 # Stage 3: Builder
 FROM base AS builder
@@ -42,10 +39,8 @@ COPY --from=builder /app/apps/tenant-instance/dist /app/deploy/dist
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install pnpm
-# Copy pnpm version from pruner
-COPY --from=pruner /app/pnpm-version.txt .
-RUN npm install -g pnpm@$(cat pnpm-version.txt)
+# Enable corepack
+RUN corepack enable
 
 # Copy the deployed application
 COPY --from=deployer /app/deploy .
