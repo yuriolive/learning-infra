@@ -19,6 +19,7 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     subdomain: databaseTenant.subdomain ?? null,
     databaseUrl: databaseTenant.databaseUrl ?? null,
     apiUrl: databaseTenant.apiUrl ?? null,
+    redisHash: databaseTenant.redisHash ?? null,
     status: databaseTenant.status,
     plan: databaseTenant.plan,
     createdAt: databaseTenant.createdAt,
@@ -84,6 +85,7 @@ export class TenantRepository {
           databaseUrl: input.databaseUrl,
         }),
         ...(input.apiUrl !== undefined && { apiUrl: input.apiUrl }),
+        ...(input.redisHash !== undefined && { redisHash: input.redisHash }),
         ...(input.metadata !== undefined && { metadata: input.metadata }),
         updatedAt: new Date(),
       })

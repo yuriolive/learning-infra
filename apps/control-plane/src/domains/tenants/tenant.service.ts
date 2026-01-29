@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 import { type createLogger } from "@vendin/utils/logger";
 
@@ -138,9 +138,15 @@ export class TenantService {
       const jwtSecret = randomBytes(32).toString("hex");
 
       // 3. Deploy Cloud Run
+      const redisHash = createHash("sha256")
+        .update(tenantId)
+        .digest("hex")
+        .slice(0, 12);
+      const redisPrefix = `t_${redisHash}:`;
       const environmentVariables = {
         DATABASE_URL: databaseUrl,
         REDIS_URL: this.upstashRedisUrl,
+        REDIS_PREFIX: redisPrefix,
         COOKIE_SECRET: cookieSecret,
         JWT_SECRET: jwtSecret,
         STORE_CORS: `https://${subdomain}.vendin.store,http://localhost:3000`,
@@ -159,6 +165,7 @@ export class TenantService {
       await this.repository.update(tenantId, {
         databaseUrl,
         apiUrl,
+        redisHash,
         status: "active",
       });
 

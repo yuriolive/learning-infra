@@ -9,6 +9,8 @@ if (!jwtSecret || !cookieSecret) {
   throw new Error("Missing JWT_SECRET or COOKIE_SECRET environment variables.");
 }
 
+const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -49,12 +51,16 @@ export default defineConfig({
       resolve: "@medusajs/medusa/cache-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
+        namespace: redisPrefix,
       },
     },
     {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
+        queueOptions: {
+          prefix: redisPrefix,
+        },
       },
     },
   ],

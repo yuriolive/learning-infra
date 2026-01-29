@@ -30,6 +30,7 @@ This document consolidates all environment variable and secrets management for t
 | `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials                                |
 | `GCP_PROJECT_ID`                 | Plain Var | `wrangler.jsonc` | Google Cloud Project ID                                        |
 | `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region                                            |
+| `REDIS_PREFIX`                   | Plain Var | Dynamic          | Prefix for Redis keys (namespacing for multi-tenancy)          |
 | `TENANT_IMAGE_TAG`               | Plain Var | `wrangler.jsonc` | Docker image tag for tenant (dynamically constructed in CI/CD) |
 
 ---
