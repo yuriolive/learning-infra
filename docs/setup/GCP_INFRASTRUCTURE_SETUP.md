@@ -104,6 +104,36 @@ gcloud secrets add-iam-policy-binding control-plane-db-url \
   --project="vendin-store" \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/secretmanager.secretAccessor"
+
+# 7. Create Control Plane Service Account & Key
+# This SA is used by the Control Plane to provision Cloud Run instances
+gcloud iam service-accounts create control-plane-sa \
+  --project="vendin-store" \
+  --description="Control Plane Service Account" \
+  --display-name="Control Plane SA"
+
+CP_SA_EMAIL="control-plane-sa@vendin-store.iam.gserviceaccount.com"
+
+# Grant permissions to manage Cloud Run
+gcloud projects add-iam-policy-binding "vendin-store" \
+  --member="serviceAccount:$CP_SA_EMAIL" \
+  --role="roles/run.admin"
+
+# Grant permissions to act as the Tenant Runtime SA (created in CLOUD_RUN_SETUP.md)
+# Note: Ensure cloud-run-sa exists first!
+gcloud iam service-accounts add-iam-policy-binding "cloud-run-sa@vendin-store.iam.gserviceaccount.com" \
+  --member="serviceAccount:$CP_SA_EMAIL" \
+  --role="roles/iam.serviceAccountUser"
+
+# Generate Key (for GOOGLE_APPLICATION_CREDENTIALS)
+gcloud iam service-accounts keys create gcp-keys/control-plane-sa.json \
+  --iam-account=$CP_SA_EMAIL
+
+echo "Minify this JSON content for GOOGLE_APPLICATION_CREDENTIALS:"
+# Linux/Mac
+cat gcp-keys/control-plane-sa.json | tr -d '\n'
+# Windows PowerShell
+# Get-Content gcp-keys/control-plane-sa.json -Raw | ForEach-Object { $_ -replace '\s+', '' }
 ```
 
 ## Required GitHub Secrets

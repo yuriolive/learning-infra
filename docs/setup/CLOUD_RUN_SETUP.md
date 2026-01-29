@@ -51,6 +51,21 @@ By default, Cloud Run services have direct internet access. If you need to restr
 
 ---
 
+## Control Plane Permissions (GOOGLE_APPLICATION_CREDENTIALS)
+
+The Control Plane requires a Service Account Key to authenticate with Google Cloud and provision new tenant instances.
+
+1. **Service Account**: `control-plane-sa@vendin-store.iam.gserviceaccount.com`
+2. **Roles Required**:
+   - `roles/run.admin` (Global)
+   - `roles/iam.serviceAccountUser` (On the `cloud-run-sa` resource)
+3. **Setup**:
+   - Create the SA and generate the key as described in `GCP_INFRASTRUCTURE_SETUP.md` (Step 7).
+   - Minify the JSON key content.
+   - Save as `GOOGLE_APPLICATION_CREDENTIALS` in Cloudflare Secrets and `.dev.vars`.
+
+---
+
 ## Tenant Instance Deployment Pattern
 
 Each tenant gets its own isolated Cloud Run service running a MedusaJS 2.0 instance. These are **dynamically provisioned** by the Control Plane when a new merchant signs up.
