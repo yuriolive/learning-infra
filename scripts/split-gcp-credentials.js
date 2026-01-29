@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+/**
+ * Helper script to split GCP service account JSON credentials into 3 parts.
+ * This is useful when storing minified credentials in environments with size limitations (e.g. Cloudflare).
+ *
+ * Usage: node scripts/split-gcp-credentials.js <path-to-json-file>
+ */
+
+const fs = require("fs");
+const path = require("path");
+
+const filePath = process.argv[2];
+
+if (!filePath) {
+  console.error(
+    "Usage: node scripts/split-gcp-credentials.js <path-to-json-file>",
+  );
+  process.exit(1);
+}
+
+try {
+  const absolutePath = path.resolve(process.cwd(), filePath);
+  if (!fs.existsSync(absolutePath)) {
+    console.error(`Error: File not found at ${absolutePath}`);
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(absolutePath, "utf8");
+  // Minify: remove all whitespace
+  const minified = content.replace(/\s/g, "");
+
+  const totalLength = minified.length;
+  const partSize = Math.ceil(totalLength / 3);
+
+  const part1 = minified.substring(0, partSize);
+  const part2 = minified.substring(partSize, partSize * 2);
+  const part3 = minified.substring(partSize * 2);
+
+  console.log("\n--- GCP CREDENTIALS PARTS ---\n");
+  console.log("GOOGLE_APPLICATION_CREDENTIALS_PART_1:");
+  console.log(part1);
+  console.log("\nGOOGLE_APPLICATION_CREDENTIALS_PART_2:");
+  console.log(part2);
+  console.log("\nGOOGLE_APPLICATION_CREDENTIALS_PART_3:");
+  console.log(part3);
+  console.log("\n-----------------------------\n");
+  console.log(`Total Minified Length: ${totalLength} characters`);
+  console.log(`Each part is approximately ${partSize} characters.`);
+} catch (error) {
+  console.error("Error processing file:", error.message);
+  process.exit(1);
+}
