@@ -63,7 +63,8 @@
       "@types/react": "^18.3.2",
       "@types/react-dom": "^18.2.25",
       "vite": "^6.0.0",
-      "express": "^4.21.2"
+      "express": "^4.21.2",
+      "@aws-sdk/client-s3": "3.723.0"
     },
     "peerDependencyRules": {
       "ignoreMissing": [
