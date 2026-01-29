@@ -27,11 +27,26 @@ vi.mock("@vendin/utils/logger", () => ({
 describe("CloudflareProvider", () => {
   const originalEnvironment = process.env;
 
+  let provider: CloudflareProvider;
+  let mockCustomHostnames: {
+    create: MockedFunction;
+    list: MockedFunction;
+  };
+  type MockedFunction = ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     process.env = { ...originalEnvironment };
     process.env.CLOUDFLARE_API_TOKEN = "test-token";
     process.env.CLOUDFLARE_ZONE_ID = "test-zone-id";
+
+    // Initialize provider and extract mock
+    provider = new CloudflareProvider();
+    const client = (provider as unknown as { client: Cloudflare }).client;
+    mockCustomHostnames = client.customHostnames as unknown as {
+      create: MockedFunction;
+      list: MockedFunction;
+    };
   });
 
   afterEach(() => {
@@ -53,23 +68,18 @@ describe("CloudflareProvider", () => {
   });
 
   it("should initialize with correct credentials", () => {
+    // Re-init to trigger constructor
     new CloudflareProvider();
     expect(Cloudflare).toHaveBeenCalledWith({ apiToken: "test-token" });
   });
 
   describe("createCustomHostname", () => {
     it("should create a custom hostname successfully with defaults", async () => {
-      const provider = new CloudflareProvider();
-      // Access private client via casting for testing
-      const mockCreate = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.create as unknown as {
-        mockResolvedValue: (value: unknown) => void;
-      };
-      mockCreate.mockResolvedValue({});
+      mockCustomHostnames.create.mockResolvedValue({});
 
       await provider.createCustomHostname("tenant-1", "test.example.com");
 
-      expect(mockCreate).toHaveBeenCalledWith({
+      expect(mockCustomHostnames.create).toHaveBeenCalledWith({
         hostname: "test.example.com",
         ssl: {
           method: "http",
@@ -80,18 +90,13 @@ describe("CloudflareProvider", () => {
     });
 
     it("should allow overriding SSL settings", async () => {
-      const provider = new CloudflareProvider();
-      const mockCreate = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.create as unknown as {
-        mockResolvedValue: (value: unknown) => void;
-      };
-      mockCreate.mockResolvedValue({});
+      mockCustomHostnames.create.mockResolvedValue({});
 
       await provider.createCustomHostname("tenant-1", "test.example.com", {
         ssl: { method: "txt", type: "dv" },
       });
 
-      expect(mockCreate).toHaveBeenCalledWith({
+      expect(mockCustomHostnames.create).toHaveBeenCalledWith({
         hostname: "test.example.com",
         ssl: {
           method: "txt",
@@ -102,13 +107,8 @@ describe("CloudflareProvider", () => {
     });
 
     it("should propagate errors from SDK", async () => {
-      const provider = new CloudflareProvider();
-      const mockCreate = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.create as unknown as {
-        mockRejectedValue: (value: unknown) => void;
-      };
       const error = new Error("API Error");
-      mockCreate.mockRejectedValue(error);
+      mockCustomHostnames.create.mockRejectedValue(error);
 
       await expect(
         provider.createCustomHostname("tenant-1", "test.example.com"),
@@ -118,12 +118,6 @@ describe("CloudflareProvider", () => {
 
   describe("getHostnameStatus", () => {
     it("should return status and verification errors", async () => {
-      const provider = new CloudflareProvider();
-      const mockList = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.list as unknown as {
-        mockResolvedValue: (value: unknown) => void;
-      };
-
       const mockResponse = {
         result: [
           {
@@ -134,7 +128,7 @@ describe("CloudflareProvider", () => {
         ],
       };
 
-      mockList.mockResolvedValue(mockResponse);
+      mockCustomHostnames.list.mockResolvedValue(mockResponse);
 
       const result = await provider.getHostnameStatus(
         "tenant-1",
@@ -145,24 +139,18 @@ describe("CloudflareProvider", () => {
         status: "active",
         verification_errors: ["error1"],
       });
-      expect(mockList).toHaveBeenCalledWith({
+      expect(mockCustomHostnames.list).toHaveBeenCalledWith({
         hostname: "test.example.com",
         zone_id: "test-zone-id",
       });
     });
 
     it("should throw error if hostname not found", async () => {
-      const provider = new CloudflareProvider();
-      const mockList = (provider as unknown as { client: Cloudflare }).client
-        .customHostnames.list as unknown as {
-        mockResolvedValue: (value: unknown) => void;
-      };
-
       const mockResponse = {
         result: [],
       };
 
-      mockList.mockResolvedValue(mockResponse);
+      mockCustomHostnames.list.mockResolvedValue(mockResponse);
 
       await expect(
         provider.getHostnameStatus("tenant-1", "test.example.com"),

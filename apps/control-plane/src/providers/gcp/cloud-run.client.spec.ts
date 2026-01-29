@@ -93,38 +93,41 @@ describe("CloudRunProvider", () => {
     );
     mockRunClient = (provider as unknown as { runClient: unknown })
       .runClient as MockRunClient;
+    // Default mocks are set in beforeEach, tests can override with *Once methods
+    mockRunClient.projects.locations.services.get.mockResolvedValue({
+      data: { uri: "https://tenant-1.a.run.app" },
+    });
+    mockRunClient.projects.locations.services.create.mockResolvedValue({
+      data: {
+        name: "projects/test-project/locations/us-central1/operations/op-1",
+      },
+    });
+    mockRunClient.projects.locations.operations.get.mockResolvedValue({
+      data: { done: true },
+    });
+    mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
+      data: { bindings: [] },
+    });
+    mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
+      {},
+    );
+    mockRunClient.projects.locations.services.patch.mockResolvedValue({
+      data: {
+        name: "projects/test-project/locations/us-central1/operations/op-2",
+      },
+    });
   });
 
   describe("deployTenantInstance", () => {
     it("should create a new service if it does not exist", async () => {
-      // Mock service not found
+      // Mock service not found - override the default success
       mockRunClient.projects.locations.services.get.mockRejectedValueOnce({
         code: 404,
       });
 
-      // Mock create response
-      mockRunClient.projects.locations.services.create.mockResolvedValueOnce({
-        data: {
-          name: "projects/test-project/locations/us-central1/operations/op-1",
-        },
-      });
+      // Default create mock is already set up
 
-      // Mock operation completion
-      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
-        data: { done: true },
-      });
-
-      // Mock IAM policy
-      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValueOnce(
-        {
-          data: { bindings: [] },
-        },
-      );
-      mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValueOnce(
-        {},
-      );
-
-      // Mock final service get to retrieve URI
+      // Mock final service get to retrieve URI - second call (first was 404)
       mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { uri: "https://tenant-1.a.run.app" },
       });
@@ -144,24 +147,15 @@ describe("CloudRunProvider", () => {
     });
 
     it("should patch existing service if it exists", async () => {
-      // Mock service exists
+      // Mock service exists - first call
       mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { name: "existing-service" },
       });
 
-      // Mock patch response
-      mockRunClient.projects.locations.services.patch.mockResolvedValueOnce({
-        data: {
-          name: "projects/test-project/locations/us-central1/operations/op-2",
-        },
-      });
+      // Default patch mock is set up
+      // Default op completion is set up
 
-      // Mock operation completion
-      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
-        data: { done: true },
-      });
-
-      // Mock IAM policy
+      // Mock IAM policy - override default to verify it updates
       mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValueOnce(
         {
           data: {
@@ -170,7 +164,7 @@ describe("CloudRunProvider", () => {
         },
       );
 
-      // Mock final service get to retrieve URI
+      // Mock final service get - second call
       mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { uri: "https://tenant-1-updated.a.run.app" },
       });
@@ -193,7 +187,7 @@ describe("CloudRunProvider", () => {
         data: { name: "op-fail" },
       });
 
-      // Mock operation failure
+      // Mock operation failure (override default done: true)
       mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
         data: { done: true, error: { message: "Internal error" } },
       });

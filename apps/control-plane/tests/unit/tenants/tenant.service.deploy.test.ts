@@ -123,4 +123,26 @@ describe("TenantService Deployment", () => {
       status: "provisioning_failed",
     });
   });
+
+  it("should safely exit provisionResources if providers are missing", async () => {
+    // Create service without providers
+    const serviceWithoutProviders = new TenantService(repository, {
+      logger,
+      // No credentials provided
+    });
+
+    const serviceAny = serviceWithoutProviders as unknown as {
+      provisionResources: (
+        tenantId: string,
+        subdomain: string,
+      ) => Promise<void>;
+    };
+
+    await serviceAny.provisionResources("tenant-1", "test");
+
+    // Should not attempt to create database or deploy
+    expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
+    expect(mockCloudRunProvider.deployTenantInstance).not.toHaveBeenCalled();
+    expect(repository.update).not.toHaveBeenCalled();
+  });
 });
