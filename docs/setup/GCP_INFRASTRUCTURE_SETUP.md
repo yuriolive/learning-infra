@@ -143,8 +143,8 @@ echo "- GOOGLE_APPLICATION_CREDENTIALS_PART_1"
 echo "- GOOGLE_APPLICATION_CREDENTIALS_PART_2"
 echo "- GOOGLE_APPLICATION_CREDENTIALS_PART_3"
 echo ""
-echo "Helper to split (pnpm required):"
-echo "node -e 'const fs=require(\"fs\"); const c=fs.readFileSync(\"gcp-keys/control-plane-sa.json\", \"utf8\").replace(/\\s/g, \"\"); const s=Math.ceil(c.length/3); console.log(\"Part 1:\", c.substring(0,s)); console.log(\"Part 2:\", c.substring(s, s*2)); console.log(\"Part 3:\", c.substring(s*2));'"
+echo "Helper to split:"
+echo "node scripts/split-gcp-credentials.js gcp-keys/control-plane-sa.json"
 ```
 
 ## Required GitHub Secrets
