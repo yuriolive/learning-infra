@@ -1,46 +1,42 @@
 ---
-description: MedusaJS 2.0 configuration and patterns for tenant instances.
+description: MedusaJS 2.0 config-driven patterns for tenant instances.
 globs: apps/tenant-instance/**/*
 ---
-# MedusaJS 2.0 Patterns
+# MedusaJS "Mega-Image" Rules
 
-## Configuration
+## Core Principle: Single Version, Config Enabled
 
-Each tenant instance runs MedusaJS 2.0 with tenant-specific configuration.
+All tenant instances run the **exact same Docker Image**. Differences are handled exclusively via Environment Variables.
 
-## Environment Variables
+## Plugin Strategy
 
-- `DATABASE_URL`: Tenant-specific database connection (from Secret Manager)
-- `TENANT_ID`: Unique tenant identifier
-- `REDIS_NAMESPACE`: Redis namespace for tenant isolation
-- `NODE_ENV`: `production`
+1.  **Installation**:
+    - **ALL** supported plugins (Stripe, SendGrid, ERPs) must be listed in `package.json` and installed in the image.
+    - **Do NOT** conditionally install dependencies.
 
-## API Endpoints
+2.  **Registration (`medusa-config.ts`)**:
+    - Plugins must be conditionally added to the `plugins` array based on Env Vars.
 
-- `/`: Custom storefront UI (customer experience)
-- `/admin`: Admin dashboard and API (for merchants)
-- `/store`: Store API (MedusaJS store API)
-- `/health`: Health check endpoint
+    ```typescript
+    // Example Pattern
+    const plugins = [];
 
-## Database Initialization
+    if (process.env.MEDUSA_PAYMENT_STRIPE === "true") {
+      plugins.push({
+        resolve: "medusa-payment-stripe",
+        options: { ... }
+      });
+    }
+    ```
 
-- MedusaJS schema is bootstrapped on first request or during provisioning
-- Use MedusaJS migrations for schema updates
-- Never share database connections between tenants
+3.  **Safety**:
+    - Ensure the app does **not crash** if a plugin is enabled but missing secrets (log a warning instead).
 
-## Admin Access
+## Deployment
 
-- Merchants access admin at: `{store}-my.vendin.store/admin`
-- Authentication handled by MedusaJS
-- Each tenant has isolated admin access
+- **Immutable Images**: Never build a custom image for a tenant.
+- **Rollouts**: A new feature release = updating the Image Tag on ALL Cloud Run services.
 
-## Store API
+## Database
 
-- Customers access the tenant storefront UI served by the tenant instance
-- Storefront router redirects/proxies to the tenant instance
-- Tenant instance serves `/store` API endpoints for the UI
-
-## References
-
-- **Database isolation**: See [AGENTS.md](../../../AGENTS.md#key-constraints)
-- **Secret management**: See [@secrets.md](../../infrastructure/secrets.md)
+- **Migrations**: Run migrations automatically on container start (or via init container) since code version matches DB schema version.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import server from "../../src/index";
+import server, { type Environment } from "../../src/index";
 
 const MOCK_ENV = {
   DATABASE_URL: "postgres://mock:mock@localhost:5432/mock",
@@ -14,7 +14,10 @@ describe("Security Integration Tests", () => {
 
   it("GET /health should be publicly accessible without auth", async () => {
     const request = new Request(`${origin}/health`);
-    const response = await server.fetch(request, MOCK_ENV as any);
+    const response = await server.fetch(
+      request,
+      MOCK_ENV as unknown as Environment,
+    );
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -23,7 +26,10 @@ describe("Security Integration Tests", () => {
 
   it("GET /api/tenants should return 401 if Authorization header is missing", async () => {
     const request = new Request(`${origin}/api/tenants`);
-    const response = await server.fetch(request, MOCK_ENV as any);
+    const response = await server.fetch(
+      request,
+      MOCK_ENV as unknown as Environment,
+    );
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -37,7 +43,10 @@ describe("Security Integration Tests", () => {
         Authorization: "Bearer wrong-key",
       },
     });
-    const response = await server.fetch(request, MOCK_ENV as any);
+    const response = await server.fetch(
+      request,
+      MOCK_ENV as unknown as Environment,
+    );
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -55,7 +64,10 @@ describe("Security Integration Tests", () => {
     });
 
     try {
-      const response = await server.fetch(request, MOCK_ENV as any);
+      const response = await server.fetch(
+        request,
+        MOCK_ENV as unknown as Environment,
+      );
       // If it's a 200, 404, or even 500 (db error), it means it passed auth middleware.
       // A 401 definitely means it failed auth.
       expect(response.status).not.toBe(401);
@@ -71,7 +83,10 @@ describe("Security Integration Tests", () => {
           Origin: "http://another-origin.com",
         },
       });
-      const response = await server.fetch(request, MOCK_ENV as any);
+      const response = await server.fetch(
+        request,
+        MOCK_ENV as unknown as Environment,
+      );
 
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
         "http://another-origin.com",
@@ -94,7 +109,10 @@ describe("Security Integration Tests", () => {
           Origin: "https://admin.vendin.store",
         },
       });
-      const response = await server.fetch(request, PROD_ENV as any);
+      const response = await server.fetch(
+        request,
+        PROD_ENV as unknown as Environment,
+      );
 
       expect(response.status).toBe(200);
       expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
@@ -114,7 +132,10 @@ describe("Security Integration Tests", () => {
           Origin: "https://malicious.com",
         },
       });
-      const response = await server.fetch(request, PROD_ENV as any);
+      const response = await server.fetch(
+        request,
+        PROD_ENV as unknown as Environment,
+      );
 
       // Unauthorized origin should not receive CORS header
       expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();

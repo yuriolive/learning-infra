@@ -4,6 +4,7 @@ import axios from "axios";
 import { BlingConfig } from "../../models/bling-config.js";
 
 import type { BlingSyncPreferences } from "../../models/bling-config.js";
+import type { BlingOrderPayload } from "./utils/order-mapper.js";
 import type { Logger } from "@medusajs/types";
 import type { EntityManager, EntityRepository } from "@mikro-orm/core";
 import type { AxiosInstance } from "axios";
@@ -323,7 +324,7 @@ export default class BlingModuleService extends MedusaService({
     return String(error);
   }
 
-  async getProducts(parameters: Record<string, any> = {}) {
+  async getProducts(parameters: Record<string, unknown> = {}) {
     const client = await this.createAuthorizedClient();
     const response = await client.get("/produtos", { params: parameters });
     return response.data;
@@ -335,7 +336,7 @@ export default class BlingModuleService extends MedusaService({
     return response.data;
   }
 
-  async createOrder(payload: any) {
+  async createOrder(payload: BlingOrderPayload | Record<string, unknown>) {
     const client = await this.createAuthorizedClient();
     const response = await client.post("/pedidos/vendas", payload);
     return response.data;
