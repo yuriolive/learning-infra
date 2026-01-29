@@ -61,7 +61,8 @@ export class CloudRunProvider {
         containers: [container],
         scaling: {
           minInstanceCount: 0,
-          maxInstanceCount: 1,
+          // TODO: This could be a config based on the tenant plan
+          maxInstanceCount: 3,
         },
       },
     };
