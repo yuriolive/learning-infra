@@ -2,10 +2,10 @@ import { initAnalytics } from "@vendin/analytics";
 
 import type { MedusaContainer } from "@medusajs/medusa";
 
-const analyticsLoader = async (
+const analyticsLoader = (
   container: MedusaContainer,
   _config: Record<string, unknown>,
-): Promise<void> => {
+): void => {
   try {
     const apiKey = process.env.POSTHOG_API_KEY;
     const host = process.env.POSTHOG_HOST;

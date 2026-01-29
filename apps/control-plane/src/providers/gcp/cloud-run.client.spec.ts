@@ -118,6 +118,15 @@ describe("CloudRunProvider", () => {
     });
   });
 
+  const setupIamPolicyMock = (bindings: unknown[] = []) => {
+    mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
+      data: { bindings },
+    });
+    mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
+      {},
+    );
+  };
+
   describe("deployTenantInstance", () => {
     it("should create a new service if it does not exist", async () => {
       // Mock service not found - override the default success
@@ -230,12 +239,7 @@ describe("CloudRunProvider", () => {
 
   describe("makeServicePublic", () => {
     it("should add public binding if not present", async () => {
-      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
-        data: { bindings: [] },
-      });
-      mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
-        {},
-      );
+      setupIamPolicyMock([]);
 
       await (
         provider as unknown as {
@@ -262,19 +266,12 @@ describe("CloudRunProvider", () => {
     });
 
     it("should update existing invoker binding to include allUsers", async () => {
-      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
-        data: {
-          bindings: [
-            {
-              role: "roles/run.invoker",
-              members: ["user:special@example.com"],
-            },
-          ],
+      setupIamPolicyMock([
+        {
+          role: "roles/run.invoker",
+          members: ["user:special@example.com"],
         },
-      });
-      mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
-        {},
-      );
+      ]);
 
       await (
         provider as unknown as {

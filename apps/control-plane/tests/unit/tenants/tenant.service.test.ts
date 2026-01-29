@@ -60,6 +60,14 @@ describe("TenantService", () => {
     });
   });
 
+  const createTenantHelper = (index: number) => {
+    return service.createTenant({
+      name: `Store ${index}`,
+      merchantEmail: `store${index}@example.com`,
+      subdomain: `store${index}`,
+    });
+  };
+
   describe("createTenant", () => {
     it("should create a tenant successfully", async () => {
       const input: CreateTenantInput = {
@@ -231,16 +239,8 @@ describe("TenantService", () => {
     });
 
     it("should throw error when updating to existing domain", async () => {
-      await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-        subdomain: "store1",
-      });
-      const store2 = await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-        subdomain: "store2",
-      });
+      await createTenantHelper(1);
+      const store2 = await createTenantHelper(2);
 
       const input: UpdateTenantInput = {
         subdomain: "store1",
@@ -294,21 +294,9 @@ describe("TenantService", () => {
 
   describe("listTenants", () => {
     it("should return all tenants", async () => {
-      await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-        subdomain: "store1",
-      });
-      await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-        subdomain: "store2",
-      });
-      await service.createTenant({
-        name: "Store 3",
-        merchantEmail: "store3@example.com",
-        subdomain: "store3",
-      });
+      await createTenantHelper(1);
+      await createTenantHelper(2);
+      await createTenantHelper(3);
 
       const tenants = await service.listTenants();
 
@@ -327,16 +315,8 @@ describe("TenantService", () => {
     });
 
     it("should not return deleted tenants", async () => {
-      const store1 = await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-        subdomain: "store1",
-      });
-      await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-        subdomain: "store2",
-      });
+      const store1 = await createTenantHelper(1);
+      await createTenantHelper(2);
       await service.deleteTenant(store1.id);
 
       const tenants = await service.listTenants();

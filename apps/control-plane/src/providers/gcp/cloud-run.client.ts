@@ -41,71 +41,18 @@ export class CloudRunProvider {
 
     this.logger.info({ tenantId }, "Starting Cloud Run deployment");
 
-    // Prepare container definition
-    const container = {
-      image: this.tenantImageTag,
-      env: Object.entries(environmentVariables).map(([name, value]) => ({
-        name,
-        value,
-      })),
-      resources: {
-        limits: {
-          memory: "512Mi",
-          cpu: "1",
-        },
-      },
-    };
-
-    const serviceRequest = {
-      template: {
-        containers: [container],
-        scaling: {
-          minInstanceCount: 0,
-          // TODO: This could be a config based on the tenant plan
-          maxInstanceCount: 3,
-        },
-      },
-    };
+    const serviceRequest = this.prepareServiceRequest(environmentVariables);
 
     let operationName: string | undefined;
 
     try {
-      // Try to get service to decide between create or patch
-      let exists = false;
-      try {
-        await this.runClient.projects.locations.services.get({
-          name: servicePath,
-        });
-        exists = true;
-      } catch (error: unknown) {
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          (error as { code?: number }).code !== 404
-        ) {
-          throw error;
-        }
-      }
-
-      if (exists) {
-        this.logger.info({ tenantId }, "Updating existing Cloud Run service");
-        const response = await this.runClient.projects.locations.services.patch(
-          {
-            name: servicePath,
-            requestBody: serviceRequest,
-          },
-        );
-        operationName = response.data.name ?? undefined;
-      } else {
-        this.logger.info({ tenantId }, "Creating new Cloud Run service");
-        const response =
-          await this.runClient.projects.locations.services.create({
-            parent,
-            serviceId: serviceName,
-            requestBody: serviceRequest,
-          });
-        operationName = response.data.name ?? undefined;
-      }
+      operationName = await this.getOrCreateService(
+        serviceName,
+        servicePath,
+        parent,
+        serviceRequest,
+        tenantId,
+      );
 
       if (!operationName) {
         throw new Error(
@@ -201,5 +148,75 @@ export class CloudRunProvider {
       resource: servicePath,
       requestBody: { policy },
     });
+  }
+
+  private async getOrCreateService(
+    serviceId: string,
+    servicePath: string,
+    parent: string,
+    serviceRequest: any,
+    tenantId: string,
+  ): Promise<string | undefined> {
+    // Try to get service to decide between create or patch
+    let exists = false;
+    try {
+      await this.runClient.projects.locations.services.get({
+        name: servicePath,
+      });
+      exists = true;
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        (error as { code?: number }).code !== 404
+      ) {
+        throw error;
+      }
+    }
+
+    if (exists) {
+      this.logger.info({ tenantId }, "Updating existing Cloud Run service");
+      const response = await this.runClient.projects.locations.services.patch({
+        name: servicePath,
+        requestBody: serviceRequest,
+      });
+      return response.data.name ?? undefined;
+    }
+
+    this.logger.info({ tenantId }, "Creating new Cloud Run service");
+    const response = await this.runClient.projects.locations.services.create({
+      parent,
+      serviceId,
+      requestBody: serviceRequest,
+    });
+    return response.data.name ?? undefined;
+  }
+
+  private prepareServiceRequest(
+    environmentVariables: Record<string, string>,
+  ): any {
+    const container = {
+      image: this.tenantImageTag,
+      env: Object.entries(environmentVariables).map(([name, value]) => ({
+        name,
+        value,
+      })),
+      resources: {
+        limits: {
+          memory: "512Mi",
+          cpu: "1",
+        },
+      },
+    };
+
+    return {
+      template: {
+        containers: [container],
+        scaling: {
+          minInstanceCount: 0,
+          maxInstanceCount: 3,
+        },
+      },
+    };
   }
 }

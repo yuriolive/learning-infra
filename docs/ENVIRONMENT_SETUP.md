@@ -13,24 +13,24 @@ This document consolidates all environment variable and secrets management for t
 
 ### Control Plane Environment Variables
 
-| Variable                         | Type      | Source           | Purpose                          |
-| -------------------------------- | --------- | ---------------- | -------------------------------- |
-| `DATABASE_URL`                   | Secret    | Secrets Store    | PostgreSQL connection string     |
-| `NEON_API_KEY`                   | Secret    | Secrets Store    | Neon API authentication          |
-| `NEON_PROJECT_ID`                | Secret    | Secrets Store    | Neon project identifier          |
-| `ADMIN_API_KEY`                  | Secret    | Secrets Store    | API authentication (Bearer)      |
-| `CLOUDFLARE_API_TOKEN`           | Secret    | Secrets Store    | Cloudflare API access            |
-| `CLOUDFLARE_ZONE_ID`             | Secret    | Secrets Store    | Zone ID for vendin.store         |
-| `ALLOWED_ORIGINS`                | Plain Var | `wrangler.jsonc` | CORS allowed origins             |
-| `LOG_LEVEL`                      | Plain Var | `wrangler.jsonc` | Logging verbosity (info/debug)   |
-| `NODE_ENV`                       | Plain Var | `wrangler.jsonc` | Runtime environment (production) |
-| `POSTHOG_API_KEY`                | Secret    | Secrets Store    | PostHog project API key          |
-| `POSTHOG_HOST`                   | Plain Var | `wrangler.jsonc` | PostHog API host                 |
-| `UPSTASH_REDIS_URL`              | Secret    | Secrets Store    | Redis connection string          |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials  |
-| `GCP_PROJECT_ID`                 | Plain Var | `wrangler.jsonc` | Google Cloud Project ID          |
-| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region              |
-| `TENANT_IMAGE_TAG`               | Plain Var | `wrangler.jsonc` | Docker image tag for tenant      |
+| Variable                         | Type      | Source           | Purpose                                                        |
+| -------------------------------- | --------- | ---------------- | -------------------------------------------------------------- |
+| `DATABASE_URL`                   | Secret    | Secrets Store    | PostgreSQL connection string                                   |
+| `NEON_API_KEY`                   | Secret    | Secrets Store    | Neon API authentication                                        |
+| `NEON_PROJECT_ID`                | Secret    | Secrets Store    | Neon project identifier                                        |
+| `ADMIN_API_KEY`                  | Secret    | Secrets Store    | API authentication (Bearer)                                    |
+| `CLOUDFLARE_API_TOKEN`           | Secret    | Secrets Store    | Cloudflare API access                                          |
+| `CLOUDFLARE_ZONE_ID`             | Secret    | Secrets Store    | Zone ID for vendin.store                                       |
+| `ALLOWED_ORIGINS`                | Plain Var | `wrangler.jsonc` | CORS allowed origins                                           |
+| `LOG_LEVEL`                      | Plain Var | `wrangler.jsonc` | Logging verbosity (info/debug)                                 |
+| `NODE_ENV`                       | Plain Var | `wrangler.jsonc` | Runtime environment (production)                               |
+| `POSTHOG_API_KEY`                | Secret    | Secrets Store    | PostHog project API key                                        |
+| `POSTHOG_HOST`                   | Plain Var | `wrangler.jsonc` | PostHog API host                                               |
+| `UPSTASH_REDIS_URL`              | Secret    | Secrets Store    | Redis connection string                                        |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials                                |
+| `GCP_PROJECT_ID`                 | Plain Var | `wrangler.jsonc` | Google Cloud Project ID                                        |
+| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region                                            |
+| `TENANT_IMAGE_TAG`               | Plain Var | `wrangler.jsonc` | Docker image tag for tenant (dynamically constructed in CI/CD) |
 
 ---
 
