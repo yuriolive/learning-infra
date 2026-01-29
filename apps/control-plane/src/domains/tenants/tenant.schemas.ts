@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const SUBDOMAIN_REGEX =
+  //
   /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/;
 
 export const createTenantSchema = z.object({

@@ -291,7 +291,7 @@ export default {
 
     const { tenantService } = createServices(
       logger,
-      databaseUrl!,
+      databaseUrl as string,
       nodeEnvironment,
       environment,
       neonApiKey,

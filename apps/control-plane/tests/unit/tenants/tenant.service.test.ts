@@ -60,6 +60,37 @@ describe("TenantService", () => {
     });
   });
 
+  describe("constructor", () => {
+    it("should log error if provider initialization fails", async () => {
+      // Mock failure in NeonProvider constructor
+      vi.mocked(NeonProvider).mockImplementationOnce(() => {
+        throw new Error("Init failure");
+      });
+
+      const logger = createLogger({ logLevel: "error", nodeEnv: "test" });
+      const errorSpy = vi.spyOn(logger, "error");
+
+      const database = await createMockDatabase();
+      const repository = new TenantRepository(database);
+
+      new TenantService(repository, {
+        logger,
+        neonApiKey: "mock-key",
+        neonProjectId: "mock-project",
+        gcpCredentialsJson: "{}",
+        gcpProjectId: "mock-gcp-project",
+        gcpRegion: "mock-region",
+        tenantImageTag: "mock-tag",
+        upstashRedisUrl: "redis://mock",
+      });
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ error: expect.any(Error) }),
+        "Failed to initialize providers",
+      );
+    });
+  });
+
   const createTenantHelper = (index: number) => {
     return service.createTenant({
       name: `Store ${index}`,
