@@ -6,6 +6,8 @@ import { createTenantRoutes } from "../../../src/domains/tenants/tenant.routes";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
 import { createMockDatabase } from "../../utils/mock-database";
 
+import type { CreateTenantInput } from "../../../src/domains/tenants/tenant.types";
+
 describe("TenantRoutes", () => {
   let routes: ReturnType<typeof createTenantRoutes>;
   let service: TenantService;
@@ -19,6 +21,24 @@ describe("TenantRoutes", () => {
     service = new TenantService(repository, { logger });
     routes = createTenantRoutes({ tenantService: service, logger });
   });
+
+  const createTenantHelper = (
+    indexOrOverrides: number | Partial<CreateTenantInput> = 1,
+  ) => {
+    if (typeof indexOrOverrides === "number") {
+      return service.createTenant({
+        name: `Store ${indexOrOverrides}`,
+        merchantEmail: `store${indexOrOverrides}@example.com`,
+        subdomain: `store${indexOrOverrides}`,
+      });
+    }
+    return service.createTenant({
+      name: "Test Store",
+      merchantEmail: "test@example.com",
+      subdomain: "teststore",
+      ...indexOrOverrides,
+    });
+  };
 
   describe("POST /api/tenants", () => {
     it("should create a tenant successfully", async () => {
@@ -60,11 +80,7 @@ describe("TenantRoutes", () => {
     });
 
     it("should return 409 for duplicate domain", async () => {
-      await service.createTenant({
-        name: "Existing Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      });
+      await createTenantHelper({ subdomain: "teststore" });
 
       const request = new Request("http://localhost:3000/api/tenants", {
         method: "POST",
@@ -98,22 +114,14 @@ describe("TenantRoutes", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Subdomain is required for deployment");
+      expect(data.error).toBe("Validation error");
     });
   });
 
   describe("GET /api/tenants", () => {
     it("should return list of tenants", async () => {
-      await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-        subdomain: "store1",
-      });
-      await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-        subdomain: "store2",
-      });
+      await createTenantHelper(1);
+      await createTenantHelper(2);
 
       const request = new Request("http://localhost:3000/api/tenants", {
         method: "GET",
@@ -141,11 +149,7 @@ describe("TenantRoutes", () => {
 
   describe("GET /api/tenants/:tenantId", () => {
     it("should return tenant when found", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      });
+      const created = await createTenantHelper(1);
 
       const request = new Request(
         `http://localhost:3000/api/tenants/${created.id}`,
@@ -159,7 +163,7 @@ describe("TenantRoutes", () => {
 
       expect(response.status).toBe(200);
       expect(data.id).toBe(created.id);
-      expect(data.name).toBe("Test Store");
+      expect(data.name).toBe("Store 1");
     });
 
     it("should return 404 when tenant not found", async () => {
@@ -195,9 +199,8 @@ describe("TenantRoutes", () => {
 
   describe("PATCH /api/tenants/:tenantId", () => {
     it("should update tenant successfully", async () => {
-      const created = await service.createTenant({
+      const created = await createTenantHelper({
         name: "Original Name",
-        merchantEmail: "test@example.com",
         subdomain: "original",
       });
 
@@ -208,6 +211,7 @@ describe("TenantRoutes", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: "Updated Name",
+            subdomain: "original", // Now required by schema
             status: "suspended",
           }),
         },
@@ -228,7 +232,10 @@ describe("TenantRoutes", () => {
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: "Updated Name" }),
+          body: JSON.stringify({
+            name: "Updated Name",
+            subdomain: "nonexistent",
+          }),
         },
       );
 
@@ -242,11 +249,7 @@ describe("TenantRoutes", () => {
 
   describe("DELETE /api/tenants/:tenantId", () => {
     it("should delete tenant successfully", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      });
+      const created = await createTenantHelper();
 
       const request = new Request(
         `http://localhost:3000/api/tenants/${created.id}`,
