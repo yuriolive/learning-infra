@@ -6,7 +6,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "wrangler dev",
     "start": "npm run build && node dist/src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
