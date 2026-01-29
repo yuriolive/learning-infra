@@ -81,7 +81,8 @@
         "POSTHOG_HOST": "https://us.i.posthog.com",
         "GCP_PROJECT_ID": "GCP_PROJECT_ID_PLACEHOLDER",
         "GCP_REGION": "southamerica-east1",
-        "TENANT_IMAGE_TAG": "TENANT_IMAGE_TAG_PLACEHOLDER"
+        "TENANT_IMAGE_TAG": "TENANT_IMAGE_TAG_PLACEHOLDER",
+        "CLOUD_RUN_SERVICE_ACCOUNT": "CLOUD_RUN_SERVICE_ACCOUNT_PLACEHOLDER"
       }
     }
   }
