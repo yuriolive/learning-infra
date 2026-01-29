@@ -259,6 +259,11 @@ export class CloudRunProvider {
         name,
         value,
       })),
+      ports: [
+        {
+          containerPort: 8080,
+        },
+      ],
       resources: {
         limits: {
           memory: "512Mi",

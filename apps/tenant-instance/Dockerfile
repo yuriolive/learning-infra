@@ -46,7 +46,7 @@ COPY --from=deployer /app/deploy .
 ENV NODE_ENV=production
 
 # Expose ports
-EXPOSE 9000 5173
+EXPOSE 8080 9000 5173
 
 # Ensure start.sh is executable
 RUN chmod +x ./start.sh
