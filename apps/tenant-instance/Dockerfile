@@ -8,6 +8,9 @@ FROM base AS pruner
 COPY . .
 RUN turbo prune --scope=@vendin/tenant-instance --docker
 
+# Extract pnpm version from package.json
+RUN node -p "require('./package.json').packageManager.split('@')[1]" > pnpm-version.txt
+
 # Stage 3: Builder
 FROM base AS builder
 WORKDIR /app
@@ -40,7 +43,9 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm@9.15.4
+# Copy pnpm version from pruner
+COPY --from=pruner /app/pnpm-version.txt .
+RUN npm install -g pnpm@$(cat pnpm-version.txt)
 
 # Copy the deployed application
 COPY --from=deployer /app/deploy .
