@@ -56,12 +56,7 @@ export class TenantService {
         );
       }
 
-      if (
-        config.gcpCredentialsJson &&
-        config.gcpProjectId &&
-        config.gcpRegion &&
-        config.tenantImageTag
-      ) {
+      if (config.gcpProjectId && config.gcpRegion && config.tenantImageTag) {
         this.cloudRunProvider = new CloudRunProvider({
           credentialsJson: config.gcpCredentialsJson,
           projectId: config.gcpProjectId,
@@ -74,7 +69,7 @@ export class TenantService {
         });
       } else {
         this.logger.warn(
-          "GCP credentials or config not found. Cloud Run deployment will be skipped.",
+          "GCP config not found. Cloud Run deployment will be skipped.",
         );
       }
     } catch (error) {

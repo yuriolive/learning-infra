@@ -3,7 +3,7 @@ import { GoogleAuth } from "google-auth-library";
 import { run_v2 } from "googleapis";
 
 interface CloudRunProviderConfig {
-  credentialsJson: string;
+  credentialsJson?: string | undefined;
   projectId: string;
   region: string;
   tenantImageTag: string;
@@ -26,10 +26,26 @@ export class CloudRunProvider {
     this.tenantImageTag = config.tenantImageTag;
     this.serviceAccount = config.serviceAccount;
 
-    const auth = new GoogleAuth({
-      credentials: JSON.parse(config.credentialsJson),
+    const authOptions: {
+      credentials?: object;
+      keyFilename?: string;
+      scopes: string[];
+    } = {
       scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-    });
+    };
+
+    if (config.credentialsJson) {
+      try {
+        // Try parsing as JSON string validation
+        const credentials = JSON.parse(config.credentialsJson);
+        authOptions.credentials = credentials;
+      } catch {
+        // If not valid JSON, treat as file path
+        authOptions.keyFilename = config.credentialsJson;
+      }
+    }
+
+    const auth = new GoogleAuth(authOptions);
 
     this.runClient = new run_v2.Run({ auth });
   }
