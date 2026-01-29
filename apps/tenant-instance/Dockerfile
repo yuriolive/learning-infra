@@ -39,6 +39,9 @@ COPY --from=builder /app/apps/tenant-instance/dist /app/deploy/dist
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy the deployed application
 COPY --from=deployer /app/deploy .
 
