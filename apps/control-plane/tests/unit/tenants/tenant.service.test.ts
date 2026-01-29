@@ -290,9 +290,10 @@ describe("TenantService", () => {
       expect(mockDeleteTenantDatabase).toHaveBeenCalledWith(expect.any(String));
       expect(mockDeleteTenantInstance).toHaveBeenCalledWith(expect.any(String));
 
-      // Verify final status
+      // Verify final status and failure reason
       const tenants = await service.listTenants();
       expect(tenants[0]?.status).toBe("provisioning_failed");
+      expect(tenants[0]?.failureReason).toBe("Deployment failed");
     });
   });
 

@@ -26,6 +26,7 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     updatedAt: databaseTenant.updatedAt,
     deletedAt: databaseTenant.deletedAt ?? null,
     metadata: databaseTenant.metadata ?? null,
+    failureReason: databaseTenant.failureReason ?? null,
   };
 }
 
@@ -87,6 +88,9 @@ export class TenantRepository {
         ...(input.apiUrl !== undefined && { apiUrl: input.apiUrl }),
         ...(input.redisHash !== undefined && { redisHash: input.redisHash }),
         ...(input.metadata !== undefined && { metadata: input.metadata }),
+        ...(input.failureReason !== undefined && {
+          failureReason: input.failureReason,
+        }),
         updatedAt: new Date(),
       })
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))
