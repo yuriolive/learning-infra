@@ -261,7 +261,7 @@ export class CloudRunProvider {
       })),
       ports: [
         {
-          containerPort: 8080,
+          containerPort: 9000,
         },
       ],
       resources: {
@@ -274,6 +274,9 @@ export class CloudRunProvider {
 
     return {
       template: {
+        annotations: {
+          "run.googleapis.com/cpu-throttling": "true",
+        },
         serviceAccount: this.serviceAccount ?? null,
         containers: [container],
         scaling: {
