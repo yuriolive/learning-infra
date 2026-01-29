@@ -61,7 +61,7 @@ describe("TenantService", () => {
   });
 
   describe("constructor", () => {
-    it("should log error if provider initialization fails", async () => {
+    it("should log error if provider initialization fails and keep providers null", async () => {
       // Mock failure in NeonProvider constructor
       vi.mocked(NeonProvider).mockImplementationOnce(() => {
         throw new Error("Init failure");
@@ -73,7 +73,7 @@ describe("TenantService", () => {
       const database = await createMockDatabase();
       const repository = new TenantRepository(database);
 
-      new TenantService(repository, {
+      const serviceInstance = new TenantService(repository, {
         logger,
         neonApiKey: "mock-key",
         neonProjectId: "mock-project",
@@ -88,6 +88,12 @@ describe("TenantService", () => {
         expect.objectContaining({ error: expect.any(Error) }),
         "Failed to initialize providers",
       );
+
+      // Access private members to verify they are null
+      // @ts-expect-error accessing private property for testing
+      expect(serviceInstance.neonProvider).toBeNull();
+      // @ts-expect-error accessing private property for testing
+      expect(serviceInstance.cloudRunProvider).toBeNull();
     });
   });
 
