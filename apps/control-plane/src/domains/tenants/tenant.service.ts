@@ -115,6 +115,17 @@ export class TenantService {
       return;
     }
 
+    if (!this.upstashRedisUrl) {
+      this.logger.error(
+        { tenantId },
+        "Provisioning aborted: Missing Upstash Redis URL",
+      );
+      await this.repository.update(tenantId, {
+        status: "provisioning_failed",
+      });
+      return;
+    }
+
     try {
       this.logger.info({ tenantId }, "Starting background provisioning");
 
@@ -129,7 +140,7 @@ export class TenantService {
       // 3. Deploy Cloud Run
       const environmentVariables = {
         DATABASE_URL: databaseUrl,
-        REDIS_URL: this.upstashRedisUrl || "",
+        REDIS_URL: this.upstashRedisUrl,
         COOKIE_SECRET: cookieSecret,
         JWT_SECRET: jwtSecret,
         STORE_CORS: `https://${subdomain}.vendin.store,http://localhost:3000`,

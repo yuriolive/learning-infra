@@ -69,9 +69,9 @@
         "LOG_LEVEL": "info",
         "NODE_ENV": "production",
         "POSTHOG_HOST": "https://us.i.posthog.com",
-        "GCP_PROJECT_ID": "vendin-store",
+        "GCP_PROJECT_ID": "GCP_PROJECT_ID_PLACEHOLDER",
         "GCP_REGION": "southamerica-east1",
-        "TENANT_IMAGE_TAG": "southamerica-east1-docker.pkg.dev/vendin-store/containers/tenant-instance:latest"
+        "TENANT_IMAGE_TAG": "TENANT_IMAGE_TAG_PLACEHOLDER"
       }
     }
   }

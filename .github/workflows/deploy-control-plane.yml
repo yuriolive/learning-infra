@@ -96,6 +96,11 @@ jobs:
             exit 1
           fi
           sed -i "s/STORE_ID_PLACEHOLDER/$STORE_ID/g" wrangler.jsonc
+          sed -i "s/GCP_PROJECT_ID_PLACEHOLDER/${{ secrets.GCP_PROJECT_ID }}/g" wrangler.jsonc
+          # Construct the image tag using secrets, matching the pattern in deploy-tenant-instance.yml
+          IMAGE_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:latest"
+          # We use a different delimiter because the image tag contains slashes
+          sed -i "s|TENANT_IMAGE_TAG_PLACEHOLDER|$IMAGE_TAG|g" wrangler.jsonc
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3

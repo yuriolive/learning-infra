@@ -56,6 +56,7 @@ describe("TenantService", () => {
       gcpProjectId: "mock-gcp-project",
       gcpRegion: "mock-region",
       tenantImageTag: "mock-tag",
+      upstashRedisUrl: "redis://mock",
     });
   });
 
@@ -120,6 +121,7 @@ describe("TenantService", () => {
         gcpProjectId: "mock-gcp-project",
         gcpRegion: "mock-region",
         tenantImageTag: "mock-tag",
+        upstashRedisUrl: "redis://mock",
       });
 
       const input: CreateTenantInput = {
