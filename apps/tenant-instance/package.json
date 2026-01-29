@@ -12,7 +12,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "medusa build",
+    "build": "tsc -b && medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "eslint .",
