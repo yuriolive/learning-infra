@@ -125,6 +125,11 @@ gcloud iam service-accounts add-iam-policy-binding "cloud-run-sa@vendin-store.ia
   --member="serviceAccount:$CP_SA_EMAIL" \
   --role="roles/iam.serviceAccountUser"
 
+# Grant permissions to Tenant Runtime SA to pull images from Artifact Registry
+gcloud projects add-iam-policy-binding "vendin-store" \
+  --member="serviceAccount:cloud-run-sa@vendin-store.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.reader"
+
 # Generate Key (for GOOGLE_APPLICATION_CREDENTIALS)
 gcloud iam service-accounts keys create gcp-keys/control-plane-sa.json \
   --iam-account=$CP_SA_EMAIL
