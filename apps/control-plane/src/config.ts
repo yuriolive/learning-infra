@@ -29,7 +29,7 @@ export interface Environment {
 function resolveSecret(
   secret: BoundSecret | undefined,
 ): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null && "get" in secret) {
+  if (secret && typeof secret === "object") {
     return secret.get();
   }
   return Promise.resolve(secret as string | undefined);
