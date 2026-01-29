@@ -132,7 +132,9 @@ describe("validateConfiguration", () => {
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.objectContaining({ missingVariables: ["NEON_API_KEY"] }),
+      expect.objectContaining({
+        missingVariables: ["NEON_API_KEY", "CLOUD_RUN_SERVICE_ACCOUNT"],
+      }),
       "Critical infrastructure keys are missing in production",
     );
   });
@@ -156,7 +158,11 @@ describe("validateConfiguration", () => {
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
-        missingVariables: ["NEON_PROJECT_ID", "GCP_PROJECT_ID"],
+        missingVariables: [
+          "NEON_PROJECT_ID",
+          "GCP_PROJECT_ID",
+          "CLOUD_RUN_SERVICE_ACCOUNT",
+        ],
       }),
       "Critical infrastructure keys are missing in production",
     );
