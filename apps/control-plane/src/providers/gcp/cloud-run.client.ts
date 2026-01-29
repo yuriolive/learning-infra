@@ -7,6 +7,7 @@ interface CloudRunProviderConfig {
   projectId: string;
   region: string;
   tenantImageTag: string;
+  serviceAccount?: string;
   logger: ReturnType<typeof createLogger>;
 }
 
@@ -16,12 +17,14 @@ export class CloudRunProvider {
   private projectId: string;
   private region: string;
   private tenantImageTag: string;
+  private serviceAccount: string | undefined;
 
   constructor(config: CloudRunProviderConfig) {
     this.logger = config.logger;
     this.projectId = config.projectId;
     this.region = config.region;
     this.tenantImageTag = config.tenantImageTag;
+    this.serviceAccount = config.serviceAccount;
 
     const auth = new GoogleAuth({
       credentials: JSON.parse(config.credentialsJson),
@@ -250,6 +253,7 @@ export class CloudRunProvider {
 
     return {
       template: {
+        serviceAccount: this.serviceAccount ?? null,
         containers: [container],
         scaling: {
           minInstanceCount: 0,

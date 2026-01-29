@@ -26,6 +26,7 @@ interface TenantServiceConfig {
   gcpRegion?: string | undefined;
   tenantImageTag?: string | undefined;
   upstashRedisUrl?: string | undefined;
+  cloudRunServiceAccount?: string | undefined;
   logger: ReturnType<typeof createLogger>;
 }
 
@@ -67,6 +68,9 @@ export class TenantService {
           region: config.gcpRegion,
           tenantImageTag: config.tenantImageTag,
           logger: this.logger,
+          ...(config.cloudRunServiceAccount
+            ? { serviceAccount: config.cloudRunServiceAccount }
+            : {}),
         });
       } else {
         this.logger.warn(
@@ -173,10 +177,15 @@ export class TenantService {
     } catch (error) {
       this.logger.error({ error, tenantId }, "Provisioning resources failed");
 
+      // Rollback any resources that might have been created
       await this.rollbackProvisioning(tenantId);
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       await this.repository.update(tenantId, {
         status: "provisioning_failed",
+        failureReason: errorMessage,
       });
     }
   }
