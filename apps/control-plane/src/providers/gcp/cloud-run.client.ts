@@ -264,6 +264,26 @@ export class CloudRunProvider {
           containerPort: 9000,
         },
       ],
+      startupProbe: {
+        httpGet: {
+          path: "/health",
+          port: 9000,
+        },
+        initialDelaySeconds: 0,
+        timeoutSeconds: 240,
+        failureThreshold: 1,
+        periodSeconds: 240,
+      },
+      livenessProbe: {
+        httpGet: {
+          path: "/health",
+          port: 9000,
+        },
+        initialDelaySeconds: 30,
+        timeoutSeconds: 5,
+        failureThreshold: 3,
+        periodSeconds: 15,
+      },
       resources: {
         limits: {
           memory: "512Mi",
