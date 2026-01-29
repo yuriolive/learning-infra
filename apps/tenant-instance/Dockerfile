@@ -40,7 +40,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9.15.4
 
 # Copy the deployed application
 COPY --from=deployer /app/deploy .
