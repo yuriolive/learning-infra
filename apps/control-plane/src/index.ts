@@ -2,35 +2,17 @@ import { captureError, initAnalytics } from "@vendin/analytics";
 import { createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
+import {
+  resolveEnvironmentSecrets,
+  validateConfiguration,
+  type Environment,
+} from "./config";
 import { createDatabase } from "./database/database";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
-
-interface SecretBinding {
-  get(): Promise<string>;
-}
-
-type BoundSecret = string | SecretBinding;
-
-export interface Environment {
-  DATABASE_URL: BoundSecret;
-  LOG_LEVEL?: string;
-  NODE_ENV?: string;
-  NEON_API_KEY?: BoundSecret;
-  NEON_PROJECT_ID?: BoundSecret;
-  ADMIN_API_KEY?: BoundSecret;
-  ALLOWED_ORIGINS?: string;
-  POSTHOG_API_KEY?: BoundSecret;
-  POSTHOG_HOST?: string;
-  GCP_PROJECT_ID?: string;
-  GCP_REGION?: string;
-  TENANT_IMAGE_TAG?: string;
-  UPSTASH_REDIS_URL?: BoundSecret;
-  GOOGLE_APPLICATION_CREDENTIALS?: BoundSecret;
-}
 
 const openApiSpecs = new LRUCache<
   string,
@@ -39,15 +21,6 @@ const openApiSpecs = new LRUCache<
   max: 100,
   ttl: 1000 * 60 * 60,
 });
-
-function resolveSecret(
-  secret: BoundSecret | undefined,
-): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null && "get" in secret) {
-    return secret.get();
-  }
-  return Promise.resolve(secret as string | undefined);
-}
 
 function getOpenAPISpec(origin: string) {
   let spec = openApiSpecs.get(origin);
@@ -147,18 +120,6 @@ function handleApiRequest(
   return tenantRoutes.handleRequest(request);
 }
 
-function resolveEnvironmentSecrets(environment: Environment) {
-  return Promise.all([
-    resolveSecret(environment.DATABASE_URL),
-    resolveSecret(environment.NEON_API_KEY),
-    resolveSecret(environment.NEON_PROJECT_ID),
-    resolveSecret(environment.ADMIN_API_KEY),
-    resolveSecret(environment.POSTHOG_API_KEY),
-    resolveSecret(environment.UPSTASH_REDIS_URL),
-    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS),
-  ]);
-}
-
 function initApplicationAnalytics(
   postHogApiKey: string | undefined,
   postHogHost: string | undefined,
@@ -211,45 +172,6 @@ function createServices(
   return { tenantService };
 }
 
-function validateConfiguration(
-  logger: ReturnType<typeof createLogger>,
-  databaseUrl: string | undefined,
-  adminApiKey: string | undefined,
-  nodeEnvironment: string,
-): Response | undefined {
-  if (!databaseUrl) {
-    logger.error("DATABASE_URL is required but was not configured");
-    return new Response(
-      JSON.stringify({
-        error: "Configuration Error",
-        message: "Database configuration is missing",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-
-  if (nodeEnvironment === "production" && !adminApiKey) {
-    logger.error(
-      "ADMIN_API_KEY is required in production but was not configured",
-    );
-    return new Response(
-      JSON.stringify({
-        error: "Configuration Error",
-        message: "Service is not properly configured",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
-  }
-
-  return undefined;
-}
-
 export default {
   async fetch(
     request: Request,
@@ -262,15 +184,14 @@ export default {
       nodeEnv: nodeEnvironment,
     });
 
-    const [
+    const {
       databaseUrl,
       neonApiKey,
       neonProjectId,
       adminApiKey,
       postHogApiKey,
-      _upstashRedisUrl,
       googleApplicationCredentials,
-    ] = await resolveEnvironmentSecrets(environment);
+    } = await resolveEnvironmentSecrets(environment);
 
     initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
 

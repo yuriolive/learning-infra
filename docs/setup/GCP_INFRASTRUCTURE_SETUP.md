@@ -134,6 +134,17 @@ echo "Minify this JSON content for GOOGLE_APPLICATION_CREDENTIALS:"
 cat gcp-keys/control-plane-sa.json | tr -d '\n'
 # Windows PowerShell
 # Get-Content gcp-keys/control-plane-sa.json -Raw | ForEach-Object { $_ -replace '\s+', '' }
+
+echo ""
+echo "IMPORTANT: If the minified JSON is > 1024 characters, Cloudflare will reject it."
+echo "In that case, split the minified JSON into 3 roughly equal parts (do not break JSON structure, just string splitting)."
+echo "Assign them to:"
+echo "- GOOGLE_APPLICATION_CREDENTIALS_PART_1"
+echo "- GOOGLE_APPLICATION_CREDENTIALS_PART_2"
+echo "- GOOGLE_APPLICATION_CREDENTIALS_PART_3"
+echo ""
+echo "Helper to split (pnpm required):"
+echo "node -e 'const fs=require(\"fs\"); const c=fs.readFileSync(\"gcp-keys/control-plane-sa.json\", \"utf8\").replace(/\\s/g, \"\"); const s=Math.ceil(c.length/3); console.log(\"Part 1:\", c.substring(0,s)); console.log(\"Part 2:\", c.substring(s, s*2)); console.log(\"Part 3:\", c.substring(s*2));'"
 ```
 
 ## Required GitHub Secrets

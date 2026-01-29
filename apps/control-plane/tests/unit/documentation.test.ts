@@ -5,7 +5,8 @@ vi.mock("../../src/database/database", () => ({
   createDatabase: () => ({}),
 }));
 
-import worker, { type Environment } from "../../src/index";
+import { type Environment } from "../../src/config";
+import worker from "../../src/index";
 
 describe("Documentation Endpoints", () => {
   const environment = {
