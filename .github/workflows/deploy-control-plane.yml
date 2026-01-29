@@ -102,6 +102,10 @@ jobs:
           # We use a different delimiter because the image tag contains slashes
           sed -i "s|TENANT_IMAGE_TAG_PLACEHOLDER|$IMAGE_TAG|g" wrangler.jsonc
 
+          # Inject Cloud Run Service Account
+          CLOUD_RUN_SA="cloud-run-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
+          sed -i "s/CLOUD_RUN_SERVICE_ACCOUNT_PLACEHOLDER/$CLOUD_RUN_SA/g" wrangler.jsonc
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:

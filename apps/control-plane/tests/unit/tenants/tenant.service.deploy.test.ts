@@ -13,8 +13,14 @@ vi.mock("../../../src/providers/gcp/cloud-run.client");
 describe("TenantService Deployment", () => {
   let service: TenantService;
   let repository: TenantRepository;
-  let mockNeonProvider: { createTenantDatabase: unknown };
-  let mockCloudRunProvider: { deployTenantInstance: ReturnType<typeof vi.fn> };
+  let mockNeonProvider: {
+    createTenantDatabase: unknown;
+    deleteTenantDatabase: unknown;
+  };
+  let mockCloudRunProvider: {
+    deployTenantInstance: ReturnType<typeof vi.fn>;
+    deleteTenantInstance: ReturnType<typeof vi.fn>;
+  };
   const logger = createLogger({ logLevel: "silent" });
 
   beforeEach(() => {
@@ -33,6 +39,7 @@ describe("TenantService Deployment", () => {
 
     mockNeonProvider = {
       createTenantDatabase: vi.fn().mockResolvedValue("postgres://db-url"),
+      deleteTenantDatabase: vi.fn().mockImplementation(async () => {}),
     };
     (NeonProvider as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       () => mockNeonProvider,
@@ -40,6 +47,7 @@ describe("TenantService Deployment", () => {
 
     mockCloudRunProvider = {
       deployTenantInstance: vi.fn().mockResolvedValue("https://service-url"),
+      deleteTenantInstance: vi.fn().mockImplementation(async () => {}),
     };
     (
       CloudRunProvider as unknown as ReturnType<typeof vi.fn>
@@ -121,6 +129,7 @@ describe("TenantService Deployment", () => {
 
     expect(repository.update).toHaveBeenCalledWith("tenant-1", {
       status: "provisioning_failed",
+      failureReason: "Deploy failed",
     });
   });
 

@@ -157,6 +157,7 @@ function createServices(
   neonProjectId: string | undefined,
   googleApplicationCredentials: string | undefined,
   upstashRedisUrl: string | undefined,
+  cloudRunServiceAccount: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
@@ -169,6 +170,7 @@ function createServices(
     gcpRegion: environment.GCP_REGION,
     tenantImageTag: environment.TENANT_IMAGE_TAG,
     upstashRedisUrl,
+    cloudRunServiceAccount,
   });
   return { tenantService };
 }
@@ -193,6 +195,7 @@ export default {
       postHogApiKey,
       upstashRedisUrl,
       googleApplicationCredentials,
+      cloudRunServiceAccount,
     } = await resolveEnvironmentSecrets(environment);
 
     initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -216,6 +219,7 @@ export default {
       environment.GCP_REGION,
       environment.TENANT_IMAGE_TAG,
       googleApplicationCredentials,
+      cloudRunServiceAccount,
     );
     if (configError) return configError;
 
@@ -228,6 +232,7 @@ export default {
       neonProjectId,
       googleApplicationCredentials,
       upstashRedisUrl,
+      cloudRunServiceAccount,
     );
 
     const tenantRoutes = createTenantRoutes({

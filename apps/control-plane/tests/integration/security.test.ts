@@ -110,6 +110,7 @@ describe("Security Integration Tests", () => {
         GCP_REGION: "us-central1",
         TENANT_IMAGE_TAG: "latest",
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
+        CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
       };
 
       const request = new Request(`${origin}/health`, {
@@ -139,6 +140,7 @@ describe("Security Integration Tests", () => {
         GCP_REGION: "us-central1",
         TENANT_IMAGE_TAG: "latest",
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
+        CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
       };
 
       const request = new Request(`${origin}/health`, {

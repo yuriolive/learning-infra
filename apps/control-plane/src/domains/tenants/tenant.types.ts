@@ -12,6 +12,7 @@ export interface Tenant {
   updatedAt: Date;
   deletedAt: Date | null;
   metadata: Record<string, unknown> | null;
+  failureReason: string | null;
 }
 
 export type TenantStatus =
@@ -40,4 +41,5 @@ export interface UpdateTenantInput {
   apiUrl?: string | undefined;
   redisHash?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
+  failureReason?: string | undefined;
 }

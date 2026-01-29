@@ -36,4 +36,5 @@ export const tenants = pgTable("tenants", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  failureReason: text("failure_reason"),
 });

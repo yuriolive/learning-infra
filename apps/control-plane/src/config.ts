@@ -24,6 +24,7 @@ export interface Environment {
   GOOGLE_APPLICATION_CREDENTIALS_PART_1?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_2?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
+  CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
 }
 
 function resolveSecret(
@@ -47,6 +48,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleAppCredsP1,
     googleAppCredsP2,
     googleAppCredsP3,
+    cloudRunServiceAccount,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -58,6 +60,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_1),
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_2),
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
+    resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -81,6 +84,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     postHogApiKey,
     upstashRedisUrl,
     googleApplicationCredentials,
+    cloudRunServiceAccount,
   };
 }
 
@@ -110,6 +114,7 @@ function validateProductionConfig(
   gcpRegion?: string,
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
+  cloudRunServiceAccount?: string,
 ): Response | undefined {
   if (!adminApiKey) {
     logger.error(
@@ -126,6 +131,8 @@ function validateProductionConfig(
   if (!tenantImageTag) missingVariables.push("TENANT_IMAGE_TAG");
   if (!googleApplicationCredentials)
     missingVariables.push("GOOGLE_APPLICATION_CREDENTIALS");
+  if (!cloudRunServiceAccount)
+    missingVariables.push("CLOUD_RUN_SERVICE_ACCOUNT");
 
   if (missingVariables.length > 0) {
     logger.error(
@@ -152,6 +159,7 @@ export function validateConfiguration(
   gcpRegion?: string,
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
+  cloudRunServiceAccount?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -173,6 +181,7 @@ export function validateConfiguration(
       gcpRegion,
       tenantImageTag,
       googleApplicationCredentials,
+      cloudRunServiceAccount,
     );
   }
 
