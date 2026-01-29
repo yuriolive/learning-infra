@@ -111,16 +111,16 @@ export class CloudRunProvider {
       if (
         typeof error === "object" &&
         error !== null &&
-        (error as { code?: number }).code !== 404
+        (error as { code?: number }).code === 404
       ) {
-        this.logger.warn(
-          { error, tenantId },
-          "Failed to delete Cloud Run service",
-        );
-      } else {
         this.logger.info(
           { tenantId },
           "Cloud Run service not found, skipping delete",
+        );
+      } else {
+        this.logger.warn(
+          { error, tenantId },
+          "Failed to delete Cloud Run service",
         );
       }
     }
