@@ -53,6 +53,6 @@ jobs:
           tags: |
             ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:latest
             ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=tenant-instance
+          cache-to: type=gha,mode=max,scope=tenant-instance
           platforms: linux/amd64
