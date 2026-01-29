@@ -9,6 +9,7 @@ on:
       - "packages/**"
       - "package.json"
       - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
       - "turbo.json"
       - ".github/workflows/deploy-tenant-instance.yml"
   workflow_dispatch:
@@ -52,9 +53,6 @@ jobs:
           tags: |
             ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:latest
             ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:${{ github.sha }}
-          cache-from: |
-            type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:buildcache
-            type=registry,ref=node:20-alpine
-            type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:pnpm-store
-          cache-to: type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           platforms: linux/amd64
