@@ -269,10 +269,10 @@ export class CloudRunProvider {
           path: "/health",
           port: 9000,
         },
-        initialDelaySeconds: 0,
-        timeoutSeconds: 240,
-        failureThreshold: 1,
-        periodSeconds: 240,
+        initialDelaySeconds: 10,
+        timeoutSeconds: 3,
+        failureThreshold: 24,
+        periodSeconds: 10,
       },
       livenessProbe: {
         httpGet: {
