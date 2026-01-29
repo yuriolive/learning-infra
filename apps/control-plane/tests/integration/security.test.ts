@@ -8,6 +8,7 @@ const MOCK_ENV = {
   ADMIN_API_KEY: "test-admin-key",
   NODE_ENV: "development",
   LOG_LEVEL: "silent",
+  UPSTASH_REDIS_URL: "redis://mock:mock@localhost:6379",
 };
 
 describe("Security Integration Tests", () => {
@@ -103,6 +104,12 @@ describe("Security Integration Tests", () => {
         NODE_ENV: "production",
         ALLOWED_ORIGINS:
           "https://admin.vendin.store,https://dashboard.vendin.store",
+        NEON_API_KEY: "prod-neon-key",
+        NEON_PROJECT_ID: "prod-neon-project-id",
+        GCP_PROJECT_ID: "prod-gcp-project-id",
+        GCP_REGION: "us-central1",
+        TENANT_IMAGE_TAG: "latest",
+        GOOGLE_APPLICATION_CREDENTIALS: "{}",
       };
 
       const request = new Request(`${origin}/health`, {
@@ -126,6 +133,12 @@ describe("Security Integration Tests", () => {
         ...MOCK_ENV,
         NODE_ENV: "production",
         ALLOWED_ORIGINS: "https://admin.vendin.store",
+        NEON_API_KEY: "prod-neon-key",
+        NEON_PROJECT_ID: "prod-neon-project-id",
+        GCP_PROJECT_ID: "prod-gcp-project-id",
+        GCP_REGION: "us-central1",
+        TENANT_IMAGE_TAG: "latest",
+        GOOGLE_APPLICATION_CREDENTIALS: "{}",
       };
 
       const request = new Request(`${origin}/health`, {

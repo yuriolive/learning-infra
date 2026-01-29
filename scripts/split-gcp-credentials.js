@@ -14,13 +14,22 @@ const filePath = process.argv[2];
 
 if (!filePath) {
   console.error(
-    "Usage: node scripts/split-gcp-credentials.js <path-to-json-file>",
+    "Usage: node scripts/split-gcp-credentials.js path-to-json-file",
   );
   process.exit(1);
 }
 
 try {
   const absolutePath = path.resolve(process.cwd(), filePath);
+
+  // Security: Prevent path traversal by ensuring the resolved path is within the project directory
+  if (!absolutePath.startsWith(process.cwd())) {
+    console.error(
+      "Error: Access denied. Path is outside of the project directory.",
+    );
+    process.exit(1);
+  }
+
   if (!fs.existsSync(absolutePath)) {
     console.error(`Error: File not found at ${absolutePath}`);
     process.exit(1);
