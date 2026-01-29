@@ -13,6 +13,7 @@ overrides:
   "@types/react": ^18.3.2
   "@types/react-dom": ^18.2.25
   vite: ^6.0.0
+  express: ^4.21.2
 
 importers:
   .:
@@ -4125,7 +4126,7 @@ packages:
       }
     engines: { node: ">=20.0.0" }
     peerDependencies:
-      express: ^4.21.0
+      express: ^4.21.2
 
   "@medusajs/workflow-engine-inmemory@2.13.1":
     resolution:
@@ -22810,7 +22811,7 @@ snapshots:
       chalk: 5.6.2
       cookie: 1.1.1
       esbuild: 0.25.0
-      express: 5.2.1
+      express: 4.22.1
       next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       path-to-regexp: 6.3.0
       urlpattern-polyfill: 10.1.0
