@@ -1,3 +1,4 @@
+import { GoogleAuth } from "google-auth-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CloudRunProvider } from "./cloud-run.client";
@@ -88,6 +89,54 @@ describe("CloudRunProvider", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  const createProvider = (
+    c: Partial<ConstructorParameters<typeof CloudRunProvider>[0]>,
+  ) => {
+    return new CloudRunProvider({
+      ...config,
+      ...c,
+    } as ConstructorParameters<typeof CloudRunProvider>[0]);
+  };
+
+  describe("constructor", () => {
+    it("should use credentialsJson as object if it is valid JSON", () => {
+      provider = createProvider({
+        credentialsJson: JSON.stringify({ project_id: "test" }),
+      });
+      expect(GoogleAuth).toHaveBeenCalledWith(
+        expect.objectContaining({
+          credentials: { project_id: "test" },
+        }),
+      );
+    });
+
+    it("should use credentialsJson as keyFilename if it is not valid JSON", () => {
+      provider = createProvider({
+        credentialsJson: "/path/to/key.json",
+      });
+      expect(GoogleAuth).toHaveBeenCalledWith(
+        expect.objectContaining({
+          keyFilename: "/path/to/key.json",
+        }),
+      );
+    });
+
+    it("should not pass credentials if credentialsJson is undefined", () => {
+      provider = createProvider({
+        credentialsJson: undefined,
+      });
+      expect(GoogleAuth).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          credentials: expect.anything(),
+          keyFilename: expect.anything(),
+        }),
+      );
+    });
+  });
+
+  beforeEach(() => {
     provider = new CloudRunProvider(
       config as unknown as ConstructorParameters<typeof CloudRunProvider>[0],
     );
