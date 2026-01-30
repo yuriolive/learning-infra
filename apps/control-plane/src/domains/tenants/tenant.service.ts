@@ -148,6 +148,9 @@ export class TenantService {
         REDIS_PREFIX: redisPrefix,
         COOKIE_SECRET: cookieSecret,
         JWT_SECRET: jwtSecret,
+        HOST: "0.0.0.0",
+        PORT: "9000",
+        NODE_ENV: "production",
         STORE_CORS: `https://${subdomain}.vendin.store,http://localhost:3000`,
         ADMIN_CORS: `https://admin.vendin.store,http://localhost:7001`,
       };

@@ -259,6 +259,31 @@ export class CloudRunProvider {
         name,
         value,
       })),
+      ports: [
+        {
+          containerPort: 9000,
+        },
+      ],
+      startupProbe: {
+        httpGet: {
+          path: "/health",
+          port: 9000,
+        },
+        initialDelaySeconds: 10,
+        timeoutSeconds: 3,
+        failureThreshold: 24,
+        periodSeconds: 10,
+      },
+      livenessProbe: {
+        httpGet: {
+          path: "/health",
+          port: 9000,
+        },
+        initialDelaySeconds: 30,
+        timeoutSeconds: 5,
+        failureThreshold: 3,
+        periodSeconds: 15,
+      },
       resources: {
         limits: {
           memory: "512Mi",
@@ -269,6 +294,9 @@ export class CloudRunProvider {
 
     return {
       template: {
+        annotations: {
+          "run.googleapis.com/cpu-throttling": "true",
+        },
         serviceAccount: this.serviceAccount ?? null,
         containers: [container],
         scaling: {

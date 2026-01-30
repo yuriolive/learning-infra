@@ -1,6 +1,7 @@
 # Stage 1: Base
 FROM node:20-alpine AS base
-RUN npm install -g pnpm turbo@2.6.1
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN npm install -g turbo@2.6.1
 WORKDIR /app
 
 # Stage 2: Pruner
@@ -33,11 +34,14 @@ COPY --from=builder /app .
 RUN pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
 # Copy the build output (dist) as it is ignored by .gitignore (and thus pnpm deploy)
-COPY --from=builder /app/apps/tenant-instance/dist /app/deploy/dist
+COPY --from=builder /app/apps/tenant-instance/dist/. /app/deploy/
 
 # Stage 5: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
+
+# Enable corepack and prepare pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # Copy the deployed application
 COPY --from=deployer /app/deploy .
