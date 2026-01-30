@@ -19,6 +19,7 @@ describe("TenantService Deployment", () => {
   };
   let mockCloudRunProvider: {
     deployTenantInstance: ReturnType<typeof vi.fn>;
+    runTenantMigrations: ReturnType<typeof vi.fn>;
     deleteTenantInstance: ReturnType<typeof vi.fn>;
   };
   const logger = createLogger({ logLevel: "silent" });
@@ -27,9 +28,11 @@ describe("TenantService Deployment", () => {
     vi.clearAllMocks();
 
     repository = {
-      create: vi
-        .fn()
-        .mockResolvedValue({ id: "tenant-1", status: "provisioning" }),
+      create: vi.fn().mockResolvedValue({
+        id: "tenant-1",
+        status: "provisioning",
+        redisHash: "mock-hash",
+      }),
       update: vi.fn().mockResolvedValue({}),
       findBySubdomain: vi.fn().mockResolvedValue(null),
       findById: vi.fn(),
@@ -47,6 +50,7 @@ describe("TenantService Deployment", () => {
 
     mockCloudRunProvider = {
       deployTenantInstance: vi.fn().mockResolvedValue("https://service-url"),
+      runTenantMigrations: vi.fn().mockResolvedValue(void 0),
       deleteTenantInstance: vi.fn().mockImplementation(async () => {}),
     };
     (
@@ -101,14 +105,15 @@ describe("TenantService Deployment", () => {
       }),
     );
 
-    expect(repository.update).toHaveBeenCalledWith(
-      "tenant-1",
-      expect.objectContaining({
-        status: "active",
-        databaseUrl: "postgres://db-url",
-        apiUrl: "https://service-url",
-      }),
-    );
+    // Verify incremental updates
+    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
+      databaseUrl: "postgres://db-url",
+    });
+
+    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
+      apiUrl: "https://service-url",
+      status: "active",
+    });
   });
 
   it("should handle provisioning failure", async () => {
@@ -144,10 +149,11 @@ describe("TenantService Deployment", () => {
       provisionResources: (
         tenantId: string,
         subdomain: string,
+        redisHash: string | null,
       ) => Promise<void>;
     };
 
-    await serviceAny.provisionResources("tenant-1", "test");
+    await serviceAny.provisionResources("tenant-1", "test", "mock-hash");
 
     // Should not attempt to create database or deploy
     expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
@@ -172,10 +178,11 @@ describe("TenantService Deployment", () => {
       provisionResources: (
         tenantId: string,
         subdomain: string,
+        redisHash: string | null,
       ) => Promise<void>;
     };
 
-    await serviceAny.provisionResources("tenant-1", "test");
+    await serviceAny.provisionResources("tenant-1", "test", "mock-hash");
 
     expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
     expect(repository.update).toHaveBeenCalledWith("tenant-1", {
