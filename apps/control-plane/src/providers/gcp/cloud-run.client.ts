@@ -253,61 +253,50 @@ export class CloudRunProvider {
     });
   }
 
-  private async getOrCreateService(
+  private getOrCreateService(
     serviceId: string,
     servicePath: string,
     parent: string,
     serviceRequest: run_v2.Schema$GoogleCloudRunV2Service,
     tenantId: string,
   ): Promise<string | undefined> {
-    // Try to get service to decide between create or patch
-    let exists = false;
-    try {
-      await this.runClient.projects.locations.services.get({
-        name: servicePath,
-      });
-      exists = true;
-    } catch (error: unknown) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        (error as { code?: number }).code !== 404
-      ) {
-        throw error;
-      }
-    }
-
-    if (exists) {
-      this.logger.info({ tenantId }, "Updating existing Cloud Run service");
-      const response = await this.runClient.projects.locations.services.patch({
-        name: servicePath,
-        requestBody: serviceRequest,
-      });
-      return response.data.name ?? undefined;
-    }
-
-    this.logger.info({ tenantId }, "Creating new Cloud Run service");
-    const response = await this.runClient.projects.locations.services.create({
-      parent,
+    return this.getOrCreateResource(
       serviceId,
-      requestBody: serviceRequest,
-    });
-    return response.data.name ?? undefined;
+      servicePath,
+      parent,
+      serviceRequest,
+      "services",
+      tenantId,
+    );
   }
 
-  private async getOrCreateJob(
+  private getOrCreateJob(
     jobId: string,
     jobPath: string,
     parent: string,
     jobRequest: run_v2.Schema$GoogleCloudRunV2Job,
     tenantId: string,
   ): Promise<string | undefined> {
-    let exists = false;
+    return this.getOrCreateResource(
+      jobId,
+      jobPath,
+      parent,
+      jobRequest,
+      "jobs",
+      tenantId,
+    );
+  }
+
+  private async checkResourceExists(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    client: any,
+    resourcePath: string,
+  ): Promise<boolean> {
     try {
-      await this.runClient.projects.locations.jobs.get({
-        name: jobPath,
+      await client.get({
+        name: resourcePath,
       });
-      exists = true;
+      return true;
     } catch (error: unknown) {
       if (
         typeof error === "object" &&
@@ -316,22 +305,46 @@ export class CloudRunProvider {
       ) {
         throw error;
       }
+      return false;
     }
+  }
+
+  private async getOrCreateResource(
+    resourceId: string,
+    resourcePath: string,
+    parent: string,
+    requestBody: object,
+    resourceType: "services" | "jobs",
+    tenantId: string,
+  ): Promise<string | undefined> {
+    const client =
+      resourceType === "services"
+        ? this.runClient.projects.locations.services
+        : this.runClient.projects.locations.jobs;
+    const idField = resourceType === "services" ? "serviceId" : "jobId";
+    const displayName = resourceType === "services" ? "service" : "job";
+
+    const exists = await this.checkResourceExists(client, resourcePath);
 
     if (exists) {
-      this.logger.info({ tenantId }, "Updating existing Cloud Run job");
-      const response = await this.runClient.projects.locations.jobs.patch({
-        name: jobPath,
-        requestBody: jobRequest,
+      this.logger.info(
+        { tenantId },
+        `Updating existing Cloud Run ${displayName}`,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (client as any).patch({
+        name: resourcePath,
+        requestBody,
       });
       return response.data.name ?? undefined;
     }
 
-    this.logger.info({ tenantId }, "Creating new Cloud Run job");
-    const response = await this.runClient.projects.locations.jobs.create({
+    this.logger.info({ tenantId }, `Creating new Cloud Run ${displayName}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await (client as any).create({
       parent,
-      jobId,
-      requestBody: jobRequest,
+      [idField]: resourceId,
+      requestBody,
     });
     return response.data.name ?? undefined;
   }

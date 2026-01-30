@@ -116,35 +116,20 @@ export class TenantService {
     subdomain: string,
     redisHash: string | null,
   ) {
-    if (!this.neonProvider || !this.cloudRunProvider) {
-      return;
-    }
-
-    if (!this.upstashRedisUrl) {
-      this.logger.error(
-        { tenantId },
-        "Provisioning aborted: Missing Upstash Redis URL",
-      );
-      await this.repository.update(tenantId, {
-        status: "provisioning_failed",
-      });
-      return;
-    }
-
-    if (!redisHash) {
-      this.logger.error(
-        { tenantId },
-        "Provisioning aborted: Missing Redis Hash",
-      );
-      await this.repository.update(tenantId, {
-        status: "provisioning_failed",
-        failureReason: "Redis hash missing",
-      });
-      return;
-    }
-
     try {
+      if (!this.neonProvider || !this.cloudRunProvider) {
+        return;
+      }
+
       this.logger.info({ tenantId }, "Starting background provisioning");
+
+      if (!this.upstashRedisUrl) {
+        throw new Error("Missing Upstash Redis URL");
+      }
+
+      if (!redisHash) {
+        throw new Error("Redis hash missing");
+      }
 
       // 1. Provision Database
       const databaseUrl =
