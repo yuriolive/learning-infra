@@ -8,7 +8,7 @@ const cookieSecret = process.env.COOKIE_SECRET || "supersecret";
 const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
 
 // Check if we are running a migration command
-const isMigrating = process.argv.includes("db:migrate");
+const isMigrating = process.argv.some((argument) => argument.startsWith("db:"));
 
 const modules = isMigrating
   ? []
