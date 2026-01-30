@@ -149,10 +149,9 @@ export class TenantService {
         COOKIE_SECRET: cookieSecret,
         JWT_SECRET: jwtSecret,
         HOST: "0.0.0.0",
-        PORT: "9000",
         NODE_ENV: "production",
-        STORE_CORS: `https://${subdomain}.vendin.store,http://localhost:3000`,
-        ADMIN_CORS: `https://admin.vendin.store,http://localhost:7001`,
+        STORE_CORS: `https://${subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+        ADMIN_CORS: `https://${subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
       };
 
       // Filter out empty env vars if needed, but REDIS_URL might be required by Medusa.
