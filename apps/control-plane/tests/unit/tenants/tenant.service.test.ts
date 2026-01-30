@@ -20,6 +20,7 @@ vi.mock("../../../src/providers/gcp/cloud-run.client", () => {
       deployTenantInstance: vi
         .fn()
         .mockResolvedValue("https://mock-service-url"),
+      runTenantMigrations: vi.fn().mockResolvedValue(void 0),
       deleteTenantInstance: vi.fn().mockResolvedValue(void 0),
     })),
   };
@@ -144,6 +145,7 @@ describe("TenantService", () => {
       // Verify that databaseUrl was updated
       const updatedTenant = await service.getTenant(tenant.id);
       expect(updatedTenant.databaseUrl).toBe("postgres://mock-db-url");
+      expect(updatedTenant.redisHash).toHaveLength(12);
       expect(updatedTenant.status).toBe("active");
     });
 
@@ -246,6 +248,7 @@ describe("TenantService", () => {
       // @ts-expect-error Mocking for test purposes
       vi.mocked(CloudRunProvider).mockImplementationOnce(() => ({
         deployTenantInstance: mockDeployTenantInstance,
+        runTenantMigrations: vi.fn().mockResolvedValue(void 0),
         deleteTenantInstance: mockDeleteTenantInstance,
       }));
 
