@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { authClient } from "@/lib/auth-client";
 
 import { useAuthCallbacks } from "./use-auth-callbacks";
@@ -9,18 +10,24 @@ export const useWhatsAppAuth = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { handleSuccess: handleSendOtpSuccess, handleError: handleSendOtpError } = useAuthCallbacks({
+  const {
+    handleSuccess: handleSendOtpSuccess,
+    handleError: handleSendOtpError,
+  } = useAuthCallbacks({
     setLoading,
     successMessage: "OTP sent successfully",
     redirectUrl: "", // No redirect on send OTP
-    onSuccess: () => setOtpSent(true),
+    onSuccess: () => {
+      setOtpSent(true);
+    },
   });
 
-  const { handleSuccess: handleVerifySuccess, handleError: handleVerifyError } = useAuthCallbacks({
-    setLoading,
-    successMessage: "Logged in successfully",
-    redirectUrl: "/",
-  });
+  const { handleSuccess: handleVerifySuccess, handleError: handleVerifyError } =
+    useAuthCallbacks({
+      setLoading,
+      successMessage: "Logged in successfully",
+      redirectUrl: "/",
+    });
 
   const sendOtp = async () => {
     setLoading(true);
@@ -31,7 +38,7 @@ export const useWhatsAppAuth = () => {
       {
         onSuccess: handleSendOtpSuccess,
         onError: handleSendOtpError,
-      }
+      },
     );
   };
 
@@ -45,7 +52,7 @@ export const useWhatsAppAuth = () => {
       {
         onSuccess: handleVerifySuccess,
         onError: handleVerifyError,
-      }
+      },
     );
   };
 
