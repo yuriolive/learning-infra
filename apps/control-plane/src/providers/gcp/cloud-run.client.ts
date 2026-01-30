@@ -289,14 +289,12 @@ export class CloudRunProvider {
           memory: "512Mi",
           cpu: "1",
         },
+        cpuIdle: true,
       },
     };
 
     return {
       template: {
-        annotations: {
-          "run.googleapis.com/cpu-throttling": "true",
-        },
         serviceAccount: this.serviceAccount ?? null,
         containers: [container],
         scaling: {
