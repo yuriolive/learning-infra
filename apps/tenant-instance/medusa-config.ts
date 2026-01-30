@@ -48,14 +48,23 @@ export default defineConfig({
       options: {
         redisUrl: process.env.REDIS_URL,
         namespace: redisPrefix,
+        redisOptions: {
+          maxRetriesPerRequest: null,
+          enableReadyCheck: false,
+        },
       },
     },
     {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.REDIS_URL,
-        queueOptions: {
-          prefix: redisPrefix,
+        redisPrefix,
+        jobOptions: {
+          removeOnComplete: true,
+        },
+        redisOptions: {
+          maxRetriesPerRequest: null,
+          enableReadyCheck: false,
         },
       },
     },

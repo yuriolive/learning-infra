@@ -103,6 +103,51 @@ export class CloudRunProvider {
     }
   }
 
+  async runTenantMigrations(
+    tenantId: string,
+    environmentVariables: Record<string, string>,
+  ): Promise<void> {
+    const jobId = `migrate-${tenantId}`;
+    const parent = `projects/${this.projectId}/locations/${this.region}`;
+    const jobPath = `${parent}/jobs/${jobId}`;
+
+    this.logger.info({ tenantId }, "Starting database migrations job");
+
+    const jobRequest = this.prepareJobRequest(environmentVariables);
+
+    try {
+      const operationName = await this.getOrCreateJob(
+        jobId,
+        jobPath,
+        parent,
+        jobRequest,
+        tenantId,
+      );
+
+      if (operationName) {
+        await this.waitForOperation(operationName);
+      }
+
+      // Run the job
+      const executionOperation = await this.runJobExecution(jobPath, tenantId);
+
+      if (!executionOperation) {
+        throw new Error("Failed to start migration job execution");
+      }
+
+      // Wait for execution to complete
+      await this.waitForExecutionCompletion(executionOperation);
+
+      this.logger.info(
+        { tenantId },
+        "Database migrations completed successfully",
+      );
+    } catch (error) {
+      this.logger.error({ error, tenantId }, "Database migrations failed");
+      throw error;
+    }
+  }
+
   async deleteTenantInstance(tenantId: string): Promise<void> {
     const serviceName = `tenant-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
@@ -248,6 +293,165 @@ export class CloudRunProvider {
       requestBody: serviceRequest,
     });
     return response.data.name ?? undefined;
+  }
+
+  private async getOrCreateJob(
+    jobId: string,
+    jobPath: string,
+    parent: string,
+    jobRequest: run_v2.Schema$GoogleCloudRunV2Job,
+    tenantId: string,
+  ): Promise<string | undefined> {
+    let exists = false;
+    try {
+      await this.runClient.projects.locations.jobs.get({
+        name: jobPath,
+      });
+      exists = true;
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        (error as { code?: number }).code !== 404
+      ) {
+        throw error;
+      }
+    }
+
+    if (exists) {
+      this.logger.info({ tenantId }, "Updating existing Cloud Run job");
+      const response = await this.runClient.projects.locations.jobs.patch({
+        name: jobPath,
+        requestBody: jobRequest,
+      });
+      return response.data.name ?? undefined;
+    }
+
+    this.logger.info({ tenantId }, "Creating new Cloud Run job");
+    const response = await this.runClient.projects.locations.jobs.create({
+      parent,
+      jobId,
+      requestBody: jobRequest,
+    });
+    return response.data.name ?? undefined;
+  }
+
+  private async runJobExecution(
+    jobPath: string,
+    tenantId: string,
+  ): Promise<string | undefined> {
+    this.logger.info({ tenantId }, "Executing Cloud Run migration job");
+    const response = await this.runClient.projects.locations.jobs.run({
+      name: jobPath,
+    });
+    return response.data.name ?? undefined;
+  }
+
+  private async waitForExecutionCompletion(
+    executionOperationName: string,
+  ): Promise<void> {
+    const startTime = Date.now();
+    const timeout = 600_000; // 10 minutes for migrations
+
+    this.logger.info(
+      { executionOperationName },
+      "Waiting for Cloud Run job execution completion",
+    );
+
+    // Initial wait to let the operation settle
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    while (Date.now() - startTime < timeout) {
+      const response = await this.runClient.projects.locations.operations.get({
+        name: executionOperationName,
+      });
+
+      if (response.data.done) {
+        if (response.data.error) {
+          throw new Error(
+            `Migration job failed: ${response.data.error.message}`,
+          );
+        }
+
+        // The operation being "done" means the execution was triggered.
+        // We need to fetch the execution itself to check its status.
+        const executionName = response.data.response?.name as string;
+        if (!executionName) {
+          throw new Error(
+            "Job execution started but execution name is missing",
+          );
+        }
+
+        return this.pollExecutionStatus(executionName);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    throw new Error("Timeout waiting for migration job to start");
+  }
+
+  private async pollExecutionStatus(executionName: string): Promise<void> {
+    const startTime = Date.now();
+    const timeout = 600_000; // 10 minutes
+
+    while (Date.now() - startTime < timeout) {
+      const response =
+        await this.runClient.projects.locations.jobs.executions.get({
+          name: executionName,
+        });
+
+      const execution = response.data;
+
+      // Check for completion conditions
+      if (execution.succeededCount === 1) {
+        return;
+      }
+
+      if (execution.failedCount && execution.failedCount > 0) {
+        throw new Error(`Migration job execution failed`);
+      }
+
+      if (execution.cancelledCount && execution.cancelledCount > 0) {
+        throw new Error(`Migration job execution was cancelled`);
+      }
+
+      // Check if it's still running
+      this.logger.debug({ executionName }, "Polling migration job status...");
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    throw new Error("Timeout waiting for migration job execution results");
+  }
+
+  private prepareJobRequest(
+    environmentVariables: Record<string, string>,
+  ): run_v2.Schema$GoogleCloudRunV2Job {
+    return {
+      template: {
+        template: {
+          containers: [
+            {
+              image: this.tenantImageTag,
+              command: ["pnpm", "run", "db:migrate"],
+              env: Object.entries(environmentVariables).map(
+                ([name, value]) => ({
+                  name,
+                  value,
+                }),
+              ),
+              resources: {
+                limits: {
+                  memory: "1024Mi",
+                  cpu: "1",
+                },
+              },
+            },
+          ],
+          serviceAccount: this.serviceAccount ?? null,
+        },
+      },
+    };
   }
 
   private prepareServiceRequest(

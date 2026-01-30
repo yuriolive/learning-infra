@@ -157,6 +157,13 @@ export class TenantService {
       // Filter out empty env vars if needed, but REDIS_URL might be required by Medusa.
       // If REDIS_URL is empty, we pass it empty string.
 
+      // 3. Run Migrations
+      await this.cloudRunProvider.runTenantMigrations(
+        tenantId,
+        environmentVariables,
+      );
+
+      // 4. Deploy Cloud Run
       const apiUrl = await this.cloudRunProvider.deployTenantInstance(
         tenantId,
         environmentVariables,
