@@ -5,6 +5,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { type Database } from "../../database/database";
 import { tenants } from "../../database/schema";
 
+import { SubdomainInUseError } from "./tenant.errors";
 import type {
   CreateTenantInput,
   Tenant,
@@ -46,24 +47,31 @@ export class TenantRepository {
       .digest("hex")
       .slice(0, 12);
 
-    const [tenant] = await this.db
-      .insert(tenants)
-      .values({
-        id,
-        name: input.name,
-        merchantEmail: input.merchantEmail,
-        subdomain: input.subdomain,
-        plan: input.plan,
-        metadata: input.metadata,
-        redisHash,
-      })
-      .returning();
+    try {
+      const [tenant] = await this.db
+        .insert(tenants)
+        .values({
+          id,
+          name: input.name,
+          merchantEmail: input.merchantEmail,
+          subdomain: input.subdomain,
+          plan: input.plan,
+          metadata: input.metadata,
+          redisHash,
+        })
+        .returning();
 
-    if (!tenant) {
-      throw new Error("Failed to create tenant");
+      if (!tenant) {
+        throw new Error("Failed to create tenant");
+      }
+
+      return mapToTenant(tenant);
+    } catch (error: any) {
+      if (error.code === "23505") {
+        throw new SubdomainInUseError();
+      }
+      throw error;
     }
-
-    return mapToTenant(tenant);
   }
 
   async findById(id: string): Promise<Tenant | null> {

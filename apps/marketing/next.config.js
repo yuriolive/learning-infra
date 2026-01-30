@@ -16,6 +16,7 @@ const nextConfig = {
     "@vendin/analytics",
     "@vendin/assets",
     "next-themes",
+    "lucide-react",
   ],
 };
 

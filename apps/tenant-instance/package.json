@@ -32,6 +32,8 @@
     "@medusajs/draft-order": "^2.13.0",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
+    "@medusajs/file-s3": "^2.13.0",
+    "@aws-sdk/client-s3": "3.723.0",
     "@vendin/analytics": "workspace:*",
     "pg": "^8.17.2",
     "react": "^18.3.1",
@@ -52,5 +54,8 @@
     "vite": "^6.0.7",
     "vite-tsconfig-paths": "^6.0.5",
     "vitest": "^4.0.18"
+  },
+  "resolutions": {
+    "@aws-sdk/client-s3": "3.723.0"
   }
 }

@@ -56,11 +56,13 @@ export class TenantService {
         );
       }
 
-      if (config.gcpProjectId && config.gcpRegion && config.tenantImageTag) {
+      const region = config.gcpRegion || "southamerica-east1";
+
+      if (config.gcpProjectId && config.tenantImageTag) {
         this.cloudRunProvider = new CloudRunProvider({
           credentialsJson: config.gcpCredentialsJson,
           projectId: config.gcpProjectId,
-          region: config.gcpRegion,
+          region,
           tenantImageTag: config.tenantImageTag,
           logger: this.logger,
           ...(config.cloudRunServiceAccount
