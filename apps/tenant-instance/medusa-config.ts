@@ -59,5 +59,11 @@ export default defineConfig({
         },
       },
     },
+    {
+      resolve: "./src/modules/agent",
+      options: {
+        modelName: "gemini-3.0-flash",
+      },
+    },
   ],
 });
