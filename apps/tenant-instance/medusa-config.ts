@@ -7,6 +7,45 @@ const cookieSecret = process.env.COOKIE_SECRET || "supersecret";
 
 const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
 
+// Check if we are running a migration command
+const isMigrating = process.argv.some((argument) => argument.startsWith("db:"));
+
+const modules = isMigrating
+  ? []
+  : [
+      {
+        resolve: "@medusajs/medusa/cache-redis",
+        options: {
+          redisUrl: process.env.REDIS_URL,
+          namespace: redisPrefix,
+          redisOptions: {
+            maxRetriesPerRequest: null,
+            enableReadyCheck: false,
+          },
+        },
+      },
+      {
+        resolve: "@medusajs/medusa/event-bus-redis",
+        options: {
+          redisUrl: process.env.REDIS_URL,
+          redisPrefix,
+          jobOptions: {
+            removeOnComplete: true,
+          },
+          redisOptions: {
+            maxRetriesPerRequest: null,
+            enableReadyCheck: false,
+          },
+        },
+      },
+      {
+        resolve: "./src/modules/agent",
+        options: {
+          modelName: "gemini-3.0-flash",
+        },
+      },
+    ];
+
 export default defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -42,28 +81,5 @@ export default defineConfig({
       };
     },
   },
-  modules: [
-    {
-      resolve: "@medusajs/medusa/cache-redis",
-      options: {
-        redisUrl: process.env.REDIS_URL,
-        namespace: redisPrefix,
-      },
-    },
-    {
-      resolve: "@medusajs/medusa/event-bus-redis",
-      options: {
-        redisUrl: process.env.REDIS_URL,
-        queueOptions: {
-          prefix: redisPrefix,
-        },
-      },
-    },
-    {
-      resolve: "./src/modules/agent",
-      options: {
-        modelName: "gemini-3.0-flash",
-      },
-    },
-  ],
+  modules,
 });
