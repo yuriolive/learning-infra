@@ -13,11 +13,14 @@ RUN turbo prune --scope=@vendin/tenant-instance --docker
 FROM base AS builder
 WORKDIR /app
 
+# Enable pnpm store caching
+ENV PNPM_STORE_DIR=/pnpm/store
+
 # Copy lockfile and package.json's of isolated subworkspace
 COPY --from=pruner /app/out/json/ /app/out/pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies with cache mount
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source code of isolated subworkspace
 COPY --from=pruner /app/out/full/ .
@@ -25,18 +28,13 @@ COPY --from=pruner /app/out/full/ .
 # Build the project
 RUN pnpm build --filter=@vendin/tenant-instance...
 
-# Stage 4: Deployer
-FROM base AS deployer
-WORKDIR /app
-COPY --from=builder /app .
-
 # Deploy the app to a clean directory with production dependencies
-RUN pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
 # Copy the build output (dist) as it is ignored by .gitignore (and thus pnpm deploy)
-COPY --from=builder /app/apps/tenant-instance/dist/. /app/deploy/
+RUN cp -r /app/apps/tenant-instance/dist/. /app/deploy/
 
-# Stage 5: Runner
+# Stage 4: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
 
@@ -44,7 +42,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # Copy the deployed application
-COPY --from=deployer /app/deploy .
+COPY --from=builder /app/deploy .
 
 # Set production environment
 ENV NODE_ENV=production
