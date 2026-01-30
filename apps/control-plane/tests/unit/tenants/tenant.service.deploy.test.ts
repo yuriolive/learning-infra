@@ -175,13 +175,21 @@ describe("TenantService Deployment", () => {
         const serviceWithError = new TenantService(repository, config);
         const serviceAny = serviceWithError as unknown as {
           provisionResources: (
+            neonProvider: unknown,
+            cloudRunProvider: unknown,
             tenantId: string,
             subdomain: string,
             redisHash: string | null,
           ) => Promise<void>;
         };
 
-        await serviceAny.provisionResources("tenant-1", "test", redisHash);
+        await serviceAny.provisionResources(
+          mockNeonProvider,
+          mockCloudRunProvider,
+          "tenant-1",
+          "test",
+          redisHash,
+        );
 
         expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
         expect(repository.update).toHaveBeenCalledWith("tenant-1", {
