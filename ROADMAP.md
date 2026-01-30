@@ -4,7 +4,7 @@
 
 This roadmap organizes all development tasks into phases aligned with the PRD priorities. Tasks are grouped by monorepo component (`apps/control-plane/`, `apps/tenant-instance/`, `apps/storefront/`, `infrastructure/`, `packages/`) within each phase, with explicit dependencies similar to Turborepo task configuration.
 
-**Package Manager**: This project uses [Bun](https://bun.sh) for package management, script execution, and runtime. All commands should use `bun` instead of `npm` or `yarn`.
+**Package Manager**: This project uses [PNPM](https://pnpm.io) for package management and script execution. All commands should use `pnpm` instead of `npm` or `yarn`.
 
 ## Monorepo Structure
 
@@ -58,12 +58,12 @@ Tasks follow dependency patterns similar to `turbo.json`:
   - **Depends on**: Control Plane API Foundation
 
 - [ ] **Development Tooling** (`apps/control-plane/`)
-  - Bun package.json scripts (dev, build, test, lint, typecheck)
+  - PNPM package.json scripts (dev, build, test, lint, typecheck)
   - Vitest configuration (unit + integration)
   - ESLint configuration
   - TypeScript configuration (strict mode)
   - Drizzle config for migrations
-  - Bun workspaces configuration
+  - PNPM workspaces configuration
   - **Depends on**: Control Plane API Foundation
 
 - [ ] **Testing Infrastructure** (`apps/control-plane/tests/`)
@@ -125,12 +125,12 @@ Tasks follow dependency patterns similar to `turbo.json`:
   - **Depends on**: MedusaJS 2.0 Template Setup
 
 - [ ] **Development Tooling** (`apps/tenant-instance/`)
-  - Bun package.json scripts (dev, build, test, lint, typecheck)
+  - PNPM package.json scripts (dev, build, test, lint, typecheck)
   - Vitest configuration (unit + integration)
   - ESLint configuration
   - TypeScript configuration (strict mode)
   - Drizzle config for migrations
-  - Bun workspaces configuration
+  - PNPM workspaces configuration
   - **Depends on**: MedusaJS 2.0 Template Setup
 
 - [ ] **Testing Infrastructure** (`apps/tenant-instance/tests/`)
@@ -159,19 +159,19 @@ Tasks follow dependency patterns similar to `turbo.json`:
 
 **Dependencies**: `^build` (packages), Tenant Instance API
 
-- [ ] **Multi-Tenant Next.js Application** (`apps/storefront/`)
-  - Next.js setup with edge runtime
-  - Hostname-based tenant resolution
-  - Subdomain routing logic
-  - Tenant API URL resolution
+- [ ] **Multi-Tenant Storefront Application** (`apps/storefront/`)
+  - Next.js setup with App Router
+  - Hostname-based tenant resolution (Middleware)
+  - Dynamic API Client Factory (Targets correct tenant backend)
+  - Tenant Context Provider (Injects name, logo, theme)
+  - CSS Variables for dynamic theming
   - **Depends on**: `^build` (packages), Control Plane API (for tenant lookup)
 
-- [ ] **Basic Storefront Features** (`apps/storefront/src/app/`)
-  - Product listing page
-  - Product detail page
+- [ ] **Core Storefront Features** (`apps/storefront/src/app/`)
+  - Product listing and details
   - Shopping cart functionality
-  - Basic checkout flow
-  - **Depends on**: Multi-Tenant Next.js Application, Tenant Instance API
+  - Checkout flow integration
+  - **Depends on**: Multi-Tenant Storefront Application, Tenant Instance API
 
 ### `infrastructure/` - Infrastructure as Code
 
@@ -185,11 +185,11 @@ Tasks follow dependency patterns similar to `turbo.json`:
   - **Depends on**: Control Plane API, Tenant Instance
 
 - [ ] **CI/CD Pipeline** (`infrastructure/ci/`)
-  - Control Plane deployment pipeline (using Bun)
-  - Tenant template build pipeline (using Bun)
+  - Control Plane deployment pipeline (using PNPM)
+  - Tenant template build pipeline (using PNPM)
   - Storefront deployment to Cloudflare Pages
-  - Automated testing (using Bun scripts)
-  - Bun installation in CI environment
+  - Automated testing (using PNPM scripts)
+  - PNPM installation in CI environment
   - **Depends on**: `^build` (all apps and packages)
 
 ### `packages/` - Shared Packages
@@ -320,10 +320,10 @@ Tasks follow dependency patterns similar to `turbo.json`:
 
 - [ ] **Documentation** (`docs/`)
   - API documentation (Control Plane)
-  - Deployment runbooks (Bun commands)
+  - Deployment runbooks (PNPM commands)
   - Troubleshooting guides
   - Merchant onboarding documentation
-  - Developer setup guides (Bun installation and usage)
+  - Developer setup guides (PNPM installation and usage)
   - **Depends on**: All Phase 1 components
 
 ---
@@ -485,10 +485,10 @@ Tasks follow dependency patterns similar to `turbo.json`:
 
 - [ ] **Monorepo Setup** (Root)
   - Turborepo configuration (`turbo.json`)
-  - Bun workspaces configuration (`package.json`)
-  - Root package.json with Bun scripts
-  - Shared build scripts (using Bun)
-  - Dependency management (Bun lockfile)
+  - PNPM workspaces configuration (`package.json`)
+  - Root package.json with PNPM scripts
+  - Shared build scripts (using PNPM)
+  - Dependency management (PNPM lockfile)
   - **Depends on**: None (foundation)
 
 - [ ] **Shared Testing Utilities** (`packages/test-utils/`)
@@ -638,6 +638,6 @@ Tasks follow dependency patterns similar to `turbo.json`:
 - All tasks maintain strict tenant isolation (non-negotiable)
 - Serverless-first approach for all infrastructure
 - TypeScript required for all backend code
-- **Bun** is the package manager and runtime (use `bun` instead of `npm`/`yarn`)
+- **PNPM** is the package manager (use `pnpm` instead of `npm`/`yarn`)
 - Regular security audits throughout all phases
 - Performance targets must be met before moving to next phase

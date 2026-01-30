@@ -1,3 +1,5 @@
+import { createHash, randomUUID } from "node:crypto";
+
 import { and, eq, ne } from "drizzle-orm";
 
 import { type Database } from "../../database/database";
@@ -19,12 +21,14 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     subdomain: databaseTenant.subdomain ?? null,
     databaseUrl: databaseTenant.databaseUrl ?? null,
     apiUrl: databaseTenant.apiUrl ?? null,
+    redisHash: databaseTenant.redisHash ?? null,
     status: databaseTenant.status,
     plan: databaseTenant.plan,
     createdAt: databaseTenant.createdAt,
     updatedAt: databaseTenant.updatedAt,
     deletedAt: databaseTenant.deletedAt ?? null,
     metadata: databaseTenant.metadata ?? null,
+    failureReason: databaseTenant.failureReason ?? null,
   };
 }
 
@@ -36,14 +40,22 @@ export class TenantRepository {
   }
 
   async create(input: CreateTenantInput): Promise<Tenant> {
+    const id = randomUUID();
+    const redisHash = createHash("sha256")
+      .update(id)
+      .digest("hex")
+      .slice(0, 12);
+
     const [tenant] = await this.db
       .insert(tenants)
       .values({
+        id,
         name: input.name,
         merchantEmail: input.merchantEmail,
         subdomain: input.subdomain,
         plan: input.plan,
         metadata: input.metadata,
+        redisHash,
       })
       .returning();
 
@@ -84,7 +96,11 @@ export class TenantRepository {
           databaseUrl: input.databaseUrl,
         }),
         ...(input.apiUrl !== undefined && { apiUrl: input.apiUrl }),
+        ...(input.redisHash !== undefined && { redisHash: input.redisHash }),
         ...(input.metadata !== undefined && { metadata: input.metadata }),
+        ...(input.failureReason !== undefined && {
+          failureReason: input.failureReason,
+        }),
         updatedAt: new Date(),
       })
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))

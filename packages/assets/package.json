@@ -10,7 +10,7 @@
     "./logo/*": "./src/logo/*.tsx"
   },
   "scripts": {
-    "typecheck": "bun x tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "19.2.3"

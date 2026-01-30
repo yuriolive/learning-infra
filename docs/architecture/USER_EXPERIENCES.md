@@ -27,37 +27,37 @@ Customer → vendin.store
 
 **User**: End customers  
 **Domain**: `{store}-my.vendin.store` or custom domain  
-**Apps**: Storefront router + Tenant instance
+**Apps**: **Shared Storefront** + Tenant Instance (API)
 
 ```
 Customer → awesome-store-my.vendin.store
-        → Storefront router (Cloudflare Pages)
-        → Resolve tenant by hostname
-        → Redirect/proxy to tenant-{id}
-        → Tenant instance serves custom storefront UI + APIs
+        → **Shared Storefront**
+        → Middleware maps hostname to Tenant ID
+        → UI fetches products from Tenant Instance API
+        → Renders "Tenant A" themed experience
 ```
 
 **Notes**:
 
-- Each tenant can have **custom themes and storefront UI**
-- Storefront router **does not render** customer UI
+- A single Next.js app serves ALL tenants
+- Visuals (Logo, Colors) are injected via CSS Variables from Tenant Config
 
 ## 3. Merchant Admin
 
 **User**: Merchant/store owner  
-**Domain**: `{store}-my.vendin.store/admin`  
-**App**: Tenant instance (MedusaJS)
+**Domain**: `{store}-my.vendin.store/app`  
+**App**: Tenant Instance (MedusaJS)
 
 ```
-Merchant → awesome-store-my.vendin.store/admin
-        → Storefront router
-        → Tenant instance (MedusaJS admin UI + API)
+Merchant → awesome-store-my.vendin.store/app
+        → Authenticates with Medusa Backend
+        → Manages products, orders, settings
 ```
 
 **Notes**:
 
-- Admin UI is served directly by the tenant instance
-- Each tenant has isolated admin access and data
+- Admin UI is embedded in the Medusa Backend
+- Strictly isolated per tenant
 
 ## Related Documentation
 

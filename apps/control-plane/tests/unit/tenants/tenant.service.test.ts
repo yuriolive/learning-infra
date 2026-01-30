@@ -8,12 +8,32 @@ vi.mock("../../../src/providers/neon/neon.client", () => {
   return {
     NeonProvider: vi.fn().mockImplementation(() => ({
       createTenantDatabase: vi.fn().mockResolvedValue("postgres://mock-db-url"),
+      deleteTenantDatabase: vi.fn().mockResolvedValue(void 0),
     })),
   };
 });
 
+// Mock CloudRunProvider
+vi.mock("../../../src/providers/gcp/cloud-run.client", () => {
+  return {
+    CloudRunProvider: vi.fn().mockImplementation(() => ({
+      deployTenantInstance: vi
+        .fn()
+        .mockResolvedValue("https://mock-service-url"),
+      runTenantMigrations: vi.fn().mockResolvedValue(void 0),
+      deleteTenantInstance: vi.fn().mockResolvedValue(void 0),
+    })),
+  };
+});
+
+import {
+  SubdomainInUseError,
+  SubdomainRequiredError,
+  TenantNotFoundError,
+} from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
 
@@ -36,8 +56,58 @@ describe("TenantService", () => {
       logger,
       neonApiKey: "mock-key",
       neonProjectId: "mock-project",
+      gcpCredentialsJson: "{}",
+      gcpProjectId: "mock-gcp-project",
+      gcpRegion: "mock-region",
+      tenantImageTag: "mock-tag",
+      upstashRedisUrl: "redis://mock",
     });
   });
+
+  describe("constructor", () => {
+    it("should log error if provider initialization fails and keep providers null", async () => {
+      // Mock failure in NeonProvider constructor
+      vi.mocked(NeonProvider).mockImplementationOnce(() => {
+        throw new Error("Init failure");
+      });
+
+      const logger = createLogger({ logLevel: "error", nodeEnv: "test" });
+      const errorSpy = vi.spyOn(logger, "error");
+
+      const database = await createMockDatabase();
+      const repository = new TenantRepository(database);
+
+      const serviceInstance = new TenantService(repository, {
+        logger,
+        neonApiKey: "mock-key",
+        neonProjectId: "mock-project",
+        gcpCredentialsJson: "{}",
+        gcpProjectId: "mock-gcp-project",
+        gcpRegion: "mock-region",
+        tenantImageTag: "mock-tag",
+        upstashRedisUrl: "redis://mock",
+      });
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ error: expect.any(Error) }),
+        "Failed to initialize providers",
+      );
+
+      // Access private members to verify they are null
+      // @ts-expect-error accessing private property for testing
+      expect(serviceInstance.neonProvider).toBeNull();
+      // @ts-expect-error accessing private property for testing
+      expect(serviceInstance.cloudRunProvider).toBeNull();
+    });
+  });
+
+  const createTenantHelper = (index: number) => {
+    return service.createTenant({
+      name: `Store ${index}`,
+      merchantEmail: `store${index}@example.com`,
+      subdomain: `store${index}`,
+    });
+  };
 
   describe("createTenant", () => {
     it("should create a tenant successfully", async () => {
@@ -55,21 +125,31 @@ describe("TenantService", () => {
       expect(tenant.status).toBe("provisioning");
     });
 
-    it("should provision database if Neon credentials are present", async () => {
+    it("should provision database if credentials are present", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
         subdomain: "teststore",
       };
 
-      const tenant = await service.createTenant(input);
+      let backgroundTask: Promise<unknown> | undefined;
+      const waitUntil = (p: Promise<unknown>) => {
+        backgroundTask = p;
+      };
+
+      const tenant = await service.createTenant(input, waitUntil);
+
+      // Await background task
+      if (backgroundTask) await backgroundTask;
 
       // Verify that databaseUrl was updated
       const updatedTenant = await service.getTenant(tenant.id);
       expect(updatedTenant.databaseUrl).toBe("postgres://mock-db-url");
+      expect(updatedTenant.redisHash).toHaveLength(12);
+      expect(updatedTenant.status).toBe("active");
     });
 
-    it("should set status to provisioning_failed if database provisioning fails", async () => {
+    it("should set status to provisioning_failed if provisioning fails", async () => {
       // Mock failure
       const mockCreateTenantDatabase = vi
         .fn()
@@ -77,6 +157,7 @@ describe("TenantService", () => {
       // @ts-expect-error Mocking for test purposes
       NeonProvider.mockImplementationOnce(() => ({
         createTenantDatabase: mockCreateTenantDatabase,
+        deleteTenantDatabase: vi.fn().mockResolvedValue(void 0),
       }));
 
       // Re-initialize service with failed provider
@@ -87,6 +168,11 @@ describe("TenantService", () => {
         logger,
         neonApiKey: "mock-key",
         neonProjectId: "mock-project",
+        gcpCredentialsJson: "{}",
+        gcpProjectId: "mock-gcp-project",
+        gcpRegion: "mock-region",
+        tenantImageTag: "mock-tag",
+        upstashRedisUrl: "redis://mock",
       });
 
       const input: CreateTenantInput = {
@@ -95,14 +181,24 @@ describe("TenantService", () => {
         subdomain: "teststore",
       };
 
-      await expect(service.createTenant(input)).rejects.toThrow(
-        "Failed to provision database resource",
-      );
+      let backgroundTask: Promise<unknown> | undefined;
+      const waitUntil = (p: Promise<unknown>) => {
+        backgroundTask = p;
+      };
+
+      await service.createTenant(input, waitUntil);
+
+      // Await background task (ignore rejection as service catches it)
+      if (backgroundTask) {
+        try {
+          await backgroundTask;
+        } catch {
+          // ignore
+        }
+      }
 
       // Verify status is provisioning_failed
       const tenants = await service.listTenants();
-      // Since listTenants filters out deleted, we might need to query repository directly or use listTenants if it shows provisioning_failed
-      // By default listTenants shows all non-deleted.
       expect(tenants).toHaveLength(1);
       expect(tenants[0]?.status).toBe("provisioning_failed");
     });
@@ -117,21 +213,90 @@ describe("TenantService", () => {
       await service.createTenant(input);
 
       await expect(service.createTenant(input)).rejects.toThrow(
-        "Subdomain already in use",
+        SubdomainInUseError,
       );
     });
 
-    it("should allow creating tenant without domain", async () => {
+    it("should throw error if subdomain is missing", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
+        // subdomain missing
       };
 
-      const tenant = await service.createTenant(input);
+      await expect(service.createTenant(input)).rejects.toThrow(
+        SubdomainRequiredError,
+      );
+    });
+    it("should rollback resources if provisioning fails", async () => {
+      // Mock failure in cloud run deployment
+      const mockDeployTenantInstance = vi
+        .fn()
+        .mockRejectedValue(new Error("Deployment failed"));
 
-      expect(tenant.id).toBeDefined();
-      expect(tenant.name).toBe("Test Store");
-      expect(tenant.subdomain).toBeNull();
+      const mockDeleteTenantDatabase = vi.fn().mockResolvedValue(void 0);
+      const mockDeleteTenantInstance = vi.fn().mockResolvedValue(void 0);
+
+      // @ts-expect-error Mocking for test purposes
+      NeonProvider.mockImplementationOnce(() => ({
+        createTenantDatabase: vi
+          .fn()
+          .mockResolvedValue("postgres://mock-db-url"),
+        deleteTenantDatabase: mockDeleteTenantDatabase,
+      }));
+
+      // @ts-expect-error Mocking for test purposes
+      vi.mocked(CloudRunProvider).mockImplementationOnce(() => ({
+        deployTenantInstance: mockDeployTenantInstance,
+        runTenantMigrations: vi.fn().mockResolvedValue(void 0),
+        deleteTenantInstance: mockDeleteTenantInstance,
+      }));
+
+      // Re-initialize service with custom mocks
+      const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
+      const database = await createMockDatabase();
+      repository = new TenantRepository(database);
+      service = new TenantService(repository, {
+        logger,
+        neonApiKey: "mock-key",
+        neonProjectId: "mock-project",
+        gcpCredentialsJson: "{}",
+        gcpProjectId: "mock-gcp-project",
+        gcpRegion: "mock-region",
+        tenantImageTag: "mock-tag",
+        upstashRedisUrl: "redis://mock",
+      });
+
+      const input: CreateTenantInput = {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
+      };
+
+      let backgroundTask: Promise<unknown> | undefined;
+      const waitUntil = (p: Promise<unknown>) => {
+        backgroundTask = p;
+      };
+
+      await service.createTenant(input, waitUntil);
+
+      // Await background task
+      if (backgroundTask) {
+        try {
+          await backgroundTask;
+        } catch {
+          // ignore
+        }
+      }
+
+      // Verify rollback methods were called
+      expect(mockDeleteTenantDatabase).toHaveBeenCalledWith(expect.any(String));
+      expect(mockDeleteTenantInstance).toHaveBeenCalledWith(expect.any(String));
+
+      // Verify final status and failure reason
+      const tenants = await service.listTenants();
+      expect(tenants[0]?.status).toBe("provisioning_failed");
+      expect(tenants[0]?.failureReason).toBe("Deployment failed");
     });
   });
 
@@ -140,6 +305,7 @@ describe("TenantService", () => {
       const created = await service.createTenant({
         name: "Test Store",
         merchantEmail: "test@example.com",
+        subdomain: "teststore",
       });
 
       const tenant = await service.getTenant(created.id);
@@ -150,7 +316,7 @@ describe("TenantService", () => {
 
     it("should throw error when tenant not found", async () => {
       await expect(service.getTenant(randomUUID())).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
   });
@@ -160,6 +326,7 @@ describe("TenantService", () => {
       const created = await service.createTenant({
         name: "Original Name",
         merchantEmail: "test@example.com",
+        subdomain: "original",
       });
 
       const input: UpdateTenantInput = {
@@ -180,28 +347,20 @@ describe("TenantService", () => {
       };
 
       await expect(service.updateTenant(randomUUID(), input)).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
 
     it("should throw error when updating to existing domain", async () => {
-      await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-        subdomain: "store1",
-      });
-      const store2 = await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-        subdomain: "store2",
-      });
+      await createTenantHelper(1);
+      const store2 = await createTenantHelper(2);
 
       const input: UpdateTenantInput = {
         subdomain: "store1",
       };
 
       await expect(service.updateTenant(store2.id, input)).rejects.toThrow(
-        "Subdomain already in use",
+        SubdomainInUseError,
       );
     });
 
@@ -229,36 +388,28 @@ describe("TenantService", () => {
       const created = await service.createTenant({
         name: "Test Store",
         merchantEmail: "test@example.com",
+        subdomain: "teststore",
       });
 
       await expect(service.deleteTenant(created.id)).resolves.toBeUndefined();
 
       await expect(service.getTenant(created.id)).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
 
     it("should throw error when tenant not found", async () => {
       await expect(service.deleteTenant(randomUUID())).rejects.toThrow(
-        "Tenant not found",
+        TenantNotFoundError,
       );
     });
   });
 
   describe("listTenants", () => {
     it("should return all tenants", async () => {
-      await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-      });
-      await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-      });
-      await service.createTenant({
-        name: "Store 3",
-        merchantEmail: "store3@example.com",
-      });
+      await createTenantHelper(1);
+      await createTenantHelper(2);
+      await createTenantHelper(3);
 
       const tenants = await service.listTenants();
 
@@ -277,14 +428,8 @@ describe("TenantService", () => {
     });
 
     it("should not return deleted tenants", async () => {
-      const store1 = await service.createTenant({
-        name: "Store 1",
-        merchantEmail: "store1@example.com",
-      });
-      await service.createTenant({
-        name: "Store 2",
-        merchantEmail: "store2@example.com",
-      });
+      const store1 = await createTenantHelper(1);
+      await createTenantHelper(2);
       await service.deleteTenant(store1.id);
 
       const tenants = await service.listTenants();

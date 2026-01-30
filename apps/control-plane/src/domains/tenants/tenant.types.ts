@@ -5,12 +5,14 @@ export interface Tenant {
   subdomain: string | null;
   databaseUrl: string | null;
   apiUrl: string | null;
+  redisHash: string | null;
   status: TenantStatus;
   plan: TenantPlan;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
   metadata: Record<string, unknown> | null;
+  failureReason: string | null;
 }
 
 export type TenantStatus =
@@ -37,5 +39,7 @@ export interface UpdateTenantInput {
   plan?: TenantPlan | undefined;
   databaseUrl?: string | undefined;
   apiUrl?: string | undefined;
+  redisHash?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
+  failureReason?: string | undefined;
 }

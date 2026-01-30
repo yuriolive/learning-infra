@@ -19,11 +19,11 @@ Creates a GitHub pull request using the project's PR template and standard workf
 
 1. **Lint and Typecheck**: Ensure all checks pass.
    ```bash
-   bun run lint && bun run typecheck
+   pnpm run lint && pnpm run typecheck
    ```
 2. **Tests**: Ensure tests pass.
    ```bash
-   bun run test
+   pnpm run test
    ```
 
 ### Step 2: Push Changes

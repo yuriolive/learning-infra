@@ -23,12 +23,7 @@
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "target": "ES2022",
-    "types": ["@types/bun"]
+    "types": ["node"]
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.d.ts",
-    "scripts"
-  ]
+  "exclude": ["node_modules", "dist", "**/*.d.ts", "scripts"]
 }

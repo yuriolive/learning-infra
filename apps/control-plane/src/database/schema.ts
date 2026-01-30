@@ -29,10 +29,12 @@ export const tenants = pgTable("tenants", {
   subdomain: text("subdomain").unique(), // This is the tenant's unique subdomain (e.g., "my-store")
   databaseUrl: text("database_url"),
   apiUrl: text("api_url"),
+  redisHash: text("redis_hash"),
   status: tenantStatusEnum("status").notNull().default("provisioning"),
   plan: tenantPlanEnum("plan").notNull().default("free"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  failureReason: text("failure_reason"),
 });

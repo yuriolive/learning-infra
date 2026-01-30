@@ -54,19 +54,19 @@ After making any code changes, run the following to ensure Husky checks will pas
 
 ```bash
 # Run linting (ESLint + Prettier)
-bun run lint
+pnpm run lint
 
 # Run type checking
-bun run typecheck
+pnpm run typecheck
 
 # Or run all checks that Husky will run
-bun run lint && bun run typecheck
+pnpm run lint && pnpm run typecheck
 ```
 
 **Husky Pre-Commit Hooks**:
-- ESLint with auto-fix (`bun x eslint --fix`)
-- Prettier formatting (`bun x prettier --write`)
-- TypeScript type checking (`bun x tsc --noEmit --project tsconfig.ci.json`)
+- ESLint with auto-fix (`pnpm dlx eslint --fix`)
+- Prettier formatting (`pnpm dlx prettier --write`)
+- TypeScript type checking (`pnpm dlx tsc --noEmit --project tsconfig.ci.json`)
 
 **Why this matters**:
 - Prevents failed commits due to linting/formatting errors
@@ -76,7 +76,7 @@ bun run lint && bun run typecheck
 
 **Workflow**:
 1. Make code changes
-2. Run `bun run lint && bun run typecheck` locally
+2. Run `pnpm run lint && pnpm run typecheck` locally
 3. Fix any errors or warnings
 4. Stage and commit changes
 5. Husky will run the same checks automatically

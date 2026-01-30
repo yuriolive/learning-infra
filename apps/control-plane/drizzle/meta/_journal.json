@@ -8,6 +8,20 @@
       "when": 1769036659647,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769652722507,
+      "tag": "0001_ambiguous_johnny_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769713333817,
+      "tag": "0002_long_deathstrike",
+      "breakpoints": true
     }
   ]
 }

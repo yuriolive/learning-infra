@@ -1,41 +1,57 @@
-FROM oven/bun:1.2.20
-
+# Stage 1: Base
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN npm install -g turbo@2.6.1
 WORKDIR /app
 
-# Install Node.js for MedusaJS build (fixes source map issue with Bun)
-# Bun image is based on Debian, so we can install Node.js via apt
-RUN apt-get update && \
-    apt-get install -y curl ca-certificates && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Stage 2: Pruner
+FROM base AS pruner
+COPY . .
+RUN turbo prune --scope=@vendin/tenant-instance --docker
 
-# Copy package.json files
-COPY package.json bun.lock turbo.json ./
-COPY apps/tenant-instance/package.json ./apps/tenant-instance/
-COPY packages/analytics/package.json ./packages/analytics/
-COPY packages/config/package.json ./packages/config/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/medusa/plugins/medusa-plugin-bling/package.json ./packages/medusa/plugins/medusa-plugin-bling/
+# Stage 3: Builder
+FROM base AS builder
+WORKDIR /app
 
-# Install dependencies
-RUN bun install
+# Enable pnpm store caching
+ENV PNPM_STORE_DIR=/pnpm/store
 
-# Copy application code and workspace dependencies
-COPY apps/tenant-instance ./apps/tenant-instance
-COPY packages/analytics ./packages/analytics
-COPY packages/config ./packages/config
-COPY packages/utils ./packages/utils
-COPY packages/medusa/plugins/medusa-plugin-bling ./packages/medusa/plugins/medusa-plugin-bling
+# Copy lockfile and package.json's of isolated subworkspace
+COPY --from=pruner /app/out/json/ /app/out/pnpm-lock.yaml ./
 
-# Build the application
-WORKDIR /app/apps/tenant-instance
+# Install dependencies with cache mount
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# Copy source code of isolated subworkspace
+COPY --from=pruner /app/out/full/ .
+
+# Build the project
+RUN pnpm build --filter=@vendin/tenant-instance...
+
+# Deploy the app to a clean directory with production dependencies
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
+
+# Copy the build output (dist) as it is ignored by .gitignore (and thus pnpm deploy)
+RUN cp -r /app/apps/tenant-instance/dist/. /app/deploy/
+
+# Stage 4: Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Enable corepack and prepare pnpm
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+
+# Copy the deployed application
+COPY --from=builder /app/deploy .
+
+# Set production environment
 ENV NODE_ENV=production
-ENV MEDUSA_TELEMETRY_DISABLED=1
-# Use npm/npx for build (fixes Bun source map issue with MedusaJS decorators)
-# npx will use the installed Node.js instead of Bun
-RUN bun run build
 
-EXPOSE 9000
+# Expose ports
+EXPOSE 9000 5173
 
-CMD ["bun", "run", "start"]
+# Ensure start.sh is executable
+RUN chmod +x ./start.sh
+
+# Start
+ENTRYPOINT ["./start.sh"]
