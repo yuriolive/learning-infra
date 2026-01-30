@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 import { type createLogger } from "@vendin/utils/logger";
 
@@ -98,15 +98,7 @@ export class TenantService {
 
     // 2. Trigger background provisioning
     if (this.neonProvider && this.cloudRunProvider && waitUntil) {
-      waitUntil(
-        this.provisionResources(
-          this.neonProvider,
-          this.cloudRunProvider,
-          tenant.id,
-          input.subdomain,
-          tenant.redisHash,
-        ),
-      );
+      waitUntil(this.provisionResources(tenant.id, input.subdomain));
     } else {
       this.logger.warn(
         { tenantId: tenant.id },
@@ -117,37 +109,39 @@ export class TenantService {
     return tenant;
   }
 
-  private async provisionResources(
-    neonProvider: NeonProvider,
-    cloudRunProvider: CloudRunProvider,
-    tenantId: string,
-    subdomain: string,
-    redisHash: string | null,
-  ) {
+  private async provisionResources(tenantId: string, subdomain: string) {
+    if (!this.neonProvider || !this.cloudRunProvider) {
+      return;
+    }
+
+    if (!this.upstashRedisUrl) {
+      this.logger.error(
+        { tenantId },
+        "Provisioning aborted: Missing Upstash Redis URL",
+      );
+      await this.repository.update(tenantId, {
+        status: "provisioning_failed",
+      });
+      return;
+    }
+
     try {
       this.logger.info({ tenantId }, "Starting background provisioning");
 
-      if (!this.upstashRedisUrl) {
-        throw new Error("Missing Upstash Redis URL");
-      }
-
-      if (!redisHash) {
-        throw new Error("Redis hash missing");
-      }
-
       // 1. Provision Database
-      const databaseUrl = await neonProvider.createTenantDatabase(tenantId);
-
-      // Save databaseUrl immediately
-      await this.repository.update(tenantId, { databaseUrl });
+      const databaseUrl =
+        await this.neonProvider.createTenantDatabase(tenantId);
 
       // 2. Generate Secrets
       const cookieSecret = randomBytes(32).toString("hex");
       const jwtSecret = randomBytes(32).toString("hex");
 
-      // 3. Prepare Environment
+      // 3. Deploy Cloud Run
+      const redisHash = createHash("sha256")
+        .update(tenantId)
+        .digest("hex")
+        .slice(0, 12);
       const redisPrefix = `t_${redisHash}:`;
-
       const environmentVariables = {
         DATABASE_URL: databaseUrl,
         REDIS_URL: this.upstashRedisUrl,
@@ -160,21 +154,19 @@ export class TenantService {
         ADMIN_CORS: `https://${subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
       };
 
-      // 4. Run Migrations
-      await cloudRunProvider.runTenantMigrations(
+      // Filter out empty env vars if needed, but REDIS_URL might be required by Medusa.
+      // If REDIS_URL is empty, we pass it empty string.
+
+      const apiUrl = await this.cloudRunProvider.deployTenantInstance(
         tenantId,
         environmentVariables,
       );
 
-      // 5. Deploy Cloud Run
-      const apiUrl = await cloudRunProvider.deployTenantInstance(
-        tenantId,
-        environmentVariables,
-      );
-
-      // 6. Final Update
+      // 4. Update Tenant
       await this.repository.update(tenantId, {
+        databaseUrl,
         apiUrl,
+        redisHash,
         status: "active",
       });
 

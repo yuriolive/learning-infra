@@ -19,7 +19,6 @@ describe("TenantService Deployment", () => {
   };
   let mockCloudRunProvider: {
     deployTenantInstance: ReturnType<typeof vi.fn>;
-    runTenantMigrations: ReturnType<typeof vi.fn>;
     deleteTenantInstance: ReturnType<typeof vi.fn>;
   };
   const logger = createLogger({ logLevel: "silent" });
@@ -28,11 +27,9 @@ describe("TenantService Deployment", () => {
     vi.clearAllMocks();
 
     repository = {
-      create: vi.fn().mockResolvedValue({
-        id: "tenant-1",
-        status: "provisioning",
-        redisHash: "mock-hash",
-      }),
+      create: vi
+        .fn()
+        .mockResolvedValue({ id: "tenant-1", status: "provisioning" }),
       update: vi.fn().mockResolvedValue({}),
       findBySubdomain: vi.fn().mockResolvedValue(null),
       findById: vi.fn(),
@@ -50,7 +47,6 @@ describe("TenantService Deployment", () => {
 
     mockCloudRunProvider = {
       deployTenantInstance: vi.fn().mockResolvedValue("https://service-url"),
-      runTenantMigrations: vi.fn().mockResolvedValue(void 0),
       deleteTenantInstance: vi.fn().mockImplementation(async () => {}),
     };
     (
@@ -105,15 +101,14 @@ describe("TenantService Deployment", () => {
       }),
     );
 
-    // Verify incremental updates
-    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-      databaseUrl: "postgres://db-url",
-    });
-
-    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-      apiUrl: "https://service-url",
-      status: "active",
-    });
+    expect(repository.update).toHaveBeenCalledWith(
+      "tenant-1",
+      expect.objectContaining({
+        status: "active",
+        databaseUrl: "postgres://db-url",
+        apiUrl: "https://service-url",
+      }),
+    );
   });
 
   it("should handle provisioning failure", async () => {
@@ -138,65 +133,53 @@ describe("TenantService Deployment", () => {
     });
   });
 
-  describe("provisionResources failure paths", () => {
-    it.each([
-      {
-        name: "missing Upstash Redis URL",
-        config: {
-          logger,
-          neonApiKey: "key",
-          neonProjectId: "proj",
-          gcpCredentialsJson: "{}",
-          gcpProjectId: "gcp-proj",
-          gcpRegion: "us-central1",
-          tenantImageTag: "tag",
-        },
-        redisHash: "mock-hash",
-        expectedReason: "Missing Upstash Redis URL",
-      },
-      {
-        name: "missing Redis Hash",
-        config: {
-          logger,
-          neonApiKey: "key",
-          neonProjectId: "proj",
-          gcpCredentialsJson: "{}",
-          gcpProjectId: "gcp-proj",
-          gcpRegion: "us-central1",
-          tenantImageTag: "tag",
-          upstashRedisUrl: "redis://",
-        },
-        redisHash: null,
-        expectedReason: "Redis hash missing",
-      },
-    ])(
-      "should fail provisioning if $name",
-      async ({ config, redisHash, expectedReason }) => {
-        const serviceWithError = new TenantService(repository, config);
-        const serviceAny = serviceWithError as unknown as {
-          provisionResources: (
-            neonProvider: unknown,
-            cloudRunProvider: unknown,
-            tenantId: string,
-            subdomain: string,
-            redisHash: string | null,
-          ) => Promise<void>;
-        };
+  it("should safely exit provisionResources if providers are missing", async () => {
+    // Create service without providers
+    const serviceWithoutProviders = new TenantService(repository, {
+      logger,
+      // No credentials provided
+    });
 
-        await serviceAny.provisionResources(
-          mockNeonProvider,
-          mockCloudRunProvider,
-          "tenant-1",
-          "test",
-          redisHash,
-        );
+    const serviceAny = serviceWithoutProviders as unknown as {
+      provisionResources: (
+        tenantId: string,
+        subdomain: string,
+      ) => Promise<void>;
+    };
 
-        expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
-        expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-          status: "provisioning_failed",
-          failureReason: expectedReason,
-        });
-      },
-    );
+    await serviceAny.provisionResources("tenant-1", "test");
+
+    // Should not attempt to create database or deploy
+    expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
+    expect(mockCloudRunProvider.deployTenantInstance).not.toHaveBeenCalled();
+    expect(repository.update).not.toHaveBeenCalled();
+  });
+
+  it("should fail provisioning if upstashRedisUrl is missing", async () => {
+    // Service with providers but NO redis URL
+    const serviceNoRedis = new TenantService(repository, {
+      logger,
+      neonApiKey: "key",
+      neonProjectId: "proj",
+      gcpCredentialsJson: "{}",
+      gcpProjectId: "gcp-proj",
+      gcpRegion: "us-central1",
+      tenantImageTag: "tag",
+      // upstashRedisUrl missing
+    });
+
+    const serviceAny = serviceNoRedis as unknown as {
+      provisionResources: (
+        tenantId: string,
+        subdomain: string,
+      ) => Promise<void>;
+    };
+
+    await serviceAny.provisionResources("tenant-1", "test");
+
+    expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
+    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
+      status: "provisioning_failed",
+    });
   });
 });

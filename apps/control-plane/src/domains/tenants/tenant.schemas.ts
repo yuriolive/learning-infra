@@ -24,9 +24,7 @@ export const updateTenantSchema = z.object({
   plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
   databaseUrl: z.string().optional(),
   apiUrl: z.string().optional(),
-  redisHash: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
-  failureReason: z.string().optional(),
 });
 
 export const tenantIdSchema = z.object({
