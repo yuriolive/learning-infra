@@ -99,7 +99,13 @@ export class TenantService {
     // 2. Trigger background provisioning
     if (this.neonProvider && this.cloudRunProvider && waitUntil) {
       waitUntil(
-        this.provisionResources(tenant.id, input.subdomain, tenant.redisHash),
+        this.provisionResources(
+          this.neonProvider,
+          this.cloudRunProvider,
+          tenant.id,
+          input.subdomain,
+          tenant.redisHash,
+        ),
       );
     } else {
       this.logger.warn(
@@ -112,15 +118,13 @@ export class TenantService {
   }
 
   private async provisionResources(
+    neonProvider: NeonProvider,
+    cloudRunProvider: CloudRunProvider,
     tenantId: string,
     subdomain: string,
     redisHash: string | null,
   ) {
     try {
-      if (!this.neonProvider || !this.cloudRunProvider) {
-        return;
-      }
-
       this.logger.info({ tenantId }, "Starting background provisioning");
 
       if (!this.upstashRedisUrl) {
@@ -132,8 +136,7 @@ export class TenantService {
       }
 
       // 1. Provision Database
-      const databaseUrl =
-        await this.neonProvider.createTenantDatabase(tenantId);
+      const databaseUrl = await neonProvider.createTenantDatabase(tenantId);
 
       // Save databaseUrl immediately
       await this.repository.update(tenantId, { databaseUrl });
@@ -158,13 +161,13 @@ export class TenantService {
       };
 
       // 4. Run Migrations
-      await this.cloudRunProvider.runTenantMigrations(
+      await cloudRunProvider.runTenantMigrations(
         tenantId,
         environmentVariables,
       );
 
       // 5. Deploy Cloud Run
-      const apiUrl = await this.cloudRunProvider.deployTenantInstance(
+      const apiUrl = await cloudRunProvider.deployTenantInstance(
         tenantId,
         environmentVariables,
       );

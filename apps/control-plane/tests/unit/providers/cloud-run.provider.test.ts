@@ -1,4 +1,5 @@
 import { createLogger } from "@vendin/utils/logger";
+/* eslint-disable vitest/expect-expect */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
@@ -53,6 +54,28 @@ vi.mock("google-auth-library", () => ({
   GoogleAuth: vi.fn().mockImplementation(() => ({})),
 }));
 
+const setupMigrationOperations = (overrides: Record<string, unknown> = {}) => {
+  mockOperationsGet.mockImplementation(({ name }: { name: string }) => {
+    if (name === "job-op-1") return { data: { done: true } };
+    if (name === "exec-op-1") {
+      return {
+        data: { done: true, response: { name: "exec-1" }, ...overrides },
+      };
+    }
+    return { data: { done: false } };
+  });
+};
+
+const expectToRejectWithTimers = async (
+  promise: Promise<unknown>,
+  message: string,
+) => {
+  await Promise.all([
+    vi.runAllTimersAsync(),
+    expect(promise).rejects.toThrow(message),
+  ]);
+};
+
 describe("CloudRunProvider", () => {
   let provider: CloudRunProvider;
   const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
@@ -85,12 +108,7 @@ describe("CloudRunProvider", () => {
       // 2. runJobExecution
       mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
 
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        if (name === "exec-op-1")
-          return { data: { done: true, response: { name: "exec-1" } } };
-        return { data: { done: false } };
-      });
+      setupMigrationOperations();
 
       // Poll execution status
       mockExecutionsGet.mockResolvedValue({ data: { succeededCount: 1 } });
@@ -110,22 +128,14 @@ describe("CloudRunProvider", () => {
       mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
       mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
 
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        if (name === "exec-op-1")
-          return { data: { done: true, response: { name: "exec-1" } } };
-        return { data: { done: false } };
-      });
+      setupMigrationOperations();
 
       // Poll returns failure
       mockExecutionsGet.mockResolvedValue({ data: { failedCount: 1 } });
 
       const promise = provider.runTenantMigrations(tenantId, environment);
 
-      await Promise.all([
-        vi.runAllTimersAsync(),
-        expect(promise).rejects.toThrow("Migration job execution failed"),
-      ]);
+      await expectToRejectWithTimers(promise, "Migration job execution failed");
     });
 
     it("should throw if migration execution is cancelled", async () => {
@@ -133,24 +143,17 @@ describe("CloudRunProvider", () => {
       mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
       mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
 
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        if (name === "exec-op-1")
-          return { data: { done: true, response: { name: "exec-1" } } };
-        return { data: { done: false } };
-      });
+      setupMigrationOperations();
 
       // Poll returns cancelled
       mockExecutionsGet.mockResolvedValue({ data: { cancelledCount: 1 } });
 
       const promise = provider.runTenantMigrations(tenantId, environment);
 
-      await Promise.all([
-        vi.runAllTimersAsync(),
-        expect(promise).rejects.toThrow(
-          "Migration job execution was cancelled",
-        ),
-      ]);
+      await expectToRejectWithTimers(
+        promise,
+        "Migration job execution was cancelled",
+      );
     });
 
     it("should timeout if execution takes too long to complete", async () => {
@@ -158,24 +161,17 @@ describe("CloudRunProvider", () => {
       mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
       mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
 
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        if (name === "exec-op-1")
-          return { data: { done: true, response: { name: "exec-1" } } };
-        return { data: { done: false } };
-      });
+      setupMigrationOperations();
 
       // Poll always returns running
       mockExecutionsGet.mockResolvedValue({ data: { succeededCount: 0 } });
 
       const promise = provider.runTenantMigrations(tenantId, environment);
 
-      await Promise.all([
-        vi.runAllTimersAsync(),
-        expect(promise).rejects.toThrow(
-          "Timeout waiting for migration job execution results",
-        ),
-      ]);
+      await expectToRejectWithTimers(
+        promise,
+        "Timeout waiting for migration job execution results",
+      );
     });
 
     it("should throw if operation fails with error", async () => {
@@ -183,20 +179,14 @@ describe("CloudRunProvider", () => {
       mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
       mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
 
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        if (name === "exec-op-1") {
-          return { data: { done: true, error: { message: "Internal error" } } };
-        }
-        return { data: { done: false } };
-      });
+      setupMigrationOperations({ error: { message: "Internal error" } });
 
       const promise = provider.runTenantMigrations(tenantId, environment);
 
-      await Promise.all([
-        vi.runAllTimersAsync(),
-        expect(promise).rejects.toThrow("Migration job failed: Internal error"),
-      ]);
+      await expectToRejectWithTimers(
+        promise,
+        "Migration job failed: Internal error",
+      );
     });
 
     it("should throw if execution name is missing in operation response", async () => {
@@ -204,20 +194,14 @@ describe("CloudRunProvider", () => {
       mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
       mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
 
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        if (name === "exec-op-1") return { data: { done: true, response: {} } };
-        return { data: { done: false } };
-      });
+      setupMigrationOperations({ response: {} });
 
       const promise = provider.runTenantMigrations(tenantId, environment);
 
-      await Promise.all([
-        vi.runAllTimersAsync(),
-        expect(promise).rejects.toThrow(
-          "Job execution started but execution name is missing",
-        ),
-      ]);
+      await expectToRejectWithTimers(
+        promise,
+        "Job execution started but execution name is missing",
+      );
     });
 
     it("should timeout if execution operation never completes", async () => {
@@ -231,17 +215,12 @@ describe("CloudRunProvider", () => {
         return { data: { done: false } };
       });
 
-      // Update mock clock to ensure Date.now() advances
-      vi.getMockedSystemTime(); // or just rely on advanceTimersByTime
-
       const promise = provider.runTenantMigrations(tenantId, environment);
 
-      await Promise.all([
-        vi.runAllTimersAsync(),
-        expect(promise).rejects.toThrow(
-          "Timeout waiting for migration job to start",
-        ),
-      ]);
+      await expectToRejectWithTimers(
+        promise,
+        "Timeout waiting for migration job to start",
+      );
     });
   });
 
