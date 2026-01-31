@@ -24,11 +24,15 @@ main:
         except:
           as: e
           steps:
-            - log_db_error:
-                call: sys.log
+            - rollback_db:
+                call: http.post
                 args:
-                  text: ${"Database provisioning failed for " + tenantId}
-                  data: ${e}
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
             - raise_db_error:
                 raise: ${e}
 
@@ -46,7 +50,7 @@ main:
         except:
           as: e
           steps:
-            - rollback_db:
+            - rollback_trigger:
                 call: http.post
                 args:
                   url: ${baseUrl + "/internal/provisioning/rollback"}
@@ -55,7 +59,7 @@ main:
                     tenantId: ${tenantId}
                   auth:
                     type: OIDC
-            - raise_migration_trigger_error:
+            - raise_trigger_error:
                 raise: ${e}
 
     - wait_for_migrations:
@@ -77,7 +81,7 @@ main:
         except:
           as: e
           steps:
-            - rollback_migration_check:
+            - rollback_check:
                 call: http.post
                 args:
                   url: ${baseUrl + "/internal/provisioning/rollback"}
@@ -86,7 +90,7 @@ main:
                     tenantId: ${tenantId}
                   auth:
                     type: OIDC
-            - raise_migration_check_error:
+            - raise_check_error:
                 raise: ${e}
 
     - evaluate_migration:
@@ -97,9 +101,18 @@ main:
             next: deploy_service
           - condition: ${status_response.body.status == "failed"}
             steps:
+              - rollback_logic_failure:
+                  call: http.post
+                  args:
+                    url: ${baseUrl + "/internal/provisioning/rollback"}
+                    headers: ${headers}
+                    body:
+                      tenantId: ${tenantId}
+                    auth:
+                      type: OIDC
               - raise_migration_failed:
                   raise: ${"Migration failed: " + default(status_response.body.error, "Unknown error")}
-        next: wait_for_migrations # Default loop back if status is weird, or raise? Let's loop back.
+        next: wait_for_migrations
 
     - deploy_service:
         try:

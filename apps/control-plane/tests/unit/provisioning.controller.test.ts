@@ -36,13 +36,14 @@ describe("ProvisioningController", () => {
   });
 
   const createRequest = (action: string, key: string = TEST_INTERNAL_KEY, method = "POST") => {
+    const body = method === "POST" ? JSON.stringify({ tenantId: "b0e41783-6236-47a6-a36c-8c345330a111" }) : null;
     return new Request(`http://localhost/internal/provisioning/${action}`, {
       method,
       headers: {
         "Content-Type": "application/json",
         "X-Internal-Key": key,
       },
-      body: method === "POST" ? JSON.stringify({ tenantId: "b0e41783-6236-47a6-a36c-8c345330a111" }) : undefined,
+      body,
     });
   };
 
