@@ -5,6 +5,14 @@ import { z } from "zod";
 import type { IProductModuleService } from "@medusajs/framework/types";
 import type { MedusaContainer } from "@medusajs/medusa";
 
+// Interface for variant with optional calculated price
+interface VariantWithPrice {
+  calculated_price?: {
+    calculated_amount: number;
+    currency_code: string;
+  };
+}
+
 export function getStoreTools(container: MedusaContainer) {
   return [
     tool(
@@ -38,16 +46,18 @@ export function getStoreTools(container: MedusaContainer) {
 
             if (p.variants) {
               for (const v of p.variants) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const variant = v as any;
+                // Safely cast to access potential calculated_price
+                const variant = v as unknown as VariantWithPrice;
 
                 // check calculated_price
-                if (
-                  variant.calculated_price?.calculated_amount &&
-                  variant.calculated_price.calculated_amount < lowestPrice
-                ) {
-                  lowestPrice = variant.calculated_price.calculated_amount;
-                  currency = variant.calculated_price.currency_code;
+                if (variant.calculated_price?.calculated_amount) {
+                  if (
+                    variant.calculated_price.calculated_amount < lowestPrice
+                  ) {
+                    lowestPrice =
+                      variant.calculated_price.calculated_amount;
+                    currency = variant.calculated_price.currency_code;
+                  }
                 }
               }
             }
@@ -57,9 +67,9 @@ export function getStoreTools(container: MedusaContainer) {
               title: p.title,
               handle: p.handle,
               price_display:
-                lowestPrice === Infinity
-                  ? "Price on request"
-                  : `${currency.toUpperCase()} ${lowestPrice}`,
+                lowestPrice !== Infinity
+                  ? `${currency.toUpperCase()} ${lowestPrice}`
+                  : "Price on request",
             };
           });
 

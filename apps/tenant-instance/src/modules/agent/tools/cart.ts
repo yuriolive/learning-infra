@@ -9,6 +9,12 @@ import type {
 } from "@medusajs/framework/types";
 import type { MedusaContainer } from "@medusajs/medusa";
 
+// Extend CartDTO locally to include completed_at which is present in runtime but might be missing in strict DTOs
+interface ExtendedCart {
+  id: string;
+  completed_at?: Date | string | null;
+}
+
 export function getCartTools(container: MedusaContainer) {
   return [
     tool(
@@ -45,8 +51,11 @@ export function getCartTools(container: MedusaContainer) {
           );
 
           // Filter for active cart (not completed)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const activeCart = carts.find((c) => !(c as any).completed_at);
+          // We cast to unknown then ExtendedCart to safely access completed_at without 'any'
+          const activeCart = carts.find((c) => {
+             const cart = c as unknown as ExtendedCart;
+             return !cart.completed_at;
+          });
 
           if (activeCart) {
             return activeCart.id;
@@ -57,7 +66,7 @@ export function getCartTools(container: MedusaContainer) {
             customer_id,
             region_id: defaultRegion.id,
             currency_code: "brl",
-            email: `${customer_id}@example.com`, // Optional but good for cart
+            email: `${customer_id}@example.com`,
           });
 
           return newCart.id;
@@ -67,7 +76,8 @@ export function getCartTools(container: MedusaContainer) {
       },
       {
         name: "get_or_create_cart",
-        description: "Get an existing cart or create a new one for a customer.",
+        description:
+          "Get an existing cart or create a new one for a customer.",
         schema: z.object({
           customer_id: z.string().describe("The ID of the customer"),
         }),
@@ -80,8 +90,8 @@ export function getCartTools(container: MedusaContainer) {
         quantity,
       }: {
         cart_id: string;
-        variant_id: string;
         quantity: number;
+        variant_id: string;
       }) => {
         try {
           const cartModule: ICartModuleService = container.resolve(
@@ -107,29 +117,6 @@ export function getCartTools(container: MedusaContainer) {
 
           const variant = variants[0];
 
-          // We need a price.
-          // ProductModule variants don't have calculated_price easily without context.
-          // But Cart needs unit_price.
-          // We will iterate variant.options or similar? No.
-          // We have to assume the price is available or 0.
-          // Ideally we use PricingModule but that adds complexity.
-          // We will try to find a price in `variant` if mapped (unlikely) or just pass 0
-          // and let the system handle it? No, Cart Module needs explicit price.
-
-          // Hack: We'll set a placeholder price if not found,
-          // OR we can rely on the fact that standard storefronts use workflows that handle this.
-          // Since I am calling the Module Service directly, I am responsible for data.
-
-          // Let's assume for this "Agent" demo, we pick an arbitrary price if not present?
-          // Or maybe we can't do this reliably without Pricing Module.
-          //
-          // HOWEVER, the `IProductModuleService` definition doesn't guarantee prices.
-          // But earlier in `products.ts` I saw logic to iterate variants.
-          //
-          // To fix the TYPE error, I must provide `title` and `unit_price`.
-
-          const title = variant.title;
-
           // TODO: IMPLEMENT PRICING MODULE RESOLUTION
           // The Product Module does not return prices directly in v2 without orchestrating with Pricing Module.
           // The Cart Module requires a `unit_price` to be passed explicitly.
@@ -142,7 +129,7 @@ export function getCartTools(container: MedusaContainer) {
             {
               variant_id,
               quantity,
-              title,
+              title: variant.title,
               unit_price,
             },
           ]);
