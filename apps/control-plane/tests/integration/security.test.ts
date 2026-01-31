@@ -111,7 +111,7 @@ describe("Security Integration Tests", () => {
         TENANT_IMAGE_TAG: "latest",
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
-        INTERNAL_API_SECRET: "mock-internal-secret",
+        INTERNAL_API_KEY: "mock-internal-key",
       };
 
       const request = new Request(`${origin}/health`, {
@@ -142,7 +142,7 @@ describe("Security Integration Tests", () => {
         TENANT_IMAGE_TAG: "latest",
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
-        INTERNAL_API_SECRET: "mock-internal-secret",
+        INTERNAL_API_KEY: "mock-internal-key",
       };
 
       const request = new Request(`${origin}/health`, {

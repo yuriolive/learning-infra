@@ -9,7 +9,7 @@ export interface InternalRouteContext {
   logger: ReturnType<typeof createLogger>;
   tenantService: TenantService;
   db: Database;
-  internalApiSecret: string;
+  internalApiKey: string;
 }
 
 export function createInternalRoutes(context: InternalRouteContext) {
@@ -17,7 +17,7 @@ export function createInternalRoutes(context: InternalRouteContext) {
     context.tenantService,
     context.db,
     context.logger,
-    context.internalApiSecret,
+    context.internalApiKey,
   );
 
   return {

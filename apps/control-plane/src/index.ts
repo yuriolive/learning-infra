@@ -204,7 +204,7 @@ export default {
       upstashRedisUrl,
       googleApplicationCredentials,
       cloudRunServiceAccount,
-      internalApiSecret,
+
       internalApiKey,
     } = await resolveEnvironmentSecrets(environment);
 
@@ -230,7 +230,7 @@ export default {
       environment.TENANT_IMAGE_TAG,
       googleApplicationCredentials,
       cloudRunServiceAccount,
-      internalApiSecret,
+
       internalApiKey,
     );
     if (configError) return configError;
@@ -245,7 +245,7 @@ export default {
       googleApplicationCredentials,
       upstashRedisUrl,
       cloudRunServiceAccount,
-      (internalApiSecret || internalApiKey) as string,
+      internalApiKey as string,
     );
 
     const tenantRoutes = createTenantRoutes({
@@ -260,7 +260,7 @@ export default {
       logger,
       tenantService,
       db: database,
-      internalApiSecret: (internalApiSecret || internalApiKey) as string, // validated in config
+      internalApiKey: internalApiKey as string, // validated in config
     });
 
     const url = new URL(request.url);

@@ -145,6 +145,20 @@ gcloud artifacts repositories add-iam-policy-binding containers \
   --member="serviceAccount:cloud-run-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/artifactregistry.reader"
 
+# 9. Grant Workflow & Service Invocation Permissions
+
+# Control Plane needs to trigger Workflows
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:control-plane-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/workflows.invoker"
+
+# Allow Cloud Run SA (Workflows identity) to invoke Cloud Run services
+# (This is needed if the workflow invokes the Cloud Run service directly)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:cloud-run-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/run.invoker"
+
+
 echo "Setup Complete! Don't forget to configure Secrets (see Part 2 -> Secret Manager)."
 ```
 
