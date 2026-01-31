@@ -132,13 +132,13 @@ Each test gets a **fresh PGLite instance**:
 
 ```bash
 # Run all tests
-bun run test
+pnpm run test
 
 # Watch mode
-bun run test:watch
+pnpm run test:watch
 
 # Coverage
-bun run test:coverage
+pnpm run test:coverage
 ```
 
 **Current Performance**:
