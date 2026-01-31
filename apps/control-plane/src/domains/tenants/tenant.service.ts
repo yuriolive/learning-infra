@@ -185,7 +185,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Triggering migration job");
-    const executionName = await this.cloudRunProvider!.runTenantMigrations(
+    const executionName = await this.cloudRunProvider?.runTenantMigrations(
       tenantId,
       environmentVariables,
     );
