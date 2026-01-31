@@ -1,13 +1,20 @@
 import { Payment, PaymentRefund } from "mercadopago";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import type {
+  AuthorizePaymentInput,
+  CapturePaymentInput,
+  GetPaymentStatusInput,
+  RefundPaymentInput,
+} from "@medusajs/types";
+
 // Mock @medusajs/framework/utils BEFORE importing service
 vi.mock("@medusajs/framework/utils", () => {
   return {
     AbstractPaymentProvider: class {
-      protected container: any;
-      protected options: any;
-      constructor(container: any, options: any) {
+      protected container: unknown;
+      protected options: unknown;
+      constructor(container: unknown, options: unknown) {
         this.container = container;
         this.options = options;
       }
@@ -51,9 +58,13 @@ describe("MercadoPagoPaymentProviderService", () => {
 
     // Use regular functions for mockImplementation to support 'new'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Payment as any).mockImplementation(function() { return paymentClientMock; });
+    (Payment as any).mockImplementation(function () {
+      return paymentClientMock;
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (PaymentRefund as any).mockImplementation(function() { return refundClientMock; });
+    (PaymentRefund as any).mockImplementation(function () {
+      return refundClientMock;
+    });
 
     service = new MercadoPagoPaymentProviderService(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,8 +101,9 @@ describe("MercadoPagoPaymentProviderService", () => {
         point_of_interaction: {},
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await service.authorizePayment(input as any);
+      const result = await service.authorizePayment(
+        input as unknown as AuthorizePaymentInput,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((paymentClientMock as any).create).toHaveBeenCalledWith(
@@ -143,9 +155,9 @@ describe("MercadoPagoPaymentProviderService", () => {
         new Error("insufficient_amount"),
       );
 
-      await expect(service.authorizePayment(input as any)).rejects.toThrow(
-        "Payment declined: Insufficient funds",
-      );
+      await expect(
+        service.authorizePayment(input as unknown as AuthorizePaymentInput),
+      ).rejects.toThrow("Payment declined: Insufficient funds");
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((loggerMock as any).error).toHaveBeenCalled();
@@ -163,8 +175,9 @@ describe("MercadoPagoPaymentProviderService", () => {
         status: "approved",
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await service.capturePayment(input as any);
+      const result = await service.capturePayment(
+        input as unknown as CapturePaymentInput,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((paymentClientMock as any).capture).toHaveBeenCalledWith({
@@ -183,9 +196,9 @@ describe("MercadoPagoPaymentProviderService", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (paymentClientMock as any).capture.mockRejectedValue(new Error("Fail"));
 
-      await expect(service.capturePayment(input as any)).rejects.toThrow(
-        "Failed to capture payment: Fail",
-      );
+      await expect(
+        service.capturePayment(input as unknown as CapturePaymentInput),
+      ).rejects.toThrow("Failed to capture payment: Fail");
     });
   });
 
@@ -199,8 +212,9 @@ describe("MercadoPagoPaymentProviderService", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (refundClientMock as any).create.mockResolvedValue({ id: "ref_123" });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await service.refundPayment(input as any);
+      const result = await service.refundPayment(
+        input as unknown as RefundPaymentInput,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((refundClientMock as any).create).toHaveBeenCalledWith({
@@ -219,8 +233,9 @@ describe("MercadoPagoPaymentProviderService", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (paymentClientMock as any).get.mockResolvedValue({ status: "approved" });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await service.getPaymentStatus(input as any);
+      const result = await service.getPaymentStatus(
+        input as unknown as GetPaymentStatusInput,
+      );
 
       expect(result.status).toBe("authorized");
     });
@@ -239,23 +254,25 @@ describe("MercadoPagoPaymentProviderService", () => {
 
   describe("getWebhookActionAndData", () => {
     it("should verify signature and return authorized for approved payment", async () => {
-      const secret = "test_secret";
+      const webhookSecret = "test_secret";
       const ts = "123456";
       const requestId = "req_123";
       const dataId = "data_123";
       const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
       const { createHmac } = await import("node:crypto");
-      const hmac = createHmac("sha256", secret).update(manifest).digest("hex");
+      const hmac = createHmac("sha256", webhookSecret)
+        .update(manifest)
+        .digest("hex");
 
       const payload = {
         data: { id: "mp_123" },
         headers: {
-            "x-signature": `ts=${ts},v1=${hmac}`,
-            "x-request-id": requestId
+          "x-signature": `ts=${ts},v1=${hmac}`,
+          "x-request-id": requestId,
         },
         query: {
-            "data.id": dataId
-        }
+          "data.id": dataId,
+        },
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -282,10 +299,10 @@ describe("MercadoPagoPaymentProviderService", () => {
       const payload = {
         data: { id: "mp_123" },
         headers: {
-            "x-signature": "ts=123,v1=bad_sig",
-            "x-request-id": "req_123"
+          "x-signature": "ts=123,v1=bad_sig",
+          "x-request-id": "req_123",
         },
-        query: { "data.id": "123" }
+        query: { "data.id": "123" },
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -293,7 +310,9 @@ describe("MercadoPagoPaymentProviderService", () => {
 
       expect(result).toEqual({ action: "failed" });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((loggerMock as any).error).toHaveBeenCalledWith(expect.stringContaining("signature verification failed"));
+      expect((loggerMock as any).error).toHaveBeenCalledWith(
+        expect.stringContaining("signature verification failed"),
+      );
     });
   });
 });
