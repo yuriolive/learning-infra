@@ -24,6 +24,10 @@ export const verifyMercadoPagoSignature = (
   const ts = tsPart.split("=")[1];
   const v1 = v1Part.split("=")[1];
 
+  if (!ts || !v1) {
+    return false;
+  }
+
   const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
 
   const hmac = createHmac("sha256", webhookSecret);
