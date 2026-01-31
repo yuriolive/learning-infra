@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getStoreTools } from "../products";
 import { Modules } from "@medusajs/framework/utils";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+import { getStoreTools } from "../products";
 
 describe("Product Tools", () => {
   const mockProductService = {
@@ -16,7 +17,11 @@ describe("Product Tools", () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tools = getStoreTools(mockContainer as any);
-  const searchTool = tools.find((t) => t.name === "search_products")!;
+  const searchTool = tools.find((t) => t.name === "search_products");
+
+  if (!searchTool) {
+    throw new Error("search_products tool not found");
+  }
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,7 +60,7 @@ describe("Product Tools", () => {
 
     expect(mockProductService.listAndCountProducts).toHaveBeenCalledWith(
       { q: "red", status: "published" },
-      expect.objectContaining({ take: 5, relations: ["variants"] })
+      expect.objectContaining({ take: 5, relations: ["variants"] }),
     );
 
     expect(parsed).toHaveLength(1);
@@ -76,20 +81,20 @@ describe("Product Tools", () => {
 
   it("should handle products without prices", async () => {
     mockProductService.listAndCountProducts.mockResolvedValue([
-        [
-          {
-            id: "prod_2",
-            title: "Free Item",
-            handle: "free-item",
-            variants: [{ id: "v1" }], // No calculated_price
-          },
-        ],
-        1,
-      ]);
+      [
+        {
+          id: "prod_2",
+          title: "Free Item",
+          handle: "free-item",
+          variants: [{ id: "v1" }], // No calculated_price
+        },
+      ],
+      1,
+    ]);
 
-      const result = await searchTool.invoke({ query: "free" });
-      const parsed = JSON.parse(result);
+    const result = await searchTool.invoke({ query: "free" });
+    const parsed = JSON.parse(result);
 
-      expect(parsed[0].price_display).toBe("Price on request");
+    expect(parsed[0].price_display).toBe("Price on request");
   });
 });
