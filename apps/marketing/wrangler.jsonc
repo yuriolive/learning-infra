@@ -5,7 +5,8 @@
   "compatibility_date": "2024-12-30",
   "compatibility_flags": [
     "nodejs_compat",
-    "global_fetch_strictly_public"
+    "global_fetch_strictly_public",
+    "nodejs_compat_populate_process_env"
   ],
   "assets": {
     "directory": ".open-next/assets",
@@ -15,6 +16,14 @@
     {
       "binding": "WORKER_SELF_REFERENCE",
       "service": "marketing"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "marketing-db",
+      // This ID is replaced by the CI/CD pipeline during deployment
+      "database_id": "c690ee76-0766-4ec9-97de-da4ef52d9dee"
     }
   ],
   "observability": {

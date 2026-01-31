@@ -1,11 +1,15 @@
 "use client";
 
-import { Button, Input, Checkbox, Link } from "@heroui/react";
+import { Link, Tabs, Tab } from "@heroui/react";
+import { useState } from "react";
 
 import { AuthCardWrapper } from "../../components/auth/auth-card-wrapper";
-import { PasswordInput } from "../../components/auth/password-input";
+import { EmailLoginForm } from "../../components/auth/email-login-form";
+import { WhatsAppAuthForm } from "../../components/auth/whatsapp-auth-form";
 
 export default function LoginPage() {
+  const [selected, setSelected] = useState("email");
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-default-50 p-4">
       <AuthCardWrapper
@@ -20,30 +24,21 @@ export default function LoginPage() {
           </p>
         }
       >
-        <form className="flex flex-col gap-4">
-          <Input
-            label="Email"
-            placeholder="Enter your email"
-            type="email"
-            variant="bordered"
-          />
-          <PasswordInput />
-          <div className="flex py-2 px-1 justify-between">
-            <Checkbox
-              classNames={{
-                label: "text-small",
-              }}
-            >
-              Remember me
-            </Checkbox>
-            <Link color="primary" href="#" size="sm">
-              Forgot password?
-            </Link>
-          </div>
-          <Button color="primary" fullWidth size="lg">
-            Log In
-          </Button>
-        </form>
+        <Tabs
+          fullWidth
+          size="md"
+          aria-label="Login methods"
+          selectedKey={selected}
+          onSelectionChange={(key) => { setSelected(key as string); }}
+          className="mb-4"
+        >
+          <Tab key="email" title="Email">
+            <EmailLoginForm />
+          </Tab>
+          <Tab key="whatsapp" title="WhatsApp">
+            <WhatsAppAuthForm />
+          </Tab>
+        </Tabs>
       </AuthCardWrapper>
     </div>
   );
