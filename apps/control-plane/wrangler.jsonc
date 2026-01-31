@@ -1,12 +1,10 @@
 {
   "name": "control-plane",
-  "main": "dist/index.js",
-  "compatibility_date": "2026-01-31",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-24",
   "minify": true,
   "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public",
-    "nodejs_compat_populate_process_env"
+    "nodejs_compat"
   ],
   "routes": [
     {

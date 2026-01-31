@@ -94,11 +94,14 @@ export class TenantService {
           clientOptions.keyFilename = config.gcpCredentialsJson;
         }
       }
-      this.executionsClient = new ExecutionsClient(clientOptions);
+      this.executionsClient = new ExecutionsClient({
+        ...clientOptions,
+        fallback: "rest",
+      });
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize providers");
       // Fallback for executions client to avoid crash if init fails, though it likely won't work
-      this.executionsClient = new ExecutionsClient();
+      this.executionsClient = new ExecutionsClient({ fallback: "rest" });
     }
   }
 
