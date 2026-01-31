@@ -140,12 +140,6 @@ export class TenantService {
           { error, tenantId: tenant.id },
           "Failed to trigger provisioning workflow",
         );
-        // Do we fail the request? Or just log?
-        // Since we return the tenant, maybe we should mark it as failed if workflow trigger fails?
-        // But for now, let's just log and throw to let the user know something is wrong?
-        // Or suppress? The user expects "Return the tenant immediately".
-        // If I throw, they get error. If I suppress, they get a tenant that never provisions.
-        // I'll throw so they know.
         throw error;
       }
     } else {
@@ -171,49 +165,37 @@ export class TenantService {
   }
 
   async runMigrations(tenantId: string): Promise<void> {
-    if (!this.cloudRunProvider) {
-      throw new Error("Cloud Run provider not initialized");
-    }
-    const tenant = await this.getTenant(tenantId);
-    if (!tenant.databaseUrl) throw new Error("Database URL missing");
-    if (!tenant.redisHash) throw new Error("Redis hash missing");
-    if (!this.upstashRedisUrl) throw new Error("Upstash Redis URL missing");
+    const { tenant } = await this.validateProvisioningPrerequisites(tenantId);
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
-    // Migrations might need DB URL. Secrets are not critical for schema migration usually.
-    // Passing empty secrets or minimal env.
     const environmentVariables = {
-      DATABASE_URL: tenant.databaseUrl,
-      REDIS_URL: this.upstashRedisUrl,
+      DATABASE_URL: tenant.databaseUrl!,
+      REDIS_URL: this.upstashRedisUrl!,
       REDIS_PREFIX: redisPrefix,
       NODE_ENV: "production",
     };
 
     this.logger.info({ tenantId }, "Running migrations");
-    await this.cloudRunProvider.runTenantMigrations(
+    await this.cloudRunProvider!.runTenantMigrations(
       tenantId,
       environmentVariables,
     );
   }
 
   async deployService(tenantId: string): Promise<void> {
-    if (!this.cloudRunProvider) {
-      throw new Error("Cloud Run provider not initialized");
-    }
-    const tenant = await this.getTenant(tenantId);
-    if (!tenant.databaseUrl) throw new Error("Database URL missing");
-    if (!tenant.redisHash) throw new Error("Redis hash missing");
-    if (!tenant.subdomain) throw new Error("Subdomain missing");
-    if (!this.upstashRedisUrl) throw new Error("Upstash Redis URL missing");
+    const { tenant } = await this.validateProvisioningPrerequisites(
+      tenantId,
+      true, // requireSubdomain
+    );
 
     const redisPrefix = `t_${tenant.redisHash}:`;
     const cookieSecret = randomBytes(32).toString("hex");
     const jwtSecret = randomBytes(32).toString("hex");
 
     const environmentVariables = {
-      DATABASE_URL: tenant.databaseUrl,
-      REDIS_URL: this.upstashRedisUrl,
+      DATABASE_URL: tenant.databaseUrl!,
+      REDIS_URL: this.upstashRedisUrl!,
       REDIS_PREFIX: redisPrefix,
       COOKIE_SECRET: cookieSecret,
       JWT_SECRET: jwtSecret,
@@ -224,7 +206,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl = await this.cloudRunProvider.deployTenantInstance(
+    const apiUrl = await this.cloudRunProvider!.deployTenantInstance(
       tenantId,
       environmentVariables,
     );
@@ -267,11 +249,29 @@ export class TenantService {
       }
     }
 
-    // Also mark as provision_failed
     await this.repository.update(tenantId, {
       status: "provisioning_failed",
       failureReason: "Provisioning workflow failed and rolled back",
     });
+  }
+
+  // --- Helper Methods ---
+
+  private async validateProvisioningPrerequisites(
+    tenantId: string,
+    requireSubdomain = false,
+  ): Promise<{ tenant: Tenant }> {
+    if (!this.cloudRunProvider) {
+      throw new Error("Cloud Run provider not initialized");
+    }
+    const tenant = await this.getTenant(tenantId);
+    if (!tenant.databaseUrl) throw new Error("Database URL missing");
+    if (!tenant.redisHash) throw new Error("Redis hash missing");
+    if (!this.upstashRedisUrl) throw new Error("Upstash Redis URL missing");
+    if (requireSubdomain && !tenant.subdomain) {
+      throw new Error("Subdomain missing");
+    }
+    return { tenant };
   }
 
   // --- CRUD Methods ---

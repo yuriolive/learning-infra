@@ -103,6 +103,15 @@ describe("TenantService Granular Provisioning", () => {
         })
       );
     });
+
+    it("should fail if prerequisites are missing", async () => {
+      (repository.findById as any).mockResolvedValueOnce({
+        id: "tenant-1",
+        databaseUrl: null, // Missing DB URL
+      });
+
+      await expect(service.runMigrations("tenant-1")).rejects.toThrow("Database URL missing");
+    });
   });
 
   describe("deployService", () => {
@@ -121,6 +130,17 @@ describe("TenantService Granular Provisioning", () => {
       expect(repository.update).toHaveBeenCalledWith("tenant-1", {
         apiUrl: "https://service-url",
       });
+    });
+
+    it("should fail if subdomain is missing", async () => {
+      (repository.findById as any).mockResolvedValueOnce({
+        id: "tenant-1",
+        databaseUrl: "postgres://db",
+        redisHash: "hash",
+        subdomain: null, // Missing subdomain
+      });
+
+      await expect(service.deployService("tenant-1")).rejects.toThrow("Subdomain missing");
     });
   });
 
