@@ -4,17 +4,22 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   resolve: {
-    alias: {
-      "protobufjs/minimal": "protobufjs/minimal",
-      protobufjs: "protobufjs/minimal",
-    },
+    alias: [
+      { find: /^protobufjs$/, replacement: "protobufjs/minimal" },
+      {
+        find: "@protobufjs/codegen",
+        replacement: "./mocks/protobuf-codegen.js",
+      },
+      {
+        find: "@protobufjs/inquire",
+        replacement: "./mocks/protobuf-codegen.js",
+      },
+    ],
   },
   build: {
     target: "esnext",
     minify: true,
     ssr: true,
-    outDir: "dist",
-    emptyOutDir: true,
     rollupOptions: {
       input: "src/index.ts",
       output: {
@@ -23,5 +28,8 @@ export default defineConfig({
       },
       external: ["cloudflare", /^node:/],
     },
+  },
+  ssr: {
+    noExternal: true,
   },
 });
