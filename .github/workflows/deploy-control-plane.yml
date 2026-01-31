@@ -108,7 +108,7 @@ jobs:
 
       - name: Build Worker
         working-directory: apps/control-plane
-        run: npm run build:worker
+        run: npm run build
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
