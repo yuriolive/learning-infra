@@ -1,7 +1,7 @@
 {
   "name": "control-plane",
   "main": "dist/index.js",
-  "compatibility_date": "2025-01-24",
+  "compatibility_date": "2026-01-31",
   "minify": true,
   "compatibility_flags": [
     "nodejs_compat"
