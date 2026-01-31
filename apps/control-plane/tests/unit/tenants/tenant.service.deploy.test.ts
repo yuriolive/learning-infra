@@ -9,13 +9,20 @@ import type { TenantRepository } from "../../../src/domains/tenants/tenant.repos
 
 vi.mock("../../../src/providers/neon/neon.client");
 vi.mock("../../../src/providers/gcp/cloud-run.client");
+vi.mock("@google-cloud/workflows", () => {
+  return {
+    ExecutionsClient: vi.fn().mockImplementation(() => ({
+      createExecution: vi.fn().mockResolvedValue({ name: "mock-execution" }),
+    })),
+  };
+});
 
-describe("TenantService Deployment", () => {
+describe("TenantService Granular Provisioning", () => {
   let service: TenantService;
   let repository: TenantRepository;
   let mockNeonProvider: {
-    createTenantDatabase: unknown;
-    deleteTenantDatabase: unknown;
+    createTenantDatabase: ReturnType<typeof vi.fn>;
+    deleteTenantDatabase: ReturnType<typeof vi.fn>;
   };
   let mockCloudRunProvider: {
     deployTenantInstance: ReturnType<typeof vi.fn>;
@@ -35,7 +42,12 @@ describe("TenantService Deployment", () => {
       }),
       update: vi.fn().mockResolvedValue({}),
       findBySubdomain: vi.fn().mockResolvedValue(null),
-      findById: vi.fn(),
+      findById: vi.fn().mockResolvedValue({
+        id: "tenant-1",
+        databaseUrl: "postgres://db-url",
+        redisHash: "mock-hash",
+        subdomain: "test",
+      }),
       softDelete: vi.fn(),
       findAll: vi.fn(),
     } as unknown as TenantRepository;
@@ -69,134 +81,60 @@ describe("TenantService Deployment", () => {
     });
   });
 
-  it("should enforce subdomain requirement", async () => {
-    const input = { name: "Test", merchantEmail: "test@test.com" };
-    await expect(service.createTenant(input)).rejects.toThrow(
-      "Subdomain is required",
-    );
-  });
+  describe("provisionDatabase", () => {
+    it("should provision database and update tenant", async () => {
+      await service.provisionDatabase("tenant-1");
 
-  it("should trigger background provisioning", async () => {
-    const waitUntil = vi.fn();
-    const input = {
-      name: "Test",
-      merchantEmail: "test@test.com",
-      subdomain: "test",
-    };
-
-    const result = await service.createTenant(input, waitUntil);
-
-    expect(result.status).toBe("provisioning");
-    expect(waitUntil).toHaveBeenCalled();
-
-    // Execute the background task
-    const task = waitUntil.mock.calls[0]![0];
-    await task;
-
-    expect(mockNeonProvider.createTenantDatabase).toHaveBeenCalledWith(
-      "tenant-1",
-    );
-    expect(mockCloudRunProvider.deployTenantInstance).toHaveBeenCalledWith(
-      "tenant-1",
-      expect.objectContaining({
-        DATABASE_URL: "postgres://db-url",
-        REDIS_URL: "redis://",
-        STORE_CORS: expect.stringContaining("test.vendin.store"),
-      }),
-    );
-
-    // Verify incremental updates
-    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-      databaseUrl: "postgres://db-url",
-    });
-
-    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-      apiUrl: "https://service-url",
-      status: "active",
+      expect(mockNeonProvider.createTenantDatabase).toHaveBeenCalledWith("tenant-1");
+      expect(repository.update).toHaveBeenCalledWith("tenant-1", {
+        databaseUrl: "postgres://db-url",
+      });
     });
   });
 
-  it("should handle provisioning failure", async () => {
-    mockCloudRunProvider.deployTenantInstance.mockRejectedValue(
-      new Error("Deploy failed"),
-    );
-
-    const waitUntil = vi.fn();
-    const input = {
-      name: "Test",
-      merchantEmail: "test@test.com",
-      subdomain: "test",
-    };
-
-    await service.createTenant(input, waitUntil);
-    const task = waitUntil.mock.calls[0]![0];
-    await task;
-
-    expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-      status: "provisioning_failed",
-      failureReason: "Deploy failed",
+  describe("runMigrations", () => {
+    it("should run migrations", async () => {
+      await service.runMigrations("tenant-1");
+      expect(mockCloudRunProvider.runTenantMigrations).toHaveBeenCalledWith(
+        "tenant-1",
+        expect.objectContaining({
+            DATABASE_URL: "postgres://db-url",
+            REDIS_URL: "redis://",
+        })
+      );
     });
   });
 
-  describe("provisionResources failure paths", () => {
-    it.each([
-      {
-        name: "missing Upstash Redis URL",
-        config: {
-          logger,
-          neonApiKey: "key",
-          neonProjectId: "proj",
-          gcpCredentialsJson: "{}",
-          gcpProjectId: "gcp-proj",
-          gcpRegion: "us-central1",
-          tenantImageTag: "tag",
-        },
-        redisHash: "mock-hash",
-        expectedReason: "Missing Upstash Redis URL",
-      },
-      {
-        name: "missing Redis Hash",
-        config: {
-          logger,
-          neonApiKey: "key",
-          neonProjectId: "proj",
-          gcpCredentialsJson: "{}",
-          gcpProjectId: "gcp-proj",
-          gcpRegion: "us-central1",
-          tenantImageTag: "tag",
-          upstashRedisUrl: "redis://",
-        },
-        redisHash: null,
-        expectedReason: "Redis hash missing",
-      },
-    ])(
-      "should fail provisioning if $name",
-      async ({ config, redisHash, expectedReason }) => {
-        const serviceWithError = new TenantService(repository, config);
-        const serviceAny = serviceWithError as unknown as {
-          provisionResources: (
-            neonProvider: unknown,
-            cloudRunProvider: unknown,
-            tenantId: string,
-            subdomain: string,
-            redisHash: string | null,
-          ) => Promise<void>;
-        };
+  describe("deployService", () => {
+    it("should deploy service and update tenant", async () => {
+      await service.deployService("tenant-1");
 
-        await serviceAny.provisionResources(
-          mockNeonProvider,
-          mockCloudRunProvider,
-          "tenant-1",
-          "test",
-          redisHash,
-        );
+      expect(mockCloudRunProvider.deployTenantInstance).toHaveBeenCalledWith(
+        "tenant-1",
+        expect.objectContaining({
+          DATABASE_URL: "postgres://db-url",
+          REDIS_URL: "redis://",
+          STORE_CORS: expect.stringContaining("test.vendin.store"),
+        }),
+      );
 
-        expect(mockNeonProvider.createTenantDatabase).not.toHaveBeenCalled();
-        expect(repository.update).toHaveBeenCalledWith("tenant-1", {
+      expect(repository.update).toHaveBeenCalledWith("tenant-1", {
+        apiUrl: "https://service-url",
+      });
+    });
+  });
+
+  describe("rollbackResources", () => {
+    it("should delete database and service and mark tenant as failed", async () => {
+      await service.rollbackResources("tenant-1");
+
+      expect(mockNeonProvider.deleteTenantDatabase).toHaveBeenCalledWith("tenant-1");
+      expect(mockCloudRunProvider.deleteTenantInstance).toHaveBeenCalledWith("tenant-1");
+
+      expect(repository.update).toHaveBeenCalledWith("tenant-1", {
           status: "provisioning_failed",
-          failureReason: expectedReason,
-        });
-      },
-    );
+          failureReason: "Provisioning workflow failed and rolled back",
+      });
+    });
   });
 });

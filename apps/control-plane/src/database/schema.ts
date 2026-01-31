@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   jsonb,
   pgEnum,
@@ -38,3 +39,28 @@ export const tenants = pgTable("tenants", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   failureReason: text("failure_reason"),
 });
+
+export const tenantProvisioningEvents = pgTable("tenant_provisioning_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id),
+  step: text("step").notNull(),
+  status: text("status").notNull(),
+  details: jsonb("details"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  provisioningEvents: many(tenantProvisioningEvents),
+}));
+
+export const tenantProvisioningEventsRelations = relations(
+  tenantProvisioningEvents,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [tenantProvisioningEvents.tenantId],
+      references: [tenants.id],
+    }),
+  }),
+);

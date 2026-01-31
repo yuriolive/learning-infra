@@ -1,0 +1,168 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - baseUrl: ${args.baseUrl}
+          - tenantId: ${args.tenantId}
+          - internalSecret: "INTERNAL_API_SECRET_PLACEHOLDER" # This will be replaced by the workflow deployment, or we assume it's set in the args or Env
+          # Note: In a real scenario, we'd fetch this secret from Secret Manager within the workflow
+          # For now, let's assume we can pass it or it's hardcoded/env var in the deployment.
+          # However, the prompt says "Auth: Use auth: { type: OIDC }".
+          # This implies the Control Plane is protected by Cloud IAM (Cloud Run invoker).
+          # But we also added an API Key guard in the controller.
+          # The Controller checks `X-Internal-Secret`.
+          # The `http.post` step in workflows can send headers.
+          # We need to fetch the secret or have it available.
+          # Given the constraints, let's use a placeholder and assume the deployment replaces it or we fetch it.
+          # For this task, I'll use a placeholder variable.
+
+    - fetch_secret:
+        call: googleapis.secretmanager.v1.projects.secrets.versions.access
+        args:
+          name: "projects/${sys.get_env('GOOGLE_CLOUD_PROJECT_ID')}/secrets/internal-api-secret/versions/latest"
+        result: secret_payload
+
+    - assign_secret:
+        assign:
+          - internalSecret: ${text.decode(base64.decode(secret_payload.payload.data))}
+
+    - provision_database:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/database"}
+            headers:
+              X-Internal-Secret: ${internalSecret}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: db_result
+        except:
+          as: e
+          steps:
+            - log_db_error:
+                call: sys.log
+                args:
+                  text: ${"Database provisioning failed for " + tenantId}
+                  data: ${e}
+            - raise_db_error:
+                raise: ${e}
+
+    - run_migrations:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/migrations"}
+            headers:
+              X-Internal-Secret: ${internalSecret}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: migration_result
+        except:
+          as: e
+          steps:
+            - rollback_db:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers:
+                    X-Internal-Secret: ${internalSecret}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_migration_error:
+                raise: ${e}
+
+    - deploy_service:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/service"}
+            headers:
+              X-Internal-Secret: ${internalSecret}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: service_result
+        except:
+          as: e
+          steps:
+            - rollback_service:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers:
+                    X-Internal-Secret: ${internalSecret}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_service_error:
+                raise: ${e}
+
+    - configure_domain:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/domain"}
+            headers:
+              X-Internal-Secret: ${internalSecret}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: domain_result
+        except:
+          as: e
+          steps:
+            - rollback_domain:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers:
+                    X-Internal-Secret: ${internalSecret}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_domain_error:
+                raise: ${e}
+
+    - activate_tenant:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/activate"}
+            headers:
+              X-Internal-Secret: ${internalSecret}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: activation_result
+        except:
+          as: e
+          steps:
+            - rollback_activation:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers:
+                    X-Internal-Secret: ${internalSecret}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_activation_error:
+                raise: ${e}
+
+    - return_result:
+        return:
+          status: "success"
+          tenantId: ${tenantId}
