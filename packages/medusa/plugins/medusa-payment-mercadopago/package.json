@@ -26,6 +26,7 @@
     "@medusajs/framework": "^2.13.0",
     "@medusajs/types": "^2.13.0",
     "@medusajs/utils": "^2.13.0",
+    "@medusajs/admin-shared": "^2.13.1",
     "mercadopago": "^2.0.0"
   },
   "devDependencies": {
