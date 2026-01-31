@@ -11,7 +11,6 @@ dist
 build
 coverage
 .turbo
-.bun
 *.log
 .DS_Store/
 npm-debug.log*

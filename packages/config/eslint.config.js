@@ -126,7 +126,7 @@ export default [
       "unicorn/prefer-node-protocol": "error",
     },
     settings: {
-      "import/core-modules": ["bun", "node:crypto", "node:path", "node:url"],
+      "import/core-modules": ["node:crypto", "node:path", "node:url"],
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,

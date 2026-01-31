@@ -9,7 +9,6 @@ export default [
       "**/build/**",
       "**/coverage/**",
       "**/.turbo/**",
-      "**/.bun/**",
       "**/drizzle/**",
       "**/.next/**",
       "**/.open-next/**",

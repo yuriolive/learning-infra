@@ -140,15 +140,15 @@ The marketing app and storefront router use **OpenNext** with the Cloudflare ada
 cd apps/storefront
 
 # Build and deploy in one command
-bun run pages:deploy
+pnpm run pages:deploy
 
 # Deploy marketing app
 cd ../marketing
-bun run pages:deploy
+pnpm run pages:deploy
 
 # Or build first, then deploy
-bun run pages:build
-bun run pages:deploy
+pnpm run pages:build
+pnpm run pages:deploy
 
 # This uses OpenNext to:
 # 1. Build Next.js with Turbopack
@@ -182,13 +182,13 @@ The repository includes GitHub Actions workflows that automatically deploy on pu
 
 ```bash
 # Install Wrangler globally (optional, for local testing)
-bun add -g wrangler
+pnpm add -g wrangler
 
 # Login to Cloudflare
 wrangler login
 
 # The first deployment will create the project automatically
-bun run pages:deploy
+pnpm run pages:deploy
 ```
 
 ### Step 3: Configure Environment Variables
@@ -591,13 +591,13 @@ The GitHub Actions workflow replaces `STORE_ID_PLACEHOLDER` with the value from 
 
 ```bash
 # 1. List stores to find the STORE_ID
-bun wrangler secrets-store store list --remote
+pnpm wrangler secrets-store store list --remote
 
 # 2. List secrets in the store to find the SECRET_ID
-bun wrangler secrets-store secret list <STORE_ID> --remote
+pnpm wrangler secrets-store secret list <STORE_ID> --remote
 
 # 3. Retrieve a secret value
-bun wrangler secrets-store secret get <STORE_ID> --secret-id <SECRET_ID> --remote
+pnpm wrangler secrets-store secret get <STORE_ID> --secret-id <SECRET_ID> --remote
 ```
 
 ## Part G: Monitoring and Analytics
