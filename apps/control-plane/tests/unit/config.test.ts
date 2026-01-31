@@ -34,7 +34,7 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "mock-sa",
-      "internal-api-secret",
+      "internal-api-key",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -115,13 +115,13 @@ describe("validateConfiguration", () => {
       "gcp-region",
       "tenant-image-tag",
       "google-app-creds",
-      "sa", // missing internal api secret
+      "sa", // missing internal api key
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      "INTERNAL_API_SECRET or INTERNAL_API_KEY is required in production but was not configured",
+      "INTERNAL_API_KEY is required in production but was not configured",
     );
   });
 
@@ -153,7 +153,7 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "sa",
-      "internal-secret",
+      "internal-key",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -180,7 +180,7 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "sa",
-      "internal-secret",
+      "internal-key",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -204,7 +204,7 @@ describe("resolveEnvironmentSecrets", () => {
       POSTHOG_API_KEY: "posthog-key",
       UPSTASH_REDIS_URL: "redis://upstash",
       GOOGLE_APPLICATION_CREDENTIALS: "full-creds",
-      INTERNAL_API_SECRET: "internal-secret",
+      INTERNAL_API_KEY: "internal-key",
     };
 
     const result = await resolveEnvironmentSecrets(environment);
@@ -217,8 +217,7 @@ describe("resolveEnvironmentSecrets", () => {
       postHogApiKey: "posthog-key",
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
-      internalApiSecret: "internal-secret",
-      internalApiKey: undefined,
+      internalApiKey: "internal-key",
     });
   });
 
