@@ -8,6 +8,7 @@ describe("Cart Tools", () => {
     listCarts: vi.fn(),
     createCarts: vi.fn(),
     addLineItems: vi.fn(),
+    retrieveCart: vi.fn(),
   };
 
   const mockRegionService = {
@@ -18,11 +19,21 @@ describe("Cart Tools", () => {
     listAndCountProductVariants: vi.fn(),
   };
 
+  const mockCustomerService = {
+    retrieveCustomer: vi.fn(),
+  };
+
+  const mockPricingService = {
+    calculatePrices: vi.fn(),
+  };
+
   const mockContainer = {
     resolve: vi.fn((key) => {
       if (key === Modules.CART) return mockCartService;
       if (key === Modules.REGION) return mockRegionService;
       if (key === Modules.PRODUCT) return mockProductService;
+      if (key === Modules.CUSTOMER) return mockCustomerService;
+      if (key === Modules.PRICING) return mockPricingService;
       return {};
     }),
   };
@@ -47,7 +58,7 @@ describe("Cart Tools", () => {
   describe("get_or_create_cart", () => {
     it("should return existing cart id", async () => {
       mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1" }],
+        [{ id: "reg_1", currency_code: "usd" }],
         1,
       ]);
       mockCartService.listCarts.mockResolvedValue([{ id: "cart_existing" }]);
@@ -64,11 +75,14 @@ describe("Cart Tools", () => {
 
     it("should create new cart if none exists", async () => {
       mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1" }],
+        [{ id: "reg_1", currency_code: "usd" }],
         1,
       ]);
       mockCartService.listCarts.mockResolvedValue([]);
       mockCartService.createCarts.mockResolvedValue({ id: "cart_new" });
+      mockCustomerService.retrieveCustomer.mockResolvedValue({
+        email: "test@test.com",
+      });
 
       const result = await getOrCreateTool.invoke({ customer_id: "cus_1" });
 
@@ -76,7 +90,32 @@ describe("Cart Tools", () => {
         expect.objectContaining({
           customer_id: "cus_1",
           region_id: "reg_1",
-          currency_code: "brl",
+          currency_code: "usd",
+          email: "test@test.com",
+        }),
+      );
+      expect(result).toBe("cart_new");
+    });
+
+    it("should create new cart with fallback email if customer not found", async () => {
+      mockRegionService.listAndCountRegions.mockResolvedValue([
+        [{ id: "reg_1", currency_code: "usd" }],
+        1,
+      ]);
+      mockCartService.listCarts.mockResolvedValue([]);
+      mockCartService.createCarts.mockResolvedValue({ id: "cart_new" });
+      mockCustomerService.retrieveCustomer.mockRejectedValue(
+        new Error("Not found"),
+      );
+
+      const result = await getOrCreateTool.invoke({ customer_id: "cus_1" });
+
+      expect(mockCartService.createCarts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customer_id: "cus_1",
+          region_id: "reg_1",
+          currency_code: "usd",
+          email: "cus_1@example.com",
         }),
       );
       expect(result).toBe("cart_new");
@@ -84,13 +123,16 @@ describe("Cart Tools", () => {
 
     it("should ignore completed carts and create new one", async () => {
       mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1" }],
+        [{ id: "reg_1", currency_code: "usd" }],
         1,
       ]);
       mockCartService.listCarts.mockResolvedValue([
         { id: "cart_completed", completed_at: new Date() },
       ]);
       mockCartService.createCarts.mockResolvedValue({ id: "cart_new" });
+      mockCustomerService.retrieveCustomer.mockResolvedValue({
+        email: "test@test.com",
+      });
 
       const result = await getOrCreateTool.invoke({ customer_id: "cus_1" });
 
@@ -107,10 +149,18 @@ describe("Cart Tools", () => {
 
   describe("add_item_to_cart", () => {
     it("should add item successfully", async () => {
+      mockCartService.retrieveCart.mockResolvedValue({
+        id: "cart_1",
+        region_id: "reg_1",
+        currency_code: "usd",
+      });
       mockCartService.addLineItems.mockResolvedValue({});
       mockProductService.listAndCountProductVariants.mockResolvedValue([
         [{ id: "var_1", title: "Test Variant" }],
         1,
+      ]);
+      mockPricingService.calculatePrices.mockResolvedValue([
+        { calculated_amount: 1500 },
       ]);
 
       const result = await addItemTool.invoke({
@@ -123,12 +173,22 @@ describe("Cart Tools", () => {
         mockProductService.listAndCountProductVariants,
       ).toHaveBeenCalledWith({ id: "var_1" }, { take: 1 });
 
+      expect(mockPricingService.calculatePrices).toHaveBeenCalledWith(
+        { id: ["var_1"] },
+        {
+          context: {
+            currency_code: "usd",
+            region_id: "reg_1",
+          },
+        },
+      );
+
       expect(mockCartService.addLineItems).toHaveBeenCalledWith("cart_1", [
         {
           variant_id: "var_1",
           quantity: 2,
           title: "Test Variant",
-          unit_price: 1000,
+          unit_price: 1500,
         },
       ]);
       expect(result).toContain("Item added");
@@ -148,10 +208,41 @@ describe("Cart Tools", () => {
       );
     });
 
-    it("should handle errors from cart service", async () => {
+    it("should handle error if price not found", async () => {
+      mockCartService.retrieveCart.mockResolvedValue({
+        id: "cart_1",
+        region_id: "reg_1",
+        currency_code: "usd",
+      });
       mockProductService.listAndCountProductVariants.mockResolvedValue([
         [{ id: "var_1", title: "Test Variant" }],
         1,
+      ]);
+      mockPricingService.calculatePrices.mockResolvedValue([]);
+
+      const result = await addItemTool.invoke({
+        cart_id: "cart_1",
+        variant_id: "var_1",
+        quantity: 2,
+      });
+
+      expect(result).toContain(
+        "Error: Failed to add item. Could not determine price for variant var_1",
+      );
+    });
+
+    it("should handle errors from cart service", async () => {
+      mockCartService.retrieveCart.mockResolvedValue({
+        id: "cart_1",
+        region_id: "reg_1",
+        currency_code: "usd",
+      });
+      mockProductService.listAndCountProductVariants.mockResolvedValue([
+        [{ id: "var_1", title: "Test Variant" }],
+        1,
+      ]);
+      mockPricingService.calculatePrices.mockResolvedValue([
+        { calculated_amount: 1500 },
       ]);
       mockCartService.addLineItems.mockRejectedValue(new Error("Out of stock"));
 

@@ -50,14 +50,12 @@ export function getStoreTools(container: MedusaContainer) {
                 const variant = v as unknown as VariantWithPrice;
 
                 // check calculated_price
-                if (variant.calculated_price?.calculated_amount) {
-                  if (
-                    variant.calculated_price.calculated_amount < lowestPrice
-                  ) {
-                    lowestPrice =
-                      variant.calculated_price.calculated_amount;
-                    currency = variant.calculated_price.currency_code;
-                  }
+                if (
+                  variant.calculated_price?.calculated_amount &&
+                  variant.calculated_price.calculated_amount < lowestPrice
+                ) {
+                  lowestPrice = variant.calculated_price.calculated_amount;
+                  currency = variant.calculated_price.currency_code;
                 }
               }
             }
@@ -67,9 +65,9 @@ export function getStoreTools(container: MedusaContainer) {
               title: p.title,
               handle: p.handle,
               price_display:
-                lowestPrice !== Infinity
-                  ? `${currency.toUpperCase()} ${lowestPrice}`
-                  : "Price on request",
+                lowestPrice === Infinity
+                  ? "Price on request"
+                  : `${currency.toUpperCase()} ${lowestPrice}`,
             };
           });
 

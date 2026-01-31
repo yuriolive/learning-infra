@@ -6,6 +6,8 @@ import type {
   ICartModuleService,
   IRegionModuleService,
   IProductModuleService,
+  ICustomerModuleService,
+  IPricingModuleService,
 } from "@medusajs/framework/types";
 import type { MedusaContainer } from "@medusajs/medusa";
 
@@ -16,138 +18,170 @@ interface ExtendedCart {
 }
 
 export function getCartTools(container: MedusaContainer) {
-  return [
-    tool(
-      async ({ customer_id }: { customer_id: string }) => {
-        try {
-          const cartModule: ICartModuleService = container.resolve(
-            Modules.CART,
-          );
-          const regionModule: IRegionModuleService = container.resolve(
-            Modules.REGION,
-          );
+  return [getGetOrCreateCartTool(container), getAddItemToCartTool(container)];
+}
 
-          // Get default region
-          const [regions] = await regionModule.listAndCountRegions(
-            {},
-            { take: 1 },
-          );
+function getGetOrCreateCartTool(container: MedusaContainer) {
+  return tool(
+    async ({ customer_id }: { customer_id: string }) => {
+      try {
+        const cartModule: ICartModuleService = container.resolve(Modules.CART);
+        const regionModule: IRegionModuleService = container.resolve(
+          Modules.REGION,
+        );
+        const customerModule: ICustomerModuleService = container.resolve(
+          Modules.CUSTOMER,
+        );
 
-          if (regions.length === 0) {
-            throw new Error("Store not configured: No regions found.");
-          }
+        // Get default region
+        const [regions] = await regionModule.listAndCountRegions(
+          {},
+          { take: 1 },
+        );
 
-          const defaultRegion = regions[0];
+        if (regions.length === 0) {
+          throw new Error("Store not configured: No regions found.");
+        }
 
-          // Try to find active cart for customer
-          const carts = await cartModule.listCarts(
-            {
-              customer_id,
-            },
-            {
-              take: 5, // Fetch a few to find an active one
-              order: { created_at: "DESC" },
-            },
-          );
+        const defaultRegion = regions[0];
 
-          // Filter for active cart (not completed)
-          // We cast to unknown then ExtendedCart to safely access completed_at without 'any'
-          const activeCart = carts.find((c) => {
-             const cart = c as unknown as ExtendedCart;
-             return !cart.completed_at;
-          });
-
-          if (activeCart) {
-            return activeCart.id;
-          }
-
-          // Create new cart
-          const newCart = await cartModule.createCarts({
+        // Try to find active cart for customer
+        const carts = await cartModule.listCarts(
+          {
             customer_id,
-            region_id: defaultRegion.id,
-            currency_code: "brl",
-            email: `${customer_id}@example.com`,
-          });
+          },
+          {
+            take: 5, // Fetch a few to find an active one
+            order: { created_at: "DESC" },
+          },
+        );
 
-          return newCart.id;
-        } catch (error) {
-          return `Error: ${(error as Error).message}`;
+        // Filter for active cart (not completed)
+        // We cast to unknown then ExtendedCart to safely access completed_at without 'any'
+        const activeCart = carts.find((c) => {
+          const cart = c as unknown as ExtendedCart;
+          return !cart.completed_at;
+        });
+
+        if (activeCart) {
+          return activeCart.id;
         }
-      },
-      {
-        name: "get_or_create_cart",
-        description:
-          "Get an existing cart or create a new one for a customer.",
-        schema: z.object({
-          customer_id: z.string().describe("The ID of the customer"),
-        }),
-      },
-    ),
-    tool(
-      async ({
-        cart_id,
-        variant_id,
-        quantity,
-      }: {
-        cart_id: string;
-        quantity: number;
-        variant_id: string;
-      }) => {
-        try {
-          const cartModule: ICartModuleService = container.resolve(
-            Modules.CART,
-          );
-          const productModule: IProductModuleService = container.resolve(
-            Modules.PRODUCT,
-          );
 
-          // Fetch variant to get price and title
-          const [variants] = await productModule.listAndCountProductVariants(
-            {
-              id: variant_id,
-            },
-            {
-              take: 1,
-            },
-          );
+        // Fetch customer to get email
+        const customer = await customerModule
+          .retrieveCustomer(customer_id)
+          .catch(() => null);
+        const email = customer?.email || `${customer_id}@example.com`;
 
-          if (variants.length === 0) {
-            throw new Error(`Variant ${variant_id} not found.`);
-          }
+        // Create new cart
+        const newCart = await cartModule.createCarts({
+          customer_id,
+          region_id: defaultRegion.id,
+          currency_code: defaultRegion.currency_code,
+          email,
+        });
 
-          const variant = variants[0];
+        return newCart.id;
+      } catch (error) {
+        return `Error: ${(error as Error).message}`;
+      }
+    },
+    {
+      name: "get_or_create_cart",
+      description: "Get an existing cart or create a new one for a customer.",
+      schema: z.object({
+        customer_id: z.string().describe("The ID of the customer"),
+      }),
+    },
+  );
+}
 
-          // TODO: IMPLEMENT PRICING MODULE RESOLUTION
-          // The Product Module does not return prices directly in v2 without orchestrating with Pricing Module.
-          // The Cart Module requires a `unit_price` to be passed explicitly.
-          // For this Agent Tool scaffolding, we are using a placeholder price of 10.00 (1000)
-          // to ensure the tool functions strictly for adding items.
-          // In a real production scenario, you must resolve the price for the specific region/currency context.
-          const unit_price = 1000;
+function getAddItemToCartTool(container: MedusaContainer) {
+  return tool(
+    async ({
+      cart_id,
+      variant_id,
+      quantity,
+    }: {
+      cart_id: string;
+      quantity: number;
+      variant_id: string;
+    }) => {
+      try {
+        const cartModule: ICartModuleService = container.resolve(Modules.CART);
+        const productModule: IProductModuleService = container.resolve(
+          Modules.PRODUCT,
+        );
+        const pricingModule: IPricingModuleService = container.resolve(
+          Modules.PRICING,
+        );
 
-          await cartModule.addLineItems(cart_id, [
-            {
-              variant_id,
-              quantity,
-              title: variant.title,
-              unit_price,
-            },
-          ]);
+        // Fetch variant to get title (price comes from pricing module)
+        const [variants] = await productModule.listAndCountProductVariants(
+          {
+            id: variant_id,
+          },
+          {
+            take: 1,
+          },
+        );
 
-          return "Item added to cart successfully.";
-        } catch (error) {
-          return `Error: Failed to add item. ${(error as Error).message}`;
+        if (variants.length === 0) {
+          throw new Error(`Variant ${variant_id} not found.`);
         }
-      },
-      {
-        name: "add_item_to_cart",
-        description: "Add a product variant to the cart.",
-        schema: z.object({
-          cart_id: z.string(),
-          variant_id: z.string(),
-          quantity: z.number(),
-        }),
-      },
-    ),
-  ];
+
+        const variant = variants[0];
+
+        // Fetch cart to get currency and region context
+        const cart = await cartModule.retrieveCart(cart_id);
+
+        if (!cart.region_id || !cart.currency_code) {
+          throw new Error(
+            `Cart ${cart_id} is missing region or currency context.`,
+          );
+        }
+
+        // Calculate price
+        const priceSet = await pricingModule.calculatePrices(
+          { id: [variant_id] },
+          {
+            context: {
+              currency_code: cart.currency_code,
+              region_id: cart.region_id,
+            },
+          },
+        );
+
+        const calculatedPrice = priceSet[0]?.calculated_amount;
+
+        if (calculatedPrice === undefined || calculatedPrice === null) {
+          throw new Error(
+            `Could not determine price for variant ${variant_id}`,
+          );
+        }
+
+        await cartModule.addLineItems(cart_id, [
+          {
+            variant_id,
+            quantity,
+            title: variant.title,
+            unit_price: calculatedPrice,
+          },
+        ]);
+
+        return "Item added to cart successfully.";
+      } catch (error) {
+        return `Error: Failed to add item. ${(error as Error).message}`;
+      }
+    },
+    {
+      name: "add_item_to_cart",
+      description: "Add a product variant to the cart.",
+      schema: z.object({
+        cart_id: z.string(),
+        variant_id: z.string(),
+        quantity: z.number(),
+      }),
+    },
+  );
 }
