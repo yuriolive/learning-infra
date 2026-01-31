@@ -21,12 +21,12 @@ export function createInternalRoutes(context: InternalRouteContext) {
   );
 
   return {
-    async handleRequest(request: Request): Promise<Response> {
+    handleRequest(request: Request): Promise<Response> {
       const url = new URL(request.url);
       if (url.pathname.startsWith("/internal/provisioning/")) {
-        return await controller.handleRequest(request);
+        return controller.handleRequest(request);
       }
-      return new Response("Not found", { status: 404 });
+      return Promise.resolve(new Response("Not found", { status: 404 }));
     },
   };
 }

@@ -177,10 +177,12 @@ describe("TenantService", () => {
       ).rejects.toThrow(SubdomainRequiredError);
     });
 
-    it("should fail if workflow triggering fails", () => {
-      vi.mocked(ExecutionsClient).mockImplementationOnce(() => {
-        throw new Error("Workflow trigger failed");
-      });
+    it("should fail if workflow triggering fails", async () => {
+      // Mock failure in execution creation
+      // @ts-expect-error accessing private property
+      service.executionsClient.createExecution.mockRejectedValueOnce(
+        new Error("Workflow trigger failed"),
+      );
 
       const input: CreateTenantInput = {
         name: "Test Store",
@@ -188,7 +190,7 @@ describe("TenantService", () => {
         subdomain: "teststore",
       };
 
-      return expect(
+      await expect(
         service.createTenant(input, "https://mock.base.url"),
       ).rejects.toThrow("Workflow trigger failed");
     });
