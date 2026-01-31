@@ -18,7 +18,7 @@
     "@vendin/analytics": "workspace:*",
     "@vendin/assets": "workspace:*",
     "@vendin/utils": "workspace:^",
-    "better-auth": "1.4.17",
+    "better-auth": "1.2.12",
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^12.27.2",
     "lucide-react": "^0.473.0",
@@ -30,7 +30,7 @@
     "zod": "3.24.1"
   },
   "devDependencies": {
-    "@better-auth/cli": "^1.4.17",
+    "@better-auth/cli": "^1.2.12",
     "@cloudflare/workers-types": "^4.20260127.0",
     "@heroui/theme": "^2.4.26",
     "@opennextjs/cloudflare": "^1.15.1",
