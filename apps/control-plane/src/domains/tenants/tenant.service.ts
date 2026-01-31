@@ -172,7 +172,7 @@ export class TenantService {
   }
 
   async triggerMigration(tenantId: string): Promise<{ executionName: string }> {
-    const { tenant, databaseUrl, upstashRedisUrl, cloudRunProvider } =
+    const { tenant, databaseUrl, upstashRedisUrl } =
       await this.validateProvisioningPrerequisites(tenantId);
 
     const redisPrefix = `t_${tenant.redisHash}:`;
@@ -185,10 +185,11 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Triggering migration job");
-    const executionName = await cloudRunProvider.runTenantMigrations(
-      tenantId,
-      environmentVariables,
-    );
+    const executionName =
+      (await this.cloudRunProvider?.runTenantMigrations(
+        tenantId,
+        environmentVariables,
+      )) ?? "";
 
     return { executionName };
   }
@@ -217,7 +218,7 @@ export class TenantService {
   }
 
   async deployService(tenantId: string): Promise<void> {
-    const { tenant, databaseUrl, upstashRedisUrl, cloudRunProvider } =
+    const { tenant, databaseUrl, upstashRedisUrl } =
       await this.validateProvisioningPrerequisites(
         tenantId,
         true, // requireSubdomain
@@ -240,10 +241,11 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl = await cloudRunProvider.deployTenantInstance(
-      tenantId,
-      environmentVariables,
-    );
+    const apiUrl =
+      (await this.cloudRunProvider?.deployTenantInstance(
+        tenantId,
+        environmentVariables,
+      )) ?? "";
 
     await this.repository.update(tenantId, { apiUrl });
   }

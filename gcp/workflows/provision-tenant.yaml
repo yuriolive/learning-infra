@@ -111,9 +111,7 @@ main:
                     auth:
                       type: OIDC
               - raise_migration_failed:
-                  raise: ${"Migration failed: " + default(status_response.body.error, "Unknown error")}
-        next: wait_for_migrations
-
+                  raise: '${"Migration failed: " + default(status_response.body.error, "Unknown error")}'
     - deploy_service:
         try:
           call: http.post

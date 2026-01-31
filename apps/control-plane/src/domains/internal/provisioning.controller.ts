@@ -14,7 +14,7 @@ export class ProvisioningController {
     private service: TenantService,
     private database: Database,
     private logger: ReturnType<typeof createLogger>,
-    private internalApiKey: string,
+    private internalKey: string,
   ) {}
 
   async handleRequest(request: Request): Promise<Response> {
@@ -50,7 +50,7 @@ export class ProvisioningController {
 
   private checkAuth(request: Request): Response | null {
     const key = request.headers.get("X-Internal-Key");
-    if (!key || key !== this.internalApiKey) {
+    if (!key || key !== this.internalKey) {
       this.logger.warn(
         "Unauthorized attempt to access provisioning controller",
       );
