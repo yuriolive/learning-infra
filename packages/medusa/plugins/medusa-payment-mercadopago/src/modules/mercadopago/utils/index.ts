@@ -15,3 +15,7 @@ export const convertToDecimal = (amount: BigNumberInput): number => {
 export const convertFromDecimal = (amount: number): number => {
   return Math.round(amount * 100);
 };
+
+export const sanitizeIdentificationNumber = (number: string): string => {
+  return number.replaceAll(/[.-]/g, "");
+};

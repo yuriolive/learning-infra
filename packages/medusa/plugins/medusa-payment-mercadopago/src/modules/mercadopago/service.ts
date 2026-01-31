@@ -3,11 +3,23 @@ import { randomUUID } from "node:crypto";
 import { AbstractPaymentProvider } from "@medusajs/framework/utils";
 import { MercadoPagoConfig, Payment, PaymentRefund } from "mercadopago";
 
-import { convertToDecimal, convertFromDecimal } from "./utils/index.js";
+import {
+  convertToDecimal,
+  convertFromDecimal,
+  sanitizeIdentificationNumber,
+} from "./utils/index.js";
+import { mapMercadoPagoStatus } from "./utils/status-mapper.js";
+import { verifyMercadoPagoSignature } from "./utils/webhook.js";
 
 import type {
+  MercadoPagoOptions,
+  MercadoPagoPaymentData,
+  MedusaPaymentContext,
+  MercadoPagoPaymentRequest,
+  MercadoPagoPaymentResponse,
+} from "./types.js";
+import type {
   Logger,
-  PaymentSessionStatus,
   AuthorizePaymentInput,
   AuthorizePaymentOutput,
   CapturePaymentInput,
@@ -28,35 +40,7 @@ import type {
   UpdatePaymentOutput,
   ProviderWebhookPayload,
   WebhookActionResult,
-  BigNumberInput,
 } from "@medusajs/types";
-
-interface MercadoPagoOptions extends Record<string, unknown> {
-  accessToken: string;
-  webhookSecret?: string;
-  webhookUrl?: string;
-}
-
-interface MercadoPagoPaymentData extends Record<string, unknown> {
-  sessionId?: string;
-  amount?: BigNumberInput;
-  paymentMethodId?: string;
-  installments?: number;
-  token?: string;
-  issuerId?: string;
-  identification?: {
-    type: string;
-    number: string;
-  };
-  externalId?: string;
-}
-
-interface MedusaPaymentContext {
-  customer?: {
-    email?: string;
-  };
-  idempotency_key?: string;
-}
 
 export default class MercadoPagoPaymentProviderService extends AbstractPaymentProvider {
   static override identifier = "mercadopago";
@@ -72,11 +56,11 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
     this.logger_ = container.logger;
 
     if (!options.accessToken) {
-      this.logger_.warn("MercadoPago access token not configured");
+      throw new Error("MercadoPago access token is required");
     }
 
     this.config_ = new MercadoPagoConfig({
-      accessToken: options.accessToken || "placeholder",
+      accessToken: options.accessToken,
       options: { timeout: 10_000 },
     });
     this.paymentClient_ = new Payment(this.config_);
@@ -118,6 +102,52 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
     };
   }
 
+  protected async preparePaymentPayload(
+    paymentData: MercadoPagoPaymentData,
+    context: MedusaPaymentContext,
+  ): Promise<MercadoPagoPaymentRequest> {
+    const amount = convertToDecimal(paymentData.amount || 0);
+    const sessionId = paymentData.sessionId;
+
+    if (!sessionId) {
+      throw new Error("Session ID missing in payment data");
+    }
+
+    const { email } = context.customer || {};
+
+    const payload: MercadoPagoPaymentRequest = {
+      transaction_amount: amount,
+      description: `Order ${context.idempotency_key || sessionId}`,
+      external_reference: sessionId,
+      payer: {
+        email: email || "unknown@email.com",
+      },
+      payment_method_id: paymentData.paymentMethodId,
+      installments: paymentData.installments || 1,
+    };
+
+    if (paymentData.token) {
+      payload.token = paymentData.token;
+    }
+
+    if (paymentData.issuerId) {
+      payload.issuer_id = Number(paymentData.issuerId);
+    }
+
+    if (paymentData.identification) {
+      payload.payer.identification = {
+        type: paymentData.identification.type,
+        number: sanitizeIdentificationNumber(paymentData.identification.number),
+      };
+    }
+
+    if (this.options_.webhookUrl) {
+      payload.notification_url = this.options_.webhookUrl;
+    }
+
+    return payload;
+  }
+
   async authorizePayment(
     input: AuthorizePaymentInput,
   ): Promise<AuthorizePaymentOutput> {
@@ -125,70 +155,17 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       const paymentData = (input.data || {}) as MercadoPagoPaymentData;
       const context = (input.context || {}) as unknown as MedusaPaymentContext;
 
-      // Use trusted amount from session data (stored by initiate/update)
-      const amount = convertToDecimal(paymentData.amount || 0);
-      const sessionId = paymentData.sessionId;
+      const payload = await this.preparePaymentPayload(paymentData, context);
 
-      if (!sessionId) {
-        throw new Error("Session ID missing in payment data");
-      }
-
-      const { email } = context.customer || {};
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload: any = {
-        transaction_amount: amount,
-        description: `Order ${context.idempotency_key || sessionId}`,
-        external_reference: sessionId, // Critical for webhook reconciliation
-        payer: {
-          email: email || "unknown@email.com",
+      const response = await this.paymentClient_.create({
+        body: payload,
+        requestOptions: {
+          idempotencyKey: context.idempotency_key || paymentData.sessionId,
         },
-        payment_method_id: paymentData.paymentMethodId,
-        installments: paymentData.installments || 1,
-      };
+      });
+      const mpPayment = response as unknown as MercadoPagoPaymentResponse;
 
-      if (paymentData.token) {
-        payload.token = paymentData.token;
-      }
-
-      if (paymentData.issuerId) {
-        payload.issuer_id = paymentData.issuerId;
-      }
-
-      if (paymentData.identification) {
-        payload.payer.identification = paymentData.identification;
-      }
-
-      if (this.options_.webhookUrl) {
-        payload.notification_url = this.options_.webhookUrl;
-      }
-
-      const response = await this.paymentClient_.create({ body: payload });
-      const mpPayment = response as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      let status: PaymentSessionStatus = "pending";
-      switch (mpPayment.status) {
-        case "approved": {
-          status = "authorized";
-
-          break;
-        }
-        case "pending":
-        case "in_process": {
-          status = "pending";
-
-          break;
-        }
-        case "rejected":
-        case "cancelled": {
-          status = "canceled";
-
-          break;
-        }
-        default: {
-          status = "error";
-        }
-      }
+      const status = mapMercadoPagoStatus(mpPayment.status || "pending");
 
       const newData: Record<string, unknown> = {
         ...paymentData,
@@ -197,12 +174,13 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       };
 
       if (mpPayment.point_of_interaction?.transaction_data) {
-        newData.qr_code =
-          mpPayment.point_of_interaction.transaction_data.qr_code;
-        newData.qr_code_base64 =
-          mpPayment.point_of_interaction.transaction_data.qr_code_base64;
-        newData.ticket_url =
-          mpPayment.point_of_interaction.transaction_data.ticket_url;
+        Object.assign(newData, {
+          qr_code: mpPayment.point_of_interaction.transaction_data.qr_code,
+          qr_code_base64:
+            mpPayment.point_of_interaction.transaction_data.qr_code_base64,
+          ticket_url:
+            mpPayment.point_of_interaction.transaction_data.ticket_url,
+        });
       }
 
       return {
@@ -210,7 +188,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
         status,
       };
     } catch (error) {
-      const error_ = error as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const error_ = error as Error;
       this.logger_.error(`MercadoPago authorization error: ${error_.message}`);
       return {
         data: { ...input.data, error: error_.message },
@@ -227,7 +205,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       await this.paymentClient_.cancel({ id });
       return { data: { ...input.data, status: "canceled" } };
     } catch (error) {
-      const error_ = error as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const error_ = error as Error;
       return {
         data: { ...input.data, error: error_.message },
       };
@@ -245,7 +223,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       }
       return { data: input.data || {} };
     } catch (error) {
-      const error_ = error as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const error_ = error as Error;
       return {
         data: { ...input.data, error: error_.message },
       };
@@ -265,32 +243,8 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
     try {
       const response = await this.paymentClient_.get({ id: externalId });
       const status = response.status;
-      let medusaStatus: PaymentSessionStatus = "pending";
+      const medusaStatus = mapMercadoPagoStatus(status || "pending");
 
-      switch (status) {
-        case "approved": {
-          medusaStatus = "authorized";
-          break;
-        }
-        case "pending":
-        case "in_process": {
-          medusaStatus = "pending";
-          break;
-        }
-        case "rejected":
-        case "cancelled": {
-          medusaStatus = "canceled";
-          break;
-        }
-        case "refunded":
-        case "charged_back": {
-          medusaStatus = "requires_more";
-          break;
-        }
-        default: {
-          medusaStatus = "pending";
-        }
-      }
       return { status: medusaStatus, data: { ...input.data, status } };
     } catch {
       return { status: "error", data: input.data || {} };
@@ -309,7 +263,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
 
       return { data: { ...input.data, refundId: response.id } };
     } catch (error) {
-      const error_ = error as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const error_ = error as Error;
       return {
         data: { ...input.data, error: error_.message },
       };
@@ -317,9 +271,26 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
   }
 
   async getWebhookActionAndData(
-    data: ProviderWebhookPayload["payload"],
+    data: ProviderWebhookPayload["payload"] & {
+      headers: Record<string, string>;
+      query: Record<string, string>;
+    },
   ): Promise<WebhookActionResult> {
-    const { data: eventData } = data as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const { headers, query, ...payload } = data;
+
+    if (this.options_.webhookSecret) {
+      const isValid = verifyMercadoPagoSignature(
+        headers,
+        query,
+        this.options_.webhookSecret,
+      );
+      if (!isValid) {
+        this.logger_.error("MercadoPago webhook signature verification failed");
+        return { action: "failed" };
+      }
+    }
+
+    const { data: eventData } = payload as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     const paymentId = eventData?.id;
 
     if (!paymentId) {
@@ -327,11 +298,13 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
     }
 
     try {
-      const payment = await this.paymentClient_.get({ id: paymentId });
+      const payment = (await this.paymentClient_.get({
+        id: paymentId,
+      })) as unknown as MercadoPagoPaymentResponse;
 
       if (payment.status === "approved") {
         return {
-          action: "captured", // Or authorized
+          action: "captured",
           data: {
             session_id: payment.external_reference || "",
             amount: convertFromDecimal(payment.transaction_amount!),
