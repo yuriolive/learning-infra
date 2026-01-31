@@ -172,7 +172,7 @@ export class TenantService {
   }
 
   async triggerMigration(tenantId: string): Promise<{ executionName: string }> {
-    const { tenant, databaseUrl, upstashRedisUrl } =
+    const { tenant, databaseUrl, upstashRedisUrl, cloudRunProvider } =
       await this.validateProvisioningPrerequisites(tenantId);
 
     const redisPrefix = `t_${tenant.redisHash}:`;
@@ -185,7 +185,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Triggering migration job");
-    const executionName = await this.cloudRunProvider?.runTenantMigrations(
+    const executionName = await cloudRunProvider.runTenantMigrations(
       tenantId,
       environmentVariables,
     );
@@ -193,7 +193,7 @@ export class TenantService {
     return { executionName };
   }
 
-  async getMigrationStatus(executionName: string): Promise<{
+  getMigrationStatus(executionName: string): Promise<{
     status: MigrationStatus;
     error?: string;
   }> {
@@ -217,7 +217,7 @@ export class TenantService {
   }
 
   async deployService(tenantId: string): Promise<void> {
-    const { tenant, databaseUrl, upstashRedisUrl } =
+    const { tenant, databaseUrl, upstashRedisUrl, cloudRunProvider } =
       await this.validateProvisioningPrerequisites(
         tenantId,
         true, // requireSubdomain
@@ -240,7 +240,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl = await this.cloudRunProvider?.deployTenantInstance(
+    const apiUrl = await cloudRunProvider.deployTenantInstance(
       tenantId,
       environmentVariables,
     );
@@ -298,6 +298,7 @@ export class TenantService {
     tenant: Tenant;
     databaseUrl: string;
     upstashRedisUrl: string;
+    cloudRunProvider: CloudRunProvider;
   }> {
     if (!this.cloudRunProvider) {
       throw new Error("Cloud Run provider not initialized");
@@ -313,6 +314,7 @@ export class TenantService {
       tenant,
       databaseUrl: tenant.databaseUrl,
       upstashRedisUrl: this.upstashRedisUrl,
+      cloudRunProvider: this.cloudRunProvider,
     };
   }
 

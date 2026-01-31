@@ -59,44 +59,44 @@ export class ProvisioningController {
     return null;
   }
 
-  private async dispatchAction(
+  private dispatchAction(
     action: string | undefined,
     tenantId: string,
   ): Promise<Response> {
     switch (action) {
       case "database": {
-        return await this.handleStep(tenantId, "create_db", () =>
+        return this.handleStep(tenantId, "create_db", () =>
           this.service.provisionDatabase(tenantId),
         );
       }
       case "migrations": {
         // Change: Returns execution name immediately (async trigger)
-        return await this.handleStep(tenantId, "migrate_db", () =>
+        return this.handleStep(tenantId, "migrate_db", () =>
           this.service.triggerMigration(tenantId),
         );
       }
       case "service": {
-        return await this.handleStep(tenantId, "deploy_service", () =>
+        return this.handleStep(tenantId, "deploy_service", () =>
           this.service.deployService(tenantId),
         );
       }
       case "domain": {
-        return await this.handleStep(tenantId, "setup_domain", () =>
+        return this.handleStep(tenantId, "setup_domain", () =>
           this.service.configureDomain(tenantId),
         );
       }
       case "activate": {
-        return await this.handleStep(tenantId, "activate_tenant", () =>
+        return this.handleStep(tenantId, "activate_tenant", () =>
           this.service.activateTenant(tenantId),
         );
       }
       case "rollback": {
-        return await this.handleStep(tenantId, "rollback", () =>
+        return this.handleStep(tenantId, "rollback", () =>
           this.service.rollbackResources(tenantId),
         );
       }
       default: {
-        return new Response("Not Found", { status: 404 });
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
       }
     }
   }
@@ -127,7 +127,7 @@ export class ProvisioningController {
       const result = await action();
       await this.logEvent(tenantId, step, "completed");
 
-      const responseBody = result === undefined ? { status: "ok" } : result;
+      const responseBody = result ?? { status: "ok" };
 
       return new Response(JSON.stringify(responseBody), {
         status: 200,
