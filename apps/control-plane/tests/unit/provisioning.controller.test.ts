@@ -21,12 +21,12 @@ const mockService = {
   rollbackResources: vi.fn(),
 } as unknown as TenantService;
 
-const internalSecret = "test-internal-secret-123";
+const TEST_INTERNAL_SECRET = "test-internal-secret-mock-value";
 const controller = new ProvisioningController(
   mockService,
   mockDb,
   mockLogger,
-  internalSecret,
+  TEST_INTERNAL_SECRET,
 );
 
 describe("ProvisioningController", () => {
@@ -34,7 +34,7 @@ describe("ProvisioningController", () => {
     vi.clearAllMocks();
   });
 
-  const createRequest = (action: string, secret: string = internalSecret) => {
+  const createRequest = (action: string, secret: string = TEST_INTERNAL_SECRET) => {
     return new Request(`http://localhost/internal/provisioning/${action}`, {
       method: "POST",
       headers: {

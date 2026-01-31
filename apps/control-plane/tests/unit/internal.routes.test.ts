@@ -9,7 +9,7 @@ import { type Database } from "../../src/database/database";
 const mockLogger = createLogger();
 const mockDb = {} as unknown as Database;
 const mockService = {} as unknown as TenantService;
-const internalSecret = "test-secret";
+const TEST_INTERNAL_SECRET = "test-internal-secret-mock-value";
 
 describe("Internal Routes", () => {
   let routes: ReturnType<typeof createInternalRoutes>;
@@ -20,7 +20,7 @@ describe("Internal Routes", () => {
       logger: mockLogger,
       tenantService: mockService,
       db: mockDb,
-      internalApiSecret: internalSecret,
+      internalApiSecret: TEST_INTERNAL_SECRET,
     });
   });
 
@@ -39,12 +39,12 @@ describe("Internal Routes", () => {
           logger: mockLogger,
           tenantService: mockService,
           db: minimalDb,
-          internalApiSecret: internalSecret
+          internalApiSecret: TEST_INTERNAL_SECRET
       });
 
       const response = await routes.handleRequest(new Request("http://localhost/internal/provisioning/database", {
           method: "POST",
-          headers: { "X-Internal-Secret": internalSecret, "Content-Type": "application/json" },
+          headers: { "X-Internal-Secret": TEST_INTERNAL_SECRET, "Content-Type": "application/json" },
           body: JSON.stringify({ tenantId: "b0e41783-6236-47a6-a36c-8c345330a111" }) // valid uuid
       }));
 

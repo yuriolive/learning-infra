@@ -99,8 +99,10 @@ export class ProvisioningController {
     try {
       const result = await action();
       await this.logEvent(tenantId, step, "completed");
-      // Use nullish coalescing to handle potential undefined return types (e.g. void)
-      return new Response(JSON.stringify(result ?? { status: "ok" }), {
+
+      const responseBody = result === undefined ? { status: "ok" } : result;
+
+      return new Response(JSON.stringify(responseBody), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });

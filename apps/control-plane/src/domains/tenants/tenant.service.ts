@@ -165,37 +165,39 @@ export class TenantService {
   }
 
   async runMigrations(tenantId: string): Promise<void> {
-    const { tenant } = await this.validateProvisioningPrerequisites(tenantId);
+    const { tenant, databaseUrl, upstashRedisUrl } =
+      await this.validateProvisioningPrerequisites(tenantId);
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
     const environmentVariables = {
-      DATABASE_URL: tenant.databaseUrl!,
-      REDIS_URL: this.upstashRedisUrl!,
+      DATABASE_URL: databaseUrl,
+      REDIS_URL: upstashRedisUrl,
       REDIS_PREFIX: redisPrefix,
       NODE_ENV: "production",
     };
 
     this.logger.info({ tenantId }, "Running migrations");
-    await this.cloudRunProvider?.runTenantMigrations(
+    await this.cloudRunProvider!.runTenantMigrations(
       tenantId,
       environmentVariables,
     );
   }
 
   async deployService(tenantId: string): Promise<void> {
-    const { tenant } = await this.validateProvisioningPrerequisites(
-      tenantId,
-      true, // requireSubdomain
-    );
+    const { tenant, databaseUrl, upstashRedisUrl } =
+      await this.validateProvisioningPrerequisites(
+        tenantId,
+        true, // requireSubdomain
+      );
 
     const redisPrefix = `t_${tenant.redisHash}:`;
     const cookieSecret = randomBytes(32).toString("hex");
     const jwtSecret = randomBytes(32).toString("hex");
 
     const environmentVariables = {
-      DATABASE_URL: tenant.databaseUrl!,
-      REDIS_URL: this.upstashRedisUrl!,
+      DATABASE_URL: databaseUrl,
+      REDIS_URL: upstashRedisUrl,
       REDIS_PREFIX: redisPrefix,
       COOKIE_SECRET: cookieSecret,
       JWT_SECRET: jwtSecret,
@@ -206,7 +208,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl = await this.cloudRunProvider?.deployTenantInstance(
+    const apiUrl = await this.cloudRunProvider!.deployTenantInstance(
       tenantId,
       environmentVariables,
     );
@@ -260,7 +262,11 @@ export class TenantService {
   private async validateProvisioningPrerequisites(
     tenantId: string,
     requireSubdomain = false,
-  ): Promise<{ tenant: Tenant }> {
+  ): Promise<{
+    tenant: Tenant;
+    databaseUrl: string;
+    upstashRedisUrl: string;
+  }> {
     if (!this.cloudRunProvider) {
       throw new Error("Cloud Run provider not initialized");
     }
@@ -271,7 +277,11 @@ export class TenantService {
     if (requireSubdomain && !tenant.subdomain) {
       throw new Error("Subdomain missing");
     }
-    return { tenant };
+    return {
+      tenant,
+      databaseUrl: tenant.databaseUrl,
+      upstashRedisUrl: this.upstashRedisUrl,
+    };
   }
 
   // --- CRUD Methods ---
