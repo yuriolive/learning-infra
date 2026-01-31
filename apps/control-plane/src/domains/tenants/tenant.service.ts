@@ -240,7 +240,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl = await this.cloudRunProvider!.deployTenantInstance(
+    const apiUrl = await this.cloudRunProvider?.deployTenantInstance(
       tenantId,
       environmentVariables,
     );
