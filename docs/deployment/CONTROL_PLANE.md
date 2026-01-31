@@ -34,18 +34,18 @@ For complete environment setup including secrets configuration, GitHub secrets, 
 
 ```bash
 # Login to Cloudflare
-bun wrangler login
+pnpm wrangler login
 ```
 
 ### Deploy via Script
 
 ```bash
 # Using package.json script from root
-bun run deploy:control-plane
+pnpm run deploy:control-plane
 
 # Or from apps/control-plane
 cd apps/control-plane
-bun run deploy
+pnpm run deploy
 ```
 
 ## CI/CD Workflow
@@ -69,7 +69,7 @@ graph LR
 ```bash
 # Stream logs
 cd apps/control-plane
-bun wrangler tail
+pnpm wrangler tail
 ```
 
 ## Related Documentation

@@ -38,6 +38,12 @@ const modules = isMigrating
           },
         },
       },
+      {
+        resolve: "./src/modules/agent",
+        options: {
+          modelName: "gemini-3.0-flash",
+        },
+      },
     ];
 
 export default defineConfig({

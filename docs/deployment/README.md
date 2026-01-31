@@ -20,7 +20,7 @@ Control Plane deployment to Google Cloud Run:
 
 ```bash
 # Deploy Control Plane
-bun run deploy:control-plane
+pnpm run deploy:control-plane
 
 # View logs
 gcloud run logs tail control-plane --region southamerica-east1

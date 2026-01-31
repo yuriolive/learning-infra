@@ -1,0 +1,44 @@
+{
+  "name": "@vendin/medusa-payment-mercadopago",
+  "version": "1.0.0",
+  "description": "MercadoPago payment provider for MedusaJS v2",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./modules/*": "./dist/modules/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "medusa plugin:build",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist .medusa",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@medusajs/framework": "^2.13.0",
+    "@medusajs/types": "^2.13.0",
+    "@medusajs/utils": "^2.13.0",
+    "@medusajs/admin-shared": "^2.13.1",
+    "mercadopago": "^2.0.0"
+  },
+  "devDependencies": {
+    "@medusajs/cli": "^2.13.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@medusajs/framework": "^2.0.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

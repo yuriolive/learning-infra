@@ -362,14 +362,14 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     steps:
-      - run: bun run test:unit
+      - run: pnpm run test:unit
       - duration: ~10 seconds
 
   integration-tests:
     runs-on: ubuntu-latest
     needs: unit-tests
     steps:
-      - run: bun run test:integration
+      - run: pnpm run test:integration
       - duration: ~3 minutes
 
   e2e-tests:
@@ -377,7 +377,7 @@ jobs:
     needs: integration-tests
     if: github.ref == 'refs/heads/main'
     steps:
-      - run: bun run test:e2e
+      - run: pnpm run test:e2e
       - duration: ~10 minutes
 ```
 
