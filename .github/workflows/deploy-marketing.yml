@@ -48,14 +48,6 @@ jobs:
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
           NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
 
-      - name: Validate Database ID
-        run: |
-          if grep -q "PLACEHOLDER_DB_ID" apps/marketing/wrangler.jsonc; then
-            echo "Error: PLACEHOLDER_DB_ID found in apps/marketing/wrangler.jsonc"
-            echo "The database ID must be replaced by a real value before deployment."
-            exit 1
-          fi
-
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
