@@ -37,6 +37,7 @@
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
     "@vendin/analytics": "workspace:*",
+    "medusa-plugin-neon-search": "workspace:*",
     "ioredis": "^5.9.2",
     "pg": "^8.17.2",
     "react": "^18.3.1",

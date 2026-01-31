@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig } from "@medusajs/framework/utils";
+import { loadEnv, defineConfig, Modules } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
@@ -42,6 +42,13 @@ const modules = isMigrating
         resolve: "./src/modules/agent",
         options: {
           modelName: "gemini-3.0-flash",
+        },
+      },
+      {
+        resolve: "medusa-plugin-neon-search",
+        key: "search", // Using string literal since Modules.SEARCH might be missing in this version
+        options: {
+          gemini_api_key: process.env.GEMINI_API_KEY,
         },
       },
     ];
