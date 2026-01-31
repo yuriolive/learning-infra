@@ -10,12 +10,10 @@ export const mapMercadoPagoStatus = (status: string): PaymentSessionStatus => {
       return "pending";
     }
     case "rejected":
-    case "cancelled": {
-      return "canceled";
-    }
+    case "cancelled":
     case "refunded":
     case "charged_back": {
-      return "requires_more";
+      return "canceled";
     }
     default: {
       return "pending";

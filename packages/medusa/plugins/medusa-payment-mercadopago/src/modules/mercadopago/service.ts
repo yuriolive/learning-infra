@@ -190,10 +190,16 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
     } catch (error) {
       const error_ = error as Error;
       this.logger_.error(`MercadoPago authorization error: ${error_.message}`);
-      return {
-        data: { ...input.data, error: error_.message },
-        status: "error",
-      };
+
+      let errorMessage = `Payment authorization failed: ${error_.message}`;
+      // Map common MP errors to user friendly messages
+      if (error_.message.includes("insufficient_amount")) {
+        errorMessage = "Payment declined: Insufficient funds";
+      } else if (error_.message.includes("bad_request")) {
+         errorMessage = "Payment declined: Invalid payment data";
+      }
+
+      throw new Error(errorMessage);
     }
   }
 
@@ -206,9 +212,8 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       return { data: { ...input.data, status: "canceled" } };
     } catch (error) {
       const error_ = error as Error;
-      return {
-        data: { ...input.data, error: error_.message },
-      };
+      this.logger_.error(`MercadoPago cancel error: ${error_.message}`);
+      throw new Error(`Failed to cancel payment: ${error_.message}`);
     }
   }
 
@@ -224,9 +229,8 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       return { data: input.data || {} };
     } catch (error) {
       const error_ = error as Error;
-      return {
-        data: { ...input.data, error: error_.message },
-      };
+      this.logger_.error(`MercadoPago capture error: ${error_.message}`);
+      throw new Error(`Failed to capture payment: ${error_.message}`);
     }
   }
 
@@ -246,8 +250,9 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       const medusaStatus = mapMercadoPagoStatus(status || "pending");
 
       return { status: medusaStatus, data: { ...input.data, status } };
-    } catch {
-      return { status: "error", data: input.data || {} };
+    } catch (error) {
+       this.logger_.error(`MercadoPago get status error: ${(error as Error).message}`);
+       return { status: "error", data: input.data || {} };
     }
   }
 
@@ -264,9 +269,8 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       return { data: { ...input.data, refundId: response.id } };
     } catch (error) {
       const error_ = error as Error;
-      return {
-        data: { ...input.data, error: error_.message },
-      };
+      this.logger_.error(`MercadoPago refund error: ${error_.message}`);
+      throw new Error(`Failed to refund payment: ${error_.message}`);
     }
   }
 
@@ -302,18 +306,22 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
         id: paymentId,
       })) as unknown as MercadoPagoPaymentResponse;
 
-      if (payment.status === "approved") {
-        return {
-          action: "captured",
-          data: {
-            session_id: payment.external_reference || "",
-            amount: convertFromDecimal(payment.transaction_amount!),
-          },
-        };
+      switch (payment.status) {
+        case "approved":
+          return {
+            action: "authorized",
+            data: {
+              session_id: payment.external_reference || "",
+              amount: convertFromDecimal(payment.transaction_amount!),
+            },
+          };
+        case "rejected":
+          return { action: "failed" };
+        default:
+          return { action: "not_supported" };
       }
-
-      return { action: "not_supported" };
-    } catch {
+    } catch (error) {
+      this.logger_.error(`Webhook error: ${(error as Error).message}`);
       return { action: "failed" };
     }
   }
