@@ -254,13 +254,13 @@ describe("MercadoPagoPaymentProviderService", () => {
 
   describe("getWebhookActionAndData", () => {
     it("should verify signature and return authorized for approved payment", async () => {
-      const webhookSecret = "test_secret";
+      const testWebhookSecret = "test_secret";
       const ts = "123456";
       const requestId = "req_123";
       const dataId = "data_123";
       const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
       const { createHmac } = await import("node:crypto");
-      const hmac = createHmac("sha256", webhookSecret)
+      const hmac = createHmac("sha256", testWebhookSecret)
         .update(manifest)
         .digest("hex");
 
