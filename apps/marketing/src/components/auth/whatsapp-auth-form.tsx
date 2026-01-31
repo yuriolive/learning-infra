@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Input, Link } from "@heroui/react";
+
 import { useWhatsAppAuth } from "../../hooks/use-whatsapp-auth";
 
 export const WhatsAppAuthForm = () => {
@@ -19,8 +20,8 @@ export const WhatsAppAuthForm = () => {
   return (
     <form
       className="flex flex-col gap-4"
-      onSubmit={(e) => {
-        e.preventDefault();
+      onSubmit={(event) => {
+        event.preventDefault();
         if (otpSent) {
           void verifyOtp();
         } else {
@@ -47,12 +48,24 @@ export const WhatsAppAuthForm = () => {
           onValueChange={setOtp}
         />
       )}
-      <Button color="primary" fullWidth size="lg" type="submit" isLoading={loading}>
+      <Button
+        color="primary"
+        fullWidth
+        size="lg"
+        type="submit"
+        isLoading={loading}
+      >
         {otpSent ? "Verify & Login" : "Send Code"}
       </Button>
       {otpSent && (
         <div className="flex justify-center">
-          <Link size="sm" className="cursor-pointer" onPress={() => { reset(); }}>
+          <Link
+            size="sm"
+            className="cursor-pointer"
+            onPress={() => {
+              reset();
+            }}
+          >
             Change phone number
           </Link>
         </div>

@@ -29,7 +29,9 @@ export default function LoginPage() {
           size="md"
           aria-label="Login methods"
           selectedKey={selected}
-          onSelectionChange={(key) => { setSelected(key as string); }}
+          onSelectionChange={(key) => {
+            setSelected(key as string);
+          }}
           className="mb-4"
         >
           <Tab key="email" title="Email">

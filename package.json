@@ -80,6 +80,8 @@
       "allowedVersions": {
         "zod": "3.x || 4.x",
         "eslint": "9.x",
+        "openai": "6.x",
+        "dotenv": "17.x",
         "react": "18.x",
         "react-dom": "18.x",
         "vite": "6.x",

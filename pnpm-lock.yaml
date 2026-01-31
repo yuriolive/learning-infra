@@ -94,6 +94,9 @@ importers:
       "@asteasolutions/zod-to-openapi":
         specifier: ^7.3.4
         version: 7.3.4(zod@3.25.76)
+      "@google-cloud/workflows":
+        specifier: ^5.0.0
+        version: 5.0.0
       "@neondatabase/api-client":
         specifier: ^2.6.0
         version: 2.6.0
@@ -226,7 +229,7 @@ importers:
         version: link:../../packages/utils
       better-auth:
         specifier: 1.4.18
-        version: 1.4.18(@prisma/client@5.22.0)(better-sqlite3@12.6.2)(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(pg@8.17.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
+        version: 1.4.18(@prisma/client@5.22.0)(better-sqlite3@12.6.2)(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(pg@8.17.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8)
@@ -238,7 +241,7 @@ importers:
         version: 0.473.0(react@18.3.1)
       next:
         specifier: 16.1.5
-        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -257,7 +260,7 @@ importers:
     devDependencies:
       "@better-auth/cli":
         specifier: ^1.4.18
-        version: 1.4.18(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(better-call@1.1.8(zod@4.3.6))(drizzle-kit@0.31.8)(jose@6.1.3)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(magicast@0.5.1)(nanostores@1.1.0)(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(postgres@3.4.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
+        version: 1.4.18(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(better-call@1.1.8(zod@4.3.6))(drizzle-kit@0.31.8)(jose@6.1.3)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(magicast@0.5.1)(nanostores@1.1.0)(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(postgres@3.4.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
       "@cloudflare/workers-types":
         specifier: ^4.20260127.0
         version: 4.20260131.0
@@ -266,7 +269,7 @@ importers:
         version: 2.4.26(tailwindcss@4.1.18)
       "@opennextjs/cloudflare":
         specifier: ^1.15.1
-        version: 1.16.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))
+        version: 1.16.1(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))
       "@tailwindcss/postcss":
         specifier: ^4
         version: 4.1.18
@@ -308,7 +311,7 @@ importers:
         version: 12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next:
         specifier: 16.1.5
-        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -318,7 +321,7 @@ importers:
     devDependencies:
       "@opennextjs/cloudflare":
         specifier: ^1.15.1
-        version: 1.16.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))
+        version: 1.16.1(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))
       "@tailwindcss/postcss":
         specifier: ^4
         version: 4.1.18
@@ -351,16 +354,16 @@ importers:
     dependencies:
       "@langchain/community":
         specifier: ^1.1.9
-        version: 1.1.9(khgln6xeqnibbh5sl772bqmeii)
+        version: 1.1.10(vrbxzyq4mutphvpizkquizm5za)
       "@langchain/core":
         specifier: ^1.1.17
-        version: 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+        version: 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       "@langchain/google-genai":
         specifier: ^2.1.13
-        version: 2.1.13(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))
+        version: 2.1.14(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))
       "@langchain/langgraph":
         specifier: ^1.1.2
-        version: 1.1.2(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
+        version: 1.1.2(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)
       "@medusajs/admin-sdk":
         specifier: ^2.13.0
         version: 2.13.1
@@ -424,7 +427,7 @@ importers:
         version: 8.17.1
       next:
         specifier: 16.1.5
-        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@20.19.30)(typescript@5.9.3)
@@ -448,7 +451,7 @@ importers:
     dependencies:
       next:
         specifier: 16.1.5
-        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       posthog-js:
         specifier: ^1.200.0
         version: 1.336.1
@@ -2418,6 +2421,13 @@ packages:
         integrity: sha512-XOMO2Hupl0wdd172Y06h6kLpBz6Dv+J4okPLl4LPtzbr8f66WbIoy4ev98EBuZ6ZK4h5ydTN6XneT4QVpD7cdA==,
       }
 
+  "@google-cloud/workflows@5.0.0":
+    resolution:
+      {
+        integrity: sha512-QoV6zv4de8G2LUMRHvVCns1B1m2lWOzCTBvCkWOHy4/AizudoszEx/lyf9rmhEnwkhUkWMOwHZC+apoHSqj/dQ==,
+      }
+    engines: { node: ">=18" }
+
   "@google/generative-ai@0.24.1":
     resolution:
       {
@@ -3800,10 +3810,10 @@ packages:
         integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==,
       }
 
-  "@langchain/classic@1.0.12":
+  "@langchain/classic@1.0.13":
     resolution:
       {
-        integrity: sha512-3HE0w3vbC+jZLEyS+Uww7PEbfR+119gjVZmne5X3gaiwovAHUCyaeuNmJclE+XqdeqdaxQoEjtToO56jVBqFKA==,
+        integrity: sha512-n8enK0+D9bOB6vCr31uetDulwWNtFpFLMVwmKoe0sJJGfMU7vJN73uc9tEBmMpTxL2nfb+fZrXmttYHaq2XvIg==,
       }
     engines: { node: ">=20" }
     peerDependencies:
@@ -3819,10 +3829,10 @@ packages:
       typeorm:
         optional: true
 
-  "@langchain/community@1.1.9":
+  "@langchain/community@1.1.10":
     resolution:
       {
-        integrity: sha512-rYNrmVGVLeKlmfZWvZ+W5G7q1eqxZobtYaQSVN0NyFfVgXWHOdl0FFjb6x3/TXzM/YmuMrN4H0HFjINBYzr41A==,
+        integrity: sha512-uXGHkd3GJsbDt6n6Yv077QR9ULqG2GrO7t2dwIu3eVkt0bM9d/LFp9OAIQZiYOEWz/nKwvb4III/TUmnYt+1eA==,
       }
     engines: { node: ">=20" }
     peerDependencies:
@@ -4187,21 +4197,21 @@ packages:
       youtubei.js:
         optional: true
 
-  "@langchain/core@1.1.17":
+  "@langchain/core@1.1.18":
     resolution:
       {
-        integrity: sha512-g7/kcKbKEwNZSyyT7aT0utxn7wTOtKErqz0cL6VjrV4v/aOb9g+dKcfj17YkSm42YQmJp/rB2IXGc17vQPEBqA==,
+        integrity: sha512-vwzbtHUSZaJONBA1n9uQedZPfyFFZ6XzTggTpR28n8tiIg7e1NC/5dvGW/lGtR1Du1VwV9DvDHA5/bOrLe6cVg==,
       }
     engines: { node: ">=20" }
 
-  "@langchain/google-genai@2.1.13":
+  "@langchain/google-genai@2.1.14":
     resolution:
       {
-        integrity: sha512-XWypAcTV8c32H+83ktfjgkzPC6hO/EmCz/G78HlYddAkJ0MP7kSeZ5+MIzFbdl6ShCLbIiTH+NZ9OLE+75cWfA==,
+        integrity: sha512-chwsGwHJAl0dIvL9PYcb7EuS7ah0eOrFHXG2puHXBYvbi+fL2x4BK567OqDpDex5862zs99szlWKQRjrQNGjMQ==,
       }
     engines: { node: ">=20" }
     peerDependencies:
-      "@langchain/core": 1.1.17
+      "@langchain/core": 1.1.18
 
   "@langchain/langgraph-checkpoint@1.0.0":
     resolution:
@@ -4243,10 +4253,10 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  "@langchain/openai@1.2.3":
+  "@langchain/openai@1.2.4":
     resolution:
       {
-        integrity: sha512-+bKR4+Obz5a/NHEw0bAm3f/s4k0cXc/g46ZRRXqjcyDYP+9wFarItvGNn6DEEk5S7pGp1QqApAQNt9IZk1Ic1Q==,
+        integrity: sha512-3ThBOIXAJ6eXuqGGO41XDgr4rp/qpl/RpZmGcjv1S3+CRLS4UQBgXkZEab7mun85HfdsUWLs/v1+pDwbMFixcA==,
       }
     engines: { node: ">=20" }
     peerDependencies:
@@ -5804,10 +5814,10 @@ packages:
       }
     engines: { node: ^12.20.0 || ^14.18.0 || >=16.0.0 }
 
-  "@playwright/test@1.58.0":
+  "@playwright/test@1.58.1":
     resolution:
       {
-        integrity: sha512-fWza+Lpbj6SkQKCrU6si4iu+fD2dD3gxNHFhUPxsfXBPhnv3rRSQVd0NtBUT9Z/RhF/boCBcuUaMUSTRTopjZg==,
+        integrity: sha512-6LdVIUERWxQMmUSSQi0I53GgCBYgM2RpGngCPY7hSeju+VrKjq3lvs7HpJoPbDiY5QM5EYRtRX5fvrinnMAz3w==,
       }
     engines: { node: ">=18" }
     hasBin: true
@@ -9094,6 +9104,13 @@ packages:
         integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==,
       }
 
+  "@tootallnate/once@2.0.0":
+    resolution:
+      {
+        integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==,
+      }
+    engines: { node: ">= 10" }
+
   "@tsconfig/node10@1.0.12":
     resolution:
       {
@@ -10131,6 +10148,13 @@ packages:
       }
     engines: { node: ">=0.4.0" }
     hasBin: true
+
+  agent-base@6.0.2:
+    resolution:
+      {
+        integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==,
+      }
+    engines: { node: ">= 6.0.0" }
 
   agent-base@7.1.4:
     resolution:
@@ -12074,6 +12098,12 @@ packages:
         integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==,
       }
 
+  duplexify@4.1.3:
+    resolution:
+      {
+        integrity: sha512-M3BmBhwJRZsSx38lZyhE53Csddgzl5R7xGJNk7CVddZD6CcmwMCH8J+7AprIrQKH7TonKxaCjcv27Qmf+sQ+oA==,
+      }
+
   eastasianwidth@0.2.0:
     resolution:
       {
@@ -13380,6 +13410,13 @@ packages:
       }
     engines: { node: ">=18" }
 
+  google-gax@5.0.6:
+    resolution:
+      {
+        integrity: sha512-1kGbqVQBZPAAu4+/R1XxPQKP0ydbNYoLAr4l0ZO2bMV0kLyLW4I1gAk++qBLWt7DPORTzmWRMsCZe86gDjShJA==,
+      }
+    engines: { node: ">=18" }
+
   google-logging-utils@1.1.3:
     resolution:
       {
@@ -13682,6 +13719,20 @@ packages:
         integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==,
       }
     engines: { node: ">= 0.8" }
+
+  http-proxy-agent@5.0.0:
+    resolution:
+      {
+        integrity: sha512-n2hY8YdoRE1i7r6M0w9DIw5GgZN0G25P8zLCRQ8rjXtTU3vsNFBI/vWK/UIeE6g5MUUz6avwAPXmL6Fy9D/90w==,
+      }
+    engines: { node: ">= 6" }
+
+  https-proxy-agent@5.0.1:
+    resolution:
+      {
+        integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==,
+      }
+    engines: { node: ">= 6" }
 
   https-proxy-agent@7.0.6:
     resolution:
@@ -14658,10 +14709,10 @@ packages:
       }
     engines: { node: ">=20.0.0" }
 
-  langsmith@0.4.11:
+  langsmith@0.4.12:
     resolution:
       {
-        integrity: sha512-HHWM8df5LAf+GkGeYlUQenI1n2SFOPVMmmylZs935AuNisR09v3H15CO3S+LKkvE41IqIFN4ScZqf/Tab1RZZA==,
+        integrity: sha512-YWt0jcGvKqjUgIvd78rd4QcdMss0lUkeUaqp0UpVRq7H2yNDx8H5jOUO/laWUmaPtWGgcip0qturykXe1g9Gqw==,
       }
     peerDependencies:
       "@opentelemetry/api": "*"
@@ -16623,18 +16674,18 @@ packages:
         integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==,
       }
 
-  playwright-core@1.58.0:
+  playwright-core@1.58.1:
     resolution:
       {
-        integrity: sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==,
+        integrity: sha512-bcWzOaTxcW+VOOGBCQgnaKToLJ65d6AqfLVKEWvexyS3AS6rbXl+xdpYRMGSRBClPvyj44njOWoxjNdL/H9UNg==,
       }
     engines: { node: ">=18" }
     hasBin: true
 
-  playwright@1.58.0:
+  playwright@1.58.1:
     resolution:
       {
-        integrity: sha512-2SVA0sbPktiIY/MCOPX8e86ehA/e+tDNq+e5Y8qjKYti2Z/JG7xnronT/TXTIkKbYGWlCbuucZ6dziEgkoEjQQ==,
+        integrity: sha512-+2uTZHxSCcxjvGc5C891LrS1/NlxglGxzrC4seZiVjcYVQfUa87wBL6rTDqzGjuoWNjnBzRqKmF6zRYGMvQUaQ==,
       }
     engines: { node: ">=18" }
     hasBin: true
@@ -16913,6 +16964,13 @@ packages:
       {
         integrity: sha512-TwEZ+X+yCJmYfL7TPUOcvBZ4QfoT5YenQiJuX//0th53DE6w0xxLEtfK3iyryQFddXuvkIk51EEgrJQ0WJkOmQ==,
       }
+
+  proto3-json-serializer@3.0.4:
+    resolution:
+      {
+        integrity: sha512-E1sbAYg3aEbXrq0n1ojJkRHQJGE1kaE/O6GLA94y8rnJBfgvOPTOd1b9hOceQK1FFZI9qMh1vBERCyO2ifubcw==,
+      }
+    engines: { node: ">=18" }
 
   protobufjs@7.5.4:
     resolution:
@@ -17543,6 +17601,13 @@ packages:
     peerDependencies:
       axios: "*"
 
+  retry-request@8.0.2:
+    resolution:
+      {
+        integrity: sha512-JzFPAfklk1kjR1w76f0QOIhoDkNkSqW8wYKT08n9yysTmZfB+RQ2QoXoTAeOi1HD9ZipTyTAZg3c4pM/jeqgSw==,
+      }
+    engines: { node: ">=18" }
+
   reusify@1.1.0:
     resolution:
       {
@@ -18051,6 +18116,18 @@ packages:
         integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==,
       }
 
+  stream-events@1.0.5:
+    resolution:
+      {
+        integrity: sha512-E1GUzBSgvct8Jsb3v2X15pjzN1tYebtbLaMg+eBOUOAxgbLoSbT2NS91ckc5lJD1KfLjId+jXJRgo0qnV5Nerg==,
+      }
+
+  stream-shift@1.0.3:
+    resolution:
+      {
+        integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==,
+      }
+
   streamsearch@1.1.0:
     resolution:
       {
@@ -18266,6 +18343,12 @@ packages:
       }
     engines: { node: ">=10" }
 
+  stubs@3.0.0:
+    resolution:
+      {
+        integrity: sha512-PdHt7hHUJKxvTCgbKX9C1V/ftOcjJQgz8BZwNfV5c4B6dcGqlpelTbJ999jBGZ2jYiPAwcX5dP6oBwVlBlUbxw==,
+      }
+
   style-mod@4.1.3:
     resolution:
       {
@@ -18437,6 +18520,13 @@ packages:
         integrity: sha512-51LAVKUSZSVfI05vjPESNc5vwqqZpbXCsU+/+wxlOrUjk2SnFTt97v9ZgQrD4YmxYW1Px6w2KjaDitCfkvgxMQ==,
       }
     engines: { node: ">=8.0.0" }
+
+  teeny-request@10.1.0:
+    resolution:
+      {
+        integrity: sha512-3ZnLvgWF29jikg1sAQ1g0o+lr5JX6sVgYvfUJazn7ZjJroDBUTWp44/+cFVX0bULjv4vci+rBD+oGVAkWqhUbw==,
+      }
+    engines: { node: ">=18" }
 
   terser@5.16.9:
     resolution:
@@ -21243,7 +21333,7 @@ snapshots:
 
   "@babel/parser@7.25.6":
     dependencies:
-      "@babel/types": 7.28.6
+      "@babel/types": 7.25.6
 
   "@babel/parser@7.28.6":
     dependencies:
@@ -21352,9 +21442,9 @@ snapshots:
     dependencies:
       "@babel/code-frame": 7.28.6
       "@babel/generator": 7.28.6
-      "@babel/parser": 7.28.6
+      "@babel/parser": 7.25.6
       "@babel/template": 7.28.6
-      "@babel/types": 7.28.6
+      "@babel/types": 7.25.6
       debug: 4.4.3(supports-color@8.1.1)
       globals: 11.12.0
     transitivePeerDependencies:
@@ -21385,7 +21475,7 @@ snapshots:
 
   "@bcoe/v8-coverage@1.0.2": {}
 
-  "@better-auth/cli@1.4.18(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(better-call@1.1.8(zod@4.3.6))(drizzle-kit@0.31.8)(jose@6.1.3)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(magicast@0.5.1)(nanostores@1.1.0)(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(postgres@3.4.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))":
+  "@better-auth/cli@1.4.18(@better-fetch/fetch@1.1.21)(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(better-call@1.1.8(zod@4.3.6))(drizzle-kit@0.31.8)(jose@6.1.3)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(magicast@0.5.1)(nanostores@1.1.0)(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(postgres@3.4.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))":
     dependencies:
       "@babel/core": 7.28.6
       "@babel/preset-react": 7.28.5(@babel/core@7.28.6)
@@ -21397,7 +21487,7 @@ snapshots:
       "@mrleebo/prisma-ast": 0.13.1
       "@prisma/client": 5.22.0
       "@types/pg": 8.16.0
-      better-auth: 1.4.18(@prisma/client@5.22.0)(better-sqlite3@12.6.2)(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(pg@8.17.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
+      better-auth: 1.4.18(@prisma/client@5.22.0)(better-sqlite3@12.6.2)(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(pg@8.17.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
       better-sqlite3: 12.6.2
       c12: 3.3.3(magicast@0.5.1)
       chalk: 5.6.2
@@ -21491,11 +21581,11 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  "@browserbasehq/stagehand@1.14.0(@playwright/test@1.58.0)(deepmerge@4.3.1)(dotenv@17.2.3)(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(zod@3.25.76)":
+  "@browserbasehq/stagehand@1.14.0(@playwright/test@1.58.1)(deepmerge@4.3.1)(dotenv@17.2.3)(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(zod@3.25.76)":
     dependencies:
       "@anthropic-ai/sdk": 0.27.3
       "@browserbasehq/sdk": 2.6.0
-      "@playwright/test": 1.58.0
+      "@playwright/test": 1.58.1
       deepmerge: 4.3.1
       dotenv: 17.2.3
       openai: 6.17.0(ws@8.19.0)(zod@3.25.76)
@@ -21919,6 +22009,12 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  "@google-cloud/workflows@5.0.0":
+    dependencies:
+      google-gax: 5.0.6
+    transitivePeerDependencies:
+      - supports-color
+
   "@google/generative-ai@0.24.1": {}
 
   "@graphql-codegen/core@4.0.2(graphql@16.12.0)":
@@ -21982,14 +22078,14 @@ snapshots:
   "@graphql-tools/optimize@2.0.0(graphql@16.12.0)":
     dependencies:
       graphql: 16.12.0
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   "@graphql-tools/relay-operation-optimizer@7.0.27(graphql@16.12.0)":
     dependencies:
       "@ardatan/relay-compiler": 12.0.3(graphql@16.12.0)
       "@graphql-tools/utils": 11.0.0(graphql@16.12.0)
       graphql: 16.12.0
-      tslib: 2.8.1
+      tslib: 2.6.3
     transitivePeerDependencies:
       - encoding
 
@@ -22006,7 +22102,7 @@ snapshots:
       "@whatwg-node/promise-helpers": 1.3.2
       cross-inspect: 1.0.1
       graphql: 16.12.0
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   "@graphql-tools/utils@11.0.0(graphql@16.12.0)":
     dependencies:
@@ -22050,7 +22146,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-accordion": 2.2.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22068,7 +22164,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-stately/utils": 3.11.0(react@18.3.1)
       react: 18.3.1
@@ -22078,7 +22174,7 @@ snapshots:
 
   "@heroui/aria-utils@2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/utils": 3.32.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-stately/collections": 3.12.8(react@18.3.1)
       "@react-types/overlays": 3.9.2(react@18.3.1)
@@ -22101,7 +22197,7 @@ snapshots:
       "@heroui/scroll-shadow": 2.3.19(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-safe-layout-effect": 2.1.8(react@18.3.1)
       "@react-aria/combobox": 3.14.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22119,7 +22215,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-image": 2.1.13(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22131,7 +22227,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -22141,7 +22237,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-aria/breadcrumbs": 3.5.30(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22155,7 +22251,7 @@ snapshots:
       "@heroui/ripple": 2.2.21(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
       "@heroui/spinner": 2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-button": 2.2.21(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22173,7 +22269,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-button": 2.2.21(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@internationalized/date": 3.10.1
@@ -22197,7 +22293,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/ripple": 2.2.21(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-button": 2.2.21(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22212,7 +22308,7 @@ snapshots:
       "@heroui/form": 2.1.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-callback-ref": 2.1.8(react@18.3.1)
       "@heroui/use-safe-layout-effect": 2.1.8(react@18.3.1)
@@ -22231,7 +22327,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/interactions": 3.26.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22252,7 +22348,7 @@ snapshots:
       "@heroui/form": 2.1.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@internationalized/date": 3.10.1
       "@react-aria/datepicker": 3.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22274,7 +22370,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@internationalized/date": 3.10.1
       "@react-aria/datepicker": 3.15.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22306,7 +22402,7 @@ snapshots:
       "@heroui/modal": 2.2.26(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -22320,7 +22416,7 @@ snapshots:
       "@heroui/popover": 2.3.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/menu": 3.19.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22333,7 +22429,7 @@ snapshots:
   "@heroui/form@2.1.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-stately/form": 3.2.2(react@18.3.1)
       "@react-types/form": 3.7.16(react@18.3.1)
@@ -22343,7 +22439,7 @@ snapshots:
 
   "@heroui/framer-utils@2.1.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/use-measure": 2.1.8(react@18.3.1)
       framer-motion: 12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
@@ -22355,7 +22451,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-image": 2.1.13(react@18.3.1)
       react: 18.3.1
@@ -22366,7 +22462,7 @@ snapshots:
       "@heroui/form": 2.1.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-form-reset": 2.0.1(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22384,7 +22480,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-safe-layout-effect": 2.1.8(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22413,7 +22509,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-link": 2.2.22(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22427,7 +22523,7 @@ snapshots:
       "@heroui/divider": 2.2.21(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-is-mobile": 2.2.12(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22447,7 +22543,7 @@ snapshots:
       "@heroui/divider": 2.2.21(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-is-mobile": 2.2.12(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22468,7 +22564,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-button": 2.2.21(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/use-aria-modal-overlay": 2.2.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22489,7 +22585,7 @@ snapshots:
       "@heroui/framer-utils": 2.1.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-resize": 2.1.8(react@18.3.1)
       "@heroui/use-scroll-position": 2.1.8(react@18.3.1)
@@ -22510,7 +22606,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-safe-layout-effect": 2.1.8(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22531,7 +22627,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-intersection-observer": 2.2.14(react@18.3.1)
       "@heroui/use-pagination": 2.2.19(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22551,7 +22647,7 @@ snapshots:
       "@heroui/framer-utils": 2.1.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-button": 2.2.21(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/use-aria-overlay": 2.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22569,7 +22665,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-is-mounted": 2.1.8(react@18.3.1)
       "@react-aria/progress": 3.4.28(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22582,7 +22678,7 @@ snapshots:
       "@heroui/form": 2.1.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/interactions": 3.26.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22648,7 +22744,7 @@ snapshots:
       "@heroui/spacer": 2.2.22(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/spinner": 2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/switch": 2.2.26(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/table": 2.2.29(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/tabs": 2.2.26(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
@@ -22667,7 +22763,7 @@ snapshots:
     dependencies:
       "@heroui/dom-animation": 2.1.10(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       framer-motion: 12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
@@ -22677,7 +22773,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-data-scroll-overflow": 2.2.13(react@18.3.1)
       react: 18.3.1
@@ -22694,7 +22790,7 @@ snapshots:
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
       "@heroui/spinner": 2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-button": 2.2.21(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/use-aria-multiselect": 2.4.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22719,7 +22815,7 @@ snapshots:
   "@heroui/skeleton@2.2.18(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -22728,7 +22824,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/tooltip": 2.2.26(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22748,7 +22844,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/tooltip": 2.2.26(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/use-clipboard": 2.1.9(react@18.3.1)
@@ -22769,7 +22865,7 @@ snapshots:
   "@heroui/spinner@2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/system-rsc": 2.3.21(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       react: 18.3.1
@@ -22781,7 +22877,7 @@ snapshots:
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-safe-layout-effect": 2.1.8(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22798,7 +22894,7 @@ snapshots:
       "@react-types/shared": 3.32.1(react@18.3.1)
       react: 18.3.1
 
-  "@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
+  "@heroui/system@2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/system-rsc": 2.3.21(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react@18.3.1)
@@ -22817,7 +22913,7 @@ snapshots:
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@react-aria/interactions": 3.26.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22836,7 +22932,7 @@ snapshots:
       "@heroui/aria-utils": 2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-is-mounted": 2.1.8(react@18.3.1)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22876,7 +22972,7 @@ snapshots:
       "@heroui/shared-icons": 2.1.10(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
       "@heroui/spinner": 2.2.26(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-is-mobile": 2.2.12(react@18.3.1)
       "@react-aria/interactions": 3.26.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -22893,7 +22989,7 @@ snapshots:
       "@heroui/framer-utils": 2.1.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@heroui/use-aria-overlay": 2.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/use-safe-layout-effect": 2.1.8(react@18.3.1)
@@ -23062,7 +23158,7 @@ snapshots:
       "@heroui/avatar": 2.2.24(@heroui/system@2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.25(tailwindcss@4.1.18))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/react-utils": 2.1.14(react@18.3.1)
       "@heroui/shared-utils": 2.1.12
-      "@heroui/system": 2.4.25(@heroui/theme@2.4.25(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@heroui/system": 2.4.25(@heroui/theme@2.4.26(tailwindcss@4.1.18))(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@heroui/theme": 2.4.25(tailwindcss@4.1.18)
       "@react-aria/focus": 3.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
@@ -23316,11 +23412,11 @@ snapshots:
 
   "@js-sdsl/ordered-map@4.4.2": {}
 
-  "@langchain/classic@1.0.12(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(ws@8.19.0)":
+  "@langchain/classic@1.0.13(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(ws@8.19.0)":
     dependencies:
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
-      "@langchain/openai": 1.2.3(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(ws@8.19.0)
-      "@langchain/textsplitters": 1.0.1(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/openai": 1.2.4(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(ws@8.19.0)
+      "@langchain/textsplitters": 1.0.1(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))
       handlebars: 4.7.8
       js-yaml: 4.1.1
       jsonpointer: 5.0.1
@@ -23329,7 +23425,7 @@ snapshots:
       yaml: 2.8.2
       zod: 3.25.76
     optionalDependencies:
-      langsmith: 0.4.11(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      langsmith: 0.4.12(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
     transitivePeerDependencies:
       - "@opentelemetry/api"
       - "@opentelemetry/exporter-trace-otlp-proto"
@@ -23337,13 +23433,13 @@ snapshots:
       - openai
       - ws
 
-  "@langchain/community@1.1.9(khgln6xeqnibbh5sl772bqmeii)":
+  "@langchain/community@1.1.10(vrbxzyq4mutphvpizkquizm5za)":
     dependencies:
-      "@browserbasehq/stagehand": 1.14.0(@playwright/test@1.58.0)(deepmerge@4.3.1)(dotenv@17.2.3)(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(zod@3.25.76)
+      "@browserbasehq/stagehand": 1.14.0(@playwright/test@1.58.1)(deepmerge@4.3.1)(dotenv@17.2.3)(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(zod@3.25.76)
       "@ibm-cloud/watsonx-ai": 1.7.7
-      "@langchain/classic": 1.0.12(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(ws@8.19.0)
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
-      "@langchain/openai": 1.2.3(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(ws@8.19.0)
+      "@langchain/classic": 1.0.13(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))(ws@8.19.0)
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/openai": 1.2.4(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(ws@8.19.0)
       binary-extensions: 2.3.0
       flat: 5.0.2
       ibm-cloud-sdk-core: 5.4.5
@@ -23371,7 +23467,7 @@ snapshots:
       jsonwebtoken: 9.0.3
       lodash: 4.17.23
       pg: 8.17.2
-      playwright: 1.58.0
+      playwright: 1.58.1
       ws: 8.19.0
     transitivePeerDependencies:
       - "@opentelemetry/api"
@@ -23379,14 +23475,14 @@ snapshots:
       - "@opentelemetry/sdk-trace-base"
       - peggy
 
-  "@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))":
+  "@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))":
     dependencies:
       "@cfworker/json-schema": 4.1.1
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.21
-      langsmith: 0.4.11(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      langsmith: 0.4.12(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       mustache: 4.2.0
       p-queue: 6.6.2
       uuid: 10.0.0
@@ -23397,32 +23493,32 @@ snapshots:
       - "@opentelemetry/sdk-trace-base"
       - openai
 
-  "@langchain/google-genai@2.1.13(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))":
+  "@langchain/google-genai@2.1.14(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))":
     dependencies:
       "@google/generative-ai": 0.24.1
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       uuid: 11.1.0
 
-  "@langchain/langgraph-checkpoint@1.0.0(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))":
+  "@langchain/langgraph-checkpoint@1.0.0(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))":
     dependencies:
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       uuid: 10.0.0
 
-  "@langchain/langgraph-sdk@1.5.5(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
+  "@langchain/langgraph-sdk@1.5.5(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       p-queue: 9.1.0
       p-retry: 7.1.1
       uuid: 13.0.0
     optionalDependencies:
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  "@langchain/langgraph@1.1.2(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)":
+  "@langchain/langgraph@1.1.2(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod-to-json-schema@3.25.1(zod@3.25.76))(zod@3.25.76)":
     dependencies:
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
-      "@langchain/langgraph-checkpoint": 1.0.0(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))
-      "@langchain/langgraph-sdk": 1.5.5(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/langgraph-checkpoint": 1.0.0(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))
+      "@langchain/langgraph-sdk": 1.5.5(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@standard-schema/spec": 1.1.0
       uuid: 10.0.0
       zod: 3.25.76
@@ -23432,18 +23528,18 @@ snapshots:
       - react
       - react-dom
 
-  "@langchain/openai@1.2.3(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(ws@8.19.0)":
+  "@langchain/openai@1.2.4(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))(ws@8.19.0)":
     dependencies:
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       js-tiktoken: 1.0.21
       openai: 6.17.0(ws@8.19.0)(zod@3.25.76)
       zod: 3.25.76
     transitivePeerDependencies:
       - ws
 
-  "@langchain/textsplitters@1.0.1(@langchain/core@1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))":
+  "@langchain/textsplitters@1.0.1(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)))":
     dependencies:
-      "@langchain/core": 1.1.17(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
+      "@langchain/core": 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76))
       js-tiktoken: 1.0.21
 
   "@lezer/common@1.5.0": {}
@@ -25119,7 +25215,7 @@ snapshots:
 
   "@oclif/screen@1.0.4": {}
 
-  "@opennextjs/aws@3.9.14(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))":
+  "@opennextjs/aws@3.9.14(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))":
     dependencies:
       "@ast-grep/napi": 0.40.0
       "@aws-sdk/client-cloudfront": 3.398.0
@@ -25135,7 +25231,7 @@ snapshots:
       cookie: 1.1.1
       esbuild: 0.25.0
       express: 4.22.1
-      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       path-to-regexp: 6.3.0
       urlpattern-polyfill: 10.1.0
       yaml: 2.8.2
@@ -25143,15 +25239,15 @@ snapshots:
       - aws-crt
       - supports-color
 
-  "@opennextjs/cloudflare@1.16.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))":
+  "@opennextjs/cloudflare@1.16.1(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))":
     dependencies:
       "@ast-grep/napi": 0.40.0
       "@dotenvx/dotenvx": 1.31.0
-      "@opennextjs/aws": 3.9.14(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      "@opennextjs/aws": 3.9.14(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       cloudflare: 4.5.0
       enquirer: 2.4.1
       glob: 12.0.0
-      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ts-tqdm: 0.8.6
       wrangler: 4.61.0(@cloudflare/workers-types@4.20260131.0)
       yargs: 18.0.0
@@ -25505,9 +25601,9 @@ snapshots:
 
   "@pkgr/core@0.2.9": {}
 
-  "@playwright/test@1.58.0":
+  "@playwright/test@1.58.1":
     dependencies:
-      playwright: 1.58.0
+      playwright: 1.58.1
 
   "@poppinss/colors@4.1.6":
     dependencies:
@@ -28559,6 +28655,8 @@ snapshots:
 
   "@tokenizer/token@0.3.0": {}
 
+  "@tootallnate/once@2.0.0": {}
+
   "@tsconfig/node10@1.0.12": {}
 
   "@tsconfig/node12@1.0.11": {}
@@ -28680,7 +28778,7 @@ snapshots:
 
   "@types/pg-pool@2.0.6":
     dependencies:
-      "@types/pg": 8.16.0
+      "@types/pg": 8.6.1
 
   "@types/pg@8.16.0":
     dependencies:
@@ -29311,6 +29409,12 @@ snapshots:
 
   acorn@8.15.0: {}
 
+  agent-base@6.0.2:
+    dependencies:
+      debug: 4.4.3(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+
   agent-base@7.1.4: {}
 
   agentkeepalive@4.6.0:
@@ -29566,7 +29670,7 @@ snapshots:
     dependencies:
       safe-buffer: 5.1.2
 
-  better-auth@1.4.18(@prisma/client@5.22.0)(better-sqlite3@12.6.2)(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(pg@8.17.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3)):
+  better-auth@1.4.18(@prisma/client@5.22.0)(better-sqlite3@12.6.2)(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(pg@8.17.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@20.19.30)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3)):
     dependencies:
       "@better-auth/core": 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.6))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0)
       "@better-auth/telemetry": 1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.6))(jose@6.1.3)(kysely@0.28.10)(nanostores@1.1.0))
@@ -29585,7 +29689,7 @@ snapshots:
       better-sqlite3: 12.6.2
       drizzle-kit: 0.31.8
       drizzle-orm: 0.45.1(@cloudflare/workers-types@4.20260131.0)(@electric-sql/pglite@0.3.15)(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@prisma/client@5.22.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(knex@3.1.0(better-sqlite3@12.6.2)(pg@8.17.2))(kysely@0.28.10)(pg@8.17.2)(postgres@3.4.8)
-      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       pg: 8.17.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -29772,7 +29876,7 @@ snapshots:
   capital-case@1.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
       upper-case-first: 2.0.2
 
   cardinal@2.1.1:
@@ -29835,7 +29939,7 @@ snapshots:
       path-case: 3.0.4
       sentence-case: 3.0.4
       snake-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   change-case@5.4.4: {}
 
@@ -30126,7 +30230,7 @@ snapshots:
   constant-case@3.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
       upper-case: 2.0.2
 
   content-disposition@0.5.4:
@@ -30369,7 +30473,7 @@ snapshots:
   dot-case@3.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   dot-prop@5.3.0:
     dependencies:
@@ -30415,6 +30519,13 @@ snapshots:
       gopd: 1.2.0
 
   duplexer@0.1.2: {}
+
+  duplexify@4.1.3:
+    dependencies:
+      end-of-stream: 1.4.5
+      inherits: 2.0.4
+      readable-stream: 3.6.2
+      stream-shift: 1.0.3
 
   eastasianwidth@0.2.0: {}
 
@@ -31464,6 +31575,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  google-gax@5.0.6:
+    dependencies:
+      "@grpc/grpc-js": 1.14.3
+      "@grpc/proto-loader": 0.8.0
+      duplexify: 4.1.3
+      google-auth-library: 10.5.0
+      google-logging-utils: 1.1.3
+      node-fetch: 3.3.2
+      object-hash: 3.0.0
+      proto3-json-serializer: 3.0.4
+      protobufjs: 7.5.4
+      retry-request: 8.0.2
+      rimraf: 5.0.10
+    transitivePeerDependencies:
+      - supports-color
+
   google-logging-utils@1.1.3: {}
 
   googleapis-common@8.0.1:
@@ -31490,7 +31617,7 @@ snapshots:
   graphql-tag@2.12.6(graphql@16.12.0):
     dependencies:
       graphql: 16.12.0
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   graphql@16.12.0: {}
 
@@ -31671,7 +31798,7 @@ snapshots:
   header-case@2.0.4:
     dependencies:
       capital-case: 1.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   help-me@5.0.0: {}
 
@@ -31708,6 +31835,21 @@ snapshots:
       setprototypeof: 1.2.0
       statuses: 2.0.2
       toidentifier: 1.0.1
+
+  http-proxy-agent@5.0.0:
+    dependencies:
+      "@tootallnate/once": 2.0.0
+      agent-base: 6.0.2
+      debug: 4.4.3(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+
+  https-proxy-agent@5.0.1:
+    dependencies:
+      agent-base: 6.0.2
+      debug: 4.4.3(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -31757,7 +31899,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.3
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.4)
+      retry-axios: 2.6.0(axios@1.13.4(debug@4.4.3))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -31980,7 +32122,7 @@ snapshots:
 
   is-lower-case@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   is-map@2.0.3: {}
 
@@ -32051,7 +32193,7 @@ snapshots:
 
   is-upper-case@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   is-valid-path@0.1.1:
     dependencies:
@@ -32285,7 +32427,7 @@ snapshots:
 
   kysely@0.28.10: {}
 
-  langsmith@0.4.11(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)):
+  langsmith@0.4.12(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.200.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.19.0)(zod@3.25.76)):
     dependencies:
       "@types/uuid": 10.0.0
       chalk: 4.1.2
@@ -32467,11 +32609,11 @@ snapshots:
 
   lower-case-first@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   lower-case@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   lowlight@3.3.0:
     dependencies:
@@ -33061,7 +33203,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       "@next/env": 16.1.5
       "@swc/helpers": 0.5.15
@@ -33081,7 +33223,7 @@ snapshots:
       "@next/swc-win32-arm64-msvc": 16.1.5
       "@next/swc-win32-x64-msvc": 16.1.5
       "@opentelemetry/api": 1.9.0
-      "@playwright/test": 1.58.0
+      "@playwright/test": 1.58.1
       sharp: 0.34.5
     transitivePeerDependencies:
       - "@babel/core"
@@ -33327,7 +33469,7 @@ snapshots:
   param-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   parent-module@1.0.1:
     dependencies:
@@ -33362,7 +33504,7 @@ snapshots:
   path-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   path-exists@4.0.0: {}
 
@@ -33531,11 +33673,11 @@ snapshots:
       exsolve: 1.0.8
       pathe: 2.0.3
 
-  playwright-core@1.58.0: {}
+  playwright-core@1.58.1: {}
 
-  playwright@1.58.0:
+  playwright@1.58.1:
     dependencies:
-      playwright-core: 1.58.0
+      playwright-core: 1.58.1
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -33693,6 +33835,10 @@ snapshots:
       react-is: 16.13.1
 
   property-information@7.1.0: {}
+
+  proto3-json-serializer@3.0.4:
+    dependencies:
+      protobufjs: 7.5.4
 
   protobufjs@7.5.4:
     dependencies:
@@ -34234,9 +34380,16 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.13.4):
+  retry-axios@2.6.0(axios@1.13.4(debug@4.4.3)):
     dependencies:
       axios: 1.13.4(debug@4.4.3)
+
+  retry-request@8.0.2:
+    dependencies:
+      extend: 3.0.2
+      teeny-request: 10.1.0
+    transitivePeerDependencies:
+      - supports-color
 
   reusify@1.1.0: {}
 
@@ -34363,7 +34516,7 @@ snapshots:
   sentence-case@3.0.4:
     dependencies:
       no-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
       upper-case-first: 2.0.2
 
   serve-static@1.16.3:
@@ -34510,7 +34663,7 @@ snapshots:
   snake-case@3.0.4:
     dependencies:
       dot-case: 3.0.4
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   sonic-boom@4.2.0:
     dependencies:
@@ -34543,7 +34696,7 @@ snapshots:
 
   sponge-case@1.0.1:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   sprintf-js@1.0.3: {}
 
@@ -34572,6 +34725,12 @@ snapshots:
     dependencies:
       inherits: 2.0.4
       readable-stream: 3.6.2
+
+  stream-events@1.0.5:
+    dependencies:
+      stubs: 3.0.0
+
+  stream-shift@1.0.3: {}
 
   streamsearch@1.1.0: {}
 
@@ -34716,6 +34875,8 @@ snapshots:
       "@tokenizer/token": 0.3.0
       peek-readable: 4.1.0
 
+  stubs@3.0.0: {}
+
   style-mod@4.1.3: {}
 
   styled-jsx@5.1.6(@babel/core@7.28.6)(react@18.3.1):
@@ -34760,7 +34921,7 @@ snapshots:
 
   swap-case@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   swrv@1.1.0(vue@3.5.27(typescript@5.9.3)):
     dependencies:
@@ -34833,6 +34994,15 @@ snapshots:
 
   tarn@3.0.2: {}
 
+  teeny-request@10.1.0:
+    dependencies:
+      http-proxy-agent: 5.0.0
+      https-proxy-agent: 5.0.1
+      node-fetch: 3.3.2
+      stream-events: 1.0.5
+    transitivePeerDependencies:
+      - supports-color
+
   terser@5.16.9:
     dependencies:
       "@jridgewell/source-map": 0.3.11
@@ -34893,7 +35063,7 @@ snapshots:
 
   title-case@3.0.3:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   to-fast-properties@2.0.0: {}
 
@@ -35224,11 +35394,11 @@ snapshots:
 
   upper-case-first@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   upper-case@2.0.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.6.3
 
   uri-js@4.4.1:
     dependencies:

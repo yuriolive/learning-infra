@@ -1,12 +1,12 @@
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-interface UseAuthCallbacksProps {
+interface UseAuthCallbacksProperties {
   setLoading: (loading: boolean) => void;
   successMessage?: string;
   redirectUrl?: string;
   onSuccess?: () => void;
-  onError?: (ctx: { error: { message: string } }) => void;
+  onError?: (context: { error: { message: string } }) => void;
 }
 
 export const useAuthCallbacks = ({
@@ -15,7 +15,7 @@ export const useAuthCallbacks = ({
   redirectUrl = "/",
   onSuccess,
   onError,
-}: UseAuthCallbacksProps) => {
+}: UseAuthCallbacksProperties) => {
   const router = useRouter();
 
   const handleSuccess = () => {
@@ -29,11 +29,11 @@ export const useAuthCallbacks = ({
     router.push(redirectUrl);
   };
 
-  const handleError = (ctx: { error: { message: string } }) => {
+  const handleError = (context: { error: { message: string } }) => {
     setLoading(false);
-    toast.error(ctx.error.message);
+    toast.error(context.error.message);
     if (onError) {
-      onError(ctx);
+      onError(context);
     }
   };
 
