@@ -50,7 +50,7 @@ To use the plugin in a Medusa application (e.g., `apps/tenant-instance`):
 1. Add the plugin as a dependency:
 
    ```bash
-   bun add @vendin/medusa-plugin-custom@workspace:*
+   pnpm add @vendin/medusa-plugin-custom@workspace:*
    ```
 
 2. Register it in `medusa-config.ts`:
