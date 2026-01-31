@@ -1,10 +1,9 @@
 #!/bin/sh
 
 if [ "$NODE_ENV" = "production" ]; then
-  # In production, we assume migrations are handled separately (or skipped as requested)
-  # and dependencies are baked into the image.
+  # Note: Database migrations are handled by the Control Plane via Cloud Run Jobs
   echo "Starting Medusa production server..."
-  pnpm start
+  exec pnpm start
 else
   # Ensure dependencies are installed (especially important if using volumes in development)
   # Check if we are in the monorepo structure (development)

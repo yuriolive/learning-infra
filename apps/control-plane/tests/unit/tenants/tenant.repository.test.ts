@@ -139,6 +139,23 @@ describe("TenantRepository", () => {
       );
     });
 
+    it("should update redisHash", async () => {
+      const created = await repository.create({
+        name: "Store with Redis",
+        merchantEmail: "test@example.com",
+      });
+
+      const updated = await repository.update(created.id, {
+        redisHash: "abc123def456",
+      });
+
+      expect(updated).not.toBeNull();
+      expect(updated?.redisHash).toBe("abc123def456");
+
+      const found = await repository.findById(created.id);
+      expect(found?.redisHash).toBe("abc123def456");
+    });
+
     it("should return null when tenant not found", async () => {
       const updated = await repository.update(randomUUID(), {
         name: "New Name",
