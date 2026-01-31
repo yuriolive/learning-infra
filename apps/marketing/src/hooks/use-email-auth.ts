@@ -1,3 +1,4 @@
+import { logger } from "@vendin/utils/logger";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -59,8 +60,7 @@ export const useEmailAuth = (mode: AuthMode) => {
     } catch (error) {
       setLoading(false);
       toast.error("An unexpected error occurred");
-      // eslint-disable-next-line no-console
-      console.error(error);
+      logger.error({ error }, "Unexpected error during authentication");
     }
   };
 

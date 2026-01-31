@@ -1,14 +1,20 @@
+import { logger } from "@vendin/utils/logger";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { drizzle } from "drizzle-orm/d1";
 import { phoneNumber } from "better-auth/plugins";
-import type { D1Database } from "@cloudflare/workers-types";
+import { drizzle } from "drizzle-orm/d1";
+
 import * as schema from "../db/schema";
 
+import type { D1Database } from "@cloudflare/workers-types";
+
 export const auth = betterAuth({
-  database: drizzleAdapter(drizzle((process.env.DB as unknown) as D1Database, { schema }), {
-    provider: "sqlite",
-  }),
+  database: drizzleAdapter(
+    drizzle(process.env.DB as unknown as D1Database, { schema }),
+    {
+      provider: "sqlite",
+    },
+  ),
   emailAndPassword: {
     enabled: true,
   },
@@ -20,7 +26,7 @@ export const auth = betterAuth({
         const apiVersion = process.env.WHATSAPP_API_VERSION || "v21.0";
 
         if (!token || !phoneNumberId) {
-          console.error("WhatsApp credentials missing. OTP will not be sent.");
+          logger.error("WhatsApp credentials missing. OTP will not be sent.");
           throw new Error("WhatsApp credentials not configured.");
         }
 
@@ -44,15 +50,17 @@ export const auth = betterAuth({
                   body: `Your verification code is: ${code}`,
                 },
               }),
-            }
+            },
           );
 
           if (!response.ok) {
             const error = await response.text();
-            console.error("Failed to send WhatsApp message:", error);
+            logger.error({ error }, "Failed to send WhatsApp message");
+            throw new Error(`WhatsApp API error: ${error}`);
           }
-        } catch (e) {
-          console.error("Error sending WhatsApp message:", e);
+        } catch (error) {
+          logger.error({ error }, "Error sending WhatsApp message");
+          throw error;
         }
       },
       signUpOnVerification: {
