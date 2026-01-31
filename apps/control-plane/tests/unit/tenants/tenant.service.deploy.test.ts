@@ -6,6 +6,7 @@ import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 
 import type { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
+import type { Tenant } from "../../../src/domains/tenants/tenant.types";
 
 vi.mock("../../../src/providers/neon/neon.client");
 vi.mock("../../../src/providers/gcp/cloud-run.client");
@@ -56,8 +57,8 @@ describe("TenantService Granular Provisioning", () => {
       createTenantDatabase: vi.fn().mockResolvedValue("postgres://db-url"),
       deleteTenantDatabase: vi.fn().mockImplementation(async () => {}),
     };
-    (NeonProvider as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      () => mockNeonProvider,
+    vi.mocked(NeonProvider).mockImplementation(
+      () => mockNeonProvider as unknown as NeonProvider,
     );
 
     mockCloudRunProvider = {
@@ -65,9 +66,9 @@ describe("TenantService Granular Provisioning", () => {
       runTenantMigrations: vi.fn().mockResolvedValue(void 0),
       deleteTenantInstance: vi.fn().mockImplementation(async () => {}),
     };
-    (
-      CloudRunProvider as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation(() => mockCloudRunProvider);
+    vi.mocked(CloudRunProvider).mockImplementation(
+      () => mockCloudRunProvider as unknown as CloudRunProvider,
+    );
 
     service = new TenantService(repository, {
       logger,
@@ -85,7 +86,9 @@ describe("TenantService Granular Provisioning", () => {
     it("should provision database and update tenant", async () => {
       await service.provisionDatabase("tenant-1");
 
-      expect(mockNeonProvider.createTenantDatabase).toHaveBeenCalledWith("tenant-1");
+      expect(mockNeonProvider.createTenantDatabase).toHaveBeenCalledWith(
+        "tenant-1",
+      );
       expect(repository.update).toHaveBeenCalledWith("tenant-1", {
         databaseUrl: "postgres://db-url",
       });
@@ -98,19 +101,21 @@ describe("TenantService Granular Provisioning", () => {
       expect(mockCloudRunProvider.runTenantMigrations).toHaveBeenCalledWith(
         "tenant-1",
         expect.objectContaining({
-            DATABASE_URL: "postgres://db-url",
-            REDIS_URL: "redis://",
-        })
+          DATABASE_URL: "postgres://db-url",
+          REDIS_URL: "redis://",
+        }),
       );
     });
 
     it("should fail if prerequisites are missing", async () => {
-      (repository.findById as any).mockResolvedValueOnce({
+      vi.mocked(repository.findById).mockResolvedValueOnce({
         id: "tenant-1",
         databaseUrl: null, // Missing DB URL
-      });
+      } as unknown as Tenant);
 
-      await expect(service.runMigrations("tenant-1")).rejects.toThrow("Database URL missing");
+      await expect(service.runMigrations("tenant-1")).rejects.toThrow(
+        "Database URL missing",
+      );
     });
   });
 
@@ -133,14 +138,16 @@ describe("TenantService Granular Provisioning", () => {
     });
 
     it("should fail if subdomain is missing", async () => {
-      (repository.findById as any).mockResolvedValueOnce({
+      vi.mocked(repository.findById).mockResolvedValueOnce({
         id: "tenant-1",
         databaseUrl: "postgres://db",
         redisHash: "hash",
         subdomain: null, // Missing subdomain
-      });
+      } as unknown as Tenant);
 
-      await expect(service.deployService("tenant-1")).rejects.toThrow("Subdomain missing");
+      await expect(service.deployService("tenant-1")).rejects.toThrow(
+        "Subdomain missing",
+      );
     });
   });
 
@@ -148,12 +155,16 @@ describe("TenantService Granular Provisioning", () => {
     it("should delete database and service and mark tenant as failed", async () => {
       await service.rollbackResources("tenant-1");
 
-      expect(mockNeonProvider.deleteTenantDatabase).toHaveBeenCalledWith("tenant-1");
-      expect(mockCloudRunProvider.deleteTenantInstance).toHaveBeenCalledWith("tenant-1");
+      expect(mockNeonProvider.deleteTenantDatabase).toHaveBeenCalledWith(
+        "tenant-1",
+      );
+      expect(mockCloudRunProvider.deleteTenantInstance).toHaveBeenCalledWith(
+        "tenant-1",
+      );
 
       expect(repository.update).toHaveBeenCalledWith("tenant-1", {
-          status: "provisioning_failed",
-          failureReason: "Provisioning workflow failed and rolled back",
+        status: "provisioning_failed",
+        failureReason: "Provisioning workflow failed and rolled back",
       });
     });
   });

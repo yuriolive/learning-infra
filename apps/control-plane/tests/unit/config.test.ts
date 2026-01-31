@@ -115,8 +115,7 @@ describe("validateConfiguration", () => {
       "gcp-region",
       "tenant-image-tag",
       "google-app-creds",
-      "sa",
-      undefined, // missing internal api secret
+      "sa", // missing internal api secret
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -188,10 +187,7 @@ describe("validateConfiguration", () => {
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
-        missingVariables: [
-          "NEON_PROJECT_ID",
-          "GCP_PROJECT_ID",
-        ],
+        missingVariables: ["NEON_PROJECT_ID", "GCP_PROJECT_ID"],
       }),
       "Critical infrastructure keys are missing in production",
     );

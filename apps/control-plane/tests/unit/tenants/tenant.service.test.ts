@@ -35,6 +35,8 @@ vi.mock("@google-cloud/workflows", () => {
   };
 });
 
+import { ExecutionsClient } from "@google-cloud/workflows";
+
 import {
   SubdomainInUseError,
   SubdomainRequiredError,
@@ -42,10 +44,8 @@ import {
 } from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
-import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
-import { ExecutionsClient } from "@google-cloud/workflows";
 
 import type {
   CreateTenantInput,
@@ -108,15 +108,18 @@ describe("TenantService", () => {
       expect(serviceInstance.neonProvider).toBeNull();
       // @ts-expect-error accessing private property for testing
       expect(serviceInstance.cloudRunProvider).toBeNull();
-    }, 10000); // Increased timeout
+    }, 10_000); // Increased timeout
   });
 
   const createTenantHelper = (index: number) => {
-    return service.createTenant({
-      name: `Store ${index}`,
-      merchantEmail: `store${index}@example.com`,
-      subdomain: `store${index}`,
-    }, "https://mock.base.url");
+    return service.createTenant(
+      {
+        name: `Store ${index}`,
+        merchantEmail: `store${index}@example.com`,
+        subdomain: `store${index}`,
+      },
+      "https://mock.base.url",
+    );
   };
 
   describe("createTenant", () => {
@@ -138,14 +141,14 @@ describe("TenantService", () => {
     });
 
     it("should trigger workflow if GCP project configured", async () => {
-        const input: CreateTenantInput = {
-          name: "Test Store",
-          merchantEmail: "test@example.com",
-          subdomain: "teststore",
-        };
+      const input: CreateTenantInput = {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
+      };
 
-        await service.createTenant(input, "https://mock.base.url");
-        expect(ExecutionsClient).toHaveBeenCalled();
+      await service.createTenant(input, "https://mock.base.url");
+      expect(ExecutionsClient).toHaveBeenCalled();
     });
 
     it("should throw error when domain already exists", async () => {
@@ -157,9 +160,9 @@ describe("TenantService", () => {
 
       await service.createTenant(input, "https://mock.base.url");
 
-      await expect(service.createTenant(input, "https://mock.base.url")).rejects.toThrow(
-        SubdomainInUseError,
-      );
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow(SubdomainInUseError);
     });
 
     it("should throw error if subdomain is missing", async () => {
@@ -169,27 +172,38 @@ describe("TenantService", () => {
         // subdomain missing
       };
 
-      await expect(service.createTenant(input, "https://mock.base.url")).rejects.toThrow(
-        SubdomainRequiredError,
-      );
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow(SubdomainRequiredError);
     });
 
-    it("should fail if workflow triggering fails", async () => {
-      const executionsClientMock = vi.mocked(ExecutionsClient).mock.results[0]?.value;
-      // Force next createExecution to fail.
-      // Since we can't easily access the exact instance method, we can mock the class implementation to fail once.
-      // But verifying this specific failure path without refactoring is tricky if we rely on global mocks.
-      // Let's rely on throwing mechanism.
+    it("should fail if workflow triggering fails", () => {
+      vi.mocked(ExecutionsClient).mockImplementationOnce(() => {
+        throw new Error("Workflow trigger failed");
+      });
+
+      const input: CreateTenantInput = {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
+      };
+
+      return expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow("Workflow trigger failed");
     });
   });
 
   describe("getTenant", () => {
     it("should return tenant when found", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      }, "https://mock.base.url");
+      const created = await service.createTenant(
+        {
+          name: "Test Store",
+          merchantEmail: "test@example.com",
+          subdomain: "teststore",
+        },
+        "https://mock.base.url",
+      );
 
       const tenant = await service.getTenant(created.id);
 
@@ -206,11 +220,14 @@ describe("TenantService", () => {
 
   describe("updateTenant", () => {
     it("should update tenant successfully", async () => {
-      const created = await service.createTenant({
-        name: "Original Name",
-        merchantEmail: "test@example.com",
-        subdomain: "original",
-      }, "https://mock.base.url");
+      const created = await service.createTenant(
+        {
+          name: "Original Name",
+          merchantEmail: "test@example.com",
+          subdomain: "original",
+        },
+        "https://mock.base.url",
+      );
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
@@ -248,11 +265,14 @@ describe("TenantService", () => {
     });
 
     it("should allow updating to same domain for same tenant", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      }, "https://mock.base.url");
+      const created = await service.createTenant(
+        {
+          name: "Test Store",
+          merchantEmail: "test@example.com",
+          subdomain: "teststore",
+        },
+        "https://mock.base.url",
+      );
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
@@ -268,11 +288,14 @@ describe("TenantService", () => {
 
   describe("deleteTenant", () => {
     it("should delete tenant successfully", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      }, "https://mock.base.url");
+      const created = await service.createTenant(
+        {
+          name: "Test Store",
+          merchantEmail: "test@example.com",
+          subdomain: "teststore",
+        },
+        "https://mock.base.url",
+      );
 
       await expect(service.deleteTenant(created.id)).resolves.toBeUndefined();
 

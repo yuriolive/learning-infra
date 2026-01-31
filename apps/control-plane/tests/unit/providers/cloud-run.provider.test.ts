@@ -113,7 +113,10 @@ describe("CloudRunProvider", () => {
       // Poll execution status (NOT called anymore in runTenantMigrations, but needed for polling)
       // The new logic only waits for trigger.
 
-      const executionName = await provider.runTenantMigrations(tenantId, environment);
+      const executionName = await provider.runTenantMigrations(
+        tenantId,
+        environment,
+      );
 
       await vi.runAllTimersAsync();
 
@@ -175,28 +178,28 @@ describe("CloudRunProvider", () => {
   });
 
   describe("getJobExecutionStatus", () => {
-      it("should return success when succeededCount > 0", async () => {
-          mockExecutionsGet.mockResolvedValue({ data: { succeededCount: 1 } });
-          const status = await provider.getJobExecutionStatus("exec-1");
-          expect(status).toEqual({ status: "success" });
-      });
+    it("should return success when succeededCount > 0", async () => {
+      mockExecutionsGet.mockResolvedValue({ data: { succeededCount: 1 } });
+      const status = await provider.getJobExecutionStatus("exec-1");
+      expect(status).toEqual({ status: "success" });
+    });
 
-      it("should return failed when failedCount > 0", async () => {
-          mockExecutionsGet.mockResolvedValue({
-              data: {
-                  failedCount: 1,
-                  conditions: [{ state: "CONDITION_FAILED", message: "Boom" }]
-              }
-          });
-          const status = await provider.getJobExecutionStatus("exec-1");
-          expect(status).toEqual({ status: "failed", error: "Boom" });
+    it("should return failed when failedCount > 0", async () => {
+      mockExecutionsGet.mockResolvedValue({
+        data: {
+          failedCount: 1,
+          conditions: [{ state: "CONDITION_FAILED", message: "Boom" }],
+        },
       });
+      const status = await provider.getJobExecutionStatus("exec-1");
+      expect(status).toEqual({ status: "failed", error: "Boom" });
+    });
 
-      it("should return running when neither", async () => {
-          mockExecutionsGet.mockResolvedValue({ data: { succeededCount: 0 } });
-          const status = await provider.getJobExecutionStatus("exec-1");
-          expect(status).toEqual({ status: "running" });
-      });
+    it("should return running when neither", async () => {
+      mockExecutionsGet.mockResolvedValue({ data: { succeededCount: 0 } });
+      const status = await provider.getJobExecutionStatus("exec-1");
+      expect(status).toEqual({ status: "running" });
+    });
   });
 
   describe("deployTenantInstance", () => {

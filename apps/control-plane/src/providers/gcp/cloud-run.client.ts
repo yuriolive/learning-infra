@@ -152,40 +152,69 @@ export class CloudRunProvider {
 
       const executionName = await this.waitForJobTrigger(executionOperation);
 
-      this.logger.info({ tenantId, executionName }, "Migration job triggered successfully");
+      this.logger.info(
+        { tenantId, executionName },
+        "Migration job triggered successfully",
+      );
       return executionName;
-
     } catch (error) {
-      this.logger.error({ error, tenantId }, "Database migrations trigger failed");
+      this.logger.error(
+        { error, tenantId },
+        "Database migrations trigger failed",
+      );
       throw error;
     }
   }
 
   // New method for polling
-  async getJobExecutionStatus(executionName: string): Promise<{ status: MigrationStatus; error?: string }> {
+  async getJobExecutionStatus(
+    executionName: string,
+  ): Promise<{ status: MigrationStatus; error?: string }> {
     try {
-      const response = await this.runClient.projects.locations.jobs.executions.get({
-        name: executionName,
-      });
+      const response =
+        await this.runClient.projects.locations.jobs.executions.get({
+          name: executionName,
+        });
       const execution = response.data;
 
-      if (execution.succeededCount && execution.succeededCount > 0) {
-        return { status: "success" };
-      }
-      if (execution.failedCount && execution.failedCount > 0) {
-        // Try to get error message from conditions
-        const errorMsg = execution.conditions?.find(c => c.state === "CONDITION_FAILED")?.message || "Job execution failed";
-        return { status: "failed", error: errorMsg };
-      }
-      if (execution.cancelledCount && execution.cancelledCount > 0) {
-        return { status: "failed", error: "Job execution cancelled" };
+      const status = this.mapExecutionToStatus(execution);
+      if (status.status === "failed" && !status.error) {
+        status.error = "Job execution failed";
       }
 
-      return { status: "running" };
+      return status;
     } catch (error) {
-      this.logger.error({ error, executionName }, "Failed to get execution status");
-      return { status: "failed", error: error instanceof Error ? error.message : String(error) };
+      this.logger.error(
+        { error, executionName },
+        "Failed to get execution status",
+      );
+      return {
+        status: "failed",
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
+  }
+
+  private mapExecutionToStatus(
+    execution: run_v2.Schema$GoogleCloudRunV2Execution,
+  ): { status: MigrationStatus; error?: string } {
+    if (execution.succeededCount && execution.succeededCount > 0) {
+      return { status: "success" };
+    }
+
+    if (execution.failedCount && execution.failedCount > 0) {
+      const condition = execution.conditions?.find(
+        (c) => c.state === "CONDITION_FAILED",
+      );
+      const message = condition?.message;
+      return { status: "failed", ...(message ? { error: message } : {}) };
+    }
+
+    if (execution.cancelledCount && execution.cancelledCount > 0) {
+      return { status: "failed", error: "Job execution cancelled" };
+    }
+
+    return { status: "running" };
   }
 
   async deleteTenantInstance(tenantId: string): Promise<void> {
@@ -256,11 +285,9 @@ export class CloudRunProvider {
   }
 
   // Renamed/Refactored from waitForExecutionCompletion
-  private async waitForJobTrigger(
-    operationName: string,
-  ): Promise<string> {
+  private async waitForJobTrigger(operationName: string): Promise<string> {
     const startTime = Date.now();
-    const timeout = 60000; // 1 minute to trigger
+    const timeout = 60_000; // 1 minute to trigger
 
     this.logger.info(
       { operationName },
@@ -281,10 +308,12 @@ export class CloudRunProvider {
 
         const executionName = response.data.response?.name as string;
         if (!executionName) {
-           // Sometimes response is in metadata or response
-           // For Run Job, the response is Execution
-           // Let's inspect
-           throw new Error("Job trigger completed but execution name is missing");
+          // Sometimes response is in metadata or response
+          // For Run Job, the response is Execution
+          // Let's inspect
+          throw new Error(
+            "Job trigger completed but execution name is missing",
+          );
         }
         return executionName;
       }
