@@ -46,7 +46,7 @@ export function getStoreTools(container: MedusaContainer) {
             if (p.variants) {
               for (const v of p.variants) {
                 // Safely cast to access potential calculated_price
-                const variant = v as unknown as VariantWithPrice;
+                const variant = v as VariantWithPrice;
 
                 // check calculated_price
                 if (variant.calculated_price?.calculated_amount) {
@@ -82,7 +82,9 @@ export function getStoreTools(container: MedusaContainer) {
 
           return JSON.stringify(mapped);
         } catch (error) {
-          return `Error: Failed to search products. ${(error as Error).message}`;
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          return `Error: Failed to search products. ${errorMessage}`;
         }
       },
       {

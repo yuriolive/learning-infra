@@ -25,6 +25,8 @@ export interface Environment {
   GOOGLE_APPLICATION_CREDENTIALS_PART_2?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
   CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
+  INTERNAL_API_SECRET?: BoundSecret;
+  INTERNAL_API_KEY?: BoundSecret;
 }
 
 function resolveSecret(
@@ -49,6 +51,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleAppCredsP2,
     googleAppCredsP3,
     cloudRunServiceAccount,
+    internalApiSecret,
+    internalApiKey,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -61,6 +65,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_2),
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
     resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
+    resolveSecret(environment.INTERNAL_API_SECRET),
+    resolveSecret(environment.INTERNAL_API_KEY),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -85,6 +91,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     upstashRedisUrl,
     googleApplicationCredentials,
     cloudRunServiceAccount,
+    internalApiSecret,
+    internalApiKey,
   };
 }
 
@@ -115,10 +123,19 @@ function validateProductionConfig(
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
+  internalApiSecret?: string,
+  internalApiKey?: string,
 ): Response | undefined {
   if (!adminApiKey) {
     logger.error(
       "ADMIN_API_KEY is required in production but was not configured",
+    );
+    return createErrorResponse("Service is not properly configured");
+  }
+
+  if (!internalApiSecret && !internalApiKey) {
+    logger.error(
+      "INTERNAL_API_SECRET or INTERNAL_API_KEY is required in production but was not configured",
     );
     return createErrorResponse("Service is not properly configured");
   }
@@ -160,6 +177,8 @@ export function validateConfiguration(
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
+  internalApiSecret?: string,
+  internalApiKey?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -182,6 +201,8 @@ export function validateConfiguration(
       tenantImageTag,
       googleApplicationCredentials,
       cloudRunServiceAccount,
+      internalApiSecret,
+      internalApiKey,
     );
   }
 
