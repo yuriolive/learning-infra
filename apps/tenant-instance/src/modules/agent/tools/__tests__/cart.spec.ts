@@ -56,11 +56,16 @@ describe("Cart Tools", () => {
   });
 
   describe("get_or_create_cart", () => {
-    it("should return existing cart id", async () => {
+    const defaultRegion = { id: "reg_1", currency_code: "usd" };
+
+    beforeEach(() => {
       mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1", currency_code: "usd" }],
+        [defaultRegion],
         1,
       ]);
+    });
+
+    it("should return existing cart id", async () => {
       mockCartService.listCarts.mockResolvedValue([{ id: "cart_existing" }]);
 
       const result = await getOrCreateTool.invoke({ customer_id: "cus_1" });
@@ -74,10 +79,6 @@ describe("Cart Tools", () => {
     });
 
     it("should create new cart if none exists", async () => {
-      mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1", currency_code: "usd" }],
-        1,
-      ]);
       mockCartService.listCarts.mockResolvedValue([]);
       mockCartService.createCarts.mockResolvedValue({ id: "cart_new" });
       mockCustomerService.retrieveCustomer.mockResolvedValue({
@@ -89,8 +90,8 @@ describe("Cart Tools", () => {
       expect(mockCartService.createCarts).toHaveBeenCalledWith(
         expect.objectContaining({
           customer_id: "cus_1",
-          region_id: "reg_1",
-          currency_code: "usd",
+          region_id: defaultRegion.id,
+          currency_code: defaultRegion.currency_code,
           email: "test@test.com",
         }),
       );
@@ -98,10 +99,6 @@ describe("Cart Tools", () => {
     });
 
     it("should create new cart with fallback email if customer not found", async () => {
-      mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1", currency_code: "usd" }],
-        1,
-      ]);
       mockCartService.listCarts.mockResolvedValue([]);
       mockCartService.createCarts.mockResolvedValue({ id: "cart_new" });
       mockCustomerService.retrieveCustomer.mockRejectedValue(
@@ -113,8 +110,8 @@ describe("Cart Tools", () => {
       expect(mockCartService.createCarts).toHaveBeenCalledWith(
         expect.objectContaining({
           customer_id: "cus_1",
-          region_id: "reg_1",
-          currency_code: "usd",
+          region_id: defaultRegion.id,
+          currency_code: defaultRegion.currency_code,
           email: "cus_1@example.com",
         }),
       );
@@ -122,10 +119,6 @@ describe("Cart Tools", () => {
     });
 
     it("should ignore completed carts and create new one", async () => {
-      mockRegionService.listAndCountRegions.mockResolvedValue([
-        [{ id: "reg_1", currency_code: "usd" }],
-        1,
-      ]);
       mockCartService.listCarts.mockResolvedValue([
         { id: "cart_completed", completed_at: new Date() },
       ]);
@@ -148,20 +141,39 @@ describe("Cart Tools", () => {
   });
 
   describe("add_item_to_cart", () => {
-    it("should add item successfully", async () => {
-      mockCartService.retrieveCart.mockResolvedValue({
-        id: "cart_1",
-        region_id: "reg_1",
-        currency_code: "usd",
-      });
-      mockCartService.addLineItems.mockResolvedValue({});
+    const defaultCart = {
+      id: "cart_1",
+      region_id: "reg_1",
+      currency_code: "usd",
+    };
+    const defaultVariant = { id: "var_1", title: "Test Variant" };
+    const defaultPrice = 1500;
+
+    interface SetupOverrides {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      cart?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      variant?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pricing?: any;
+    }
+
+    const setupContext = (overrides: SetupOverrides = {}) => {
+      mockCartService.retrieveCart.mockResolvedValue(
+        overrides.cart || defaultCart,
+      );
       mockProductService.listAndCountProductVariants.mockResolvedValue([
-        [{ id: "var_1", title: "Test Variant" }],
+        [overrides.variant || defaultVariant],
         1,
       ]);
-      mockPricingService.calculatePrices.mockResolvedValue([
-        { calculated_amount: 1500 },
-      ]);
+      mockPricingService.calculatePrices.mockResolvedValue(
+        overrides.pricing || [{ calculated_amount: defaultPrice }],
+      );
+      mockCartService.addLineItems.mockResolvedValue({});
+    };
+
+    it("should add item successfully", async () => {
+      setupContext();
 
       const result = await addItemTool.invoke({
         cart_id: "cart_1",
@@ -209,16 +221,7 @@ describe("Cart Tools", () => {
     });
 
     it("should handle error if price not found", async () => {
-      mockCartService.retrieveCart.mockResolvedValue({
-        id: "cart_1",
-        region_id: "reg_1",
-        currency_code: "usd",
-      });
-      mockProductService.listAndCountProductVariants.mockResolvedValue([
-        [{ id: "var_1", title: "Test Variant" }],
-        1,
-      ]);
-      mockPricingService.calculatePrices.mockResolvedValue([]);
+      setupContext({ pricing: [] });
 
       const result = await addItemTool.invoke({
         cart_id: "cart_1",
@@ -232,18 +235,7 @@ describe("Cart Tools", () => {
     });
 
     it("should handle errors from cart service", async () => {
-      mockCartService.retrieveCart.mockResolvedValue({
-        id: "cart_1",
-        region_id: "reg_1",
-        currency_code: "usd",
-      });
-      mockProductService.listAndCountProductVariants.mockResolvedValue([
-        [{ id: "var_1", title: "Test Variant" }],
-        1,
-      ]);
-      mockPricingService.calculatePrices.mockResolvedValue([
-        { calculated_amount: 1500 },
-      ]);
+      setupContext();
       mockCartService.addLineItems.mockRejectedValue(new Error("Out of stock"));
 
       const result = await addItemTool.invoke({
