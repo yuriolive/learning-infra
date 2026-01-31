@@ -41,8 +41,7 @@ export function getStoreTools(container: MedusaContainer) {
           // We attempt to find 'calculated_price' on variants if available, otherwise return "Price on request".
 
           const mapped = products.map((p) => {
-            let lowestPrice = Infinity;
-            let currency = "";
+            const lowestPricesByCurrency = new Map<string, number>();
 
             if (p.variants) {
               for (const v of p.variants) {
@@ -50,24 +49,34 @@ export function getStoreTools(container: MedusaContainer) {
                 const variant = v as unknown as VariantWithPrice;
 
                 // check calculated_price
-                if (
-                  variant.calculated_price?.calculated_amount &&
-                  variant.calculated_price.calculated_amount < lowestPrice
-                ) {
-                  lowestPrice = variant.calculated_price.calculated_amount;
-                  currency = variant.calculated_price.currency_code;
+                if (variant.calculated_price?.calculated_amount) {
+                  const { calculated_amount, currency_code } =
+                    variant.calculated_price;
+                  const code = currency_code.toUpperCase();
+                  const currentLowest = lowestPricesByCurrency.get(code);
+
+                  if (
+                    currentLowest === undefined ||
+                    calculated_amount < currentLowest
+                  ) {
+                    lowestPricesByCurrency.set(code, calculated_amount);
+                  }
                 }
               }
             }
+
+            const price_display =
+              lowestPricesByCurrency.size === 0
+                ? "Price on request"
+                : [...lowestPricesByCurrency.entries()]
+                    .map(([code, amount]) => `${code} ${amount}`)
+                    .join(" / ");
 
             return {
               id: p.id,
               title: p.title,
               handle: p.handle,
-              price_display:
-                lowestPrice === Infinity
-                  ? "Price on request"
-                  : `${currency.toUpperCase()} ${lowestPrice}`,
+              price_display,
             };
           });
 

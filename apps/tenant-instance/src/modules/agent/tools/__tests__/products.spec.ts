@@ -97,4 +97,37 @@ describe("Product Tools", () => {
 
     expect(parsed[0].price_display).toBe("Price on request");
   });
+  it("should handle variants with different currencies", async () => {
+    mockProductService.listAndCountProducts.mockResolvedValue([
+      [
+        {
+          id: "prod_3",
+          title: "Multi-currency Item",
+          handle: "multi-currency",
+          variants: [
+            {
+              id: "v1",
+              calculated_price: {
+                calculated_amount: 100,
+                currency_code: "usd",
+              },
+            },
+            {
+              id: "v2",
+              calculated_price: {
+                calculated_amount: 500,
+                currency_code: "brl",
+              },
+            },
+          ],
+        },
+      ],
+      1,
+    ]);
+
+    const result = await searchTool.invoke({ query: "multi" });
+    const parsed = JSON.parse(result);
+
+    expect(parsed[0].price_display).toBe("USD 100 / BRL 500");
+  });
 });
