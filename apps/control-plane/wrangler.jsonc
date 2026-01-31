@@ -77,6 +77,11 @@
           "binding": "INTERNAL_API_SECRET",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "internal-api-secret"
+        },
+        {
+          "binding": "INTERNAL_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "internal-api-key"
         }
       ],
       "vars": {

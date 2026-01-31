@@ -5,35 +5,17 @@ main:
         assign:
           - baseUrl: ${args.baseUrl}
           - tenantId: ${args.tenantId}
-          - internalSecret: "INTERNAL_API_SECRET_PLACEHOLDER" # This will be replaced by the workflow deployment, or we assume it's set in the args or Env
-          # Note: In a real scenario, we'd fetch this secret from Secret Manager within the workflow
-          # For now, let's assume we can pass it or it's hardcoded/env var in the deployment.
-          # However, the prompt says "Auth: Use auth: { type: OIDC }".
-          # This implies the Control Plane is protected by Cloud IAM (Cloud Run invoker).
-          # But we also added an API Key guard in the controller.
-          # The Controller checks `X-Internal-Secret`.
-          # The `http.post` step in workflows can send headers.
-          # We need to fetch the secret or have it available.
-          # Given the constraints, let's use a placeholder and assume the deployment replaces it or we fetch it.
-          # For this task, I'll use a placeholder variable.
-
-    - fetch_secret:
-        call: googleapis.secretmanager.v1.projects.secrets.versions.access
-        args:
-          name: "projects/${sys.get_env('GOOGLE_CLOUD_PROJECT_ID')}/secrets/internal-api-secret/versions/latest"
-        result: secret_payload
-
-    - assign_secret:
-        assign:
-          - internalSecret: ${text.decode(base64.decode(secret_payload.payload.data))}
+          - internalKey: ${args.internalApiKey}
+          - headers:
+              Content-Type: "application/json"
+              X-Internal-Key: ${internalKey}
 
     - provision_database:
         try:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/database"}
-            headers:
-              X-Internal-Secret: ${internalSecret}
+            headers: ${headers}
             body:
               tenantId: ${tenantId}
             auth:
@@ -50,18 +32,17 @@ main:
             - raise_db_error:
                 raise: ${e}
 
-    - run_migrations:
+    - trigger_migrations:
         try:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/migrations"}
-            headers:
-              X-Internal-Secret: ${internalSecret}
+            headers: ${headers}
             body:
               tenantId: ${tenantId}
             auth:
               type: OIDC
-          result: migration_result
+          result: migration_trigger_result
         except:
           as: e
           steps:
@@ -69,22 +50,63 @@ main:
                 call: http.post
                 args:
                   url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers:
-                    X-Internal-Secret: ${internalSecret}
+                  headers: ${headers}
                   body:
                     tenantId: ${tenantId}
                   auth:
                     type: OIDC
-            - raise_migration_error:
+            - raise_migration_trigger_error:
                 raise: ${e}
+
+    - wait_for_migrations:
+        call: sys.sleep
+        args:
+          seconds: 10
+
+    - check_migration_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/migrations/status"}
+            headers: ${headers}
+            query:
+              name: ${migration_trigger_result.body.executionName}
+            auth:
+              type: OIDC
+          result: status_response
+        except:
+          as: e
+          steps:
+            - rollback_migration_check:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_migration_check_error:
+                raise: ${e}
+
+    - evaluate_migration:
+        switch:
+          - condition: ${status_response.body.status == "running"}
+            next: wait_for_migrations
+          - condition: ${status_response.body.status == "success"}
+            next: deploy_service
+          - condition: ${status_response.body.status == "failed"}
+            steps:
+              - raise_migration_failed:
+                  raise: ${"Migration failed: " + default(status_response.body.error, "Unknown error")}
+        next: wait_for_migrations # Default loop back if status is weird, or raise? Let's loop back.
 
     - deploy_service:
         try:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/service"}
-            headers:
-              X-Internal-Secret: ${internalSecret}
+            headers: ${headers}
             body:
               tenantId: ${tenantId}
             auth:
@@ -97,8 +119,7 @@ main:
                 call: http.post
                 args:
                   url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers:
-                    X-Internal-Secret: ${internalSecret}
+                  headers: ${headers}
                   body:
                     tenantId: ${tenantId}
                   auth:
@@ -111,8 +132,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/domain"}
-            headers:
-              X-Internal-Secret: ${internalSecret}
+            headers: ${headers}
             body:
               tenantId: ${tenantId}
             auth:
@@ -125,8 +145,7 @@ main:
                 call: http.post
                 args:
                   url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers:
-                    X-Internal-Secret: ${internalSecret}
+                  headers: ${headers}
                   body:
                     tenantId: ${tenantId}
                   auth:
@@ -139,8 +158,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/activate"}
-            headers:
-              X-Internal-Secret: ${internalSecret}
+            headers: ${headers}
             body:
               tenantId: ${tenantId}
             auth:
@@ -153,8 +171,7 @@ main:
                 call: http.post
                 args:
                   url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers:
-                    X-Internal-Secret: ${internalSecret}
+                  headers: ${headers}
                   body:
                     tenantId: ${tenantId}
                   auth:

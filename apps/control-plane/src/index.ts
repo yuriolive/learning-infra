@@ -164,6 +164,7 @@ function createServices(
   googleApplicationCredentials: string | undefined,
   upstashRedisUrl: string | undefined,
   cloudRunServiceAccount: string | undefined,
+  internalApiKey: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
@@ -177,6 +178,7 @@ function createServices(
     tenantImageTag: environment.TENANT_IMAGE_TAG,
     upstashRedisUrl,
     cloudRunServiceAccount,
+    internalApiKey,
   });
   return { tenantService, database };
 }
@@ -203,6 +205,7 @@ export default {
       googleApplicationCredentials,
       cloudRunServiceAccount,
       internalApiSecret,
+      internalApiKey,
     } = await resolveEnvironmentSecrets(environment);
 
     initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -228,6 +231,7 @@ export default {
       googleApplicationCredentials,
       cloudRunServiceAccount,
       internalApiSecret,
+      internalApiKey,
     );
     if (configError) return configError;
 
@@ -241,6 +245,7 @@ export default {
       googleApplicationCredentials,
       upstashRedisUrl,
       cloudRunServiceAccount,
+      (internalApiSecret || internalApiKey) as string,
     );
 
     const tenantRoutes = createTenantRoutes({
@@ -255,7 +260,7 @@ export default {
       logger,
       tenantService,
       db: database,
-      internalApiSecret: internalApiSecret as string, // validated in config
+      internalApiSecret: (internalApiSecret || internalApiKey) as string, // validated in config
     });
 
     const url = new URL(request.url);

@@ -14,22 +14,21 @@ export class ProvisioningController {
     private service: TenantService,
     private database: Database,
     private logger: ReturnType<typeof createLogger>,
-    private internalApiSecret: string,
+    private internalApiKey: string,
   ) {}
 
   async handleRequest(request: Request): Promise<Response> {
-    const secret = request.headers.get("X-Internal-Secret");
-    if (!secret || secret !== this.internalApiSecret) {
-      this.logger.warn(
-        "Unauthorized attempt to access provisioning controller",
-      );
-      return new Response("Unauthorized", { status: 401 });
-    }
+    const authResponse = this.checkAuth(request);
+    if (authResponse) return authResponse;
 
     const url = new URL(request.url);
     const action = url.pathname.split("/").pop();
 
     try {
+      if (request.method === "GET" && action === "status") {
+        return await this.handleMigrationStatus(url);
+      }
+
       const body = await request.json();
       const { tenantId } = requestSchema.parse(body);
 
@@ -49,6 +48,17 @@ export class ProvisioningController {
     }
   }
 
+  private checkAuth(request: Request): Response | null {
+    const key = request.headers.get("X-Internal-Key");
+    if (!key || key !== this.internalApiKey) {
+      this.logger.warn(
+        "Unauthorized attempt to access provisioning controller",
+      );
+      return new Response("Unauthorized", { status: 401 });
+    }
+    return null;
+  }
+
   private async dispatchAction(
     action: string | undefined,
     tenantId: string,
@@ -60,8 +70,9 @@ export class ProvisioningController {
         );
       }
       case "migrations": {
+        // Change: Returns execution name immediately (async trigger)
         return await this.handleStep(tenantId, "migrate_db", () =>
-          this.service.runMigrations(tenantId),
+          this.service.triggerMigration(tenantId),
         );
       }
       case "service": {
@@ -88,6 +99,22 @@ export class ProvisioningController {
         return new Response("Not Found", { status: 404 });
       }
     }
+  }
+
+  private async handleMigrationStatus(url: URL): Promise<Response> {
+    const executionName = url.searchParams.get("name");
+    if (!executionName) {
+      return new Response(JSON.stringify({ error: "Missing name parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const status = await this.service.getMigrationStatus(executionName);
+    return new Response(JSON.stringify(status), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   private async handleStep<T>(

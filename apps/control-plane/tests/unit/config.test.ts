@@ -122,7 +122,7 @@ describe("validateConfiguration", () => {
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      "INTERNAL_API_SECRET is required in production but was not configured",
+      "INTERNAL_API_SECRET or INTERNAL_API_KEY is required in production but was not configured",
     );
   });
 
@@ -222,6 +222,7 @@ describe("resolveEnvironmentSecrets", () => {
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
       internalApiSecret: "internal-secret",
+      internalApiKey: undefined,
     });
   });
 

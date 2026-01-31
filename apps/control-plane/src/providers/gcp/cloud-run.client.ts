@@ -11,6 +11,8 @@ interface CloudRunProviderConfig {
   logger: ReturnType<typeof createLogger>;
 }
 
+export type MigrationStatus = "running" | "success" | "failed";
+
 export class CloudRunProvider {
   private runClient: run_v2.Run;
   private logger: ReturnType<typeof createLogger>;
@@ -103,10 +105,11 @@ export class CloudRunProvider {
     }
   }
 
+  // Modified to be non-blocking
   async runTenantMigrations(
     tenantId: string,
     environmentVariables: Record<string, string>,
-  ): Promise<void> {
+  ): Promise<string> {
     const jobId = `migrate-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const jobPath = `${parent}/jobs/${jobId}`;
@@ -128,23 +131,60 @@ export class CloudRunProvider {
         await this.waitForOperation(operationName);
       }
 
-      // Run the job
+      // Trigger the job execution
       const executionOperation = await this.runJobExecution(jobPath, tenantId);
 
       if (!executionOperation) {
         throw new Error("Failed to start migration job execution");
       }
 
-      // Wait for execution to complete
-      await this.waitForExecutionCompletion(executionOperation);
+      // Instead of waiting, return the operation/execution name
+      // The runJobExecution method returns the operation name.
+      // We need to resolve the actual execution name from the operation
+      // But Cloud Run operations API for Jobs returns the execution name in `response` field ONLY after completion.
+      // However, the `run` method returns an operation that we can wait for quickly (just the trigger, not the whole job).
+      // Wait, `waitForExecutionCompletion` in previous code waited for the *job execution* to finish.
+      // Now we want to return immediately.
 
-      this.logger.info(
-        { tenantId },
-        "Database migrations completed successfully",
-      );
+      // The response from `jobs.run` is an Operation. The metadata or response of that operation contains the Execution name.
+      // We should wait for the Operation to be done (which means "execution triggered"),
+      // then get the Execution name from it.
+
+      const executionName = await this.waitForJobTrigger(executionOperation);
+
+      this.logger.info({ tenantId, executionName }, "Migration job triggered successfully");
+      return executionName;
+
     } catch (error) {
-      this.logger.error({ error, tenantId }, "Database migrations failed");
+      this.logger.error({ error, tenantId }, "Database migrations trigger failed");
       throw error;
+    }
+  }
+
+  // New method for polling
+  async getJobExecutionStatus(executionName: string): Promise<{ status: MigrationStatus; error?: string }> {
+    try {
+      const response = await this.runClient.projects.locations.jobs.executions.get({
+        name: executionName,
+      });
+      const execution = response.data;
+
+      if (execution.succeededCount && execution.succeededCount > 0) {
+        return { status: "success" };
+      }
+      if (execution.failedCount && execution.failedCount > 0) {
+        // Try to get error message from conditions
+        const errorMsg = execution.conditions?.find(c => c.state === "CONDITION_FAILED")?.message || "Job execution failed";
+        return { status: "failed", error: errorMsg };
+      }
+      if (execution.cancelledCount && execution.cancelledCount > 0) {
+        return { status: "failed", error: "Job execution cancelled" };
+      }
+
+      return { status: "running" };
+    } catch (error) {
+      this.logger.error({ error, executionName }, "Failed to get execution status");
+      return { status: "failed", error: error instanceof Error ? error.message : String(error) };
     }
   }
 
@@ -213,6 +253,46 @@ export class CloudRunProvider {
     }
 
     throw new Error("Timeout waiting for Cloud Run operation");
+  }
+
+  // Renamed/Refactored from waitForExecutionCompletion
+  private async waitForJobTrigger(
+    operationName: string,
+  ): Promise<string> {
+    const startTime = Date.now();
+    const timeout = 60000; // 1 minute to trigger
+
+    this.logger.info(
+      { operationName },
+      "Waiting for Cloud Run job trigger (operation)",
+    );
+
+    while (Date.now() - startTime < timeout) {
+      const response = await this.runClient.projects.locations.operations.get({
+        name: operationName,
+      });
+
+      if (response.data.done) {
+        if (response.data.error) {
+          throw new Error(
+            `Migration trigger failed: ${response.data.error.message}`,
+          );
+        }
+
+        const executionName = response.data.response?.name as string;
+        if (!executionName) {
+           // Sometimes response is in metadata or response
+           // For Run Job, the response is Execution
+           // Let's inspect
+           throw new Error("Job trigger completed but execution name is missing");
+        }
+        return executionName;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    throw new Error("Timeout waiting for migration job to trigger");
   }
 
   private async makeServicePublic(servicePath: string): Promise<void> {
@@ -358,83 +438,6 @@ export class CloudRunProvider {
       name: jobPath,
     });
     return response.data.name ?? undefined;
-  }
-
-  private async waitForExecutionCompletion(
-    executionOperationName: string,
-  ): Promise<void> {
-    const startTime = Date.now();
-    const timeout = 600_000; // 10 minutes for migrations
-
-    this.logger.info(
-      { executionOperationName },
-      "Waiting for Cloud Run job execution completion",
-    );
-
-    // Initial wait to let the operation settle
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    while (Date.now() - startTime < timeout) {
-      const response = await this.runClient.projects.locations.operations.get({
-        name: executionOperationName,
-      });
-
-      if (response.data.done) {
-        if (response.data.error) {
-          throw new Error(
-            `Migration job failed: ${response.data.error.message}`,
-          );
-        }
-
-        // The operation being "done" means the execution was triggered.
-        // We need to fetch the execution itself to check its status.
-        const executionName = response.data.response?.name as string;
-        if (!executionName) {
-          throw new Error(
-            "Job execution started but execution name is missing",
-          );
-        }
-
-        return this.pollExecutionStatus(executionName);
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    throw new Error("Timeout waiting for migration job to start");
-  }
-
-  private async pollExecutionStatus(executionName: string): Promise<void> {
-    const startTime = Date.now();
-    const timeout = 600_000; // 10 minutes
-
-    while (Date.now() - startTime < timeout) {
-      const response =
-        await this.runClient.projects.locations.jobs.executions.get({
-          name: executionName,
-        });
-
-      const execution = response.data;
-
-      // Check for completion conditions
-      if (execution.succeededCount === 1) {
-        return;
-      }
-
-      if (execution.failedCount && execution.failedCount > 0) {
-        throw new Error(`Migration job execution failed`);
-      }
-
-      if (execution.cancelledCount && execution.cancelledCount > 0) {
-        throw new Error(`Migration job execution was cancelled`);
-      }
-
-      // Check if it's still running
-      this.logger.debug({ executionName }, "Polling migration job status...");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    throw new Error("Timeout waiting for migration job execution results");
   }
 
   private prepareJobRequest(

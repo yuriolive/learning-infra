@@ -3,7 +3,10 @@ import { randomBytes } from "node:crypto";
 import { ExecutionsClient } from "@google-cloud/workflows";
 import { type createLogger } from "@vendin/utils/logger";
 
-import { CloudRunProvider } from "../../providers/gcp/cloud-run.client";
+import {
+  CloudRunProvider,
+  type MigrationStatus,
+} from "../../providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../providers/neon/neon.client";
 
 import {
@@ -28,6 +31,7 @@ interface TenantServiceConfig {
   tenantImageTag?: string | undefined;
   upstashRedisUrl?: string | undefined;
   cloudRunServiceAccount?: string | undefined;
+  internalApiKey?: string | undefined;
   logger: ReturnType<typeof createLogger>;
 }
 
@@ -36,6 +40,7 @@ export class TenantService {
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: ExecutionsClient;
   private upstashRedisUrl: string | undefined;
+  private internalApiKey: string | undefined;
   private logger: ReturnType<typeof createLogger>;
   private gcpProjectId: string | undefined;
   private gcpRegion: string | undefined;
@@ -46,6 +51,7 @@ export class TenantService {
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
+    this.internalApiKey = config.internalApiKey;
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
 
@@ -122,6 +128,7 @@ export class TenantService {
         const executionArguments = {
           tenantId: tenant.id,
           baseUrl,
+          internalApiKey: this.internalApiKey,
         };
 
         this.logger.info(
@@ -164,7 +171,7 @@ export class TenantService {
     return { databaseUrl };
   }
 
-  async runMigrations(tenantId: string): Promise<void> {
+  async triggerMigration(tenantId: string): Promise<{ executionName: string }> {
     const { tenant, databaseUrl, upstashRedisUrl } =
       await this.validateProvisioningPrerequisites(tenantId);
 
@@ -177,11 +184,36 @@ export class TenantService {
       NODE_ENV: "production",
     };
 
-    this.logger.info({ tenantId }, "Running migrations");
-    await this.cloudRunProvider!.runTenantMigrations(
+    this.logger.info({ tenantId }, "Triggering migration job");
+    const executionName = await this.cloudRunProvider!.runTenantMigrations(
       tenantId,
       environmentVariables,
     );
+
+    return { executionName };
+  }
+
+  async getMigrationStatus(executionName: string): Promise<{
+    status: MigrationStatus;
+    error?: string;
+  }> {
+    if (!this.cloudRunProvider) {
+      throw new Error("Cloud Run provider not initialized");
+    }
+    return this.cloudRunProvider.getJobExecutionStatus(executionName);
+  }
+
+  // Legacy/Blocking method - kept if needed by other paths, but replaced by triggerMigration in workflow
+  async runMigrations(tenantId: string): Promise<void> {
+    // This is now effectively just triggering and not waiting?
+    // Or we keep it as is?
+    // The previous implementation waited.
+    // If we change runTenantMigrations to be non-blocking, this method becomes non-blocking too.
+    // But `runTenantMigrations` in CloudRunProvider WAS changed to non-blocking and returns executionName.
+    // So this wrapper needs to be updated or removed if unused.
+    // The new controller uses triggerMigration.
+    // I will deprecate this or make it just trigger.
+    await this.triggerMigration(tenantId);
   }
 
   async deployService(tenantId: string): Promise<void> {
@@ -208,7 +240,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl = await this.cloudRunProvider?.deployTenantInstance(
+    const apiUrl = await this.cloudRunProvider!.deployTenantInstance(
       tenantId,
       environmentVariables,
     );
