@@ -177,7 +177,7 @@ export class TenantService {
     };
 
     this.logger.info({ tenantId }, "Running migrations");
-    await this.cloudRunProvider!.runTenantMigrations(
+    await this.cloudRunProvider?.runTenantMigrations(
       tenantId,
       environmentVariables,
     );
