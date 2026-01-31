@@ -1,0 +1,198 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - baseUrl: ${args.baseUrl}
+          - tenantId: ${args.tenantId}
+          - internalKey: ${args.internalApiKey}
+          - headers:
+              Content-Type: "application/json"
+              X-Internal-Key: ${internalKey}
+
+    - provision_database:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/database"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: db_result
+        except:
+          as: e
+          steps:
+            - rollback_db:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_db_error:
+                raise: ${e}
+
+    - trigger_migrations:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/migrations"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: migration_trigger_result
+        except:
+          as: e
+          steps:
+            - rollback_trigger:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_trigger_error:
+                raise: ${e}
+
+    - wait_for_migrations:
+        call: sys.sleep
+        args:
+          seconds: 10
+
+    - check_migration_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/migrations/status"}
+            headers: ${headers}
+            query:
+              name: ${migration_trigger_result.body.executionName}
+            auth:
+              type: OIDC
+          result: status_response
+        except:
+          as: e
+          steps:
+            - rollback_check:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_check_error:
+                raise: ${e}
+
+    - evaluate_migration:
+        switch:
+          - condition: ${status_response.body.status == "running"}
+            next: wait_for_migrations
+          - condition: ${status_response.body.status == "success"}
+            next: deploy_service
+          - condition: ${status_response.body.status == "failed"}
+            steps:
+              - rollback_logic_failure:
+                  call: http.post
+                  args:
+                    url: ${baseUrl + "/internal/provisioning/rollback"}
+                    headers: ${headers}
+                    body:
+                      tenantId: ${tenantId}
+                    auth:
+                      type: OIDC
+              - raise_migration_failed:
+                  raise: ${"Migration failed: " + default(status_response.body.error, "Unknown error")}
+        next: wait_for_migrations
+
+    - deploy_service:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/service"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: service_result
+        except:
+          as: e
+          steps:
+            - rollback_service:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_service_error:
+                raise: ${e}
+
+    - configure_domain:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/domain"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: domain_result
+        except:
+          as: e
+          steps:
+            - rollback_domain:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_domain_error:
+                raise: ${e}
+
+    - activate_tenant:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/activate"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: activation_result
+        except:
+          as: e
+          steps:
+            - rollback_activation:
+                call: http.post
+                args:
+                  url: ${baseUrl + "/internal/provisioning/rollback"}
+                  headers: ${headers}
+                  body:
+                    tenantId: ${tenantId}
+                  auth:
+                    type: OIDC
+            - raise_activation_error:
+                raise: ${e}
+
+    - return_result:
+        return:
+          status: "success"
+          tenantId: ${tenantId}

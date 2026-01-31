@@ -72,6 +72,16 @@
           "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "google-application-credentials-part-3"
+        },
+        {
+          "binding": "INTERNAL_API_SECRET",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "internal-api-secret"
+        },
+        {
+          "binding": "INTERNAL_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "internal-api-key"
         }
       ],
       "vars": {

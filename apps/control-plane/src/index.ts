@@ -8,6 +8,7 @@ import {
   type Environment,
 } from "./config";
 import { createDatabase } from "./database/database";
+import { createInternalRoutes } from "./domains/internal/internal.routes";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
@@ -76,6 +77,7 @@ function handleApiRequest(
   url: URL,
   origin: string,
   tenantRoutes: ReturnType<typeof createTenantRoutes>,
+  internalRoutes: ReturnType<typeof createInternalRoutes>,
 ): Response | Promise<Response> {
   if (url.pathname === "/health" || url.pathname === "/") {
     return new Response(
@@ -115,6 +117,10 @@ function handleApiRequest(
         "Content-Type": "text/html",
       },
     });
+  }
+
+  if (url.pathname.startsWith("/internal/")) {
+    return internalRoutes.handleRequest(request);
   }
 
   return tenantRoutes.handleRequest(request);
@@ -158,6 +164,7 @@ function createServices(
   googleApplicationCredentials: string | undefined,
   upstashRedisUrl: string | undefined,
   cloudRunServiceAccount: string | undefined,
+  internalApiKey: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
@@ -171,8 +178,9 @@ function createServices(
     tenantImageTag: environment.TENANT_IMAGE_TAG,
     upstashRedisUrl,
     cloudRunServiceAccount,
+    internalApiKey,
   });
-  return { tenantService };
+  return { tenantService, database };
 }
 
 export default {
@@ -196,6 +204,8 @@ export default {
       upstashRedisUrl,
       googleApplicationCredentials,
       cloudRunServiceAccount,
+      internalApiSecret,
+      internalApiKey,
     } = await resolveEnvironmentSecrets(environment);
 
     initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -220,10 +230,12 @@ export default {
       environment.TENANT_IMAGE_TAG,
       googleApplicationCredentials,
       cloudRunServiceAccount,
+      internalApiSecret,
+      internalApiKey,
     );
     if (configError) return configError;
 
-    const { tenantService } = createServices(
+    const { tenantService, database } = createServices(
       logger,
       databaseUrl as string,
       nodeEnvironment,
@@ -233,6 +245,7 @@ export default {
       googleApplicationCredentials,
       upstashRedisUrl,
       cloudRunServiceAccount,
+      (internalApiSecret || internalApiKey) as string,
     );
 
     const tenantRoutes = createTenantRoutes({
@@ -241,6 +254,13 @@ export default {
       ...(context?.waitUntil
         ? { waitUntil: context.waitUntil.bind(context) }
         : {}),
+    });
+
+    const internalRoutes = createInternalRoutes({
+      logger,
+      tenantService,
+      db: database,
+      internalApiSecret: (internalApiSecret || internalApiKey) as string, // validated in config
     });
 
     const url = new URL(request.url);
@@ -267,6 +287,7 @@ export default {
         url,
         origin,
         tenantRoutes,
+        internalRoutes,
       );
       return wrapResponse(response, request, middlewareOptions);
     } catch (error: unknown) {

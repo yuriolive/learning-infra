@@ -26,18 +26,24 @@ describe("TenantRoutes", () => {
     indexOrOverrides: number | Partial<CreateTenantInput> = 1,
   ) => {
     if (typeof indexOrOverrides === "number") {
-      return service.createTenant({
-        name: `Store ${indexOrOverrides}`,
-        merchantEmail: `store${indexOrOverrides}@example.com`,
-        subdomain: `store${indexOrOverrides}`,
-      });
+      return service.createTenant(
+        {
+          name: `Store ${indexOrOverrides}`,
+          merchantEmail: `store${indexOrOverrides}@example.com`,
+          subdomain: `store${indexOrOverrides}`,
+        },
+        "http://localhost:3000",
+      );
     }
-    return service.createTenant({
-      name: "Test Store",
-      merchantEmail: "test@example.com",
-      subdomain: "teststore",
-      ...indexOrOverrides,
-    });
+    return service.createTenant(
+      {
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+        subdomain: "teststore",
+        ...indexOrOverrides,
+      },
+      "http://localhost:3000",
+    );
   };
 
   describe("POST /api/tenants", () => {
