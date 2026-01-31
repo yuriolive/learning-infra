@@ -6,6 +6,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
+    "build:worker": "vite build",
     "dev": "tsx --watch src/index.ts",
     "start": "npm run build && node dist/src/index.js",
     "lint": "eslint .",
@@ -18,7 +19,7 @@
     "db:migrate": "tsx src/database/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "deploy": "wrangler deploy"
+    "deploy": "npm run build:worker && wrangler deploy"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",
