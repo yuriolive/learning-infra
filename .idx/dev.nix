@@ -10,6 +10,7 @@
     pkgs.turbo
     pkgs.google-cloud-sdk
     pkgs.docker
+    pkgs.gemini-cli
   ];
 
   # IDE configuration.
