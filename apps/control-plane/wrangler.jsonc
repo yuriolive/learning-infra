@@ -4,7 +4,9 @@
   "compatibility_date": "2026-01-31",
   "minify": true,
   "compatibility_flags": [
-    "nodejs_compat"
+    "nodejs_compat",
+    "global_fetch_strictly_public",
+    "nodejs_compat_populate_process_env"
   ],
   "routes": [
     {
