@@ -132,6 +132,13 @@ export class TenantService {
           { error, tenantId: tenant.id },
           "Failed to trigger provisioning workflow",
         );
+
+        await this.repository.update(tenant.id, {
+          status: "provisioning_failed",
+          failureReason:
+            error instanceof Error ? error.message : "Unknown error",
+        });
+
         throw error;
       }
     } else {

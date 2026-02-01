@@ -18,6 +18,18 @@ const getCircularReplacer = () => {
         return;
       }
       seen.add(value);
+
+      if (value instanceof Error) {
+        return {
+          name: value.name,
+          message: value.message,
+          stack: value.stack,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          cause: (value as any).cause,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(value as any),
+        };
+      }
     }
     return value;
   };

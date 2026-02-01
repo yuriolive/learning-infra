@@ -213,6 +213,31 @@ describe("TenantService", () => {
         service.createTenant(input, "https://mock.base.url"),
       ).rejects.toThrow("Workflow trigger failed");
     });
+
+    it("should update tenant status to provisioning_failed if workflow triggering fails", async () => {
+      // Mock failure in execution creation
+      const errorMessage = "Workflow trigger failed";
+      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
+        new Error(errorMessage),
+      );
+
+      const input: CreateTenantInput = {
+        name: "Failed Store",
+        merchantEmail: "failed@example.com",
+        subdomain: "failedstore",
+      };
+
+      // Expect the service to throw
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow(errorMessage);
+
+      // Verify DB state
+      const tenant = await repository.findBySubdomain(input.subdomain!);
+      expect(tenant).toBeDefined();
+      expect(tenant?.status).toBe("provisioning_failed");
+      expect(tenant?.failureReason).toBe(errorMessage);
+    });
   });
 
   describe("getTenant", () => {
