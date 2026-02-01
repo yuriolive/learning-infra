@@ -18,6 +18,20 @@ const getCircularReplacer = () => {
         return;
       }
       seen.add(value);
+
+      if (
+        value instanceof Error ||
+        (Object.prototype.hasOwnProperty.call(value, "message") &&
+          Object.prototype.hasOwnProperty.call(value, "stack"))
+      ) {
+        return {
+          name: (value as Error).name,
+          message: (value as Error).message,
+          stack: (value as Error).stack,
+          cause: (value as { cause?: unknown }).cause,
+          ...(value as Record<string, unknown>),
+        };
+      }
     }
     return value;
   };

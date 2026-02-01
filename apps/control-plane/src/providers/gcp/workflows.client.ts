@@ -95,7 +95,12 @@ export class GcpWorkflowsClient {
       );
     } catch (error) {
       this.logger.error(
-        { error, parent: options.parent },
+        {
+          error,
+          parent: options.parent,
+          errorMessage: (error as Error).message,
+          errorStack: (error as Error).stack,
+        },
         "Failed to create workflow execution",
       );
       throw error;
