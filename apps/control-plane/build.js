@@ -6,6 +6,7 @@ import * as esbuild from "esbuild";
 const require = createRequire(import.meta.url);
 const PROTOBUF_LIGHT_PATH =
   require.resolve("protobufjs/dist/light/protobuf.js");
+const PINO_BROWSER_PATH = require.resolve("pino/browser.js");
 
 const protobufAliasPlugin = {
   name: "protobuf-alias",
@@ -19,6 +20,7 @@ const protobufAliasPlugin = {
     build.onResolve({ filter: /^protobufjs(\/|$)/ }, (arguments_) => {
       // Avoid infinite loop: allow the virtual module to resolve handled above
       if (arguments_.path === "protobufjs-light-build") return null;
+      if (arguments_.importer?.includes("protobuf-shim")) return null; // avoid loop
       return { path: path.resolve("./src/protobuf-shim.js") };
     });
   },
@@ -34,7 +36,14 @@ await esbuild
     target: "es2022",
     mainFields: ["module", "main"],
     sourcemap: true,
+    alias: {
+      pino: PINO_BROWSER_PATH,
+    },
     plugins: [protobufAliasPlugin],
     logLevel: "info",
+    logOverride: {
+      "direct-eval": "silent",
+      "impossible-typeof": "silent",
+    },
   })
   .catch(() => process.exit(1)); // eslint-disable-line unicorn/no-process-exit
