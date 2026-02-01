@@ -1,14 +1,24 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import * as esbuild from "esbuild";
 
+const require = createRequire(import.meta.url);
+const PROTOBUF_LIGHT_PATH =
+  require.resolve("protobufjs/dist/light/protobuf.js");
+
 const protobufAliasPlugin = {
   name: "protobuf-alias",
   setup(build) {
+    // Resolve the virtual module "protobufjs-light-build" to the absolute path
+    build.onResolve({ filter: /^protobufjs-light-build$/ }, () => {
+      return { path: PROTOBUF_LIGHT_PATH };
+    });
+
     // Best Practice: Check for the package name boundary (/ or end of string)
     build.onResolve({ filter: /^protobufjs(\/|$)/ }, (arguments_) => {
-      // Avoid infinite loop: allow the light build import to resolve naturally
-      if (arguments_.path === "protobufjs/dist/light/protobuf.js") return null;
+      // Avoid infinite loop: allow the virtual module to resolve handled above
+      if (arguments_.path === "protobufjs-light-build") return null;
       return { path: path.resolve("./src/protobuf-shim.js") };
     });
   },

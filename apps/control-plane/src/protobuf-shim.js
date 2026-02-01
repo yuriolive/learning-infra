@@ -1,4 +1,5 @@
-import pb from "protobufjs/dist/light/protobuf.js";
+// eslint-disable-next-line import/no-unresolved
+import pb from "protobufjs-light-build";
 
 // Re-export all properties from the light build
 export const {
@@ -30,4 +31,5 @@ export const {
   decoder,
   encoder,
 } = pb;
-export { default } from "protobufjs/dist/light/protobuf.js";
+// eslint-disable-next-line import/no-unresolved
+export { default } from "protobufjs-light-build";
