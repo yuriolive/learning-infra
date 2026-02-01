@@ -17,7 +17,7 @@ Orchestrates the creation of a new tenant, including:
 
 ### Automated Deployment (CD)
 
-Any changes to files in this directory pushed to the `main` branch will automatically trigger the [Deploy GCP Workflows](file:///c:/Users/yuri_/IdeaProjects/learning-infra/.github/workflows/deploy-workflows.yml) GitHub Action.
+Any changes to files in this directory pushed to the `main` branch will automatically trigger the [Deploy GCP Workflows](../../.github/workflows/deploy-workflows.yml) GitHub Action.
 
 ### Manual Deployment
 
