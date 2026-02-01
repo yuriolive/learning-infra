@@ -1,4 +1,4 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { type NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { type PgliteDatabase } from "drizzle-orm/pglite";
@@ -41,29 +41,6 @@ export const createDatabase = (
   nodeEnvironment: string = "production",
 ): Database => {
   const connectionString = getConnectionString(rawConnectionString);
-
-  const isLocal =
-    nodeEnvironment === "development" ||
-    connectionString.includes("localhost") ||
-    connectionString.includes("db.localtest.me");
-
-  // For local development using the Neon proxy, this block intercepts the Neon
-  // serverless driver's HTTP requests and redirects them to the local proxy
-  // instance (running on port 4444). This allows us to use the same production
-  // driver (`@neondatabase/serverless`) in a local environment against a
-  // standard PostgreSQL database, ensuring consistency between environments.
-  if (isLocal && connectionString.includes("db.localtest.me")) {
-    neonConfig.fetchEndpoint = (host) => {
-      const [protocol, port] =
-        host === "db.localtest.me" ? ["http", 4444] : ["https", 443];
-      return `${protocol}://${host}:${port}/sql`;
-    };
-    const connectionStringUrl = new URL(connectionString);
-    neonConfig.useSecureWebSocket =
-      connectionStringUrl.hostname !== "db.localtest.me";
-    neonConfig.wsProxy = (host) =>
-      host === "db.localtest.me" ? `${host}:4444/v2` : `${host}/v2`;
-  }
 
   /**
    * For the control plane, we switch between drivers based on the environment:

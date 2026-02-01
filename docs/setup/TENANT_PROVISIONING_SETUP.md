@@ -15,14 +15,19 @@ Provisioning Flow:
          │
          ▼
 ┌─────────────────┐
-│ Control Plane   │  (Orchestrates provisioning)
+│ Control Plane   │  (API Request)
 │ (Cloudflare)    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ GCP Workflows   │  (Orchestrates Infrastructure)
 └────────┬────────┘
          │
          ├─▶ Create Neon Database
          ├─▶ Create Cloud Run Service
          ├─▶ Configure Secrets
-         ├─▶ Add Cloudflare Hostname (if custom domain)
+         ├─▶ Add Cloudflare Hostname
          ├─▶ Initialize MedusaJS
          └─▶ Verify Health
 ```

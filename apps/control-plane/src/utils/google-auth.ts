@@ -43,13 +43,17 @@ export class GoogleAuth {
       scope: "https://www.googleapis.com/auth/cloud-platform",
     };
 
-    const encodedHeader = btoa(JSON.stringify(header));
-    const encodedClaim = btoa(JSON.stringify(claim));
+    const encodedHeader = Buffer.from(JSON.stringify(header)).toString(
+      "base64url",
+    );
+    const encodedClaim = Buffer.from(JSON.stringify(claim)).toString(
+      "base64url",
+    );
 
     const sign = createSign("SHA256");
     sign.update(`${encodedHeader}.${encodedClaim}`);
     sign.end();
-    const signature = sign.sign(this.credentials.private_key, "base64");
+    const signature = sign.sign(this.credentials.private_key, "base64url");
 
     return `${encodedHeader}.${encodedClaim}.${signature}`;
   }
