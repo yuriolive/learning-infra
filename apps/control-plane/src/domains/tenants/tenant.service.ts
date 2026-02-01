@@ -1,13 +1,12 @@
 import { randomBytes } from "node:crypto";
 
-import { ExecutionsClient } from "@google-cloud/workflows";
-import { type createLogger } from "@vendin/utils/logger";
-
 import {
   CloudRunProvider,
   type MigrationStatus,
 } from "../../providers/gcp/cloud-run.client";
+import { GcpWorkflowsClient } from "../../providers/gcp/workflows.client";
 import { NeonProvider } from "../../providers/neon/neon.client";
+import { type Logger } from "../../utils/logger";
 
 import {
   SubdomainInUseError,
@@ -32,16 +31,16 @@ interface TenantServiceConfig {
   upstashRedisUrl?: string | undefined;
   cloudRunServiceAccount?: string | undefined;
   internalApiKey?: string | undefined;
-  logger: ReturnType<typeof createLogger>;
+  logger: Logger;
 }
 
 export class TenantService {
   private neonProvider: NeonProvider | null = null;
   private cloudRunProvider: CloudRunProvider | null = null;
-  private executionsClient: ExecutionsClient;
+  private executionsClient: GcpWorkflowsClient;
   private upstashRedisUrl: string | undefined;
   private internalApiKey: string | undefined;
-  private logger: ReturnType<typeof createLogger>;
+  private logger: Logger;
   private gcpProjectId: string | undefined;
   private gcpRegion: string | undefined;
 
@@ -64,6 +63,7 @@ export class TenantService {
         });
       } else {
         this.logger.warn(
+          {},
           "Neon credentials not found. Database provisioning will be skipped.",
         );
       }
@@ -81,27 +81,19 @@ export class TenantService {
         });
       } else {
         this.logger.warn(
+          {},
           "GCP config not found. Cloud Run deployment will be skipped.",
         );
       }
 
-      const clientOptions: { credentials?: object; keyFilename?: string } = {};
-      if (config.gcpCredentialsJson) {
-        try {
-          const credentials = JSON.parse(config.gcpCredentialsJson);
-          clientOptions.credentials = credentials;
-        } catch {
-          clientOptions.keyFilename = config.gcpCredentialsJson;
-        }
-      }
-      this.executionsClient = new ExecutionsClient({
-        ...clientOptions,
-        fallback: "rest",
+      this.executionsClient = new GcpWorkflowsClient({
+        credentialsJson: config.gcpCredentialsJson,
+        logger: this.logger,
       });
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize providers");
       // Fallback for executions client to avoid crash if init fails, though it likely won't work
-      this.executionsClient = new ExecutionsClient({ fallback: "rest" });
+      this.executionsClient = new GcpWorkflowsClient({ logger: this.logger });
     }
   }
 

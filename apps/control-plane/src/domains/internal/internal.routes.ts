@@ -1,12 +1,11 @@
-import { type createLogger } from "@vendin/utils/logger";
-
 import { type Database } from "../../database/database";
+import { type Logger } from "../../utils/logger";
 import { type TenantService } from "../tenants/tenant.service";
 
 import { ProvisioningController } from "./provisioning.controller";
 
 export interface InternalRouteContext {
-  logger: ReturnType<typeof createLogger>;
+  logger: Logger;
   tenantService: TenantService;
   db: Database;
   internalApiKey: string;

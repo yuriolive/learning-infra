@@ -1,9 +1,10 @@
-import { type createLogger } from "@vendin/utils/logger";
 import { z } from "zod";
 
 import { type Database } from "../../database/database";
 import { tenantProvisioningEvents } from "../../database/schema";
 import { type TenantService } from "../tenants/tenant.service";
+
+import type { Logger } from "../../utils/logger";
 
 const requestSchema = z.object({
   tenantId: z.string().uuid(),
@@ -13,7 +14,7 @@ export class ProvisioningController {
   constructor(
     private service: TenantService,
     private database: Database,
-    private logger: ReturnType<typeof createLogger>,
+    private logger: Logger,
     private internalApiKey: string,
   ) {}
 

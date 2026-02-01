@@ -1,6 +1,7 @@
-import { type createLogger } from "@vendin/utils/logger";
 import { GoogleAuth } from "google-auth-library";
 import { run_v2 } from "googleapis";
+
+import type { Logger } from "../../utils/logger";
 
 interface CloudRunProviderConfig {
   credentialsJson?: string | undefined;
@@ -8,14 +9,14 @@ interface CloudRunProviderConfig {
   region: string;
   tenantImageTag: string;
   serviceAccount?: string;
-  logger: ReturnType<typeof createLogger>;
+  logger: Logger;
 }
 
 export type MigrationStatus = "running" | "success" | "failed";
 
 export class CloudRunProvider {
   private runClient: run_v2.Run;
-  private logger: ReturnType<typeof createLogger>;
+  private logger: Logger;
   private projectId: string;
   private region: string;
   private tenantImageTag: string;

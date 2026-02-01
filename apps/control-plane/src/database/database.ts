@@ -2,10 +2,11 @@ import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle as drizzleHttp } from "drizzle-orm/neon-http";
 import { type NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { type PgliteDatabase } from "drizzle-orm/pglite";
-import { drizzle as drizzlePg } from "drizzle-orm/postgres-js";
-import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import {
+  drizzle as drizzlePg,
+  type PostgresJsDatabase,
+} from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import ws from "ws";
 
 import * as schema from "./schema";
 
@@ -62,10 +63,6 @@ export const createDatabase = (
       connectionStringUrl.hostname !== "db.localtest.me";
     neonConfig.wsProxy = (host) =>
       host === "db.localtest.me" ? `${host}:4444/v2` : `${host}/v2`;
-  }
-
-  if (nodeEnvironment !== "production") {
-    neonConfig.webSocketConstructor = ws;
   }
 
   /**

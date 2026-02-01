@@ -1,5 +1,4 @@
 import { captureError, initAnalytics } from "@vendin/analytics";
-import { createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
 import {
@@ -14,6 +13,7 @@ import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
+import { createLogger } from "./utils/logger";
 
 const openApiSpecs = new LRUCache<
   string,
