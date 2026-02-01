@@ -1,6 +1,6 @@
 {
   "name": "control-plane",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "compatibility_date": "2025-01-24",
   "minify": true,
   "compatibility_flags": [

@@ -13,6 +13,7 @@ export default [
       "**/.next/**",
       "**/.open-next/**",
       "docs/examples/**",
+      "**/pnpm-lock.yaml",
     ],
   },
 ];
