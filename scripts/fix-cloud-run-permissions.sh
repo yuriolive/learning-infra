@@ -54,6 +54,16 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   echo -e "${YELLOW}Warning: roles/secretmanager.secretAccessor may already be granted${NC}"
 }
 
+# Grant Workflows Admin role
+echo -e "${GREEN}Granting roles/workflows.admin...${NC}"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
+  --role="roles/workflows.admin" \
+  --condition=None \
+  --quiet || {
+  echo -e "${YELLOW}Warning: roles/workflows.admin may already be granted${NC}"
+}
+
 echo ""
 echo -e "${GREEN}=== Verifying IAM Bindings ===${NC}\n"
 
