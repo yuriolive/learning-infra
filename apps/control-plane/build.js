@@ -6,7 +6,9 @@ const protobufAliasPlugin = {
   name: "protobuf-alias",
   setup(build) {
     // Best Practice: Check for the package name boundary (/ or end of string)
-    build.onResolve({ filter: /^protobufjs(\/|$)/ }, () => {
+    build.onResolve({ filter: /^protobufjs(\/|$)/ }, (arguments_) => {
+      // Avoid infinite loop: allow the light build import to resolve naturally
+      if (arguments_.path === "protobufjs/dist/light/protobuf.js") return null;
       return { path: path.resolve("./src/protobuf-shim.js") };
     });
   },

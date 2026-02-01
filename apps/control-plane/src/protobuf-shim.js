@@ -1,4 +1,4 @@
-import pb from "../../../node_modules/protobufjs/dist/light/protobuf.js";
+import pb from "protobufjs/dist/light/protobuf.js";
 
 // Re-export all properties from the light build
 export const {
@@ -30,4 +30,4 @@ export const {
   decoder,
   encoder,
 } = pb;
-export { default } from "../../../node_modules/protobufjs/dist/light/protobuf.js";
+export { default } from "protobufjs/dist/light/protobuf.js";
