@@ -1,0 +1,45 @@
+name: Deploy GCP Workflows
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "gcp/workflows/**"
+      - ".github/workflows/deploy-workflows.yml"
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: southamerica-east1
+
+jobs:
+  deploy:
+    name: Deploy Workflows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@71fee32a0bb7e97b4d33d548e7d957010649d8fa # v2.1.3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@77e7a554d41e2ee56fc945c52dfd3f33d12def9a # v2.1.4
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy Provision Tenant Workflow
+        run: |
+          gcloud workflows deploy provision-tenant \
+            --source=gcp/workflows/provision-tenant.yaml \
+            --location=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --quiet
