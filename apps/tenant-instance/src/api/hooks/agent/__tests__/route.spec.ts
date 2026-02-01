@@ -245,4 +245,42 @@ describe("Agent API Route", () => {
       status: "ignored_missing_fields",
     });
   });
+
+  it("should return 500 with friendly error if service fails", async () => {
+    const processMessageMock = vi
+      .fn()
+      .mockRejectedValue(new Error("Redis connection failed"));
+    const loggerMock = { error: vi.fn(), warn: vi.fn() };
+    const request = {
+      body: { phone: "123456", text: "Hello" },
+      headers: { "x-internal-secret": "test-secret" },
+      scope: {
+        resolve: vi.fn().mockImplementation((key) => {
+          if (key === AGENT_MODULE) {
+            return { processMessage: processMessageMock };
+          }
+          if (key === "logger") {
+            return loggerMock;
+          }
+          return;
+        }),
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const response = {
+      json: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    await POST(request, response);
+
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      "Agent API: Error processing message",
+      expect.any(Error),
+    );
+    expect(response.status).toHaveBeenCalledWith(500);
+    expect(response.json).toHaveBeenCalledWith({ error: "Agent unavailable" });
+  });
 });

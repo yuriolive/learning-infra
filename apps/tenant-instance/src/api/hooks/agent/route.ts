@@ -107,6 +107,6 @@ export const POST = async (
     medusaResponse.status(200).json({ response });
   } catch (error) {
     logger.error("Agent API: Error processing message", error);
-    medusaResponse.status(500).json({ message: "Internal Server Error" });
+    medusaResponse.status(500).json({ error: "Agent unavailable" });
   }
 };
