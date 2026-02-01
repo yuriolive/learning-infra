@@ -38,6 +38,7 @@ await esbuild
     sourcemap: true,
     alias: {
       pino: PINO_BROWSER_PATH,
+      ws: require.resolve("ws/browser.js"),
     },
     plugins: [protobufAliasPlugin],
     logLevel: "info",
