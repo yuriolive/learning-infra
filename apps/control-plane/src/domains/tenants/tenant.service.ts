@@ -1,9 +1,3 @@
-import {
-  CloudRunProvider,
-  type MigrationStatus,
-} from "../../providers/gcp/cloud-run.client";
-import { GcpWorkflowsClient } from "../../providers/gcp/workflows.client";
-import { NeonProvider } from "../../providers/neon/neon.client";
 import { type Logger } from "../../utils/logger";
 
 import {
@@ -12,6 +6,7 @@ import {
   TenantNotFoundError,
 } from "./tenant.errors";
 
+import type { ProvisioningService } from "../provisioning/provisioning.service";
 import type { TenantRepository } from "./tenant.repository";
 import type {
   CreateTenantInput,
@@ -20,24 +15,13 @@ import type {
 } from "./tenant.types";
 
 interface TenantServiceConfig {
-  neonApiKey?: string | undefined;
-  neonProjectId?: string | undefined;
-  gcpCredentialsJson?: string | undefined;
-  gcpProjectId?: string | undefined;
-  gcpRegion?: string | undefined;
-  tenantImageTag?: string | undefined;
-  upstashRedisUrl?: string | undefined;
-  cloudRunServiceAccount?: string | undefined;
   internalApiKey?: string | undefined;
   logger: Logger;
-  executionsClient?: GcpWorkflowsClient;
+  gcpProjectId?: string | undefined;
+  gcpRegion?: string | undefined;
 }
 
 export class TenantService {
-  private neonProvider: NeonProvider | null = null;
-  private cloudRunProvider: CloudRunProvider | null = null;
-  private executionsClient: GcpWorkflowsClient;
-  private upstashRedisUrl: string | undefined;
   private internalApiKey: string | undefined;
   private logger: Logger;
   private gcpProjectId: string | undefined;
@@ -45,59 +29,13 @@ export class TenantService {
 
   constructor(
     private repository: TenantRepository,
+    private provisioningService: ProvisioningService,
     config: TenantServiceConfig,
   ) {
     this.logger = config.logger;
-    this.upstashRedisUrl = config.upstashRedisUrl;
     this.internalApiKey = config.internalApiKey;
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
-
-    this.executionsClient =
-      config.executionsClient ??
-      new GcpWorkflowsClient({
-        credentialsJson: config.gcpCredentialsJson,
-        projectId: config.gcpProjectId || "unknown-project",
-        location: config.gcpRegion || "unknown-region",
-        logger: this.logger,
-      });
-
-    this.initializeProviders(config);
-  }
-
-  private initializeProviders(config: TenantServiceConfig): void {
-    try {
-      if (config.neonApiKey && config.neonProjectId) {
-        this.neonProvider = new NeonProvider({
-          apiKey: config.neonApiKey,
-          projectId: config.neonProjectId,
-          logger: this.logger,
-        });
-      } else {
-        this.logger.warn(
-          "Neon credentials not found. Database provisioning will be skipped.",
-        );
-      }
-
-      if (config.gcpProjectId && config.gcpRegion && config.tenantImageTag) {
-        this.cloudRunProvider = new CloudRunProvider({
-          credentialsJson: config.gcpCredentialsJson,
-          projectId: config.gcpProjectId,
-          region: config.gcpRegion,
-          tenantImageTag: config.tenantImageTag,
-          logger: this.logger,
-          ...(config.cloudRunServiceAccount
-            ? { serviceAccount: config.cloudRunServiceAccount }
-            : {}),
-        });
-      } else {
-        this.logger.warn(
-          "GCP config not found. Cloud Run deployment will be skipped.",
-        );
-      }
-    } catch (error) {
-      this.logger.error({ error }, "Failed to initialize providers");
-    }
   }
 
   async createTenant(
@@ -121,47 +59,10 @@ export class TenantService {
 
     // 2. Trigger Cloud Workflow
     if (this.gcpProjectId && this.gcpRegion) {
-      await this.repository.logProvisioningEvent(
+      await this.provisioningService.triggerProvisioningWorkflow(
         tenant.id,
-        "trigger_workflow",
-        "started",
+        baseUrl,
       );
-
-      try {
-        await this.executionsClient.triggerProvisionTenant({
-          tenantId: tenant.id,
-          baseUrl,
-          internalApiKey: this.internalApiKey,
-        });
-
-        await this.repository.logProvisioningEvent(
-          tenant.id,
-          "trigger_workflow",
-          "completed",
-        );
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-
-        this.logger.error(
-          { error, tenantId: tenant.id },
-          "Failed to trigger provisioning workflow",
-        );
-
-        await this.repository.update(tenant.id, {
-          status: "provisioning_failed",
-          failureReason: errorMessage,
-        });
-
-        await this.repository.logProvisioningEvent(
-          tenant.id,
-          "trigger_workflow",
-          "failed",
-          { error: errorMessage },
-        );
-
-        throw error;
-      }
     } else {
       this.logger.warn(
         { tenantId: tenant.id },
@@ -172,148 +73,7 @@ export class TenantService {
     return tenant;
   }
 
-  // --- Granular Provisioning Methods ---
-
-  async provisionDatabase(tenantId: string): Promise<{ databaseUrl: string }> {
-    if (!this.neonProvider) {
-      throw new Error("Neon provider not initialized");
-    }
-    this.logger.info({ tenantId }, "Provisioning database");
-    const databaseUrl = await this.neonProvider.createTenantDatabase(tenantId);
-    await this.repository.update(tenantId, { databaseUrl });
-    return { databaseUrl };
-  }
-
-  async triggerMigration(tenantId: string): Promise<{ executionName: string }> {
-    const { tenant, databaseUrl, upstashRedisUrl } =
-      await this.validateProvisioningPrerequisites(tenantId);
-
-    const redisPrefix = `t_${tenant.redisHash}:`;
-
-    this.logger.info({ tenantId }, "Triggering migration job");
-    const executionName =
-      (await this.cloudRunProvider?.runTenantMigrations(tenantId, {
-        databaseUrl,
-        redisUrl: upstashRedisUrl,
-        redisPrefix,
-      })) ?? "";
-
-    return { executionName };
-  }
-
-  getMigrationStatus(executionName: string): Promise<{
-    status: MigrationStatus;
-    error?: string;
-  }> {
-    if (!this.cloudRunProvider) {
-      throw new Error("Cloud Run provider not initialized");
-    }
-    return this.cloudRunProvider.getJobExecutionStatus(executionName);
-  }
-
-  // Legacy/Blocking method - kept if needed by other paths, but replaced by triggerMigration in workflow
-  async runMigrations(tenantId: string): Promise<void> {
-    // This is now effectively just triggering and not waiting?
-    // Or we keep it as is?
-    // The previous implementation waited.
-    // If we change runTenantMigrations to be non-blocking, this method becomes non-blocking too.
-    // But `runTenantMigrations` in CloudRunProvider WAS changed to non-blocking and returns executionName.
-    // So this wrapper needs to be updated or removed if unused.
-    // The new controller uses triggerMigration.
-    // I will deprecate this or make it just trigger.
-    await this.triggerMigration(tenantId);
-  }
-
-  async deployService(tenantId: string): Promise<void> {
-    const { tenant, databaseUrl, upstashRedisUrl } =
-      await this.validateProvisioningPrerequisites(
-        tenantId,
-        true, // requireSubdomain
-      );
-
-    const redisPrefix = `t_${tenant.redisHash}:`;
-
-    this.logger.info({ tenantId }, "Deploying service");
-    const apiUrl =
-      (await this.cloudRunProvider?.deployTenantInstance(tenantId, {
-        databaseUrl,
-        redisUrl: upstashRedisUrl,
-        redisPrefix,
-        subdomain: tenant.subdomain!,
-      })) ?? "";
-
-    await this.repository.update(tenantId, { apiUrl });
-  }
-
-  async configureDomain(tenantId: string): Promise<void> {
-    const tenant = await this.getTenant(tenantId);
-    if (!tenant.subdomain) throw new Error("Subdomain missing");
-    // Placeholder for domain configuration logic
-    this.logger.info(
-      { tenantId, subdomain: tenant.subdomain },
-      "Configuring domain (placeholder)",
-    );
-  }
-
-  async activateTenant(tenantId: string): Promise<void> {
-    this.logger.info({ tenantId }, "Activating tenant");
-    await this.repository.update(tenantId, { status: "active" });
-  }
-
-  async rollbackResources(tenantId: string): Promise<void> {
-    this.logger.info({ tenantId }, "Rolling back resources");
-    if (this.neonProvider && this.cloudRunProvider) {
-      const results = await Promise.allSettled([
-        this.neonProvider.deleteTenantDatabase(tenantId),
-        this.cloudRunProvider.deleteTenantInstance(tenantId),
-      ]);
-
-      const failed = results.filter((r) => r.status === "rejected");
-      if (failed.length > 0) {
-        this.logger.error(
-          {
-            tenantId,
-            errors: failed.map((r) => (r as PromiseRejectedResult).reason),
-          },
-          "Rollback partially failed",
-        );
-      }
-    }
-
-    await this.repository.update(tenantId, {
-      status: "provisioning_failed",
-      failureReason: "Provisioning workflow failed and rolled back",
-    });
-  }
-
   // --- Helper Methods ---
-
-  private async validateProvisioningPrerequisites(
-    tenantId: string,
-    requireSubdomain = false,
-  ): Promise<{
-    tenant: Tenant;
-    databaseUrl: string;
-    upstashRedisUrl: string;
-    cloudRunProvider: CloudRunProvider;
-  }> {
-    if (!this.cloudRunProvider) {
-      throw new Error("Cloud Run provider not initialized");
-    }
-    const tenant = await this.getTenant(tenantId);
-    if (!tenant.databaseUrl) throw new Error("Database URL missing");
-    if (!tenant.redisHash) throw new Error("Redis hash missing");
-    if (!this.upstashRedisUrl) throw new Error("Upstash Redis URL missing");
-    if (requireSubdomain && !tenant.subdomain) {
-      throw new Error("Subdomain missing");
-    }
-    return {
-      tenant,
-      databaseUrl: tenant.databaseUrl,
-      upstashRedisUrl: this.upstashRedisUrl,
-      cloudRunProvider: this.cloudRunProvider,
-    };
-  }
 
   // --- CRUD Methods ---
 

@@ -96,6 +96,8 @@ describe("ProvisioningController", () => {
     expect(response.status).toBe(500);
 
     expect(mockService.logProvisioningEvent).toHaveBeenCalledTimes(2); // start and failed
+    const body = await response.json();
+    expect(body).toEqual({ error: "DB Error" });
   });
 
   it("should log error but continue if logEvent fails", async () => {
