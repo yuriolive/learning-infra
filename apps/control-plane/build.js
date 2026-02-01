@@ -5,12 +5,8 @@ import * as esbuild from "esbuild";
 const protobufAliasPlugin = {
   name: "protobuf-alias",
   setup(build) {
-    // Intercept exact import "protobufjs"
-    build.onResolve({ filter: /^protobufjs$/ }, () => {
-      return { path: path.resolve("./src/protobuf-shim.js") };
-    });
-    // Intercept exact import "protobufjs/minimal"
-    build.onResolve({ filter: /^protobufjs\/minimal$/ }, () => {
+    // Best Practice: Check for the package name boundary (/ or end of string)
+    build.onResolve({ filter: /^protobufjs(\/|$)/ }, () => {
       return { path: path.resolve("./src/protobuf-shim.js") };
     });
   },
