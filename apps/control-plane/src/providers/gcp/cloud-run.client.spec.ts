@@ -191,7 +191,10 @@ describe("CloudRunProvider", () => {
       });
 
       const uri = await provider.deployTenantInstance("1", {
-        DATABASE_URL: "postgres://...",
+        databaseUrl: "postgres://...",
+        redisUrl: "redis://...",
+        redisPrefix: "t_1:",
+        subdomain: "tenant-1",
       });
 
       expect(uri).toBe("https://tenant-1.a.run.app");
@@ -228,7 +231,10 @@ describe("CloudRunProvider", () => {
       });
 
       const uri = await provider.deployTenantInstance("tenant-1", {
-        DATABASE_URL: "postgres://...",
+        databaseUrl: "postgres://...",
+        redisUrl: "redis://...",
+        redisPrefix: "t_1:",
+        subdomain: "tenant-1",
       });
 
       expect(uri).toBe("https://tenant-1-updated.a.run.app");
@@ -251,7 +257,12 @@ describe("CloudRunProvider", () => {
       });
 
       await expect(
-        provider.deployTenantInstance("tenant-1", {}),
+        provider.deployTenantInstance("tenant-1", {
+          databaseUrl: "postgres://...",
+          redisUrl: "redis://...",
+          redisPrefix: "t_1:",
+          subdomain: "tenant-1",
+        }),
       ).rejects.toThrow("Internal error");
     });
   });

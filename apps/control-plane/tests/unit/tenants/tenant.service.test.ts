@@ -26,16 +26,15 @@ vi.mock("../../../src/providers/gcp/cloud-run.client", () => {
   };
 });
 
-// Mock ExecutionsClient
-vi.mock("@google-cloud/workflows", () => {
+// Mock GcpWorkflowsClient
+vi.mock("../../../src/providers/gcp/workflows.client", () => {
   return {
-    ExecutionsClient: vi.fn().mockImplementation(() => ({
-      createExecution: vi.fn().mockResolvedValue({ name: "mock-execution" }),
+    GcpWorkflowsClient: vi.fn().mockImplementation(() => ({
+      createExecution: vi.fn().mockResolvedValue(void 0),
+      triggerProvisionTenant: vi.fn().mockResolvedValue(void 0),
     })),
   };
 });
-
-import { ExecutionsClient } from "@google-cloud/workflows";
 
 import {
   SubdomainInUseError,
@@ -44,6 +43,7 @@ import {
 } from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { GcpWorkflowsClient } from "../../../src/providers/gcp/workflows.client"; // Moved here to be alphabetical-ish or just separated correctly
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
 
@@ -55,6 +55,7 @@ import type {
 describe("TenantService", () => {
   let service: TenantService;
   let repository: TenantRepository;
+  let executionsClient: GcpWorkflowsClient;
 
   beforeEach(async () => {
     // Reset mocks and env vars
@@ -71,6 +72,25 @@ describe("TenantService", () => {
       gcpRegion: "mock-region",
       tenantImageTag: "mock-tag",
       upstashRedisUrl: "redis://mock",
+    });
+
+    executionsClient = new GcpWorkflowsClient({
+      credentialsJson: "{}",
+      projectId: "mock-gcp-project",
+      location: "mock-region",
+      logger,
+    });
+
+    service = new TenantService(repository, {
+      logger,
+      neonApiKey: "mock-key",
+      neonProjectId: "mock-project",
+      gcpCredentialsJson: "{}",
+      gcpProjectId: "mock-gcp-project",
+      gcpRegion: "mock-region",
+      tenantImageTag: "mock-tag",
+      upstashRedisUrl: "redis://mock",
+      executionsClient,
     });
   });
 
@@ -137,7 +157,7 @@ describe("TenantService", () => {
       expect(tenant.subdomain).toBe("teststore");
       expect(tenant.status).toBe("provisioning");
 
-      expect(ExecutionsClient).toHaveBeenCalled();
+      expect(GcpWorkflowsClient).toHaveBeenCalled();
     });
 
     it("should trigger workflow if GCP project configured", async () => {
@@ -148,7 +168,7 @@ describe("TenantService", () => {
       };
 
       await service.createTenant(input, "https://mock.base.url");
-      expect(ExecutionsClient).toHaveBeenCalled();
+      expect(GcpWorkflowsClient).toHaveBeenCalled();
     });
 
     it("should throw error when domain already exists", async () => {
@@ -179,8 +199,7 @@ describe("TenantService", () => {
 
     it("should fail if workflow triggering fails", async () => {
       // Mock failure in execution creation
-      // @ts-expect-error accessing private property
-      service.executionsClient.createExecution.mockRejectedValueOnce(
+      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
         new Error("Workflow trigger failed"),
       );
 

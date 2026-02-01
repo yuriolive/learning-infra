@@ -101,8 +101,9 @@ describe("TenantService Granular Provisioning", () => {
       expect(mockCloudRunProvider.runTenantMigrations).toHaveBeenCalledWith(
         "tenant-1",
         expect.objectContaining({
-          DATABASE_URL: "postgres://db-url",
-          REDIS_URL: "redis://",
+          databaseUrl: "postgres://db-url",
+          redisUrl: "redis://",
+          redisPrefix: "t_mock-hash:",
         }),
       );
     });
@@ -126,9 +127,10 @@ describe("TenantService Granular Provisioning", () => {
       expect(mockCloudRunProvider.deployTenantInstance).toHaveBeenCalledWith(
         "tenant-1",
         expect.objectContaining({
-          DATABASE_URL: "postgres://db-url",
-          REDIS_URL: "redis://",
-          STORE_CORS: expect.stringContaining("test.vendin.store"),
+          databaseUrl: "postgres://db-url",
+          redisUrl: "redis://",
+          redisPrefix: "t_mock-hash:",
+          subdomain: "test",
         }),
       );
 

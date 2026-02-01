@@ -28,9 +28,9 @@ This document consolidates all environment variable and secrets management for t
 | `POSTHOG_API_KEY`                | Secret    | Secrets Store    | PostHog project API key                                        |
 | `POSTHOG_HOST`                   | Plain Var | `wrangler.jsonc` | PostHog API host                                               |
 | `UPSTASH_REDIS_URL`              | Secret    | Secrets Store    | Redis connection string                                        |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials                                |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials (assembled from parts)         |
 | `GCP_PROJECT_ID`                 | Plain Var | `wrangler.jsonc` | Google Cloud Project ID                                        |
-| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region                                            |
+| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region (southamerica-east1)                       |
 | `REDIS_PREFIX`                   | Plain Var | Dynamic          | Prefix for Redis keys (namespacing for multi-tenancy)          |
 | `TENANT_IMAGE_TAG`               | Plain Var | `wrangler.jsonc` | Docker image tag for tenant (dynamically constructed in CI/CD) |
 

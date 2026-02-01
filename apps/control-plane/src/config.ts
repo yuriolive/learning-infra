@@ -1,4 +1,4 @@
-import type { createLogger } from "@vendin/utils/logger";
+import type { Logger } from "./utils/logger";
 
 interface SecretBinding {
   get(): Promise<string>;
@@ -110,7 +110,7 @@ function createErrorResponse(
 
 // Helper to validate production-specific configuration to reduce complexity
 function validateProductionConfig(
-  logger: ReturnType<typeof createLogger>,
+  logger: Logger,
   adminApiKey: string | undefined,
   neonApiKey?: string,
   neonProjectId?: string,
@@ -160,7 +160,7 @@ function validateProductionConfig(
 }
 
 export function validateConfiguration(
-  logger: ReturnType<typeof createLogger>,
+  logger: Logger,
   databaseUrl: string | undefined,
   adminApiKey: string | undefined,
   nodeEnvironment: string,

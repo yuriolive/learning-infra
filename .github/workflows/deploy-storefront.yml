@@ -9,6 +9,7 @@ on:
       - "packages/**"
       - "package.json"
       - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
       - "turbo.json"
       - ".github/workflows/deploy-storefront.yml"
   workflow_dispatch:
