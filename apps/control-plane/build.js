@@ -34,6 +34,9 @@ await esbuild
     target: "es2022",
     mainFields: ["module", "main"],
     sourcemap: true,
+    alias: {
+      pino: "pino/browser",
+    },
     plugins: [protobufAliasPlugin],
     logLevel: "info",
   })
