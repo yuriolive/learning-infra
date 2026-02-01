@@ -32,10 +32,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
-    "@vendin/config": "workspace:*",
     "@types/node": "^24.7.1",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
+    "@vendin/config": "workspace:*",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
@@ -70,7 +70,9 @@
       "@types/react-dom": "^18.2.25",
       "vite": "^6.0.0",
       "express": "^4.21.2",
-      "drizzle-orm": "^0.45.1"
+      "drizzle-orm": "^0.45.1",
+      "undici": "6.23.0",
+      "fast-xml-parser": "5.3.4"
     },
     "peerDependencyRules": {
       "ignoreMissing": [
@@ -88,5 +90,8 @@
         "picomatch": "4.x"
       }
     }
+  },
+  "dependencies": {
+    "fast-xml-parser": "5.3.4"
   }
 }
