@@ -36,6 +36,7 @@ vi.mock("../../../src/providers/gcp/workflows.client", () => {
   };
 });
 
+import { ProvisioningService } from "../../../src/domains/provisioning/provisioning.service";
 import {
   SubdomainInUseError,
   SubdomainRequiredError,
@@ -43,8 +44,6 @@ import {
 } from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
-import { GcpWorkflowsClient } from "../../../src/providers/gcp/workflows.client"; // Moved here to be alphabetical-ish or just separated correctly
-import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
 
 import type {
@@ -55,15 +54,15 @@ import type {
 describe("TenantService", () => {
   let service: TenantService;
   let repository: TenantRepository;
-  let executionsClient: GcpWorkflowsClient;
+  let provisioningService: ProvisioningService;
 
   beforeEach(async () => {
-    // Reset mocks and env vars
     vi.clearAllMocks();
     const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
     const database = await createMockDatabase();
     repository = new TenantRepository(database);
-    service = new TenantService(repository, {
+
+    const config = {
       logger,
       neonApiKey: "mock-key",
       neonProjectId: "mock-project",
@@ -72,63 +71,12 @@ describe("TenantService", () => {
       gcpRegion: "mock-region",
       tenantImageTag: "mock-tag",
       upstashRedisUrl: "redis://mock",
-    });
+    };
 
-    executionsClient = new GcpWorkflowsClient({
-      credentialsJson: "{}",
-      projectId: "mock-gcp-project",
-      location: "mock-region",
-      logger,
-    });
+    provisioningService = new ProvisioningService(repository, config);
+    vi.spyOn(provisioningService, "triggerProvisioningWorkflow");
 
-    service = new TenantService(repository, {
-      logger,
-      neonApiKey: "mock-key",
-      neonProjectId: "mock-project",
-      gcpCredentialsJson: "{}",
-      gcpProjectId: "mock-gcp-project",
-      gcpRegion: "mock-region",
-      tenantImageTag: "mock-tag",
-      upstashRedisUrl: "redis://mock",
-      executionsClient,
-    });
-  });
-
-  describe("constructor", () => {
-    it("should log error if provider initialization fails and keep providers null", async () => {
-      // Mock failure in NeonProvider constructor
-      vi.mocked(NeonProvider).mockImplementationOnce(() => {
-        throw new Error("Init failure");
-      });
-
-      const logger = createLogger({ logLevel: "error", nodeEnv: "test" });
-      const errorSpy = vi.spyOn(logger, "error");
-
-      const database = await createMockDatabase();
-      const repository = new TenantRepository(database);
-
-      const serviceInstance = new TenantService(repository, {
-        logger,
-        neonApiKey: "mock-key",
-        neonProjectId: "mock-project",
-        gcpCredentialsJson: "{}",
-        gcpProjectId: "mock-gcp-project",
-        gcpRegion: "mock-region",
-        tenantImageTag: "mock-tag",
-        upstashRedisUrl: "redis://mock",
-      });
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ error: expect.any(Error) }),
-        "Failed to initialize providers",
-      );
-
-      // Access private members to verify they are null
-      // @ts-expect-error accessing private property for testing
-      expect(serviceInstance.neonProvider).toBeNull();
-      // @ts-expect-error accessing private property for testing
-      expect(serviceInstance.cloudRunProvider).toBeNull();
-    }, 10_000); // Increased timeout
+    service = new TenantService(repository, provisioningService, config);
   });
 
   const createTenantHelper = (index: number) => {
@@ -157,7 +105,9 @@ describe("TenantService", () => {
       expect(tenant.subdomain).toBe("teststore");
       expect(tenant.status).toBe("provisioning");
 
-      expect(GcpWorkflowsClient).toHaveBeenCalled();
+      expect(
+        provisioningService.triggerProvisioningWorkflow,
+      ).toHaveBeenCalled();
     });
 
     it("should trigger workflow if GCP project configured", async () => {
@@ -168,7 +118,9 @@ describe("TenantService", () => {
       };
 
       await service.createTenant(input, "https://mock.base.url");
-      expect(GcpWorkflowsClient).toHaveBeenCalled();
+      expect(
+        provisioningService.triggerProvisioningWorkflow,
+      ).toHaveBeenCalled();
     });
 
     it("should throw error when domain already exists", async () => {
@@ -199,9 +151,9 @@ describe("TenantService", () => {
 
     it("should fail if workflow triggering fails", async () => {
       // Mock failure in execution creation
-      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
-        new Error("Workflow trigger failed"),
-      );
+      vi.mocked(
+        provisioningService.triggerProvisioningWorkflow,
+      ).mockRejectedValueOnce(new Error("Workflow trigger failed"));
 
       const input: CreateTenantInput = {
         name: "Test Store",
@@ -217,9 +169,9 @@ describe("TenantService", () => {
     it("should update tenant status to provisioning_failed if workflow triggering fails", async () => {
       // Mock failure in execution creation
       const errorMessage = "Workflow trigger failed";
-      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
-        new Error(errorMessage),
-      );
+      vi.mocked(
+        provisioningService.triggerProvisioningWorkflow,
+      ).mockRejectedValueOnce(new Error(errorMessage));
 
       const input: CreateTenantInput = {
         name: "Failed Store",

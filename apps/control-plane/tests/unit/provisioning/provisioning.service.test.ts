@@ -1,7 +1,7 @@
 import { createLogger } from "@vendin/utils/logger";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { TenantService } from "../../../src/domains/tenants/tenant.service";
+import { ProvisioningService } from "../../../src/domains/provisioning/provisioning.service";
 import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 
@@ -18,17 +18,19 @@ vi.mock("@google-cloud/workflows", () => {
   };
 });
 
-describe("TenantService Granular Provisioning", () => {
-  let service: TenantService;
+describe("ProvisioningService Granular Steps", () => {
+  let service: ProvisioningService;
   let repository: TenantRepository;
   let mockNeonProvider: {
     createTenantDatabase: ReturnType<typeof vi.fn>;
     deleteTenantDatabase: ReturnType<typeof vi.fn>;
   };
   let mockCloudRunProvider: {
-    deployTenantInstance: ReturnType<typeof vi.fn>;
-    runTenantMigrations: ReturnType<typeof vi.fn>;
+    startDeployTenantInstance: ReturnType<typeof vi.fn>;
+    finalizeTenantService: ReturnType<typeof vi.fn>;
+    triggerMigrationJob: ReturnType<typeof vi.fn>;
     deleteTenantInstance: ReturnType<typeof vi.fn>;
+    getOperation: ReturnType<typeof vi.fn>;
   };
   const logger = createLogger({ logLevel: "silent" });
 
@@ -55,22 +57,24 @@ describe("TenantService Granular Provisioning", () => {
 
     mockNeonProvider = {
       createTenantDatabase: vi.fn().mockResolvedValue("postgres://db-url"),
-      deleteTenantDatabase: vi.fn().mockImplementation(async () => {}),
+      deleteTenantDatabase: vi.fn().mockResolvedValue(void 0),
     };
     vi.mocked(NeonProvider).mockImplementation(
       () => mockNeonProvider as unknown as NeonProvider,
     );
 
     mockCloudRunProvider = {
-      deployTenantInstance: vi.fn().mockResolvedValue("https://service-url"),
-      runTenantMigrations: vi.fn().mockResolvedValue(void 0),
-      deleteTenantInstance: vi.fn().mockImplementation(async () => {}),
+      startDeployTenantInstance: vi.fn().mockResolvedValue("mock-operation"),
+      finalizeTenantService: vi.fn().mockResolvedValue("https://service-url"),
+      triggerMigrationJob: vi.fn().mockResolvedValue("mock-operation"),
+      deleteTenantInstance: vi.fn().mockResolvedValue("mock-operation"),
+      getOperation: vi.fn().mockResolvedValue({ done: true }),
     };
     vi.mocked(CloudRunProvider).mockImplementation(
       () => mockCloudRunProvider as unknown as CloudRunProvider,
     );
 
-    service = new TenantService(repository, {
+    service = new ProvisioningService(repository, {
       logger,
       neonApiKey: "key",
       neonProjectId: "proj",
@@ -84,8 +88,9 @@ describe("TenantService Granular Provisioning", () => {
 
   describe("provisionDatabase", () => {
     it("should provision database and update tenant", async () => {
-      await service.provisionDatabase("tenant-1");
+      const result = await service.provisionDatabase("tenant-1");
 
+      expect(result.databaseUrl).toBe("postgres://db-url");
       expect(mockNeonProvider.createTenantDatabase).toHaveBeenCalledWith(
         "tenant-1",
       );
@@ -95,16 +100,11 @@ describe("TenantService Granular Provisioning", () => {
     });
   });
 
-  describe("runMigrations", () => {
-    it("should run migrations", async () => {
-      await service.runMigrations("tenant-1");
-      expect(mockCloudRunProvider.runTenantMigrations).toHaveBeenCalledWith(
+  describe("triggerMigrationJob", () => {
+    it("should trigger migration job", async () => {
+      await service.triggerMigrationJob("tenant-1");
+      expect(mockCloudRunProvider.triggerMigrationJob).toHaveBeenCalledWith(
         "tenant-1",
-        expect.objectContaining({
-          databaseUrl: "postgres://db-url",
-          redisUrl: "redis://",
-          redisPrefix: "t_mock-hash:",
-        }),
       );
     });
 
@@ -114,24 +114,18 @@ describe("TenantService Granular Provisioning", () => {
         databaseUrl: null, // Missing DB URL
       } as unknown as Tenant);
 
-      await expect(service.runMigrations("tenant-1")).rejects.toThrow(
+      await expect(service.triggerMigrationJob("tenant-1")).rejects.toThrow(
         "Database URL missing",
       );
     });
   });
 
-  describe("deployService", () => {
-    it("should deploy service and update tenant", async () => {
-      await service.deployService("tenant-1");
+  describe("finalizeDeployment", () => {
+    it("should finalize deployment and update tenant", async () => {
+      await service.finalizeDeployment("tenant-1");
 
-      expect(mockCloudRunProvider.deployTenantInstance).toHaveBeenCalledWith(
+      expect(mockCloudRunProvider.finalizeTenantService).toHaveBeenCalledWith(
         "tenant-1",
-        expect.objectContaining({
-          databaseUrl: "postgres://db-url",
-          redisUrl: "redis://",
-          redisPrefix: "t_mock-hash:",
-          subdomain: "test",
-        }),
       );
 
       expect(repository.update).toHaveBeenCalledWith("tenant-1", {
@@ -147,7 +141,7 @@ describe("TenantService Granular Provisioning", () => {
         subdomain: null, // Missing subdomain
       } as unknown as Tenant);
 
-      await expect(service.deployService("tenant-1")).rejects.toThrow(
+      await expect(service.finalizeDeployment("tenant-1")).rejects.toThrow(
         "Subdomain missing",
       );
     });

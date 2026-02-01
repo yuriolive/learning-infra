@@ -99,15 +99,8 @@ export class CloudRunProvider {
     );
 
     if (!operationName) {
-      // This case implies no change was needed (if we had check logic),
-      // but getOrCreateService currently always Patches if exists.
-      // So this should rarely happen unless we change that logic.
-      // We'll return an empty string or handle specifically?
-      // For now, throw if unexpected, or assuming immediate success?
-      // getOrCreateService returns undefined if it thinks it's done?
-      // Actually my implementation returns response.data.name ?? undefined.
       throw new Error(
-        "Failed to start deployment operation (no operation name returned)",
+        "Failed to start deployment: No operation name returned from Cloud Run API",
       );
     }
 
@@ -168,7 +161,7 @@ export class CloudRunProvider {
 
   // Trigger Job. Returns Operation Name (for the trigger itself).
   async triggerMigrationJob(tenantId: string): Promise<string> {
-    const jobId = `migrate-${tenantId}`;
+    const jobId = `migration-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const jobPath = `${parent}/jobs/${jobId}`;
 
@@ -277,13 +270,6 @@ export class CloudRunProvider {
       );
 
       if (operation.data.name) {
-        // We are not waiting here to avoid blocking. The deletion will happen in background.
-        // If we strictly need to wait, we should expose delete op similarly.
-        // For now, let's just log.
-        this.logger.info(
-          { operationName: operation.data.name },
-          "Delete operation started",
-        );
         return operation.data.name;
       }
 

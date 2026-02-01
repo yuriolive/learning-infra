@@ -59,10 +59,24 @@ export class TenantService {
 
     // 2. Trigger Cloud Workflow
     if (this.gcpProjectId && this.gcpRegion) {
-      await this.provisioningService.triggerProvisioningWorkflow(
-        tenant.id,
-        baseUrl,
-      );
+      try {
+        await this.provisioningService.triggerProvisioningWorkflow(
+          tenant.id,
+          baseUrl,
+        );
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        this.logger.error(
+          { tenantId: tenant.id, error },
+          "Failed to trigger provisioning workflow",
+        );
+        await this.repository.update(tenant.id, {
+          status: "provisioning_failed",
+          failureReason: errorMessage,
+        });
+        throw error;
+      }
     } else {
       this.logger.warn(
         { tenantId: tenant.id },

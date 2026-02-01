@@ -26,8 +26,18 @@ vi.mock("googleapis", () => {
               get: mockGet,
               patch: mockPatch,
               create: mockCreate,
+              delete: vi.fn(),
               getIamPolicy: mockGetIamPolicy,
               setIamPolicy: mockSetIamPolicy,
+            },
+            jobs: {
+              get: vi.fn(),
+              patch: vi.fn(),
+              create: vi.fn(),
+              run: vi.fn(),
+              executions: {
+                get: vi.fn(),
+              },
             },
             operations: {
               get: mockGetOperation,
@@ -57,8 +67,18 @@ interface MockRunClient {
         get: MockedFunction;
         create: MockedFunction;
         patch: MockedFunction;
+        delete: MockedFunction;
         getIamPolicy: MockedFunction;
         setIamPolicy: MockedFunction;
+      };
+      jobs: {
+        get: MockedFunction;
+        patch: MockedFunction;
+        create: MockedFunction;
+        run: MockedFunction;
+        executions: {
+          get: MockedFunction;
+        };
       };
       operations: {
         get: MockedFunction;
@@ -176,28 +196,22 @@ describe("CloudRunProvider", () => {
     );
   };
 
-  describe("deployTenantInstance", () => {
+  describe("startDeployTenantInstance", () => {
     it("should create a new service if it does not exist", async () => {
-      // Mock service not found - override the default success
       mockRunClient.projects.locations.services.get.mockRejectedValueOnce({
         code: 404,
       });
 
-      // Default create mock is already set up
-
-      // Mock final service get to retrieve URI - second call (first was 404)
-      mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
-        data: { uri: "https://tenant-1.a.run.app" },
-      });
-
-      const uri = await provider.deployTenantInstance("1", {
+      const opName = await provider.startDeployTenantInstance("1", {
         databaseUrl: "postgres://...",
         redisUrl: "redis://...",
         redisPrefix: "t_1:",
         subdomain: "tenant-1",
       });
 
-      expect(uri).toBe("https://tenant-1.a.run.app");
+      expect(opName).toBe(
+        "projects/test-project/locations/us-central1/operations/op-1",
+      );
       expect(
         mockRunClient.projects.locations.services.create,
       ).toHaveBeenCalledWith(
@@ -208,92 +222,92 @@ describe("CloudRunProvider", () => {
     });
 
     it("should patch existing service if it exists", async () => {
-      // Mock service exists - first call
       mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { name: "existing-service" },
       });
 
-      // Default patch mock is set up
-      // Default op completion is set up
-
-      // Mock IAM policy - override default to verify it updates
-      mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValueOnce(
-        {
-          data: {
-            bindings: [{ role: "roles/run.invoker", members: ["allUsers"] }],
-          },
-        },
-      );
-
-      // Mock final service get - second call
-      mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
-        data: { uri: "https://tenant-1-updated.a.run.app" },
-      });
-
-      const uri = await provider.deployTenantInstance("tenant-1", {
+      const opName = await provider.startDeployTenantInstance("tenant-1", {
         databaseUrl: "postgres://...",
         redisUrl: "redis://...",
         redisPrefix: "t_1:",
         subdomain: "tenant-1",
       });
 
-      expect(uri).toBe("https://tenant-1-updated.a.run.app");
+      expect(opName).toBe(
+        "projects/test-project/locations/us-central1/operations/op-2",
+      );
       expect(
         mockRunClient.projects.locations.services.patch,
       ).toHaveBeenCalled();
     });
+  });
 
-    it("should throw error if deployment operation fails", async () => {
-      mockRunClient.projects.locations.services.get.mockRejectedValueOnce({
-        code: 404,
+  describe("finalizeTenantService", () => {
+    it("should make service public and return URI", async () => {
+      mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
+        data: { uri: "https://final-uri.a.run.app" },
       });
-      mockRunClient.projects.locations.services.create.mockResolvedValueOnce({
-        data: { name: "op-fail" },
-      });
+      setupIamPolicyMock([]);
 
-      // Mock operation failure (override default done: true)
-      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
-        data: { done: true, error: { message: "Internal error" } },
-      });
+      const uri = await provider.finalizeTenantService("tenant-1");
 
-      await expect(
-        provider.deployTenantInstance("tenant-1", {
-          databaseUrl: "postgres://...",
-          redisUrl: "redis://...",
-          redisPrefix: "t_1:",
-          subdomain: "tenant-1",
-        }),
-      ).rejects.toThrow("Internal error");
+      expect(uri).toBe("https://final-uri.a.run.app");
+      expect(
+        mockRunClient.projects.locations.services.setIamPolicy,
+      ).toHaveBeenCalled();
     });
   });
 
-  describe("waitForOperation", () => {
-    it("should timeout if operation takes too long", async () => {
-      vi.useFakeTimers();
-
-      // Mock operation never done
-      mockRunClient.projects.locations.operations.get.mockResolvedValue({
-        data: { done: false },
+  describe("ensureMigrationJob", () => {
+    it("should create/patch job and return operation name", async () => {
+      mockRunClient.projects.locations.jobs.get.mockRejectedValueOnce({
+        code: 404,
+      });
+      mockRunClient.projects.locations.jobs.create.mockResolvedValueOnce({
+        data: { name: "job-op-1" },
       });
 
-      const deployPromise = (
-        provider as unknown as {
-          waitForOperation: (id: string) => Promise<void>;
-        }
-      ).waitForOperation("test-op");
-      // Prevent unhandled rejection warning by attaching a dummy catch
-      deployPromise.catch(() => {});
+      const opName = await provider.ensureMigrationJob("tenant-1", {
+        databaseUrl: "postgres://",
+        redisUrl: "redis://",
+        redisPrefix: "t_1:",
+      });
 
-      // Advance timers in increments to allow the async loop to catch up
-      for (let index = 0; index < 151; index++) {
-        await vi.advanceTimersByTimeAsync(2000);
-      }
+      expect(opName).toBe("job-op-1");
+      expect(mockRunClient.projects.locations.jobs.create).toHaveBeenCalled();
+    });
+  });
 
-      await expect(deployPromise).rejects.toThrow(
-        "Timeout waiting for Cloud Run operation",
-      );
+  describe("triggerMigrationJob", () => {
+    it("should run job and return execution name", async () => {
+      mockRunClient.projects.locations.jobs.run.mockResolvedValueOnce({
+        data: { name: "exec-op-1" },
+      });
 
-      vi.useRealTimers();
+      const execName = await provider.triggerMigrationJob("tenant-1");
+
+      expect(execName).toBe("exec-op-1");
+      expect(mockRunClient.projects.locations.jobs.run).toHaveBeenCalled();
+    });
+  });
+
+  describe("getOperation", () => {
+    it("should return done status", async () => {
+      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
+        data: { done: true, response: { foo: "bar" } },
+      });
+
+      const status = await provider.getOperation("op-1");
+      expect(status).toEqual({ done: true, response: { foo: "bar" } });
+    });
+
+    it("should return error if operation failed", async () => {
+      mockRunClient.projects.locations.operations.get.mockResolvedValueOnce({
+        data: { done: true, error: { message: "Failed" } },
+      });
+
+      const status = await provider.getOperation("op-1");
+      expect(status).toEqual({ done: true, error: "Failed" });
     });
   });
 

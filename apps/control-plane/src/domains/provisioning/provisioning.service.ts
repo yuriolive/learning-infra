@@ -39,20 +39,32 @@ export class ProvisioningService {
   }
 
   private initializeProviders(config: ProvisioningServiceConfig): void {
-    try {
-      if (config.neonApiKey && config.neonProjectId) {
+    this.initializeNeonProvider(config);
+    this.initializeCloudRunProvider(config);
+    this.initializeWorkflowsClient(config);
+  }
+
+  private initializeNeonProvider(config: ProvisioningServiceConfig): void {
+    if (config.neonApiKey && config.neonProjectId) {
+      try {
         this.neonProvider = new NeonProvider({
           apiKey: config.neonApiKey,
           projectId: config.neonProjectId,
           logger: this.logger,
         });
-      } else {
-        this.logger.warn(
-          "Neon credentials not found. Database provisioning will be skipped.",
-        );
+      } catch (error) {
+        this.logger.error({ error }, "Failed to initialize Neon provider");
       }
+    } else {
+      this.logger.warn(
+        "Neon credentials not found. Database provisioning will be skipped.",
+      );
+    }
+  }
 
-      if (config.gcpProjectId && config.gcpRegion && config.tenantImageTag) {
+  private initializeCloudRunProvider(config: ProvisioningServiceConfig): void {
+    if (config.gcpProjectId && config.gcpRegion && config.tenantImageTag) {
+      try {
         this.cloudRunProvider = new CloudRunProvider({
           credentialsJson: config.gcpCredentialsJson,
           projectId: config.gcpProjectId,
@@ -63,12 +75,18 @@ export class ProvisioningService {
             ? { serviceAccount: config.cloudRunServiceAccount }
             : {}),
         });
-      } else {
-        this.logger.warn(
-          "GCP config not found. Cloud Run deployment will be skipped.",
-        );
+      } catch (error) {
+        this.logger.error({ error }, "Failed to initialize Cloud Run provider");
       }
+    } else {
+      this.logger.warn(
+        "GCP config not found. Cloud Run deployment will be skipped.",
+      );
+    }
+  }
 
+  private initializeWorkflowsClient(config: ProvisioningServiceConfig): void {
+    try {
       this.executionsClient = new GcpWorkflowsClient({
         credentialsJson: config.gcpCredentialsJson,
         projectId: config.gcpProjectId || "unknown-project",
@@ -76,7 +94,7 @@ export class ProvisioningService {
         logger: this.logger,
       });
     } catch (error) {
-      this.logger.error({ error }, "Failed to initialize providers");
+      this.logger.error({ error }, "Failed to initialize GCP Workflows client");
     }
   }
 
@@ -114,13 +132,13 @@ export class ProvisioningService {
   async triggerMigrationJob(
     tenantId: string,
   ): Promise<{ operationName: string }> {
-    if (!this.cloudRunProvider) {
-      throw new Error("Cloud Run provider not initialized");
-    }
+    const { cloudRunProvider } = await this.validateProvisioningPrerequisites(
+      tenantId,
+      false, // requireSubdomain
+    );
 
     this.logger.info({ tenantId }, "Triggering migration job execution");
-    const operationName =
-      await this.cloudRunProvider.triggerMigrationJob(tenantId);
+    const operationName = await cloudRunProvider.triggerMigrationJob(tenantId);
 
     return { operationName };
   }
@@ -169,12 +187,13 @@ export class ProvisioningService {
   }
 
   async finalizeDeployment(tenantId: string): Promise<{ apiUrl: string }> {
-    if (!this.cloudRunProvider) {
-      throw new Error("Cloud Run provider not initialized");
-    }
+    const { cloudRunProvider } = await this.validateProvisioningPrerequisites(
+      tenantId,
+      true, // requireSubdomain
+    );
 
     this.logger.info({ tenantId }, "Finalizing deployment");
-    const apiUrl = await this.cloudRunProvider.finalizeTenantService(tenantId);
+    const apiUrl = await cloudRunProvider.finalizeTenantService(tenantId);
 
     await this.tenantRepository.update(tenantId, { apiUrl });
     return { apiUrl };
