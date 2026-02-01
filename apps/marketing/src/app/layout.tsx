@@ -1,3 +1,4 @@
+import "@/polyfills";
 import { Inter } from "next/font/google";
 
 import { Navbar } from "../components/sections/navbar";

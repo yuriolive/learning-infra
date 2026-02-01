@@ -1,3 +1,4 @@
+import "../polyfills";
 import { logger } from "@vendin/utils/logger";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
