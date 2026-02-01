@@ -39,5 +39,9 @@ await esbuild
     },
     plugins: [protobufAliasPlugin],
     logLevel: "info",
+    logOverride: {
+      "direct-eval": "silent",
+      "impossible-typeof": "silent",
+    },
   })
   .catch(() => process.exit(1)); // eslint-disable-line unicorn/no-process-exit
