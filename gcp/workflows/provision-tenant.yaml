@@ -60,10 +60,10 @@ main:
 
     - check_ensure_op_start:
         switch:
-            - condition: ${"operationName" in ensure_job_result.body}
-              next: wait_for_ensure_op
-            - condition: true
-              next: trigger_migrations
+          - condition: ${"operationName" in ensure_job_result.body}
+            next: wait_for_ensure_op
+          - condition: true
+            next: trigger_migrations
 
     - wait_for_ensure_op:
         call: sys.sleep
@@ -72,27 +72,27 @@ main:
 
     - check_ensure_op_status:
         try:
-            call: http.get
-            args:
-                url: ${baseUrl + "/internal/provisioning/operations"}
-                headers: ${headers}
-                query:
-                    name: ${ensure_job_result.body.operationName}
-                auth:
-                    type: OIDC
-            result: ensure_op_status
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${headers}
+            query:
+              name: ${ensure_job_result.body.operationName}
+            auth:
+              type: OIDC
+          result: ensure_op_status
         except:
-            as: e
-            steps:
-                - raise_ensure_status_error:
-                    raise: ${e}
-    
+          as: e
+          steps:
+            - raise_ensure_status_error:
+                raise: ${e}
+
     - evaluate_ensure_op:
         switch:
-            - condition: ${ensure_op_status.body.done}
-              next: trigger_migrations
-            - condition: true
-              next: wait_for_ensure_op
+          - condition: ${ensure_op_status.body.done}
+            next: trigger_migrations
+          - condition: true
+            next: wait_for_ensure_op
 
     - trigger_migrations:
         try:
@@ -122,33 +122,43 @@ main:
     - wait_for_trigger_op:
         call: sys.sleep
         args:
-            seconds: 5
+          seconds: 5
 
     - check_trigger_op_status:
         try:
-            call: http.get
-            args:
-                url: ${baseUrl + "/internal/provisioning/operations"}
-                headers: ${headers}
-                query:
-                    name: ${trigger_job_result.body.operationName}
-                auth:
-                    type: OIDC
-            result: trigger_op_status
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${headers}
+            query:
+              name: ${trigger_job_result.body.operationName}
+            auth:
+              type: OIDC
+          result: trigger_op_status
         except:
-            as: e
-            steps:
-                - raise_trigger_status_error:
-                    raise: ${e}
+          as: e
+          steps:
+            - raise_trigger_status_error:
+                raise: ${e}
 
     - evaluate_trigger_op:
         switch:
-            - condition: ${trigger_op_status.body.done}
-              assign:
-                  - executionName: ${trigger_op_status.body.response.name}
-              next: wait_for_migrations
-            - condition: true
-              next: wait_for_trigger_op
+          - condition: ${trigger_op_status.body.done AND "error" in trigger_op_status.body}
+            steps:
+              - rollback_trigger_error:
+                  call: perform_rollback
+                  args:
+                    baseUrl: ${baseUrl}
+                    headers: ${headers}
+                    tenantId: ${tenantId}
+              - raise_trigger_op_error:
+                  raise: '${"Migration trigger operation failed: " + default(trigger_op_status.body.error.message, "Unknown error")}'
+          - condition: ${trigger_op_status.body.done}
+            assign:
+              - executionName: ${trigger_op_status.body.response.name}
+            next: wait_for_migrations
+          - condition: true
+            next: wait_for_trigger_op
 
     - wait_for_migrations:
         call: sys.sleep
@@ -220,54 +230,64 @@ main:
     - wait_for_deploy_op:
         call: sys.sleep
         args:
-            seconds: 5
-    
+          seconds: 5
+
     - check_deploy_op_status:
         try:
-            call: http.get
-            args:
-                url: ${baseUrl + "/internal/provisioning/operations"}
-                headers: ${headers}
-                query:
-                    name: ${deploy_start_result.body.operationName}
-                auth:
-                    type: OIDC
-            result: deploy_op_status
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${headers}
+            query:
+              name: ${deploy_start_result.body.operationName}
+            auth:
+              type: OIDC
+          result: deploy_op_status
         except:
-            as: e
-            steps:
-                - raise_deploy_status_error:
-                    raise: ${e}
+          as: e
+          steps:
+            - raise_deploy_status_error:
+                raise: ${e}
 
     - evaluate_deploy_op:
         switch:
-            - condition: ${deploy_op_status.body.done}
-              next: finalize_service
-            - condition: true
-              next: wait_for_deploy_op
+          - condition: ${deploy_op_status.body.done AND "error" in deploy_op_status.body}
+            steps:
+              - rollback_deploy_error:
+                  call: perform_rollback
+                  args:
+                    baseUrl: ${baseUrl}
+                    headers: ${headers}
+                    tenantId: ${tenantId}
+              - raise_deploy_op_error:
+                  raise: '${"Service deployment operation failed: " + default(deploy_op_status.body.error.message, "Unknown error")}'
+          - condition: ${deploy_op_status.body.done}
+            next: finalize_service
+          - condition: true
+            next: wait_for_deploy_op
 
     - finalize_service:
         try:
-            call: http.post
-            args:
-                url: ${baseUrl + "/internal/provisioning/service/finalize"}
-                headers: ${headers}
-                body:
-                    tenantId: ${tenantId}
-                auth:
-                    type: OIDC
-            result: service_result
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/service/finalize"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: service_result
         except:
-            as: e
-            steps:
-                - rollback_service_finalize:
-                    call: perform_rollback
-                    args:
-                        baseUrl: ${baseUrl}
-                        headers: ${headers}
-                        tenantId: ${tenantId}
-                - raise_service_finalize_error:
-                    raise: ${e}
+          as: e
+          steps:
+            - rollback_service_finalize:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  headers: ${headers}
+                  tenantId: ${tenantId}
+            - raise_service_finalize_error:
+                raise: ${e}
 
     - configure_domain:
         try:
@@ -312,59 +332,6 @@ main:
                   baseUrl: ${baseUrl}
                   headers: ${headers}
                   tenantId: ${tenantId}
-
-    - perform_rollback:
-        params: [baseUrl, headers, tenantId]
-        steps:
-          - call_rollback_endpoint:
-              try:
-                  call: http.post
-                  args:
-                      url: ${baseUrl + "/internal/provisioning/rollback"}
-                      headers: ${headers}
-                      body:
-                          tenantId: ${tenantId}
-                      auth:
-                          type: OIDC
-                  result: rollback_result
-              except:
-                  as: e
-                  # If rollback initiation fails, we just return (best effort)
-                  return: "failed to initiate rollback"
-          
-          - check_rollback_op:
-              switch:
-                  - condition: ${"operationName" in rollback_result.body}
-                    next: wait_for_rollback_op
-                  - condition: true
-                    return: "rollback initiated (no wait)"
-
-          - wait_for_rollback_op:
-              call: sys.sleep
-              args:
-                  seconds: 5
-
-          - check_rollback_status:
-              try:
-                  call: http.get
-                  args:
-                      url: ${baseUrl + "/internal/provisioning/operations"}
-                      headers: ${headers}
-                      query:
-                          name: ${rollback_result.body.operationName}
-                      auth:
-                          type: OIDC
-                  result: rollback_op_status
-              except:
-                  as: e
-                  return: "rollback status check failed"
-
-          - evaluate_rollback_op:
-              switch:
-                  - condition: ${rollback_op_status.body.done}
-                    return: "rollback completed"
-                  - condition: true
-                    next: wait_for_rollback_op
             - raise_activation_error:
                 raise: ${e}
 
@@ -372,3 +339,56 @@ main:
         return:
           status: "success"
           tenantId: ${tenantId}
+
+perform_rollback:
+  params: [baseUrl, headers, tenantId]
+  steps:
+    - call_rollback_endpoint:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/rollback"}
+            headers: ${headers}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: rollback_result
+        except:
+          as: e
+          # If rollback initiation fails, we just return (best effort)
+          return: "failed to initiate rollback"
+
+    - check_rollback_op:
+        switch:
+          - condition: ${"operationName" in rollback_result.body}
+            next: wait_for_rollback_op
+          - condition: true
+            return: "rollback initiated (no wait)"
+
+    - wait_for_rollback_op:
+        call: sys.sleep
+        args:
+          seconds: 5
+
+    - check_rollback_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${headers}
+            query:
+              name: ${rollback_result.body.operationName}
+            auth:
+              type: OIDC
+          result: rollback_op_status
+        except:
+          as: e
+          return: "rollback status check failed"
+
+    - evaluate_rollback_op:
+        switch:
+          - condition: ${rollback_op_status.body.done}
+            return: "rollback completed"
+          - condition: true
+            next: wait_for_rollback_op
