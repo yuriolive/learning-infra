@@ -55,6 +55,7 @@ import type {
 describe("TenantService", () => {
   let service: TenantService;
   let repository: TenantRepository;
+  let executionsClient: GcpWorkflowsClient;
 
   beforeEach(async () => {
     // Reset mocks and env vars
@@ -71,6 +72,25 @@ describe("TenantService", () => {
       gcpRegion: "mock-region",
       tenantImageTag: "mock-tag",
       upstashRedisUrl: "redis://mock",
+    });
+
+    executionsClient = new GcpWorkflowsClient({
+      credentialsJson: "{}",
+      projectId: "mock-gcp-project",
+      location: "mock-region",
+      logger,
+    });
+
+    service = new TenantService(repository, {
+      logger,
+      neonApiKey: "mock-key",
+      neonProjectId: "mock-project",
+      gcpCredentialsJson: "{}",
+      gcpProjectId: "mock-gcp-project",
+      gcpRegion: "mock-region",
+      tenantImageTag: "mock-tag",
+      upstashRedisUrl: "redis://mock",
+      executionsClient,
     });
   });
 
@@ -179,8 +199,7 @@ describe("TenantService", () => {
 
     it("should fail if workflow triggering fails", async () => {
       // Mock failure in execution creation
-      // @ts-expect-error accessing private property
-      service.executionsClient.triggerProvisionTenant.mockRejectedValueOnce(
+      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
         new Error("Workflow trigger failed"),
       );
 

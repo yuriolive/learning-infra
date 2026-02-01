@@ -30,6 +30,7 @@ interface TenantServiceConfig {
   cloudRunServiceAccount?: string | undefined;
   internalApiKey?: string | undefined;
   logger: Logger;
+  executionsClient?: GcpWorkflowsClient;
 }
 
 export class TenantService {
@@ -52,12 +53,14 @@ export class TenantService {
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
 
-    this.executionsClient = new GcpWorkflowsClient({
-      credentialsJson: config.gcpCredentialsJson,
-      projectId: config.gcpProjectId || "unknown-project",
-      location: config.gcpRegion || "unknown-region",
-      logger: this.logger,
-    });
+    this.executionsClient =
+      config.executionsClient ??
+      new GcpWorkflowsClient({
+        credentialsJson: config.gcpCredentialsJson,
+        projectId: config.gcpProjectId || "unknown-project",
+        location: config.gcpRegion || "unknown-region",
+        logger: this.logger,
+      });
 
     this.initializeProviders(config);
   }
@@ -72,7 +75,6 @@ export class TenantService {
         });
       } else {
         this.logger.warn(
-          {},
           "Neon credentials not found. Database provisioning will be skipped.",
         );
       }
@@ -90,7 +92,6 @@ export class TenantService {
         });
       } else {
         this.logger.warn(
-          {},
           "GCP config not found. Cloud Run deployment will be skipped.",
         );
       }

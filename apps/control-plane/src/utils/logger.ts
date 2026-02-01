@@ -10,40 +10,42 @@ export interface LoggerOptions {
   nodeEnv?: string;
 }
 
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (_key: string, value: unknown) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+const formatLog = (
+  level: string,
+  object: object | unknown,
+  message?: string,
+) => {
+  return JSON.stringify(
+    {
+      level,
+      message,
+      ...(object as object),
+    },
+    getCircularReplacer(),
+  );
+};
+
 /* eslint-disable no-console */
 export const consoleLogger: Logger = {
-  info: (object, message) =>
-    console.log(
-      JSON.stringify({
-        level: "info",
-        message,
-        ...(object as object),
-      }),
-    ),
+  info: (object, message) => console.log(formatLog("info", object, message)),
   error: (object, message) =>
-    console.error(
-      JSON.stringify({
-        level: "error",
-        message,
-        ...(object as object),
-      }),
-    ),
-  warn: (object, message) =>
-    console.warn(
-      JSON.stringify({
-        level: "warn",
-        message,
-        ...(object as object),
-      }),
-    ),
+    console.error(formatLog("error", object, message)),
+  warn: (object, message) => console.warn(formatLog("warn", object, message)),
   debug: (object, message) =>
-    console.debug(
-      JSON.stringify({
-        level: "debug",
-        message,
-        ...(object as object),
-      }),
-    ),
+    console.debug(formatLog("debug", object, message)),
 };
 /* eslint-enable no-console */
 
