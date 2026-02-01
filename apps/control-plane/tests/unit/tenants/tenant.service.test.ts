@@ -213,6 +213,31 @@ describe("TenantService", () => {
         service.createTenant(input, "https://mock.base.url"),
       ).rejects.toThrow("Workflow trigger failed");
     });
+
+    it("should update tenant status to provisioning_failed if workflow triggering fails", async () => {
+      // Mock failure in execution creation
+      const errorMessage = "Workflow trigger failed";
+      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
+        new Error(errorMessage),
+      );
+
+      const input: CreateTenantInput = {
+        name: "Failed Store",
+        merchantEmail: "failed@example.com",
+        subdomain: "failedstore",
+      };
+
+      // Expect the service to throw
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow(errorMessage);
+
+      // Verify DB state
+      const tenant = await repository.findBySubdomain(input.subdomain!);
+      expect(tenant).toBeDefined();
+      expect(tenant?.status).toBe("provisioning_failed");
+      expect(tenant?.failureReason).toBe(errorMessage);
+    });
   });
 
   describe("getTenant", () => {
@@ -328,6 +353,27 @@ describe("TenantService", () => {
     it("should throw error when tenant not found", async () => {
       await expect(service.deleteTenant(randomUUID())).rejects.toThrow(
         TenantNotFoundError,
+      );
+    });
+  });
+
+  describe("logProvisioningEvent", () => {
+    it("should delegate to repository", async () => {
+      const tenantId = "tenant-123";
+      const step = "test_step";
+      const status = "completed";
+      const details = { foo: "bar" };
+
+      // Mock repository method
+      repository.logProvisioningEvent = vi.fn().mockResolvedValue(void 0);
+
+      await service.logProvisioningEvent(tenantId, step, status, details);
+
+      expect(repository.logProvisioningEvent).toHaveBeenCalledWith(
+        tenantId,
+        step,
+        status,
+        details,
       );
     });
   });

@@ -21,6 +21,7 @@ const mockService = {
   configureDomain: vi.fn(),
   activateTenant: vi.fn(),
   rollbackResources: vi.fn(),
+  logProvisioningEvent: vi.fn(),
 } as unknown as TenantService;
 
 const TEST_INTERNAL_KEY = "test-internal-api-key-123";
@@ -81,7 +82,7 @@ describe("ProvisioningController", () => {
     const response = await controller.handleRequest(request);
     expect(response.status).toBe(200);
     expect(mockService.provisionDatabase).toHaveBeenCalledWith(tenantId);
-    expect(mockDatabase.insert).toHaveBeenCalledTimes(2); // start and complete
+    expect(mockService.logProvisioningEvent).toHaveBeenCalledTimes(2); // start and complete
   });
 
   it("should handle failure and log it", async () => {
@@ -94,7 +95,7 @@ describe("ProvisioningController", () => {
     const response = await controller.handleRequest(request);
     expect(response.status).toBe(500);
 
-    expect(mockDatabase.insert).toHaveBeenCalledTimes(2); // start and failed
+    expect(mockService.logProvisioningEvent).toHaveBeenCalledTimes(2); // start and failed
   });
 
   it("should log error but continue if logEvent fails", async () => {
@@ -102,10 +103,10 @@ describe("ProvisioningController", () => {
     vi.mocked(mockService.provisionDatabase).mockResolvedValue({
       databaseUrl: "postgres://...",
     });
-    // Mock db.insert to fail
-    vi.mocked(mockDatabase.insert).mockImplementationOnce(() => {
-      throw new Error("DB Log Error");
-    });
+    // Mock logProvisioningEvent to fail
+    vi.mocked(mockService.logProvisioningEvent).mockRejectedValueOnce(
+      new Error("DB Log Error"),
+    );
 
     const request = createRequest("database");
 
