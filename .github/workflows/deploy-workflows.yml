@@ -32,7 +32,7 @@ jobs:
           service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@85c5576a8b7501a302633036e4f32e920d364805
 
       - name: Deploy Provision Tenant Workflow
         run: |
