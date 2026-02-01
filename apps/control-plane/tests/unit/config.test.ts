@@ -102,7 +102,7 @@ describe("validateConfiguration", () => {
     );
   });
 
-  it("should return 500 Response if NODE_ENV is production and INTERNAL_API_SECRET is missing", () => {
+  it("should return 500 Response if NODE_ENV is production and INTERNAL_API_KEY is missing", () => {
     const result = validateConfiguration(
       mockLogger,
       "postgres://localhost:5432/db",

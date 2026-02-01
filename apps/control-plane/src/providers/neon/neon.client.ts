@@ -1,14 +1,14 @@
 import { createApiClient } from "@neondatabase/api-client";
-import { type createLogger } from "@vendin/utils/logger";
 import { LRUCache } from "lru-cache";
 
+import type { Logger } from "../../utils/logger";
 import type { Api, Branch } from "@neondatabase/api-client";
 
 interface NeonProviderConfig {
   apiKey: string;
   projectId: string;
   defaultDatabase?: string;
-  logger: ReturnType<typeof createLogger>;
+  logger: Logger;
 }
 
 const projectDefaultBranchCache = new LRUCache<string, string>({
@@ -20,7 +20,7 @@ export class NeonProvider {
   private client: Api<unknown>;
   private projectId: string;
   private defaultDatabase: string;
-  private logger: ReturnType<typeof createLogger>;
+  private logger: Logger;
 
   constructor(private config: NeonProviderConfig) {
     this.logger = config.logger;

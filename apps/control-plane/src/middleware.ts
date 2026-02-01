@@ -1,4 +1,4 @@
-import type { Logger } from "@vendin/utils/logger";
+import type { Logger } from "./utils/logger";
 
 export interface MiddlewareOptions {
   logger: Logger;

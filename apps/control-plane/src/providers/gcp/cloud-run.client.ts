@@ -1,6 +1,9 @@
-import { type createLogger } from "@vendin/utils/logger";
+import { randomBytes } from "node:crypto";
+
 import { GoogleAuth } from "google-auth-library";
 import { run_v2 } from "googleapis";
+
+import type { Logger } from "../../utils/logger";
 
 interface CloudRunProviderConfig {
   credentialsJson?: string | undefined;
@@ -8,14 +11,21 @@ interface CloudRunProviderConfig {
   region: string;
   tenantImageTag: string;
   serviceAccount?: string;
-  logger: ReturnType<typeof createLogger>;
+  logger: Logger;
 }
 
 export type MigrationStatus = "running" | "success" | "failed";
 
+export interface TenantAppConfig {
+  databaseUrl: string;
+  redisUrl: string;
+  redisPrefix: string;
+  subdomain?: string; // Optional for migrations
+}
+
 export class CloudRunProvider {
   private runClient: run_v2.Run;
-  private logger: ReturnType<typeof createLogger>;
+  private logger: Logger;
   private projectId: string;
   private region: string;
   private tenantImageTag: string;
@@ -54,7 +64,7 @@ export class CloudRunProvider {
 
   async deployTenantInstance(
     tenantId: string,
-    environmentVariables: Record<string, string>,
+    config: TenantAppConfig,
   ): Promise<string> {
     const serviceName = `tenant-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
@@ -62,59 +72,75 @@ export class CloudRunProvider {
 
     this.logger.info({ tenantId }, "Starting Cloud Run deployment");
 
+    // Generate secrets and config internally
+    const cookieSecret = randomBytes(32).toString("hex");
+    const jwtSecret = randomBytes(32).toString("hex");
+
+    const environmentVariables = {
+      DATABASE_URL: config.databaseUrl,
+      REDIS_URL: config.redisUrl,
+      REDIS_PREFIX: config.redisPrefix,
+      COOKIE_SECRET: cookieSecret,
+      JWT_SECRET: jwtSecret,
+      HOST: "0.0.0.0",
+      NODE_ENV: "production",
+      STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+      ADMIN_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+    };
+
     const serviceRequest = this.prepareServiceRequest(environmentVariables);
 
-    let operationName: string | undefined;
+    const operationName = await this.getOrCreateService(
+      serviceName,
+      servicePath,
+      parent,
+      serviceRequest,
+      tenantId,
+    );
 
-    try {
-      operationName = await this.getOrCreateService(
-        serviceName,
-        servicePath,
-        parent,
-        serviceRequest,
-        tenantId,
+    if (!operationName) {
+      throw new Error(
+        "Failed to start deployment operation (no operation name returned)",
       );
-
-      if (!operationName) {
-        throw new Error(
-          "Failed to start deployment operation (no operation name returned)",
-        );
-      }
-
-      // Wait for operation completion
-      await this.waitForOperation(operationName);
-
-      // Make service public (idempotent)
-      await this.makeServicePublic(servicePath);
-
-      // Fetch the final service to get the URL
-      const service = await this.runClient.projects.locations.services.get({
-        name: servicePath,
-      });
-
-      const uri = service.data.uri;
-      if (!uri) {
-        throw new Error("Service deployed but URI is missing");
-      }
-
-      this.logger.info({ tenantId, uri }, "Cloud Run deployment successful");
-      return uri;
-    } catch (error) {
-      this.logger.error({ error, tenantId }, "Cloud Run deployment failed");
-      throw error;
     }
+
+    // Wait for operation completion
+    await this.waitForOperation(operationName);
+
+    // Make service public (idempotent)
+    await this.makeServicePublic(servicePath);
+
+    // Fetch the final service to get the URL
+    const service = await this.runClient.projects.locations.services.get({
+      name: servicePath,
+    });
+
+    const uri = service.data.uri;
+    if (!uri) {
+      throw new Error("Service deployed but URI is missing");
+    }
+
+    this.logger.info({ tenantId, uri }, "Cloud Run deployment successful");
+    return uri;
   }
 
   // Modified to be non-blocking
   async runTenantMigrations(
     tenantId: string,
-    environmentVariables: Record<string, string>,
+    config: TenantAppConfig,
   ): Promise<string> {
     const jobId = `migrate-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const jobPath = `${parent}/jobs/${jobId}`;
 
     this.logger.info({ tenantId }, "Starting database migrations job");
+
+    const environmentVariables = {
+      DATABASE_URL: config.databaseUrl,
+      REDIS_URL: config.redisUrl,
+      REDIS_PREFIX: config.redisPrefix,
+      NODE_ENV: "production",
+    };
 
     const jobRequest = this.prepareJobRequest(environmentVariables);
 
@@ -137,18 +163,6 @@ export class CloudRunProvider {
       if (!executionOperation) {
         throw new Error("Failed to start migration job execution");
       }
-
-      // Instead of waiting, return the operation/execution name
-      // The runJobExecution method returns the operation name.
-      // We need to resolve the actual execution name from the operation
-      // But Cloud Run operations API for Jobs returns the execution name in `response` field ONLY after completion.
-      // However, the `run` method returns an operation that we can wait for quickly (just the trigger, not the whole job).
-      // Wait, `waitForExecutionCompletion` in previous code waited for the *job execution* to finish.
-      // Now we want to return immediately.
-
-      // The response from `jobs.run` is an Operation. The metadata or response of that operation contains the Execution name.
-      // We should wait for the Operation to be done (which means "execution triggered"),
-      // then get the Execution name from it.
 
       const executionName = await this.waitForJobTrigger(executionOperation);
 

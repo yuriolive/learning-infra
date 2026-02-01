@@ -5,8 +5,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "node build.js",
-    "dev": "tsx --watch src/index.ts",
+    "build": "tsc --noEmit",
+    "dev": "wrangler dev",
     "start": "npm run build && node dist/src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -18,7 +18,7 @@
     "db:migrate": "tsx src/database/migrate.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",
@@ -35,7 +35,6 @@
     "googleapis": "^170.1.0",
     "lru-cache": "^11.2.4",
     "postgres": "^3.4.8",
-    "ws": "^8.19.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
