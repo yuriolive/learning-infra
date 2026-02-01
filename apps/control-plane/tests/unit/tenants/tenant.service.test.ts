@@ -357,6 +357,27 @@ describe("TenantService", () => {
     });
   });
 
+  describe("logProvisioningEvent", () => {
+    it("should delegate to repository", async () => {
+      const tenantId = "tenant-123";
+      const step = "test_step";
+      const status = "completed";
+      const details = { foo: "bar" };
+
+      // Mock repository method
+      repository.logProvisioningEvent = vi.fn().mockResolvedValue(void 0);
+
+      await service.logProvisioningEvent(tenantId, step, status, details);
+
+      expect(repository.logProvisioningEvent).toHaveBeenCalledWith(
+        tenantId,
+        step,
+        status,
+        details,
+      );
+    });
+  });
+
   describe("listTenants", () => {
     it("should return all tenants", async () => {
       await createTenantHelper(1);
