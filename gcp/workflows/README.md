@@ -29,10 +29,20 @@ gcloud workflows deploy provision-tenant \
   --location=southamerica-east1
 ```
 
-## Service Account
+## IAM Permissions
 
-The workflows are typically configured to run as a service account with the following minimum permissions:
+### Deployment Service Account (GitHub Actions)
 
-- `roles/run.admin`
-- `roles/secretmanager.secretAccessor`
-- `roles/workflows.invoker`
+The functionality provided by the `fix-cloud-run-permissions.sh` script grants the following roles to the GitHub Actions Service Account to enable automated deployment:
+
+- `roles/workflows.admin`: Required to create/update workflow definitions.
+- `roles/run.admin`: Required if the deployment also manages permissions for the running service.
+- `roles/secretmanager.secretAccessor`: Required to access secrets during deployment validation.
+
+### Runtime Service Account
+
+The service account that executes the workflow (Identity) needs:
+
+- `roles/logging.logWriter`: To write logs.
+- `roles/run.admin`: To deploy Cloud Run services (as performed by this workflow).
+- `roles/secretmanager.secretAccessor`: To access secrets during execution.
