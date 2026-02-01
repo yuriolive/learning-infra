@@ -49,9 +49,6 @@ gcloud iam service-accounts create github-actions-sa \
   --description="GitHub Actions Service Account" \
   --display-name="GitHub Actions SA"
 
-# 5. Create Artifact Registry
-
-# 6. Create Artifact Registry
 gcloud artifacts repositories create containers \
   --project=$PROJECT_ID \
   --repository-format=docker \
@@ -124,7 +121,9 @@ gcloud iam service-accounts create control-plane-sa \
   --display-name="Control Plane SA"
 
 export RUNTIME_SA_EMAIL="control-plane-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-export WORKFLOWS_SA_EMAIL="service-$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@gcp-sa-workflows.iam.gserviceaccount.com"
+# Get Project Number
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID | grep "projectNumber" | awk '{print $2}' | tr -d "'")
+export WORKFLOWS_SA_EMAIL="service-${PROJECT_NUMBER}@gcp-sa-workflows.iam.gserviceaccount.com"
 
 # 10. Grant Runtime Permissions
 
@@ -294,4 +293,12 @@ gcloud artifacts repositories describe containers --project=vendin-store --locat
 
 # 4. Check Secrets
 gcloud secrets list --project=vendin-store
+
+# 5. Check Workflows Permissions
+# Verify Deployer has Service Account User
+gcloud projects get-iam-policy $PROJECT_ID | grep -A 5 "github-actions-sa"
+
+# Verify Workflows Agent has Token Creator on Identity
+gcloud iam service-accounts get-iam-policy $RUNTIME_SA_EMAIL \
+  --project=$PROJECT_ID | grep -A 5 "serviceAccount:$WORKFLOWS_SA_EMAIL"
 ```
