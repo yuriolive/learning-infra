@@ -13,9 +13,41 @@ type ExtractionResult =
   | { phone: string; success: true; text: string }
   | { error: string; success: false; type?: string; warning?: string };
 
+interface MetaMessage {
+  from: string;
+  type: string;
+  text?: {
+    body: string;
+  };
+}
+
+interface MetaValue {
+  messages?: MetaMessage[];
+}
+
+interface MetaChange {
+  value: MetaValue;
+}
+
+interface MetaEntry {
+  changes: MetaChange[];
+}
+
+interface MetaWebhookBody {
+  object?: string;
+  entry?: MetaEntry[];
+}
+
+interface DirectBody {
+  phone?: string;
+  text?: string;
+}
+
 // Helper to extract message from Meta Webhook
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, complexity
-const extractMetaMessage = (body: any): ExtractionResult => {
+
+const extractMetaMessage = (
+  body: Partial<MetaWebhookBody>,
+): ExtractionResult => {
   if (!body.entry || !Array.isArray(body.entry) || body.entry.length === 0) {
     return {
       success: false,
@@ -52,7 +84,16 @@ const extractMetaMessage = (body: any): ExtractionResult => {
     return { success: false, error: "ignored_type", type: message.type };
   }
 
-  return { success: true, phone: message.from, text: message.text?.body };
+  const textBody = message.text?.body;
+  if (!textBody) {
+    return {
+      success: false,
+      error: "ignored_malformed",
+      warning: "Agent API: Received text message with empty body.",
+    };
+  }
+
+  return { success: true, phone: message.from, text: textBody };
 };
 
 export const POST = async (
@@ -70,8 +111,7 @@ export const POST = async (
     return;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const body = medusaRequest.body as any;
+  const body = medusaRequest.body as Partial<MetaWebhookBody> & DirectBody;
   let phone: string | undefined;
   let text: string | undefined;
 
@@ -81,9 +121,10 @@ export const POST = async (
       const extraction = extractMetaMessage(body);
       if (!extraction.success) {
         if (extraction.warning) logger.warn(extraction.warning);
-        medusaResponse
-          .status(200)
-          .json({ status: extraction.error, type: extraction.type });
+        medusaResponse.status(200).json({
+          status: extraction.error,
+          type: extraction.type ?? "unknown",
+        });
         return;
       }
       phone = extraction.phone;
