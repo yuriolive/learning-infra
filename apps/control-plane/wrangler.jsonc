@@ -1,10 +1,11 @@
 {
   "name": "control-plane",
   "main": "src/index.ts",
-  "compatibility_date": "2025-01-24",
+  "compatibility_date": "2026-01-31",
   "minify": true,
   "compatibility_flags": [
-    "nodejs_compat"
+    "nodejs_compat",
+    "global_fetch_strictly_public"
   ],
   "routes": [
     {
@@ -72,6 +73,11 @@
           "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "google-application-credentials-part-3"
+        },
+        {
+          "binding": "INTERNAL_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "internal-api-key"
         }
       ],
       "vars": {

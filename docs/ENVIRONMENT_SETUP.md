@@ -19,6 +19,7 @@ This document consolidates all environment variable and secrets management for t
 | `NEON_API_KEY`                   | Secret    | Secrets Store    | Neon API authentication                                        |
 | `NEON_PROJECT_ID`                | Secret    | Secrets Store    | Neon project identifier                                        |
 | `ADMIN_API_KEY`                  | Secret    | Secrets Store    | API authentication (Bearer)                                    |
+| `INTERNAL_API_KEY`               | Secret    | Secrets Store    | Internal API authentication                                    |
 | `CLOUDFLARE_API_TOKEN`           | Secret    | Secrets Store    | Cloudflare API access                                          |
 | `CLOUDFLARE_ZONE_ID`             | Secret    | Secrets Store    | Zone ID for vendin.store                                       |
 | `ALLOWED_ORIGINS`                | Plain Var | `wrangler.jsonc` | CORS allowed origins                                           |
@@ -27,9 +28,9 @@ This document consolidates all environment variable and secrets management for t
 | `POSTHOG_API_KEY`                | Secret    | Secrets Store    | PostHog project API key                                        |
 | `POSTHOG_HOST`                   | Plain Var | `wrangler.jsonc` | PostHog API host                                               |
 | `UPSTASH_REDIS_URL`              | Secret    | Secrets Store    | Redis connection string                                        |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials                                |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Secret    | Secrets Store    | GCP Service Account credentials (assembled from parts)         |
 | `GCP_PROJECT_ID`                 | Plain Var | `wrangler.jsonc` | Google Cloud Project ID                                        |
-| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region                                            |
+| `GCP_REGION`                     | Plain Var | `wrangler.jsonc` | Google Cloud Region (southamerica-east1)                       |
 | `REDIS_PREFIX`                   | Plain Var | Dynamic          | Prefix for Redis keys (namespacing for multi-tenancy)          |
 | `TENANT_IMAGE_TAG`               | Plain Var | `wrangler.jsonc` | Docker image tag for tenant (dynamically constructed in CI/CD) |
 
@@ -42,6 +43,14 @@ This document consolidates all environment variable and secrets management for t
 ```bash
 # Generate a secure random API key
 openssl rand -base64 32
+```
+
+### 1.1b Generate Internal API Key
+
+```bash
+# Generate a secure random Internal API key
+openssl rand -base64 32
+
 ```
 
 Save this value - you'll need it for both Cloudflare Secrets Store and GitHub Secrets.
@@ -86,6 +95,7 @@ echo -n "postgresql://user:pass@host:5432/db" | pnpm wrangler secrets-store secr
 echo -n "your-neon-api-key" | pnpm wrangler secrets-store secret put neon-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-neon-project-id" | pnpm wrangler secrets-store secret put neon-project-id --secrets-store-id=$SECRETS_STORE_ID
 echo -n "$(openssl rand -base64 32)" | pnpm wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
+echo -n "$(openssl rand -base64 32)" | pnpm wrangler secrets-store secret put internal-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-cloudflare-api-token" | pnpm wrangler secrets-store secret put cloudflare-api-token --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-cloudflare-zone-id" | pnpm wrangler secrets-store secret put cloudflare-zone-id --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-posthog-api-key" | pnpm wrangler secrets-store secret put posthog-api-key --secrets-store-id=$SECRETS_STORE_ID
@@ -120,6 +130,7 @@ Update `apps/control-plane/wrangler.jsonc`:
       { "binding": "NEON_API_KEY", "name": "neon-api-key" },
       { "binding": "NEON_PROJECT_ID", "name": "neon-project-id" },
       { "binding": "ADMIN_API_KEY", "name": "control-plane-admin-api-key" },
+      { "binding": "INTERNAL_API_KEY", "name": "internal-api-key" },
       { "binding": "CLOUDFLARE_API_TOKEN", "name": "cloudflare-api-token" },
       { "binding": "CLOUDFLARE_ZONE_ID", "name": "cloudflare-zone-id" },
       { "binding": "POSTHOG_API_KEY", "name": "posthog-api-key" },
@@ -179,6 +190,7 @@ DATABASE_URL="postgresql://user:pass@localhost:5432/control_plane_dev"
 NEON_API_KEY="your-neon-api-key"
 NEON_PROJECT_ID="your-neon-project-id"
 ADMIN_API_KEY="dev-api-key-change-me"
+INTERNAL_API_KEY="dev-internal-api-key-change-me"
 CLOUDFLARE_API_TOKEN="your-cloudflare-token"
 CLOUDFLARE_ZONE_ID="your-zone-id"
 ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"

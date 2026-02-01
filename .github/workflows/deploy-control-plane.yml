@@ -13,6 +13,8 @@ on:
       - "packages/**"
       - "package.json"
       - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
       - ".github/workflows/deploy-control-plane.yml"
   workflow_dispatch:
 
@@ -105,6 +107,10 @@ jobs:
           # Inject Cloud Run Service Account
           CLOUD_RUN_SA="cloud-run-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
           sed -i "s/CLOUD_RUN_SERVICE_ACCOUNT_PLACEHOLDER/$CLOUD_RUN_SA/g" wrangler.jsonc
+
+      - name: Build Worker
+        working-directory: apps/control-plane
+        run: npm run build
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3

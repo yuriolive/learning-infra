@@ -1,10 +1,6 @@
-import { createLogger } from "@vendin/utils/logger";
 import Cloudflare from "cloudflare";
 
-const logger = createLogger({
-  logLevel: process.env.LOG_LEVEL,
-  nodeEnv: process.env.NODE_ENV ?? "development",
-});
+import { consoleLogger as logger } from "../../utils/logger";
 
 export interface CreateHostnameOptions {
   ssl?: {

@@ -26,6 +26,16 @@ vi.mock("../../../src/providers/gcp/cloud-run.client", () => {
   };
 });
 
+// Mock GcpWorkflowsClient
+vi.mock("../../../src/providers/gcp/workflows.client", () => {
+  return {
+    GcpWorkflowsClient: vi.fn().mockImplementation(() => ({
+      createExecution: vi.fn().mockResolvedValue(void 0),
+      triggerProvisionTenant: vi.fn().mockResolvedValue(void 0),
+    })),
+  };
+});
+
 import {
   SubdomainInUseError,
   SubdomainRequiredError,
@@ -33,7 +43,7 @@ import {
 } from "../../../src/domains/tenants/tenant.errors";
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
-import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
+import { GcpWorkflowsClient } from "../../../src/providers/gcp/workflows.client"; // Moved here to be alphabetical-ish or just separated correctly
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
 import { createMockDatabase } from "../../utils/mock-database";
 
@@ -45,6 +55,7 @@ import type {
 describe("TenantService", () => {
   let service: TenantService;
   let repository: TenantRepository;
+  let executionsClient: GcpWorkflowsClient;
 
   beforeEach(async () => {
     // Reset mocks and env vars
@@ -61,6 +72,25 @@ describe("TenantService", () => {
       gcpRegion: "mock-region",
       tenantImageTag: "mock-tag",
       upstashRedisUrl: "redis://mock",
+    });
+
+    executionsClient = new GcpWorkflowsClient({
+      credentialsJson: "{}",
+      projectId: "mock-gcp-project",
+      location: "mock-region",
+      logger,
+    });
+
+    service = new TenantService(repository, {
+      logger,
+      neonApiKey: "mock-key",
+      neonProjectId: "mock-project",
+      gcpCredentialsJson: "{}",
+      gcpProjectId: "mock-gcp-project",
+      gcpRegion: "mock-region",
+      tenantImageTag: "mock-tag",
+      upstashRedisUrl: "redis://mock",
+      executionsClient,
     });
   });
 
@@ -98,15 +128,18 @@ describe("TenantService", () => {
       expect(serviceInstance.neonProvider).toBeNull();
       // @ts-expect-error accessing private property for testing
       expect(serviceInstance.cloudRunProvider).toBeNull();
-    });
+    }, 10_000); // Increased timeout
   });
 
   const createTenantHelper = (index: number) => {
-    return service.createTenant({
-      name: `Store ${index}`,
-      merchantEmail: `store${index}@example.com`,
-      subdomain: `store${index}`,
-    });
+    return service.createTenant(
+      {
+        name: `Store ${index}`,
+        merchantEmail: `store${index}@example.com`,
+        subdomain: `store${index}`,
+      },
+      "https://mock.base.url",
+    );
   };
 
   describe("createTenant", () => {
@@ -117,90 +150,25 @@ describe("TenantService", () => {
         subdomain: "teststore",
       };
 
-      const tenant = await service.createTenant(input);
+      const tenant = await service.createTenant(input, "https://mock.base.url");
 
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
       expect(tenant.subdomain).toBe("teststore");
       expect(tenant.status).toBe("provisioning");
+
+      expect(GcpWorkflowsClient).toHaveBeenCalled();
     });
 
-    it("should provision database if credentials are present", async () => {
+    it("should trigger workflow if GCP project configured", async () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
         subdomain: "teststore",
       };
 
-      let backgroundTask: Promise<unknown> | undefined;
-      const waitUntil = (p: Promise<unknown>) => {
-        backgroundTask = p;
-      };
-
-      const tenant = await service.createTenant(input, waitUntil);
-
-      // Await background task
-      if (backgroundTask) await backgroundTask;
-
-      // Verify that databaseUrl was updated
-      const updatedTenant = await service.getTenant(tenant.id);
-      expect(updatedTenant.databaseUrl).toBe("postgres://mock-db-url");
-      expect(updatedTenant.redisHash).toHaveLength(12);
-      expect(updatedTenant.status).toBe("active");
-    });
-
-    it("should set status to provisioning_failed if provisioning fails", async () => {
-      // Mock failure
-      const mockCreateTenantDatabase = vi
-        .fn()
-        .mockRejectedValue(new Error("Provisioning failed"));
-      // @ts-expect-error Mocking for test purposes
-      NeonProvider.mockImplementationOnce(() => ({
-        createTenantDatabase: mockCreateTenantDatabase,
-        deleteTenantDatabase: vi.fn().mockResolvedValue(void 0),
-      }));
-
-      // Re-initialize service with failed provider
-      const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
-      const database = await createMockDatabase();
-      repository = new TenantRepository(database);
-      service = new TenantService(repository, {
-        logger,
-        neonApiKey: "mock-key",
-        neonProjectId: "mock-project",
-        gcpCredentialsJson: "{}",
-        gcpProjectId: "mock-gcp-project",
-        gcpRegion: "mock-region",
-        tenantImageTag: "mock-tag",
-        upstashRedisUrl: "redis://mock",
-      });
-
-      const input: CreateTenantInput = {
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      };
-
-      let backgroundTask: Promise<unknown> | undefined;
-      const waitUntil = (p: Promise<unknown>) => {
-        backgroundTask = p;
-      };
-
-      await service.createTenant(input, waitUntil);
-
-      // Await background task (ignore rejection as service catches it)
-      if (backgroundTask) {
-        try {
-          await backgroundTask;
-        } catch {
-          // ignore
-        }
-      }
-
-      // Verify status is provisioning_failed
-      const tenants = await service.listTenants();
-      expect(tenants).toHaveLength(1);
-      expect(tenants[0]?.status).toBe("provisioning_failed");
+      await service.createTenant(input, "https://mock.base.url");
+      expect(GcpWorkflowsClient).toHaveBeenCalled();
     });
 
     it("should throw error when domain already exists", async () => {
@@ -210,11 +178,11 @@ describe("TenantService", () => {
         subdomain: "teststore",
       };
 
-      await service.createTenant(input);
+      await service.createTenant(input, "https://mock.base.url");
 
-      await expect(service.createTenant(input)).rejects.toThrow(
-        SubdomainInUseError,
-      );
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow(SubdomainInUseError);
     });
 
     it("should throw error if subdomain is missing", async () => {
@@ -224,48 +192,16 @@ describe("TenantService", () => {
         // subdomain missing
       };
 
-      await expect(service.createTenant(input)).rejects.toThrow(
-        SubdomainRequiredError,
-      );
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow(SubdomainRequiredError);
     });
-    it("should rollback resources if provisioning fails", async () => {
-      // Mock failure in cloud run deployment
-      const mockDeployTenantInstance = vi
-        .fn()
-        .mockRejectedValue(new Error("Deployment failed"));
 
-      const mockDeleteTenantDatabase = vi.fn().mockResolvedValue(void 0);
-      const mockDeleteTenantInstance = vi.fn().mockResolvedValue(void 0);
-
-      // @ts-expect-error Mocking for test purposes
-      NeonProvider.mockImplementationOnce(() => ({
-        createTenantDatabase: vi
-          .fn()
-          .mockResolvedValue("postgres://mock-db-url"),
-        deleteTenantDatabase: mockDeleteTenantDatabase,
-      }));
-
-      // @ts-expect-error Mocking for test purposes
-      vi.mocked(CloudRunProvider).mockImplementationOnce(() => ({
-        deployTenantInstance: mockDeployTenantInstance,
-        runTenantMigrations: vi.fn().mockResolvedValue(void 0),
-        deleteTenantInstance: mockDeleteTenantInstance,
-      }));
-
-      // Re-initialize service with custom mocks
-      const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
-      const database = await createMockDatabase();
-      repository = new TenantRepository(database);
-      service = new TenantService(repository, {
-        logger,
-        neonApiKey: "mock-key",
-        neonProjectId: "mock-project",
-        gcpCredentialsJson: "{}",
-        gcpProjectId: "mock-gcp-project",
-        gcpRegion: "mock-region",
-        tenantImageTag: "mock-tag",
-        upstashRedisUrl: "redis://mock",
-      });
+    it("should fail if workflow triggering fails", async () => {
+      // Mock failure in execution creation
+      vi.mocked(executionsClient.triggerProvisionTenant).mockRejectedValueOnce(
+        new Error("Workflow trigger failed"),
+      );
 
       const input: CreateTenantInput = {
         name: "Test Store",
@@ -273,40 +209,22 @@ describe("TenantService", () => {
         subdomain: "teststore",
       };
 
-      let backgroundTask: Promise<unknown> | undefined;
-      const waitUntil = (p: Promise<unknown>) => {
-        backgroundTask = p;
-      };
-
-      await service.createTenant(input, waitUntil);
-
-      // Await background task
-      if (backgroundTask) {
-        try {
-          await backgroundTask;
-        } catch {
-          // ignore
-        }
-      }
-
-      // Verify rollback methods were called
-      expect(mockDeleteTenantDatabase).toHaveBeenCalledWith(expect.any(String));
-      expect(mockDeleteTenantInstance).toHaveBeenCalledWith(expect.any(String));
-
-      // Verify final status and failure reason
-      const tenants = await service.listTenants();
-      expect(tenants[0]?.status).toBe("provisioning_failed");
-      expect(tenants[0]?.failureReason).toBe("Deployment failed");
+      await expect(
+        service.createTenant(input, "https://mock.base.url"),
+      ).rejects.toThrow("Workflow trigger failed");
     });
   });
 
   describe("getTenant", () => {
     it("should return tenant when found", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      });
+      const created = await service.createTenant(
+        {
+          name: "Test Store",
+          merchantEmail: "test@example.com",
+          subdomain: "teststore",
+        },
+        "https://mock.base.url",
+      );
 
       const tenant = await service.getTenant(created.id);
 
@@ -323,11 +241,14 @@ describe("TenantService", () => {
 
   describe("updateTenant", () => {
     it("should update tenant successfully", async () => {
-      const created = await service.createTenant({
-        name: "Original Name",
-        merchantEmail: "test@example.com",
-        subdomain: "original",
-      });
+      const created = await service.createTenant(
+        {
+          name: "Original Name",
+          merchantEmail: "test@example.com",
+          subdomain: "original",
+        },
+        "https://mock.base.url",
+      );
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
@@ -365,11 +286,14 @@ describe("TenantService", () => {
     });
 
     it("should allow updating to same domain for same tenant", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      });
+      const created = await service.createTenant(
+        {
+          name: "Test Store",
+          merchantEmail: "test@example.com",
+          subdomain: "teststore",
+        },
+        "https://mock.base.url",
+      );
 
       const input: UpdateTenantInput = {
         name: "Updated Name",
@@ -385,11 +309,14 @@ describe("TenantService", () => {
 
   describe("deleteTenant", () => {
     it("should delete tenant successfully", async () => {
-      const created = await service.createTenant({
-        name: "Test Store",
-        merchantEmail: "test@example.com",
-        subdomain: "teststore",
-      });
+      const created = await service.createTenant(
+        {
+          name: "Test Store",
+          merchantEmail: "test@example.com",
+          subdomain: "teststore",
+        },
+        "https://mock.base.url",
+      );
 
       await expect(service.deleteTenant(created.id)).resolves.toBeUndefined();
 

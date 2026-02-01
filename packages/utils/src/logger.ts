@@ -6,7 +6,8 @@ export interface LoggerOptions {
 }
 
 export const createLogger = (options: LoggerOptions = {}) => {
-  const nodeEnvironment = options.nodeEnv ?? "development";
+  const nodeEnvironment =
+    options.nodeEnv ?? process.env.NODE_ENV ?? "development";
   const isDevelopment = nodeEnvironment !== "production";
 
   return pino({

@@ -11,9 +11,9 @@ import {
   updateTenantSchema,
 } from "./tenant.schemas";
 
+import type { Logger } from "../../utils/logger";
 import type { TenantService } from "./tenant.service";
 import type { CreateTenantInput, UpdateTenantInput } from "./tenant.types";
-import type { Logger } from "@vendin/utils/logger";
 
 export interface RouteContext {
   logger: Logger;
@@ -143,15 +143,18 @@ async function handleCreateTenant(
   request: Request,
   service: TenantService,
   logger: Logger,
-  waitUntil?: (promise: Promise<unknown>) => void,
+  _waitUntil?: (promise: Promise<unknown>) => void,
 ): Promise<Response> {
   try {
     const body = await request.json();
     const validated = createTenantSchema.parse(body);
 
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
+
     const tenant = await service.createTenant(
       validated as CreateTenantInput,
-      waitUntil,
+      baseUrl,
     );
 
     return new Response(JSON.stringify(tenant), {

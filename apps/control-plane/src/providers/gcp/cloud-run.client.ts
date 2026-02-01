@@ -1,6 +1,9 @@
-import { type createLogger } from "@vendin/utils/logger";
+import { randomBytes } from "node:crypto";
+
 import { GoogleAuth } from "google-auth-library";
 import { run_v2 } from "googleapis";
+
+import type { Logger } from "../../utils/logger";
 
 interface CloudRunProviderConfig {
   credentialsJson?: string | undefined;
@@ -8,12 +11,21 @@ interface CloudRunProviderConfig {
   region: string;
   tenantImageTag: string;
   serviceAccount?: string;
-  logger: ReturnType<typeof createLogger>;
+  logger: Logger;
+}
+
+export type MigrationStatus = "running" | "success" | "failed";
+
+export interface TenantAppConfig {
+  databaseUrl: string;
+  redisUrl: string;
+  redisPrefix: string;
+  subdomain?: string; // Optional for migrations
 }
 
 export class CloudRunProvider {
   private runClient: run_v2.Run;
-  private logger: ReturnType<typeof createLogger>;
+  private logger: Logger;
   private projectId: string;
   private region: string;
   private tenantImageTag: string;
@@ -52,7 +64,7 @@ export class CloudRunProvider {
 
   async deployTenantInstance(
     tenantId: string,
-    environmentVariables: Record<string, string>,
+    config: TenantAppConfig,
   ): Promise<string> {
     const serviceName = `tenant-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
@@ -60,58 +72,75 @@ export class CloudRunProvider {
 
     this.logger.info({ tenantId }, "Starting Cloud Run deployment");
 
+    // Generate secrets and config internally
+    const cookieSecret = randomBytes(32).toString("hex");
+    const jwtSecret = randomBytes(32).toString("hex");
+
+    const environmentVariables = {
+      DATABASE_URL: config.databaseUrl,
+      REDIS_URL: config.redisUrl,
+      REDIS_PREFIX: config.redisPrefix,
+      COOKIE_SECRET: cookieSecret,
+      JWT_SECRET: jwtSecret,
+      HOST: "0.0.0.0",
+      NODE_ENV: "production",
+      STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+      ADMIN_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+    };
+
     const serviceRequest = this.prepareServiceRequest(environmentVariables);
 
-    let operationName: string | undefined;
+    const operationName = await this.getOrCreateService(
+      serviceName,
+      servicePath,
+      parent,
+      serviceRequest,
+      tenantId,
+    );
 
-    try {
-      operationName = await this.getOrCreateService(
-        serviceName,
-        servicePath,
-        parent,
-        serviceRequest,
-        tenantId,
+    if (!operationName) {
+      throw new Error(
+        "Failed to start deployment operation (no operation name returned)",
       );
-
-      if (!operationName) {
-        throw new Error(
-          "Failed to start deployment operation (no operation name returned)",
-        );
-      }
-
-      // Wait for operation completion
-      await this.waitForOperation(operationName);
-
-      // Make service public (idempotent)
-      await this.makeServicePublic(servicePath);
-
-      // Fetch the final service to get the URL
-      const service = await this.runClient.projects.locations.services.get({
-        name: servicePath,
-      });
-
-      const uri = service.data.uri;
-      if (!uri) {
-        throw new Error("Service deployed but URI is missing");
-      }
-
-      this.logger.info({ tenantId, uri }, "Cloud Run deployment successful");
-      return uri;
-    } catch (error) {
-      this.logger.error({ error, tenantId }, "Cloud Run deployment failed");
-      throw error;
     }
+
+    // Wait for operation completion
+    await this.waitForOperation(operationName);
+
+    // Make service public (idempotent)
+    await this.makeServicePublic(servicePath);
+
+    // Fetch the final service to get the URL
+    const service = await this.runClient.projects.locations.services.get({
+      name: servicePath,
+    });
+
+    const uri = service.data.uri;
+    if (!uri) {
+      throw new Error("Service deployed but URI is missing");
+    }
+
+    this.logger.info({ tenantId, uri }, "Cloud Run deployment successful");
+    return uri;
   }
 
+  // Modified to be non-blocking
   async runTenantMigrations(
     tenantId: string,
-    environmentVariables: Record<string, string>,
-  ): Promise<void> {
+    config: TenantAppConfig,
+  ): Promise<string> {
     const jobId = `migrate-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const jobPath = `${parent}/jobs/${jobId}`;
 
     this.logger.info({ tenantId }, "Starting database migrations job");
+
+    const environmentVariables = {
+      DATABASE_URL: config.databaseUrl,
+      REDIS_URL: config.redisUrl,
+      REDIS_PREFIX: config.redisPrefix,
+      NODE_ENV: "production",
+    };
 
     const jobRequest = this.prepareJobRequest(environmentVariables);
 
@@ -128,24 +157,78 @@ export class CloudRunProvider {
         await this.waitForOperation(operationName);
       }
 
-      // Run the job
+      // Trigger the job execution
       const executionOperation = await this.runJobExecution(jobPath, tenantId);
 
       if (!executionOperation) {
         throw new Error("Failed to start migration job execution");
       }
 
-      // Wait for execution to complete
-      await this.waitForExecutionCompletion(executionOperation);
+      const executionName = await this.waitForJobTrigger(executionOperation);
 
       this.logger.info(
-        { tenantId },
-        "Database migrations completed successfully",
+        { tenantId, executionName },
+        "Migration job triggered successfully",
       );
+      return executionName;
     } catch (error) {
-      this.logger.error({ error, tenantId }, "Database migrations failed");
+      this.logger.error(
+        { error, tenantId },
+        "Database migrations trigger failed",
+      );
       throw error;
     }
+  }
+
+  // New method for polling
+  async getJobExecutionStatus(
+    executionName: string,
+  ): Promise<{ status: MigrationStatus; error?: string }> {
+    try {
+      const response =
+        await this.runClient.projects.locations.jobs.executions.get({
+          name: executionName,
+        });
+      const execution = response.data;
+
+      const status = this.mapExecutionToStatus(execution);
+      if (status.status === "failed" && !status.error) {
+        status.error = "Job execution failed";
+      }
+
+      return status;
+    } catch (error) {
+      this.logger.error(
+        { error, executionName },
+        "Failed to get execution status",
+      );
+      return {
+        status: "failed",
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  private mapExecutionToStatus(
+    execution: run_v2.Schema$GoogleCloudRunV2Execution,
+  ): { status: MigrationStatus; error?: string } {
+    if (execution.succeededCount && execution.succeededCount > 0) {
+      return { status: "success" };
+    }
+
+    if (execution.failedCount && execution.failedCount > 0) {
+      const condition = execution.conditions?.find(
+        (c) => c.state === "CONDITION_FAILED",
+      );
+      const message = condition?.message;
+      return { status: "failed", ...(message ? { error: message } : {}) };
+    }
+
+    if (execution.cancelledCount && execution.cancelledCount > 0) {
+      return { status: "failed", error: "Job execution cancelled" };
+    }
+
+    return { status: "running" };
   }
 
   async deleteTenantInstance(tenantId: string): Promise<void> {
@@ -213,6 +296,46 @@ export class CloudRunProvider {
     }
 
     throw new Error("Timeout waiting for Cloud Run operation");
+  }
+
+  // Renamed/Refactored from waitForExecutionCompletion
+  private async waitForJobTrigger(operationName: string): Promise<string> {
+    const startTime = Date.now();
+    const timeout = 60_000; // 1 minute to trigger
+
+    this.logger.info(
+      { operationName },
+      "Waiting for Cloud Run job trigger (operation)",
+    );
+
+    while (Date.now() - startTime < timeout) {
+      const response = await this.runClient.projects.locations.operations.get({
+        name: operationName,
+      });
+
+      if (response.data.done) {
+        if (response.data.error) {
+          throw new Error(
+            `Migration trigger failed: ${response.data.error.message}`,
+          );
+        }
+
+        const executionName = response.data.response?.name as string;
+        if (!executionName) {
+          // Sometimes response is in metadata or response
+          // For Run Job, the response is Execution
+          // Let's inspect
+          throw new Error(
+            "Job trigger completed but execution name is missing",
+          );
+        }
+        return executionName;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    throw new Error("Timeout waiting for migration job to trigger");
   }
 
   private async makeServicePublic(servicePath: string): Promise<void> {
@@ -358,83 +481,6 @@ export class CloudRunProvider {
       name: jobPath,
     });
     return response.data.name ?? undefined;
-  }
-
-  private async waitForExecutionCompletion(
-    executionOperationName: string,
-  ): Promise<void> {
-    const startTime = Date.now();
-    const timeout = 600_000; // 10 minutes for migrations
-
-    this.logger.info(
-      { executionOperationName },
-      "Waiting for Cloud Run job execution completion",
-    );
-
-    // Initial wait to let the operation settle
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
-    while (Date.now() - startTime < timeout) {
-      const response = await this.runClient.projects.locations.operations.get({
-        name: executionOperationName,
-      });
-
-      if (response.data.done) {
-        if (response.data.error) {
-          throw new Error(
-            `Migration job failed: ${response.data.error.message}`,
-          );
-        }
-
-        // The operation being "done" means the execution was triggered.
-        // We need to fetch the execution itself to check its status.
-        const executionName = response.data.response?.name as string;
-        if (!executionName) {
-          throw new Error(
-            "Job execution started but execution name is missing",
-          );
-        }
-
-        return this.pollExecutionStatus(executionName);
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    throw new Error("Timeout waiting for migration job to start");
-  }
-
-  private async pollExecutionStatus(executionName: string): Promise<void> {
-    const startTime = Date.now();
-    const timeout = 600_000; // 10 minutes
-
-    while (Date.now() - startTime < timeout) {
-      const response =
-        await this.runClient.projects.locations.jobs.executions.get({
-          name: executionName,
-        });
-
-      const execution = response.data;
-
-      // Check for completion conditions
-      if (execution.succeededCount === 1) {
-        return;
-      }
-
-      if (execution.failedCount && execution.failedCount > 0) {
-        throw new Error(`Migration job execution failed`);
-      }
-
-      if (execution.cancelledCount && execution.cancelledCount > 0) {
-        throw new Error(`Migration job execution was cancelled`);
-      }
-
-      // Check if it's still running
-      this.logger.debug({ executionName }, "Polling migration job status...");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-
-    throw new Error("Timeout waiting for migration job execution results");
   }
 
   private prepareJobRequest(

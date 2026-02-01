@@ -1,4 +1,4 @@
-import type { createLogger } from "@vendin/utils/logger";
+import type { Logger } from "./utils/logger";
 
 interface SecretBinding {
   get(): Promise<string>;
@@ -25,6 +25,7 @@ export interface Environment {
   GOOGLE_APPLICATION_CREDENTIALS_PART_2?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
   CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
+  INTERNAL_API_KEY?: BoundSecret;
 }
 
 function resolveSecret(
@@ -49,6 +50,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleAppCredsP2,
     googleAppCredsP3,
     cloudRunServiceAccount,
+    internalApiKey,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -61,6 +63,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_2),
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
     resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
+    resolveSecret(environment.INTERNAL_API_KEY),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -85,6 +88,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     upstashRedisUrl,
     googleApplicationCredentials,
     cloudRunServiceAccount,
+    internalApiKey,
   };
 }
 
@@ -106,7 +110,7 @@ function createErrorResponse(
 
 // Helper to validate production-specific configuration to reduce complexity
 function validateProductionConfig(
-  logger: ReturnType<typeof createLogger>,
+  logger: Logger,
   adminApiKey: string | undefined,
   neonApiKey?: string,
   neonProjectId?: string,
@@ -115,10 +119,18 @@ function validateProductionConfig(
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
+  internalApiKey?: string,
 ): Response | undefined {
   if (!adminApiKey) {
     logger.error(
       "ADMIN_API_KEY is required in production but was not configured",
+    );
+    return createErrorResponse("Service is not properly configured");
+  }
+
+  if (!internalApiKey) {
+    logger.error(
+      "INTERNAL_API_KEY is required in production but was not configured",
     );
     return createErrorResponse("Service is not properly configured");
   }
@@ -148,7 +160,7 @@ function validateProductionConfig(
 }
 
 export function validateConfiguration(
-  logger: ReturnType<typeof createLogger>,
+  logger: Logger,
   databaseUrl: string | undefined,
   adminApiKey: string | undefined,
   nodeEnvironment: string,
@@ -160,6 +172,7 @@ export function validateConfiguration(
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
+  internalApiKey?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -182,6 +195,7 @@ export function validateConfiguration(
       tenantImageTag,
       googleApplicationCredentials,
       cloudRunServiceAccount,
+      internalApiKey,
     );
   }
 

@@ -34,6 +34,7 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "mock-sa",
+      "internal-api-key",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -101,6 +102,29 @@ describe("validateConfiguration", () => {
     );
   });
 
+  it("should return 500 Response if NODE_ENV is production and INTERNAL_API_KEY is missing", () => {
+    const result = validateConfiguration(
+      mockLogger,
+      "postgres://localhost:5432/db",
+      "admin-api-key",
+      "production",
+      "redis://localhost:6379",
+      "neon-api-key",
+      "neon-project-id",
+      "gcp-project-id",
+      "gcp-region",
+      "tenant-image-tag",
+      "google-app-creds",
+      "sa", // missing internal api key
+    );
+
+    expect(result).toBeInstanceOf(Response);
+    expect(result?.status).toBe(500);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "INTERNAL_API_KEY is required in production but was not configured",
+    );
+  });
+
   it("should return undefined if ADMIN_API_KEY is missing but NODE_ENV is not production", () => {
     const result = validateConfiguration(
       mockLogger,
@@ -128,13 +152,15 @@ describe("validateConfiguration", () => {
       "gcp-region",
       "tenant-image-tag",
       "google-app-creds",
+      "sa",
+      "internal-key",
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
-        missingVariables: ["NEON_API_KEY", "CLOUD_RUN_SERVICE_ACCOUNT"],
+        missingVariables: ["NEON_API_KEY"],
       }),
       "Critical infrastructure keys are missing in production",
     );
@@ -153,17 +179,15 @@ describe("validateConfiguration", () => {
       "gcp-region",
       "tenant-image-tag",
       "google-app-creds",
+      "sa",
+      "internal-key",
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
-        missingVariables: [
-          "NEON_PROJECT_ID",
-          "GCP_PROJECT_ID",
-          "CLOUD_RUN_SERVICE_ACCOUNT",
-        ],
+        missingVariables: ["NEON_PROJECT_ID", "GCP_PROJECT_ID"],
       }),
       "Critical infrastructure keys are missing in production",
     );
@@ -180,6 +204,7 @@ describe("resolveEnvironmentSecrets", () => {
       POSTHOG_API_KEY: "posthog-key",
       UPSTASH_REDIS_URL: "redis://upstash",
       GOOGLE_APPLICATION_CREDENTIALS: "full-creds",
+      INTERNAL_API_KEY: "internal-key",
     };
 
     const result = await resolveEnvironmentSecrets(environment);
@@ -192,6 +217,7 @@ describe("resolveEnvironmentSecrets", () => {
       postHogApiKey: "posthog-key",
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
+      internalApiKey: "internal-key",
     });
   });
 
