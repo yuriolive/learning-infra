@@ -36,6 +36,7 @@ gcloud services enable \
   run.googleapis.com \
   compute.googleapis.com \
   cloudresourcemanager.googleapis.com \
+  workflows.googleapis.com \
   --project=$PROJECT_ID
 
 # 3. Create GitHub Actions Service Account

@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { type Database } from "../../database/database";
-import { tenantProvisioningEvents } from "../../database/schema";
 import { type TenantService } from "../tenants/tenant.service";
 
 import type { Logger } from "../../utils/logger";
@@ -149,12 +148,7 @@ export class ProvisioningController {
     details?: Record<string, unknown>,
   ) {
     try {
-      await this.database.insert(tenantProvisioningEvents).values({
-        tenantId,
-        step,
-        status,
-        details,
-      });
+      await this.service.logProvisioningEvent(tenantId, step, status, details);
     } catch (error) {
       // Don't fail the request if logging fails, but log it
       this.logger.error(
