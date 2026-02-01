@@ -19,11 +19,15 @@ const getCircularReplacer = () => {
       }
       seen.add(value);
 
-      if (value instanceof Error) {
+      if (
+        value instanceof Error ||
+        (Object.prototype.hasOwnProperty.call(value, "message") &&
+          Object.prototype.hasOwnProperty.call(value, "stack"))
+      ) {
         return {
-          name: value.name,
-          message: value.message,
-          stack: value.stack,
+          name: (value as Error).name,
+          message: (value as Error).message,
+          stack: (value as Error).stack,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           cause: (value as any).cause,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
