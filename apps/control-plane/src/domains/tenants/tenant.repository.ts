@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { and, eq, ne } from "drizzle-orm";
 
 import { type Database } from "../../database/database";
-import { tenants } from "../../database/schema";
+import { tenants, tenantProvisioningEvents } from "../../database/schema";
 
 import type {
   CreateTenantInput,
@@ -132,5 +132,19 @@ export class TenantRepository {
       );
 
     return tenant ? mapToTenant(tenant) : null;
+  }
+
+  async logProvisioningEvent(
+    tenantId: string,
+    step: string,
+    status: string,
+    details?: Record<string, unknown>,
+  ): Promise<void> {
+    await this.db.insert(tenantProvisioningEvents).values({
+      tenantId,
+      step,
+      status,
+      details,
+    });
   }
 }

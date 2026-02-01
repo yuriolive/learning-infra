@@ -28,10 +28,8 @@ const getCircularReplacer = () => {
           name: (value as Error).name,
           message: (value as Error).message,
           stack: (value as Error).stack,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          cause: (value as any).cause,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ...(value as any),
+          cause: (value as { cause?: unknown }).cause,
+          ...(value as Record<string, unknown>),
         };
       }
     }

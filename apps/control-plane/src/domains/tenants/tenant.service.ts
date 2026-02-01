@@ -121,13 +121,28 @@ export class TenantService {
 
     // 2. Trigger Cloud Workflow
     if (this.gcpProjectId && this.gcpRegion) {
+      await this.repository.logProvisioningEvent(
+        tenant.id,
+        "trigger_workflow",
+        "started",
+      );
+
       try {
         await this.executionsClient.triggerProvisionTenant({
           tenantId: tenant.id,
           baseUrl,
           internalApiKey: this.internalApiKey,
         });
+
+        await this.repository.logProvisioningEvent(
+          tenant.id,
+          "trigger_workflow",
+          "completed",
+        );
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+
         this.logger.error(
           { error, tenantId: tenant.id },
           "Failed to trigger provisioning workflow",
@@ -135,9 +150,15 @@ export class TenantService {
 
         await this.repository.update(tenant.id, {
           status: "provisioning_failed",
-          failureReason:
-            error instanceof Error ? error.message : "Unknown error",
+          failureReason: errorMessage,
         });
+
+        await this.repository.logProvisioningEvent(
+          tenant.id,
+          "trigger_workflow",
+          "failed",
+          { error: errorMessage },
+        );
 
         throw error;
       }
@@ -325,6 +346,15 @@ export class TenantService {
       throw new TenantNotFoundError();
     }
     // TODO: Trigger resource cleanup (database, etc.)
+  }
+
+  async logProvisioningEvent(
+    tenantId: string,
+    step: string,
+    status: string,
+    details?: Record<string, unknown>,
+  ): Promise<void> {
+    await this.repository.logProvisioningEvent(tenantId, step, status, details);
   }
 
   async listTenants(): Promise<Tenant[]> {
