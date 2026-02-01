@@ -6,6 +6,7 @@ import * as esbuild from "esbuild";
 const require = createRequire(import.meta.url);
 const PROTOBUF_LIGHT_PATH =
   require.resolve("protobufjs/dist/light/protobuf.js");
+const PINO_BROWSER_PATH = require.resolve("pino/browser.js");
 
 const protobufAliasPlugin = {
   name: "protobuf-alias",
@@ -36,7 +37,7 @@ await esbuild
     mainFields: ["module", "main"],
     sourcemap: true,
     alias: {
-      pino: "pino/browser",
+      pino: PINO_BROWSER_PATH,
     },
     plugins: [protobufAliasPlugin],
     logLevel: "info",
