@@ -19,6 +19,7 @@ const protobufAliasPlugin = {
     build.onResolve({ filter: /^protobufjs(\/|$)/ }, (arguments_) => {
       // Avoid infinite loop: allow the virtual module to resolve handled above
       if (arguments_.path === "protobufjs-light-build") return null;
+      if (arguments_.importer?.includes("protobuf-shim")) return null; // avoid loop
       return { path: path.resolve("./src/protobuf-shim.js") };
     });
   },
