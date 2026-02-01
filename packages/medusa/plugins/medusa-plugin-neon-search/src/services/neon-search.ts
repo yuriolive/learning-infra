@@ -5,17 +5,21 @@ import type { ISearchService } from "@medusajs/types";
 
 interface InjectedDependencies {
   logger: Logger;
-  manager: unknown;
+  manager: EntityManager;
 }
 
-interface NeonSearchOptions {
+interface NeonSearchOptions extends Record<string, unknown> {
   gemini_api_key: string;
+}
+
+interface EntityManager {
+  execute(sql: string, parameters?: unknown[]): Promise<unknown>;
 }
 
 export default class NeonSearchService implements ISearchService {
   static identifier = "neon-search";
   protected logger_: Logger;
-  protected manager_: unknown; // Keeping manager as any because it interacts with TypeORM/EntityManager which might be complex to type fully here without more context, but will fix other specific any
+  protected manager_: EntityManager;
   protected genAI: GoogleGenAI;
   public options: NeonSearchOptions;
 
@@ -62,53 +66,65 @@ export default class NeonSearchService implements ISearchService {
     }
   }
 
-  async addDocuments(
+  async addDocuments(indexName: string, documents: unknown[]): Promise<void> {
+    for (const documentData of documents) {
+      await this.addDocument(indexName, documentData);
+    }
+  }
+
+  protected async addDocument(
     indexName: string,
-    documents: Array<Record<string, unknown>>,
+    documentData: unknown,
   ): Promise<void> {
-    for (const document of documents) {
-      const title = typeof document.title === "string" ? document.title : "";
-      const description =
-        typeof document.description === "string" ? document.description : "";
-      const text = (title || "") + " " + (description || "");
-      if (!text.trim()) continue;
+    const document = documentData as Record<string, unknown>;
+    const title = typeof document.title === "string" ? document.title : "";
+    const description =
+      typeof document.description === "string" ? document.description : "";
+    const text = (title || "") + " " + (description || "");
+    if (!text.trim()) {
+      return;
+    }
 
-      try {
-        const result = await this.genAI.models.embedContent({
-          model: "gemini-embedding-001",
-          contents: text,
-          config: { outputDimensionality: 768 },
-        });
+    try {
+      const embeddingValues = await this.getEmbedding(text);
+      const vectorString = `[${embeddingValues.join(",")}]`;
 
-        const embeddingValues = result.embeddings?.[0]?.values;
-
-        if (!embeddingValues) {
-          throw new Error("No embedding returned");
-        }
-
-        const vectorString = `[${embeddingValues.join(",")}]`;
-
-        await this.manager_.execute(
-          `INSERT INTO search_index_${indexName} (id, doc, embedding)
+      await this.manager_.execute(
+        `INSERT INTO search_index_${indexName} (id, doc, embedding)
            VALUES (?, ?, ?::vector)
            ON CONFLICT (id) DO UPDATE SET
              doc = EXCLUDED.doc,
              embedding = EXCLUDED.embedding`,
-          [document.id, document, vectorString],
-        );
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        this.logger_.error(
-          `Failed to add document ${document.id} to index ${indexName}: ${errorMessage}`,
-        );
-      }
+        [document.id, document, vectorString],
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger_.error(
+        `Failed to add document ${document.id} to index ${indexName}: ${errorMessage}`,
+      );
     }
+  }
+
+  protected async getEmbedding(text: string): Promise<number[]> {
+    const result = await this.genAI.models.embedContent({
+      model: "gemini-embedding-001",
+      contents: text,
+      config: { outputDimensionality: 768 },
+    });
+
+    const embeddingValues = result.embeddings?.[0]?.values;
+
+    if (!embeddingValues) {
+      throw new Error("No embedding returned");
+    }
+
+    return embeddingValues;
   }
 
   async replaceDocuments(
     indexName: string,
-    documents: Array<Record<string, unknown>>,
+    documents: unknown[],
   ): Promise<void> {
     await this.addDocuments(indexName, documents);
   }
@@ -118,17 +134,7 @@ export default class NeonSearchService implements ISearchService {
     query: string,
     options?: Record<string, unknown>,
   ): Promise<unknown> {
-    const result = await this.genAI.models.embedContent({
-      model: "gemini-embedding-001",
-      contents: query,
-      config: { outputDimensionality: 768 },
-    });
-
-    const embeddingValues = result.embeddings?.[0]?.values;
-
-    if (!embeddingValues) {
-      throw new Error("No embedding returned for query");
-    }
+    const embeddingValues = await this.getEmbedding(query);
 
     const vectorString = `[${embeddingValues.join(",")}]`;
 
@@ -144,15 +150,14 @@ export default class NeonSearchService implements ISearchService {
         LIMIT ?
     `;
 
-    const results = await this.manager_.execute(sql, [
+    const results = (await this.manager_.execute(sql, [
       vectorString,
       query,
       vectorString,
       limit,
-    ]);
+    ])) as Array<Record<string, unknown>>;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((r: any) => r.doc);
+    return results.map((r) => r.doc);
   }
 
   async deleteDocument(indexName: string, document_id: string): Promise<void> {
