@@ -247,6 +247,14 @@ After completing all steps:
    - Wait for DNS propagation (24-48 hours)
    - Check domain mapping status
 
+6. **Workflows service agent does not exist**
+   - **Error**: `FAILED_PRECONDITION` during workflow deployment.
+   - **Fix**: See manual fix in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md#L43).
+
+7. **Workflows Permission Denied (ActAs)**
+   - **Error**: `PERMISSION_DENIED: permission iam.serviceAccounts.ActAs is required`
+   - **Fix**: See manual fix in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md#L48).
+
 ### Diagnostic Commands
 
 ```bash

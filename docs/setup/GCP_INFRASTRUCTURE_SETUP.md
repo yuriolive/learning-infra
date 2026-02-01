@@ -39,6 +39,19 @@ gcloud services enable \
   workflows.googleapis.com \
   --project=$PROJECT_ID
 
+> [!TIP]
+> **Issue: Workflows service agent does not exist**
+> If you encounter `FAILED_PRECONDITION: Workflows service agent does not exist` during deployment, manually create the identity:
+> `gcloud beta services identity create --service=workflows.googleapis.com --project=$PROJECT_ID`
+
+> [!TIP]
+> **Issue: Permission iam.serviceAccounts.ActAs required**
+> If you encounter `PERMISSION_DENIED: permission iam.serviceAccounts.ActAs is required` during workflow deployment, ensure the GitHub Actions SA has the **Service Account User** role on the service account being used as the workflow identity.
+>
+> To grant it project-wide for the GitHub Actions SA:
+> `# $SERVICE_ACCOUNT_EMAIL is the github-actions-sa email`
+> `gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" --role="roles/iam.serviceAccountUser"`
+
 # 3. Create GitHub Actions Service Account
 gcloud iam service-accounts create github-actions-sa \
   --project=$PROJECT_ID \
