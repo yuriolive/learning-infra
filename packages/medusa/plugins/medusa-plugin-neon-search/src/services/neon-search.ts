@@ -1,20 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
-import { Logger } from "@medusajs/types";
-import { ISearchService } from "@medusajs/types";
 
-type InjectedDependencies = {
+import type { Logger } from "@medusajs/types";
+import type { ISearchService } from "@medusajs/types";
+
+interface InjectedDependencies {
   logger: Logger;
-  manager: any;
-};
+  manager: unknown;
+}
 
-type NeonSearchOptions = {
+interface NeonSearchOptions {
   gemini_api_key: string;
-};
+}
 
 export default class NeonSearchService implements ISearchService {
   static identifier = "neon-search";
   protected logger_: Logger;
-  protected manager_: any;
+  protected manager_: unknown; // Keeping manager as any because it interacts with TypeORM/EntityManager which might be complex to type fully here without more context, but will fix other specific any
   protected genAI: GoogleGenAI;
   public options: NeonSearchOptions;
 
@@ -30,7 +31,7 @@ export default class NeonSearchService implements ISearchService {
     this.genAI = new GoogleGenAI({ apiKey: options.gemini_api_key });
   }
 
-  async createIndex(indexName: string, options?: unknown): Promise<void> {
+  async createIndex(indexName: string, _options?: unknown): Promise<void> {
     const sql = `
       CREATE TABLE IF NOT EXISTS search_index_${indexName} (
         id VARCHAR(255) PRIMARY KEY,
@@ -49,16 +50,27 @@ export default class NeonSearchService implements ISearchService {
         USING bm25 (id, search_text)
         WITH (key_field='id');
       `);
-    } catch (e: any) {
-      if (!e.message?.includes("already exists")) {
-        this.logger_.warn(`Failed to create ParadeDB index for ${indexName}: ${e.message}`);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        !error.message?.includes("already exists")
+      ) {
+        this.logger_.warn(
+          `Failed to create ParadeDB index for ${indexName}: ${error.message}`,
+        );
       }
     }
   }
 
-  async addDocuments(indexName: string, documents: any[]): Promise<void> {
-    for (const doc of documents) {
-      const text = (doc.title || "") + " " + (doc.description || "");
+  async addDocuments(
+    indexName: string,
+    documents: Array<Record<string, unknown>>,
+  ): Promise<void> {
+    for (const document of documents) {
+      const title = typeof document.title === "string" ? document.title : "";
+      const description =
+        typeof document.description === "string" ? document.description : "";
+      const text = (title || "") + " " + (description || "");
       if (!text.trim()) continue;
 
       try {
@@ -71,10 +83,10 @@ export default class NeonSearchService implements ISearchService {
         const embeddingValues = result.embeddings?.[0]?.values;
 
         if (!embeddingValues) {
-            throw new Error("No embedding returned");
+          throw new Error("No embedding returned");
         }
 
-        const vectorStr = `[${embeddingValues.join(",")}]`;
+        const vectorString = `[${embeddingValues.join(",")}]`;
 
         await this.manager_.execute(
           `INSERT INTO search_index_${indexName} (id, doc, embedding)
@@ -82,19 +94,30 @@ export default class NeonSearchService implements ISearchService {
            ON CONFLICT (id) DO UPDATE SET
              doc = EXCLUDED.doc,
              embedding = EXCLUDED.embedding`,
-          [doc.id, doc, vectorStr]
+          [document.id, document, vectorString],
         );
-      } catch (error: any) {
-        this.logger_.error(`Failed to add document ${doc.id} to index ${indexName}: ${error.message}`);
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger_.error(
+          `Failed to add document ${document.id} to index ${indexName}: ${errorMessage}`,
+        );
       }
     }
   }
 
-  async replaceDocuments(indexName: string, documents: any[]): Promise<void> {
-      await this.addDocuments(indexName, documents);
+  async replaceDocuments(
+    indexName: string,
+    documents: Array<Record<string, unknown>>,
+  ): Promise<void> {
+    await this.addDocuments(indexName, documents);
   }
 
-  async search(indexName: string, query: string, options?: any): Promise<any> {
+  async search(
+    indexName: string,
+    query: string,
+    options?: Record<string, unknown>,
+  ): Promise<unknown> {
     const result = await this.genAI.models.embedContent({
       model: "gemini-embedding-001",
       contents: query,
@@ -104,10 +127,10 @@ export default class NeonSearchService implements ISearchService {
     const embeddingValues = result.embeddings?.[0]?.values;
 
     if (!embeddingValues) {
-         throw new Error("No embedding returned for query");
+      throw new Error("No embedding returned for query");
     }
 
-    const vectorStr = `[${embeddingValues.join(",")}]`;
+    const vectorString = `[${embeddingValues.join(",")}]`;
 
     const limit = options?.limit || 10;
 
@@ -121,24 +144,33 @@ export default class NeonSearchService implements ISearchService {
         LIMIT ?
     `;
 
-    const res = await this.manager_.execute(sql, [vectorStr, query, vectorStr, limit]);
+    const results = await this.manager_.execute(sql, [
+      vectorString,
+      query,
+      vectorString,
+      limit,
+    ]);
 
-    return res.map((r: any) => r.doc);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return results.map((r: any) => r.doc);
   }
 
   async deleteDocument(indexName: string, document_id: string): Promise<void> {
-    await this.manager_.execute(`DELETE FROM search_index_${indexName} WHERE id = ?`, [document_id]);
+    await this.manager_.execute(
+      `DELETE FROM search_index_${indexName} WHERE id = ?`,
+      [document_id],
+    );
   }
 
   async deleteAllDocuments(indexName: string): Promise<void> {
     await this.manager_.execute(`DELETE FROM search_index_${indexName}`);
   }
 
-  async getIndex(indexName: string): Promise<void> {
+  async getIndex(_indexName: string): Promise<void> {
     // No-op
   }
 
-  async updateSettings(indexName: string, settings: any): Promise<void> {
-     // No-op
+  async updateSettings(_indexName: string, _settings: unknown): Promise<void> {
+    // No-op
   }
 }
