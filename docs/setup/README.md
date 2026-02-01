@@ -249,11 +249,11 @@ After completing all steps:
 
 6. **Workflows service agent does not exist**
    - **Error**: `FAILED_PRECONDITION` during workflow deployment.
-   - **Fix**: See manual fix in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md#L43).
+   - **Fix**: See **Step 3** in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md).
 
 7. **Workflows Permission Denied (ActAs)**
    - **Error**: `PERMISSION_DENIED: permission iam.serviceAccounts.ActAs is required`
-   - **Fix**: See manual fix in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md#L48).
+   - **Fix**: See **Step 12** in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md).
 
 ### Diagnostic Commands
 

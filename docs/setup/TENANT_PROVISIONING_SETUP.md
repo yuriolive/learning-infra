@@ -608,12 +608,12 @@ Use connection pooling for:
 6. **Workflows Service Agent Missing**
    - **Error**: `FAILED_PRECONDITION: Workflows service agent does not exist`
    - **Reason**: The Workflows service agent wasn't automatically initialized.
-   - **Fix**: See manual fix in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md#L43).
+   - **Fix**: See **Step 3** in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md).
 
 7. **Workflows Permission Denied (ActAs)**
    - **Error**: `PERMISSION_DENIED: permission iam.serviceAccounts.ActAs is required`
    - **Reason**: Deployer lacks permissions to use the service account as workflow identity.
-   - **Fix**: See manual fix in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md#L48).
+   - **Fix**: See **Step 12** in [GCP_INFRASTRUCTURE_SETUP.md](./GCP_INFRASTRUCTURE_SETUP.md).
 
 ## Next Steps
 

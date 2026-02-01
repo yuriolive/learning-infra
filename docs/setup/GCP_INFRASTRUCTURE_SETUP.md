@@ -39,33 +39,26 @@ gcloud services enable \
   workflows.googleapis.com \
   --project=$PROJECT_ID
 
-> [!TIP]
-> **Issue: Workflows service agent does not exist**
-> If you encounter `FAILED_PRECONDITION: Workflows service agent does not exist` during deployment, manually create the identity:
-> `gcloud beta services identity create --service=workflows.googleapis.com --project=$PROJECT_ID`
+# 3. Initialize Service Agents
+# Required for Workflows to avoid FAILED_PRECONDITION errors
+gcloud beta services identity create --service=workflows.googleapis.com --project=$PROJECT_ID
 
-> [!TIP]
-> **Issue: Permission iam.serviceAccounts.ActAs required**
-> If you encounter `PERMISSION_DENIED: permission iam.serviceAccounts.ActAs is required` during workflow deployment, ensure the GitHub Actions SA has the **Service Account User** role on the service account being used as the workflow identity.
->
-> To grant it project-wide for the GitHub Actions SA:
-> `# $SERVICE_ACCOUNT_EMAIL is the github-actions-sa email`
-> `gcloud projects add-iam-policy-binding $PROJECT_ID --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" --role="roles/iam.serviceAccountUser"`
-
-# 3. Create GitHub Actions Service Account
+# 4. Create GitHub Actions Service Account
 gcloud iam service-accounts create github-actions-sa \
   --project=$PROJECT_ID \
   --description="GitHub Actions Service Account" \
   --display-name="GitHub Actions SA"
 
-# 4. Create Artifact Registry
+# 5. Create Artifact Registry
+
+# 6. Create Artifact Registry
 gcloud artifacts repositories create containers \
   --project=$PROJECT_ID \
   --repository-format=docker \
   --location=$REGION \
   --description="Container images for Vendin"
 
-# 5. Grant Permissions to GitHub Actions SA
+# 7. Grant Permissions to GitHub Actions SA
 # Artifact Registry Writer
 gcloud artifacts repositories add-iam-policy-binding containers \
   --project=$PROJECT_ID \
@@ -88,7 +81,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/iam.serviceAccountUser"
 
-# 6. Configure Workload Identity Federation (WIF)
+# 8. Configure Workload Identity Federation (WIF)
 # Create Pool
 gcloud iam workload-identity-pools create "github-pool" \
   --project=$PROJECT_ID \
@@ -116,21 +109,24 @@ gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT_EMAIL" \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/${POOL_ID}/attribute.repository/${GITHUB_REPO}"
 
-# 7. Create Runtime Service Accounts
+# 9. Create Runtime Service Accounts
 
-# 7a. Cloud Run Service Account (Tenant Runtime)
+# 9a. Cloud Run Service Account (Tenant Runtime)
 gcloud iam service-accounts create cloud-run-sa \
   --project=$PROJECT_ID \
   --description="Cloud Run runtime service account for MedusaJS tenants" \
   --display-name="Tenant Runtime SA"
 
-# 7b. Control Plane Service Account
+# 9b. Control Plane Service Account (Control Plane + Workflows Identity)
 gcloud iam service-accounts create control-plane-sa \
   --project=$PROJECT_ID \
   --description="Control Plane Service Account" \
   --display-name="Control Plane SA"
 
-# 8. Grant Runtime Permissions
+export RUNTIME_SA_EMAIL="control-plane-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+export WORKFLOWS_SA_EMAIL="service-$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@gcp-sa-workflows.iam.gserviceaccount.com"
+
+# 10. Grant Runtime Permissions
 
 # Control Plane needs to manage Cloud Run
 gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -159,11 +155,11 @@ gcloud artifacts repositories add-iam-policy-binding containers \
   --member="serviceAccount:cloud-run-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/artifactregistry.reader"
 
-# 9. Grant Workflow & Service Invocation Permissions
+# 11. Grant Workflow & Service Invocation Permissions
 
 # Control Plane needs to trigger Workflows
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:control-plane-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --member="serviceAccount:$RUNTIME_SA_EMAIL" \
   --role="roles/workflows.invoker"
 
 # Allow Cloud Run SA (Workflows identity) to invoke Cloud Run services
@@ -171,6 +167,18 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:cloud-run-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/run.invoker"
+
+# 12. Configure OIDC & ActAs Permissions (Crucial for Workflows)
+# Allow Control Plane SA to create OIDC tokens (required for auth: type: OIDC)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$RUNTIME_SA_EMAIL" \
+  --role="roles/iam.serviceAccountTokenCreator"
+
+# Allow Workflows Agent to impersonate Control Plane SA (to generate tokens)
+gcloud iam service-accounts add-iam-policy-binding $RUNTIME_SA_EMAIL \
+  --project=$PROJECT_ID \
+  --member="serviceAccount:$WORKFLOWS_SA_EMAIL" \
+  --role="roles/iam.serviceAccountTokenCreator"
 
 
 echo "Setup Complete! Don't forget to configure Secrets (see Part 2 -> Secret Manager)."
