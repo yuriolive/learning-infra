@@ -9,7 +9,9 @@ on:
       - "packages/**"
       - "package.json"
       - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
       - "turbo.json"
+      - ".github/workflows/deploy-marketing.yml"
   workflow_dispatch:
 
 jobs:

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "dev": "wrangler dev",
-    "start": "npm run build && node dist/src/index.js",
+    "start": "npm run build && node dist/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --passWithNoTests",
