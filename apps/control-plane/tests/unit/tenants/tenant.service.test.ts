@@ -31,6 +31,7 @@ vi.mock("../../../src/providers/gcp/workflows.client", () => {
   return {
     GcpWorkflowsClient: vi.fn().mockImplementation(() => ({
       createExecution: vi.fn().mockResolvedValue(void 0),
+      triggerProvisionTenant: vi.fn().mockResolvedValue(void 0),
     })),
   };
 });
@@ -179,7 +180,7 @@ describe("TenantService", () => {
     it("should fail if workflow triggering fails", async () => {
       // Mock failure in execution creation
       // @ts-expect-error accessing private property
-      service.executionsClient.createExecution.mockRejectedValueOnce(
+      service.executionsClient.triggerProvisionTenant.mockRejectedValueOnce(
         new Error("Workflow trigger failed"),
       );
 

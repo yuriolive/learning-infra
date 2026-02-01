@@ -1,5 +1,3 @@
-import { randomBytes } from "node:crypto";
-
 import {
   CloudRunProvider,
   type MigrationStatus,
@@ -54,6 +52,17 @@ export class TenantService {
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
 
+    this.executionsClient = new GcpWorkflowsClient({
+      credentialsJson: config.gcpCredentialsJson,
+      projectId: config.gcpProjectId || "unknown-project",
+      location: config.gcpRegion || "unknown-region",
+      logger: this.logger,
+    });
+
+    this.initializeProviders(config);
+  }
+
+  private initializeProviders(config: TenantServiceConfig): void {
     try {
       if (config.neonApiKey && config.neonProjectId) {
         this.neonProvider = new NeonProvider({
@@ -85,15 +94,8 @@ export class TenantService {
           "GCP config not found. Cloud Run deployment will be skipped.",
         );
       }
-
-      this.executionsClient = new GcpWorkflowsClient({
-        credentialsJson: config.gcpCredentialsJson,
-        logger: this.logger,
-      });
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize providers");
-      // Fallback for executions client to avoid crash if init fails, though it likely won't work
-      this.executionsClient = new GcpWorkflowsClient({ logger: this.logger });
     }
   }
 
@@ -119,23 +121,10 @@ export class TenantService {
     // 2. Trigger Cloud Workflow
     if (this.gcpProjectId && this.gcpRegion) {
       try {
-        const workflowName = `projects/${this.gcpProjectId}/locations/${this.gcpRegion}/workflows/provision-tenant`;
-        const executionArguments = {
+        await this.executionsClient.triggerProvisionTenant({
           tenantId: tenant.id,
           baseUrl,
           internalApiKey: this.internalApiKey,
-        };
-
-        this.logger.info(
-          { tenantId: tenant.id, workflowName },
-          "Triggering provisioning workflow",
-        );
-
-        await this.executionsClient.createExecution({
-          parent: workflowName,
-          execution: {
-            argument: JSON.stringify(executionArguments),
-          },
         });
       } catch (error) {
         this.logger.error(
@@ -172,19 +161,13 @@ export class TenantService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
-    const environmentVariables = {
-      DATABASE_URL: databaseUrl,
-      REDIS_URL: upstashRedisUrl,
-      REDIS_PREFIX: redisPrefix,
-      NODE_ENV: "production",
-    };
-
     this.logger.info({ tenantId }, "Triggering migration job");
     const executionName =
-      (await this.cloudRunProvider?.runTenantMigrations(
-        tenantId,
-        environmentVariables,
-      )) ?? "";
+      (await this.cloudRunProvider?.runTenantMigrations(tenantId, {
+        databaseUrl,
+        redisUrl: upstashRedisUrl,
+        redisPrefix,
+      })) ?? "";
 
     return { executionName };
   }
@@ -220,27 +203,15 @@ export class TenantService {
       );
 
     const redisPrefix = `t_${tenant.redisHash}:`;
-    const cookieSecret = randomBytes(32).toString("hex");
-    const jwtSecret = randomBytes(32).toString("hex");
-
-    const environmentVariables = {
-      DATABASE_URL: databaseUrl,
-      REDIS_URL: upstashRedisUrl,
-      REDIS_PREFIX: redisPrefix,
-      COOKIE_SECRET: cookieSecret,
-      JWT_SECRET: jwtSecret,
-      HOST: "0.0.0.0",
-      NODE_ENV: "production",
-      STORE_CORS: `https://${tenant.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
-      ADMIN_CORS: `https://${tenant.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
-    };
 
     this.logger.info({ tenantId }, "Deploying service");
     const apiUrl =
-      (await this.cloudRunProvider?.deployTenantInstance(
-        tenantId,
-        environmentVariables,
-      )) ?? "";
+      (await this.cloudRunProvider?.deployTenantInstance(tenantId, {
+        databaseUrl,
+        redisUrl: upstashRedisUrl,
+        redisPrefix,
+        subdomain: tenant.subdomain!,
+      })) ?? "";
 
     await this.repository.update(tenantId, { apiUrl });
   }

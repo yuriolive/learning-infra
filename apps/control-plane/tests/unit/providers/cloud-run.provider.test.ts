@@ -98,7 +98,11 @@ describe("CloudRunProvider", () => {
 
   describe("runTenantMigrations", () => {
     const tenantId = "tenant-1";
-    const environment = { DATABASE_URL: "postgres://" };
+    const appConfig = {
+      databaseUrl: "postgres://",
+      redisUrl: "redis://",
+      redisPrefix: "t_1:",
+    };
 
     it("should complete migrations successfully", async () => {
       // 1. getOrCreateJob (exists = false)
@@ -115,7 +119,7 @@ describe("CloudRunProvider", () => {
 
       const executionName = await provider.runTenantMigrations(
         tenantId,
-        environment,
+        appConfig,
       );
 
       await vi.runAllTimersAsync();
@@ -134,7 +138,7 @@ describe("CloudRunProvider", () => {
 
       setupMigrationOperations({ error: { message: "Internal error" } });
 
-      const promise = provider.runTenantMigrations(tenantId, environment);
+      const promise = provider.runTenantMigrations(tenantId, appConfig);
 
       await expectToRejectWithTimers(
         promise,
@@ -149,7 +153,7 @@ describe("CloudRunProvider", () => {
 
       setupMigrationOperations({ response: {} });
 
-      const promise = provider.runTenantMigrations(tenantId, environment);
+      const promise = provider.runTenantMigrations(tenantId, appConfig);
 
       await expectToRejectWithTimers(
         promise,
@@ -168,7 +172,7 @@ describe("CloudRunProvider", () => {
         return { data: { done: false } };
       });
 
-      const promise = provider.runTenantMigrations(tenantId, environment);
+      const promise = provider.runTenantMigrations(tenantId, appConfig);
 
       await expectToRejectWithTimers(
         promise,
@@ -211,7 +215,12 @@ describe("CloudRunProvider", () => {
       mockServicesSetIamPolicy.mockResolvedValue({ data: {} });
       mockServicesGet.mockResolvedValue({ data: { uri: "https://svc-url" } });
 
-      const url = await provider.deployTenantInstance("tenant-1", {});
+      const url = await provider.deployTenantInstance("tenant-1", {
+        databaseUrl: "postgres://",
+        redisUrl: "redis://",
+        redisPrefix: "t_1:",
+        subdomain: "tenant-1",
+      });
 
       expect(url).toBe("https://svc-url");
       expect(mockServicesCreate).toHaveBeenCalled();

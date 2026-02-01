@@ -3,6 +3,8 @@ import { type Logger } from "../../utils/logger";
 
 export interface ExecutionsClientConfig {
   credentialsJson?: string | undefined;
+  projectId: string;
+  location: string;
   logger: Logger;
 }
 
@@ -13,12 +15,23 @@ interface CreateExecutionOptions {
   };
 }
 
+export interface ProvisionTenantPayload {
+  tenantId: string;
+  baseUrl: string;
+  internalApiKey: string | undefined;
+}
+
 export class GcpWorkflowsClient {
   private auth: GoogleAuth | null = null;
   private logger: Logger;
+  private projectId: string;
+  private location: string;
 
   constructor(config: ExecutionsClientConfig) {
     this.logger = config.logger;
+    this.projectId = config.projectId;
+    this.location = config.location;
+
     if (config.credentialsJson) {
       try {
         this.auth = new GoogleAuth(config.credentialsJson);
@@ -31,6 +44,23 @@ export class GcpWorkflowsClient {
     }
   }
 
+  async triggerProvisionTenant(payload: ProvisionTenantPayload): Promise<void> {
+    const workflowName = `projects/${this.projectId}/locations/${this.location}/workflows/provision-tenant`;
+
+    this.logger.info(
+      { tenantId: payload.tenantId, workflowName },
+      "Triggering provisioning workflow",
+    );
+
+    await this.createExecution({
+      parent: workflowName,
+      execution: {
+        argument: JSON.stringify(payload),
+      },
+    });
+  }
+
+  // Kept public for flexibility but intended to be used by specific methods
   async createExecution(options: CreateExecutionOptions): Promise<void> {
     if (!this.auth) {
       throw new Error(
