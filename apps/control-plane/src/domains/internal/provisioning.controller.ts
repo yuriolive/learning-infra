@@ -46,7 +46,7 @@ export class ProvisioningController {
       }
       this.logger.error({ error }, "Error in provisioning controller");
       const errorMessage =
-        error instanceof Error ? error.message : "Internal Server Error";
+        error instanceof Error ? error.message : String(error);
       return new Response(JSON.stringify({ error: errorMessage }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
