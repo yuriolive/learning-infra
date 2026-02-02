@@ -255,7 +255,7 @@ export class CloudRunProvider {
     return { status: "running" };
   }
 
-  async deleteTenantInstance(tenantId: string): Promise<string> {
+  async deleteTenantInstance(tenantId: string): Promise<string | undefined> {
     const serviceName = `tenant-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const servicePath = `${parent}/services/${serviceName}`;
@@ -274,7 +274,7 @@ export class CloudRunProvider {
       }
 
       this.logger.info({ tenantId }, "Deleted Cloud Run service");
-      return "";
+      return undefined;
     } catch (error: unknown) {
       // Ignore if not found
       if (
@@ -293,7 +293,7 @@ export class CloudRunProvider {
         );
       }
     }
-    return "";
+    return undefined;
   }
 
   private async makeServicePublic(servicePath: string): Promise<void> {

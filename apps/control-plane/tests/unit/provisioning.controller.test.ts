@@ -12,25 +12,24 @@ const mockLogger = createLogger();
 const mockProvisioningService = {
   provisionDatabase: vi.fn(),
   triggerMigrationJob: vi.fn(),
+  ensureMigrationJob: vi.fn(),
   getMigrationStatus: vi.fn(),
-  deployService: vi.fn(),
+  startDeployService: vi.fn(),
+  finalizeDeployment: vi.fn(),
   configureDomain: vi.fn(),
   rollbackResources: vi.fn(),
+  activateTenant: vi.fn(),
+  getOperationStatus: vi.fn(),
 } as unknown as ProvisioningService;
 
 const mockTenantService = {
-  activateTenant: vi.fn(),
+  logProvisioningEvent: vi.fn().mockImplementation(async () => {}),
 } as unknown as TenantService;
 
 const mockDatabase = {
   insert: vi.fn().mockReturnThis(),
   values: vi.fn().mockResolvedValue({}),
-  logProvisioningEvent: vi.fn(), // If needed, but ProvisioningService uses repository usually
 } as unknown as Database;
-
-// ProvisioningController now uses repository for events, but lets see.
-// Wait, ProvisioningController uses repo directly? No, it used service.
-// Let's re-verify ProvisioningController implementation.
 
 const TEST_INTERNAL_KEY = "test-internal-api-key-123";
 const controller = new ProvisioningController(
@@ -119,6 +118,26 @@ describe("ProvisioningController", () => {
     );
   });
 
+  it("should handle /migrations?action=ensure (POST)", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = new Request(
+      `http://localhost/internal/provisioning/migrations?action=ensure`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Internal-Key": TEST_INTERNAL_KEY,
+        },
+        body: JSON.stringify({ tenantId }),
+      },
+    );
+
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.ensureMigrationJob).toHaveBeenCalledWith(
+      tenantId,
+    );
+  });
+
   it("should handle /migrations/status (GET)", async () => {
     const request = new Request(
       "http://localhost/internal/provisioning/migrations/status?name=exec-123",
@@ -133,6 +152,84 @@ describe("ProvisioningController", () => {
     await controller.handleRequest(request);
     expect(mockProvisioningService.getMigrationStatus).toHaveBeenCalledWith(
       "exec-123",
+    );
+  });
+
+  it("should handle /operations (GET)", async () => {
+    const request = new Request(
+      "http://localhost/internal/provisioning/operations?name=op-123",
+      {
+        method: "GET",
+        headers: {
+          "X-Internal-Key": TEST_INTERNAL_KEY,
+        },
+      },
+    );
+
+    vi.mocked(mockProvisioningService.getOperationStatus).mockResolvedValue({
+      done: true,
+      response: { foo: "bar" },
+    });
+
+    const response = await controller.handleRequest(request);
+    expect(response.status).toBe(200);
+    expect(mockProvisioningService.getOperationStatus).toHaveBeenCalledWith(
+      "op-123",
+    );
+  });
+
+  it("should handle /operations (GET) missing name", async () => {
+    const request = new Request(
+      "http://localhost/internal/provisioning/operations",
+      {
+        method: "GET",
+        headers: {
+          "X-Internal-Key": TEST_INTERNAL_KEY,
+        },
+      },
+    );
+
+    const response = await controller.handleRequest(request);
+    expect(response.status).toBe(400);
+  });
+
+  it("should handle /service", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = createRequest("service");
+
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.startDeployService).toHaveBeenCalledWith(
+      tenantId,
+    );
+  });
+
+  it("should handle /finalize", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = createRequest("finalize");
+
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.finalizeDeployment).toHaveBeenCalledWith(
+      tenantId,
+    );
+  });
+
+  it("should handle /domain", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = createRequest("domain");
+
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.configureDomain).toHaveBeenCalledWith(
+      tenantId,
+    );
+  });
+
+  it("should handle /activate", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = createRequest("activate");
+
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.activateTenant).toHaveBeenCalledWith(
+      tenantId,
     );
   });
 

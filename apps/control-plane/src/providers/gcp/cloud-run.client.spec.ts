@@ -368,4 +368,43 @@ describe("CloudRunProvider", () => {
       expect(invokerBinding.members).toContain("user:special@example.com");
     });
   });
+
+  describe("deleteTenantInstance", () => {
+    it("should delete service and return operation name", async () => {
+      mockRunClient.projects.locations.services.delete.mockResolvedValueOnce({
+        data: { name: "delete-op-1" },
+      });
+
+      const opName = await provider.deleteTenantInstance("tenant-1");
+
+      expect(opName).toBe("delete-op-1");
+      expect(
+        mockRunClient.projects.locations.services.delete,
+      ).toHaveBeenCalled();
+    });
+
+    it("should return undefined if service not found (404)", async () => {
+      mockRunClient.projects.locations.services.delete.mockRejectedValueOnce({
+        code: 404,
+      });
+
+      const opName = await provider.deleteTenantInstance("tenant-1");
+
+      expect(opName).toBeUndefined();
+    });
+
+    it("should return undefined and log warning on other errors", async () => {
+      mockRunClient.projects.locations.services.delete.mockRejectedValueOnce(
+        new Error("Unknown error"),
+      );
+
+      const opName = await provider.deleteTenantInstance("tenant-1");
+
+      expect(opName).toBeUndefined();
+      expect(config.logger.warn).toHaveBeenCalledWith(
+        expect.objectContaining({ error: expect.any(Error) }),
+        "Failed to delete Cloud Run service",
+      );
+    });
+  });
 });

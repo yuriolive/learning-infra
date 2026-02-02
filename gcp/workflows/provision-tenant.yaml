@@ -356,8 +356,14 @@ perform_rollback:
           result: rollback_result
         except:
           as: e
-          # If rollback initiation fails, we just return (best effort)
-          return: "failed to initiate rollback"
+          steps:
+            - log_rollback_failure:
+                call: sys.log
+                args:
+                  text: '${"Rollback initiation failed: " + default(e.message, "Unknown error")}'
+                  severity: "ERROR"
+            - return_failure:
+                return: "failed to initiate rollback"
 
     - check_rollback_op:
         switch:
