@@ -1,7 +1,10 @@
 import { createLogger } from "@vendin/utils/logger";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ProvisioningService } from "../../../src/domains/provisioning/provisioning.service";
+import {
+  ProvisioningService,
+  type ProvisioningServiceConfig,
+} from "../../../src/domains/provisioning/provisioning.service";
 import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { GcpWorkflowsClient } from "../../../src/providers/gcp/workflows.client";
 import { NeonProvider } from "../../../src/providers/neon/neon.client";
@@ -93,6 +96,23 @@ describe("ProvisioningService Granular Steps", () => {
       gcpRegion: "us-central1",
       tenantImageTag: "tag",
       upstashRedisUrl: "redis://",
+    });
+  });
+
+  describe("Provider Initialization", () => {
+    it("should throw error if provider initialization fails", () => {
+      vi.mocked(NeonProvider).mockImplementationOnce(() => {
+        throw new Error("Neon Init Error");
+      });
+
+      expect(
+        () =>
+          new ProvisioningService(repository, {
+            logger,
+            neonApiKey: "key",
+            neonProjectId: "proj",
+          } as unknown as ProvisioningServiceConfig),
+      ).toThrow("Neon Init Error");
     });
   });
 

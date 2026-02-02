@@ -118,7 +118,12 @@ export class ProvisioningController {
         );
       }
       default: {
-        return Promise.resolve(new Response("Not Found", { status: 404 }));
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: "Invalid action" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
     }
   }

@@ -54,6 +54,7 @@ export class ProvisioningService {
         });
       } catch (error) {
         this.logger.error({ error }, "Failed to initialize Neon provider");
+        throw error;
       }
     } else {
       this.logger.warn(
@@ -77,6 +78,7 @@ export class ProvisioningService {
         });
       } catch (error) {
         this.logger.error({ error }, "Failed to initialize Cloud Run provider");
+        throw error;
       }
     } else {
       this.logger.warn(
@@ -95,6 +97,7 @@ export class ProvisioningService {
       });
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize GCP Workflows client");
+      throw error;
     }
   }
 
