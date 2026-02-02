@@ -12,6 +12,7 @@ interface CloudRunProviderConfig {
   tenantImageTag: string;
   serviceAccount?: string;
   logger: Logger;
+  geminiApiKey?: string;
 }
 
 export type MigrationStatus = "running" | "success" | "failed";
@@ -30,6 +31,7 @@ export class CloudRunProvider {
   private region: string;
   private tenantImageTag: string;
   private serviceAccount: string | undefined;
+  private geminiApiKey: string | undefined;
 
   constructor(config: CloudRunProviderConfig) {
     this.logger = config.logger;
@@ -37,6 +39,7 @@ export class CloudRunProvider {
     this.region = config.region;
     this.tenantImageTag = config.tenantImageTag;
     this.serviceAccount = config.serviceAccount;
+    this.geminiApiKey = config.geminiApiKey;
 
     const authOptions: {
       credentials?: object;
@@ -86,6 +89,7 @@ export class CloudRunProvider {
       NODE_ENV: "production",
       STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
       ADMIN_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+      ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
     const serviceRequest = this.prepareServiceRequest(environmentVariables);

@@ -16,6 +16,7 @@ export interface ProvisioningServiceConfig {
   tenantImageTag?: string | undefined;
   upstashRedisUrl?: string | undefined;
   cloudRunServiceAccount?: string | undefined;
+  geminiApiKey?: string | undefined;
   logger: Logger;
 }
 
@@ -24,6 +25,7 @@ export class ProvisioningService {
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
   private internalApiKey: string | undefined;
+  private geminiApiKey: string | undefined;
   private upstashRedisUrl: string | undefined;
   private logger: Logger;
 
@@ -34,6 +36,7 @@ export class ProvisioningService {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
     this.internalApiKey = config.internalApiKey;
+    this.geminiApiKey = config.geminiApiKey;
 
     this.initializeProviders(config);
   }
@@ -72,6 +75,7 @@ export class ProvisioningService {
           region: config.gcpRegion,
           tenantImageTag: config.tenantImageTag,
           logger: this.logger,
+          ...(config.geminiApiKey ? { geminiApiKey: config.geminiApiKey } : {}),
           ...(config.cloudRunServiceAccount
             ? { serviceAccount: config.cloudRunServiceAccount }
             : {}),
