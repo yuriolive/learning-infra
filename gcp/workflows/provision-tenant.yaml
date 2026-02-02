@@ -6,7 +6,9 @@ main:
           - baseUrl: ${args.baseUrl}
           - tenantId: ${args.tenantId}
           - internalKey: ${args.internalApiKey}
-          - headers:
+          - commonHeaders:
+              X-Internal-Key: ${internalKey}
+          - postHeaders:
               Content-Type: "application/json"
               X-Internal-Key: ${internalKey}
 
@@ -15,7 +17,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/database"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -25,42 +27,178 @@ main:
           as: e
           steps:
             - rollback_db:
-                call: http.post
+                call: perform_rollback
                 args:
-                  url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers: ${headers}
-                  body:
-                    tenantId: ${tenantId}
-                  auth:
-                    type: OIDC
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Database provisioning failed: " + json.encode(default(e.body, e.message))}'
             - raise_db_error:
                 raise: ${e}
+
+    - ensure_migration_job:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/migrations"}
+            headers: ${postHeaders}
+            query:
+              action: "ensure"
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: ensure_job_result
+        except:
+          as: e
+          steps:
+            - rollback_ensure:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Migration job creation failed: " + json.encode(default(e.body, e.message))}'
+            - raise_ensure_error:
+                raise: ${e}
+
+    - check_ensure_op_start:
+        # If operationName is missing, the job already exists or completed synchronously.
+        # In this case, we proceed immediately to the next step.
+        switch:
+          - condition: ${"operationName" in ensure_job_result.body}
+            next: wait_for_ensure_op
+          - condition: true
+            next: trigger_migrations
+
+    - wait_for_ensure_op:
+        call: sys.sleep
+        args:
+          seconds: 5
+
+    - check_ensure_op_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${commonHeaders}
+            query:
+              name: ${ensure_job_result.body.operationName}
+            auth:
+              type: OIDC
+          result: ensure_op_status
+        except:
+          as: e
+          steps:
+            - rollback_ensure_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Migration job creation status check failed: " + json.encode(default(e.body, e.message))}'
+            - raise_ensure_status_error:
+                raise: ${e}
+
+    - evaluate_ensure_op:
+        switch:
+          - condition: ${ensure_op_status.body.done AND "error" in ensure_op_status.body}
+            steps:
+              - rollback_ensure_error:
+                  call: perform_rollback
+                  args:
+                    baseUrl: ${baseUrl}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
+                    tenantId: ${tenantId}
+                    reason: '${"Migration job creation operation failed: " + json.encode(default(ensure_op_status.body.error, "Unknown error"))}'
+              - raise_ensure_op_error:
+                  raise: '${"Migration job creation operation failed: " + json.encode(default(ensure_op_status.body.error, "Unknown error"))}'
+          - condition: ${ensure_op_status.body.done}
+            next: trigger_migrations
+          - condition: true
+            next: wait_for_ensure_op
 
     - trigger_migrations:
         try:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/migrations"}
-            headers: ${headers}
+            headers: ${postHeaders}
+            query:
+              action: "trigger"
             body:
               tenantId: ${tenantId}
             auth:
               type: OIDC
-          result: migration_trigger_result
+          result: trigger_job_result
         except:
           as: e
           steps:
             - rollback_trigger:
-                call: http.post
+                call: perform_rollback
                 args:
-                  url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers: ${headers}
-                  body:
-                    tenantId: ${tenantId}
-                  auth:
-                    type: OIDC
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Migration job trigger failed: " + json.encode(default(e.body, e.message))}'
             - raise_trigger_error:
                 raise: ${e}
+
+    - wait_for_trigger_op:
+        call: sys.sleep
+        args:
+          seconds: 5
+
+    - check_trigger_op_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${commonHeaders}
+            query:
+              name: ${trigger_job_result.body.operationName}
+            auth:
+              type: OIDC
+          result: trigger_op_status
+        except:
+          as: e
+          steps:
+            - rollback_trigger_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Migration trigger status check failed: " + json.encode(default(e.body, e.message))}'
+            - raise_trigger_status_error:
+                raise: ${e}
+
+    - evaluate_trigger_op:
+        switch:
+          - condition: ${trigger_op_status.body.done AND "error" in trigger_op_status.body}
+            steps:
+              - rollback_trigger_error:
+                  call: perform_rollback
+                  args:
+                    baseUrl: ${baseUrl}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
+                    tenantId: ${tenantId}
+                    reason: '${"Migration trigger operation failed: " + json.encode(default(trigger_op_status.body.error, "Unknown error"))}'
+              - raise_trigger_op_error:
+                  raise: '${"Migration trigger operation failed: " + json.encode(default(trigger_op_status.body.error, "Unknown error"))}'
+          - condition: ${trigger_op_status.body.done}
+            assign:
+              - executionName: ${trigger_op_status.body.response.name}
+            next: wait_for_migrations
+          - condition: true
+            next: wait_for_trigger_op
 
     - wait_for_migrations:
         call: sys.sleep
@@ -72,24 +210,23 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/migrations/status"}
-            headers: ${headers}
+            headers: ${commonHeaders}
             query:
-              name: ${migration_trigger_result.body.executionName}
+              name: ${executionName}
             auth:
               type: OIDC
           result: status_response
         except:
           as: e
           steps:
-            - rollback_check:
-                call: http.post
+            - rollback_check_status:
+                call: perform_rollback
                 args:
-                  url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers: ${headers}
-                  body:
-                    tenantId: ${tenantId}
-                  auth:
-                    type: OIDC
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Migration status check failed: " + json.encode(default(e.body, e.message))}'
             - raise_check_error:
                 raise: ${e}
 
@@ -102,22 +239,96 @@ main:
           - condition: ${status_response.body.status == "failed"}
             steps:
               - rollback_logic_failure:
-                  call: http.post
+                  call: perform_rollback
                   args:
-                    url: ${baseUrl + "/internal/provisioning/rollback"}
-                    headers: ${headers}
-                    body:
-                      tenantId: ${tenantId}
-                    auth:
-                      type: OIDC
+                    baseUrl: ${baseUrl}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
+                    tenantId: ${tenantId}
+                    reason: '${"Migration failed: " + json.encode(default(status_response.body.error, "Unknown error"))}'
               - raise_migration_failed:
-                  raise: '${"Migration failed: " + default(status_response.body.error, "Unknown error")}'
+                  raise: '${"Migration failed: " + json.encode(default(status_response.body.error, "Unknown error"))}'
+
     - deploy_service:
         try:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/service"}
-            headers: ${headers}
+            headers: ${postHeaders}
+            body:
+              tenantId: ${tenantId}
+            auth:
+              type: OIDC
+          result: deploy_start_result
+        except:
+          as: e
+          steps:
+            - rollback_service_start:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Service deployment initiation failed: " + json.encode(default(e.body, e.message))}'
+            - raise_service_start_error:
+                raise: ${e}
+
+    - wait_for_deploy_op:
+        call: sys.sleep
+        args:
+          seconds: 5
+
+    - check_deploy_op_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${commonHeaders}
+            query:
+              name: ${deploy_start_result.body.operationName}
+            auth:
+              type: OIDC
+          result: deploy_op_status
+        except:
+          as: e
+          steps:
+            - rollback_deploy_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Service deployment status check failed: " + json.encode(default(e.body, e.message))}'
+            - raise_deploy_status_error:
+                raise: ${e}
+
+    - evaluate_deploy_op:
+        switch:
+          - condition: ${deploy_op_status.body.done AND "error" in deploy_op_status.body}
+            steps:
+              - rollback_deploy_error:
+                  call: perform_rollback
+                  args:
+                    baseUrl: ${baseUrl}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
+                    tenantId: ${tenantId}
+                    reason: '${"Service deployment operation failed: " + json.encode(default(deploy_op_status.body.error, "Unknown error"))}'
+              - raise_deploy_op_error:
+                  raise: '${"Service deployment operation failed: " + json.encode(default(deploy_op_status.body.error, "Unknown error"))}'
+          - condition: ${deploy_op_status.body.done}
+            next: finalize_service
+          - condition: true
+            next: wait_for_deploy_op
+
+    - finalize_service:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/service/finalize"}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -126,16 +337,15 @@ main:
         except:
           as: e
           steps:
-            - rollback_service:
-                call: http.post
+            - rollback_service_finalize:
+                call: perform_rollback
                 args:
-                  url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers: ${headers}
-                  body:
-                    tenantId: ${tenantId}
-                  auth:
-                    type: OIDC
-            - raise_service_error:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Service finalization failed: " + json.encode(default(e.body, e.message))}'
+            - raise_service_finalize_error:
                 raise: ${e}
 
     - configure_domain:
@@ -143,7 +353,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/domain"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -153,14 +363,13 @@ main:
           as: e
           steps:
             - rollback_domain:
-                call: http.post
+                call: perform_rollback
                 args:
-                  url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers: ${headers}
-                  body:
-                    tenantId: ${tenantId}
-                  auth:
-                    type: OIDC
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Domain configuration failed: " + json.encode(default(e.body, e.message))}'
             - raise_domain_error:
                 raise: ${e}
 
@@ -169,7 +378,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/activate"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -179,14 +388,13 @@ main:
           as: e
           steps:
             - rollback_activation:
-                call: http.post
+                call: perform_rollback
                 args:
-                  url: ${baseUrl + "/internal/provisioning/rollback"}
-                  headers: ${headers}
-                  body:
-                    tenantId: ${tenantId}
-                  auth:
-                    type: OIDC
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
+                  reason: '${"Tenant activation failed: " + json.encode(default(e.body, e.message))}'
             - raise_activation_error:
                 raise: ${e}
 
@@ -194,3 +402,66 @@ main:
         return:
           status: "success"
           tenantId: ${tenantId}
+
+perform_rollback:
+  params:
+    [baseUrl, postHeaders, commonHeaders, tenantId, reason: "Unknown error"]
+  steps:
+    - call_rollback_endpoint:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/rollback"}
+            headers: ${postHeaders}
+            body:
+              tenantId: ${tenantId}
+              reason: ${reason}
+            auth:
+              type: OIDC
+          result: rollback_result
+        except:
+          as: e
+          steps:
+            - log_rollback_failure:
+                call: sys.log
+                args:
+                  text: '${"Rollback initiation failed: " + json.encode(default(e.body, e.message))}'
+                  severity: "ERROR"
+            - raise_rollback_error:
+                raise: ${e}
+
+    - check_rollback_op:
+        # If operationName is missing, the rollback completed synchronously or the resource was not found.
+        # We consider the rollback initiated/completed and return the status without waiting.
+        switch:
+          - condition: ${"operationName" in rollback_result.body}
+            next: wait_for_rollback_op
+          - condition: true
+            return: "rollback initiated (no wait)"
+
+    - wait_for_rollback_op:
+        call: sys.sleep
+        args:
+          seconds: 5
+
+    - check_rollback_status:
+        try:
+          call: http.get
+          args:
+            url: ${baseUrl + "/internal/provisioning/operations"}
+            headers: ${commonHeaders}
+            query:
+              name: ${rollback_result.body.operationName}
+            auth:
+              type: OIDC
+          result: rollback_op_status
+        except:
+          as: e
+          return: "rollback status check failed"
+
+    - evaluate_rollback_op:
+        switch:
+          - condition: ${rollback_op_status.body.done}
+            return: "rollback completed"
+          - condition: true
+            next: wait_for_rollback_op

@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { type Database } from "../../src/database/database";
 import { createInternalRoutes } from "../../src/domains/internal/internal.routes";
+import { type ProvisioningService } from "../../src/domains/provisioning/provisioning.service";
 import { type TenantService } from "../../src/domains/tenants/tenant.service";
 
 // Mock dependencies
 const mockLogger = createLogger();
 const mockDatabase = {} as unknown as Database;
 const mockService = {} as unknown as TenantService;
+const mockProvisioningService = {} as unknown as ProvisioningService;
 const TEST_INTERNAL_SECRET =
   process.env.INTERNAL_API_KEY ?? "test-internal-key-mock-value";
 
@@ -20,6 +22,7 @@ describe("Internal Routes", () => {
     routes = createInternalRoutes({
       logger: mockLogger,
       tenantService: mockService,
+      provisioningService: mockProvisioningService,
       db: mockDatabase,
       internalApiKey: TEST_INTERNAL_SECRET,
     });
@@ -42,6 +45,7 @@ describe("Internal Routes", () => {
     routes = createInternalRoutes({
       logger: mockLogger,
       tenantService: mockService,
+      provisioningService: mockProvisioningService,
       db: minimalDatabase,
       internalApiKey: TEST_INTERNAL_SECRET,
     });
