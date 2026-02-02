@@ -36,7 +36,7 @@ export class ProvisioningController {
       const body = await request.json();
       const { tenantId } = requestSchema.parse(body);
 
-      return await this.dispatchAction(action, tenantId, request);
+      return await this.dispatchAction(action, tenantId, request, body);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return new Response(JSON.stringify({ error: error.errors }), {
@@ -69,6 +69,7 @@ export class ProvisioningController {
     action: string | undefined,
     tenantId: string,
     request: Request,
+    body: unknown,
   ): Promise<Response> {
     switch (action) {
       case "database": {
@@ -113,8 +114,12 @@ export class ProvisioningController {
         );
       }
       case "rollback": {
+        const rollbackSchema = z.object({
+          reason: z.string().optional(),
+        });
+        const { reason } = rollbackSchema.parse(body);
         return this.handleStep(tenantId, "rollback", () =>
-          this.provisioningService.rollbackResources(tenantId),
+          this.provisioningService.rollbackResources(tenantId, reason),
         );
       }
       default: {
