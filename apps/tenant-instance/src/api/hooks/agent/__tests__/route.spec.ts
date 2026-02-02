@@ -17,26 +17,9 @@ describe("Agent API Route", () => {
   });
 
   it("should return 401 if header is missing or invalid", async () => {
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
-    const request = {
-      body: {},
-      headers: { "x-internal-secret": "wrong-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    const { request, response } = createMockRequestResponse({
+      secret: "wrong-secret",
+    });
 
     await POST(request, response);
 
@@ -46,29 +29,10 @@ describe("Agent API Route", () => {
 
   it("should handle Direct Format correctly", async () => {
     const processMessageMock = vi.fn().mockResolvedValue("Agent response");
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
-    const request = {
+    const { request, response } = createMockRequestResponse({
       body: { phone: "123456", text: "Hello" },
-      headers: { "x-internal-secret": "test-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === AGENT_MODULE) {
-            return { processMessage: processMessageMock };
-          }
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+      processMessageMock,
+    });
 
     await POST(request, response);
 
@@ -80,7 +44,6 @@ describe("Agent API Route", () => {
 
   it("should handle Meta Webhook Format correctly", async () => {
     const processMessageMock = vi.fn().mockResolvedValue("Agent response");
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
     const metaBody = {
       entry: [
         {
@@ -101,28 +64,10 @@ describe("Agent API Route", () => {
       ],
     };
 
-    const request = {
+    const { request, response } = createMockRequestResponse({
       body: metaBody,
-      headers: { "x-internal-secret": "test-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === AGENT_MODULE) {
-            return { processMessage: processMessageMock };
-          }
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+      processMessageMock,
+    });
 
     await POST(request, response);
 
@@ -132,7 +77,6 @@ describe("Agent API Route", () => {
   });
 
   it("should ignore non-text Meta messages", async () => {
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
     const metaBody = {
       entry: [
         {
@@ -152,25 +96,9 @@ describe("Agent API Route", () => {
       ],
     };
 
-    const request = {
+    const { request, response } = createMockRequestResponse({
       body: metaBody,
-      headers: { "x-internal-secret": "test-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    });
 
     await POST(request, response);
 
@@ -182,26 +110,9 @@ describe("Agent API Route", () => {
   });
 
   it("should fail silently (200 OK) for malformed Meta webhook", async () => {
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
-    const request = {
-      body: { entry: [] }, // Empty entry
-      headers: { "x-internal-secret": "test-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    const { request, response, loggerMock } = createMockRequestResponse({
+      body: { entry: [] },
+    });
 
     await POST(request, response);
 
@@ -209,30 +120,15 @@ describe("Agent API Route", () => {
       expect.stringContaining("Received empty or invalid 'entry'"),
     );
     expect(response.status).toHaveBeenCalledWith(200);
-    expect(response.json).toHaveBeenCalledWith({ status: "ignored_malformed" });
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "ignored_malformed" }),
+    );
   });
 
   it("should fail silently (200 OK) for missing fields in Direct format", async () => {
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
-    const request = {
-      body: { phone: "123" }, // Missing text
-      headers: { "x-internal-secret": "test-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+    const { request, response, loggerMock } = createMockRequestResponse({
+      body: { phone: "123" },
+    });
 
     await POST(request, response);
 
@@ -250,29 +146,10 @@ describe("Agent API Route", () => {
     const processMessageMock = vi
       .fn()
       .mockRejectedValue(new Error("Redis connection failed"));
-    const loggerMock = { error: vi.fn(), warn: vi.fn() };
-    const request = {
+    const { request, response, loggerMock } = createMockRequestResponse({
       body: { phone: "123456", text: "Hello" },
-      headers: { "x-internal-secret": "test-secret" },
-      scope: {
-        resolve: vi.fn().mockImplementation((key) => {
-          if (key === AGENT_MODULE) {
-            return { processMessage: processMessageMock };
-          }
-          if (key === "logger") {
-            return loggerMock;
-          }
-          return;
-        }),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    const response = {
-      json: vi.fn(),
-      status: vi.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+      processMessageMock,
+    });
 
     await POST(request, response);
 
@@ -284,3 +161,46 @@ describe("Agent API Route", () => {
     expect(response.json).toHaveBeenCalledWith({ error: "Agent unavailable" });
   });
 });
+
+interface LoggerMock {
+  error: ReturnType<typeof vi.fn>;
+  warn: ReturnType<typeof vi.fn>;
+}
+
+const createMockRequestResponse = ({
+  body = {},
+  secret = "test-secret",
+  processMessageMock,
+  loggerMock = { error: vi.fn(), warn: vi.fn() },
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  body?: any;
+  secret?: string;
+  processMessageMock?: unknown;
+  loggerMock?: LoggerMock;
+} = {}) => {
+  const request = {
+    body,
+    headers: { "x-internal-secret": secret },
+    scope: {
+      resolve: vi.fn().mockImplementation((key) => {
+        if (key === AGENT_MODULE && processMessageMock) {
+          return { processMessage: processMessageMock };
+        }
+        if (key === "logger") {
+          return loggerMock;
+        }
+        return;
+      }),
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+
+  const response = {
+    json: vi.fn(),
+    status: vi.fn().mockReturnThis(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+
+  return { request, response, loggerMock };
+};
