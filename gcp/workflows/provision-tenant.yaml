@@ -174,7 +174,7 @@ main:
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
               - raise_trigger_op_error:
-                  raise: '${"Migration trigger operation failed: " + default(trigger_op_status.body.error.message, "Unknown error")}'
+                  raise: '${"Migration trigger operation failed: " + json.encode(default(trigger_op_status.body.error, "Unknown error"))}'
           - condition: ${trigger_op_status.body.done}
             assign:
               - executionName: ${trigger_op_status.body.response.name}
@@ -227,7 +227,7 @@ main:
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
               - raise_migration_failed:
-                  raise: '${"Migration failed: " + default(status_response.body.error, "Unknown error")}'
+                  raise: '${"Migration failed: " + json.encode(default(status_response.body.error, "Unknown error"))}'
     - deploy_service:
         try:
           call: http.post
@@ -293,7 +293,7 @@ main:
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
               - raise_deploy_op_error:
-                  raise: '${"Service deployment operation failed: " + default(deploy_op_status.body.error.message, "Unknown error")}'
+                  raise: '${"Service deployment operation failed: " + json.encode(default(deploy_op_status.body.error, "Unknown error"))}'
           - condition: ${deploy_op_status.body.done}
             next: finalize_service
           - condition: true

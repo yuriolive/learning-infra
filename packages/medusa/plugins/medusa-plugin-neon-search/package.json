@@ -1,6 +1,7 @@
 {
   "name": "medusa-plugin-neon-search",
   "version": "1.0.0",
+  "type": "module",
   "description": "Neon Search Plugin for Medusa v2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
