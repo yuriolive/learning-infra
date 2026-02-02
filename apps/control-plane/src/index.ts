@@ -8,6 +8,7 @@ import {
 } from "./config";
 import { createDatabase } from "./database/database";
 import { createInternalRoutes } from "./domains/internal/internal.routes";
+import { ProvisioningService } from "./domains/provisioning/provisioning.service";
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
@@ -168,7 +169,8 @@ function createServices(
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
-  const tenantService = new TenantService(tenantRepository, {
+
+  const provisioningService = new ProvisioningService(tenantRepository, {
     logger,
     neonApiKey,
     neonProjectId,
@@ -180,7 +182,19 @@ function createServices(
     cloudRunServiceAccount,
     internalApiKey,
   });
-  return { tenantService, database };
+
+  const tenantService = new TenantService(
+    tenantRepository,
+    provisioningService,
+    {
+      logger,
+      internalApiKey,
+      gcpProjectId: environment.GCP_PROJECT_ID,
+      gcpRegion: environment.GCP_REGION,
+    },
+  );
+
+  return { tenantService, provisioningService, database };
 }
 
 export default {
@@ -235,7 +249,7 @@ export default {
     );
     if (configError) return configError;
 
-    const { tenantService, database } = createServices(
+    const { tenantService, provisioningService, database } = createServices(
       logger,
       databaseUrl as string,
       nodeEnvironment,
@@ -259,6 +273,7 @@ export default {
     const internalRoutes = createInternalRoutes({
       logger,
       tenantService,
+      provisioningService,
       db: database,
       internalApiKey: internalApiKey as string, // validated in config
     });

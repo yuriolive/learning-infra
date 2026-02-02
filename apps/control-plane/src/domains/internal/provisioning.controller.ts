@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 import { type Database } from "../../database/database";
+import { type Logger } from "../../utils/logger";
+import { type ProvisioningService } from "../provisioning/provisioning.service";
 import { type TenantService } from "../tenants/tenant.service";
-
-import type { Logger } from "../../utils/logger";
 
 const requestSchema = z.object({
   tenantId: z.string().uuid(),
@@ -11,7 +11,8 @@ const requestSchema = z.object({
 
 export class ProvisioningController {
   constructor(
-    private service: TenantService,
+    private tenantService: TenantService,
+    private provisioningService: ProvisioningService,
     private database: Database,
     private logger: Logger,
     private internalApiKey: string,
@@ -28,11 +29,14 @@ export class ProvisioningController {
       if (request.method === "GET" && action === "status") {
         return await this.handleMigrationStatus(url);
       }
+      if (request.method === "GET" && action === "operations") {
+        return await this.handleOperationStatus(url);
+      }
 
       const body = await request.json();
       const { tenantId } = requestSchema.parse(body);
 
-      return await this.dispatchAction(action, tenantId);
+      return await this.dispatchAction(action, tenantId, request, body);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return new Response(JSON.stringify({ error: error.errors }), {
@@ -41,7 +45,9 @@ export class ProvisioningController {
         });
       }
       this.logger.error({ error }, "Error in provisioning controller");
-      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      return new Response(JSON.stringify({ error: errorMessage }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
@@ -62,41 +68,67 @@ export class ProvisioningController {
   private dispatchAction(
     action: string | undefined,
     tenantId: string,
+    request: Request,
+    body: unknown,
   ): Promise<Response> {
     switch (action) {
       case "database": {
         return this.handleStep(tenantId, "create_db", () =>
-          this.service.provisionDatabase(tenantId),
+          this.provisioningService.provisionDatabase(tenantId),
         );
       }
       case "migrations": {
-        // Change: Returns execution name immediately (async trigger)
-        return this.handleStep(tenantId, "migrate_db", () =>
-          this.service.triggerMigration(tenantId),
+        const url = new URL(request.url || "", "http://localhost");
+        const subAction = url.searchParams.get("action");
+
+        if (subAction === "ensure") {
+          return this.handleStep(tenantId, "ensure_migration_job", () =>
+            this.provisioningService.ensureMigrationJob(tenantId),
+          );
+        }
+
+        // Default to trigger, or explicit trigger
+        return this.handleStep(tenantId, "trigger_migration_job", () =>
+          this.provisioningService.triggerMigrationJob(tenantId),
         );
       }
       case "service": {
-        return this.handleStep(tenantId, "deploy_service", () =>
-          this.service.deployService(tenantId),
+        return this.handleStep(tenantId, "deploy_service_start", () =>
+          this.provisioningService.startDeployService(tenantId),
+        );
+      }
+      case "finalize": {
+        // Path: /service/finalize -> action: finalize
+        return this.handleStep(tenantId, "deploy_service_finalize", () =>
+          this.provisioningService.finalizeDeployment(tenantId),
         );
       }
       case "domain": {
         return this.handleStep(tenantId, "setup_domain", () =>
-          this.service.configureDomain(tenantId),
+          this.provisioningService.configureDomain(tenantId),
         );
       }
       case "activate": {
         return this.handleStep(tenantId, "activate_tenant", () =>
-          this.service.activateTenant(tenantId),
+          this.provisioningService.activateTenant(tenantId),
         );
       }
       case "rollback": {
+        const rollbackSchema = z.object({
+          reason: z.string().optional(),
+        });
+        const { reason } = rollbackSchema.parse(body);
         return this.handleStep(tenantId, "rollback", () =>
-          this.service.rollbackResources(tenantId),
+          this.provisioningService.rollbackResources(tenantId, reason),
         );
       }
       default: {
-        return Promise.resolve(new Response("Not Found", { status: 404 }));
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: "Invalid action" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
       }
     }
   }
@@ -110,7 +142,27 @@ export class ProvisioningController {
       });
     }
 
-    const status = await this.service.getMigrationStatus(executionName);
+    this.logger.info({ executionName }, "Checking migration status");
+    const status =
+      await this.provisioningService.getMigrationStatus(executionName);
+    return new Response(JSON.stringify(status), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  private async handleOperationStatus(url: URL): Promise<Response> {
+    const operationName = url.searchParams.get("name");
+    if (!operationName) {
+      return new Response(JSON.stringify({ error: "Missing name parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    this.logger.info({ operationName }, "Checking operation status");
+    const status =
+      await this.provisioningService.getOperationStatus(operationName);
     return new Response(JSON.stringify(status), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -148,7 +200,12 @@ export class ProvisioningController {
     details?: Record<string, unknown>,
   ) {
     try {
-      await this.service.logProvisioningEvent(tenantId, step, status, details);
+      await this.tenantService.logProvisioningEvent(
+        tenantId,
+        step,
+        status,
+        details,
+      );
     } catch (error) {
       // Don't fail the request if logging fails, but log it
       this.logger.error(

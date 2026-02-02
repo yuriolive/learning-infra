@@ -42,4 +42,5 @@ jobs:
             --source=gcp/workflows/provision-tenant.yaml \
             --location=${{ env.REGION }} \
             --project=${{ env.PROJECT_ID }} \
+            --service-account=control-plane-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
             --quiet
