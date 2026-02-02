@@ -188,6 +188,10 @@ export class CloudRunProvider {
       const op = result.data;
 
       if (op.done) {
+        this.logger.info(
+          { name, done: true, error: op.error },
+          "Operation completed",
+        );
         if (op.error) {
           return {
             done: true,
@@ -197,6 +201,7 @@ export class CloudRunProvider {
         return { done: true, response: op.response };
       }
 
+      this.logger.info({ name, done: false }, "Operation still running");
       return { done: false };
     } catch (error) {
       this.logger.error({ err: error, name }, "Failed to get operation");
@@ -427,7 +432,12 @@ export class CloudRunProvider {
       [idField]: resourceId,
       requestBody,
     });
-    return response.data.name ?? undefined;
+    const operationName = response.data.name ?? undefined;
+    this.logger.info(
+      { tenantId, operationName },
+      `Created new Cloud Run ${displayName}`,
+    );
+    return operationName;
   }
 
   private async runJobExecution(
