@@ -1,24 +1,29 @@
 import { createLogger } from "@vendin/utils/logger";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 import { createTenantRoutes } from "../../../src/domains/tenants/tenant.routes";
 import { TenantService } from "../../../src/domains/tenants/tenant.service";
 import { createMockDatabase } from "../../utils/mock-database";
 
+import type { ProvisioningService } from "../../../src/domains/provisioning/provisioning.service";
 import type { CreateTenantInput } from "../../../src/domains/tenants/tenant.types";
 
 describe("TenantRoutes", () => {
   let routes: ReturnType<typeof createTenantRoutes>;
   let service: TenantService;
   let repository: TenantRepository;
+  let provisioningService: ProvisioningService;
   let logger: ReturnType<typeof createLogger>;
 
   beforeEach(async () => {
     const database = await createMockDatabase();
     repository = new TenantRepository(database);
     logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
-    service = new TenantService(repository, { logger });
+    provisioningService = {
+      triggerProvisioningWorkflow: vi.fn(),
+    } as unknown as ProvisioningService;
+    service = new TenantService(repository, provisioningService, { logger });
     routes = createTenantRoutes({ tenantService: service, logger });
   });
 

@@ -1,5 +1,3 @@
-import { createLogger } from "@vendin/utils/logger";
-/* eslint-disable vitest/expect-expect */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
@@ -54,31 +52,14 @@ vi.mock("google-auth-library", () => ({
   GoogleAuth: vi.fn().mockImplementation(() => ({})),
 }));
 
-const setupMigrationOperations = (overrides: Record<string, unknown> = {}) => {
-  mockOperationsGet.mockImplementation(({ name }: { name: string }) => {
-    if (name === "job-op-1") return { data: { done: true } };
-    if (name === "exec-op-1") {
-      return {
-        data: { done: true, response: { name: "exec-1" }, ...overrides },
-      };
-    }
-    return { data: { done: false } };
-  });
-};
-
-const expectToRejectWithTimers = async (
-  promise: Promise<unknown>,
-  message: string,
-) => {
-  await Promise.all([
-    vi.runAllTimersAsync(),
-    expect(promise).rejects.toThrow(message),
-  ]);
-};
-
 describe("CloudRunProvider", () => {
   let provider: CloudRunProvider;
-  const logger = createLogger({ logLevel: "silent", nodeEnv: "test" });
+  const logger = {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  };
   const config = {
     projectId: "test-project",
     region: "us-central1",
@@ -96,7 +77,7 @@ describe("CloudRunProvider", () => {
     vi.useRealTimers();
   });
 
-  describe("runTenantMigrations", () => {
+  describe("ensureMigrationJob", () => {
     const tenantId = "tenant-1";
     const appConfig = {
       databaseUrl: "postgres://",
@@ -104,80 +85,25 @@ describe("CloudRunProvider", () => {
       redisPrefix: "t_1:",
     };
 
-    it("should complete migrations successfully", async () => {
-      // 1. getOrCreateJob (exists = false)
+    it("should create/patch job successfully", async () => {
       mockJobsGet.mockRejectedValue({ code: 404 });
       mockJobsCreate.mockResolvedValue({ data: { name: "job-op-1" } });
 
-      // 2. runJobExecution
-      mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
+      const opName = await provider.ensureMigrationJob(tenantId, appConfig);
 
-      setupMigrationOperations();
-
-      // Poll execution status (NOT called anymore in runTenantMigrations, but needed for polling)
-      // The new logic only waits for trigger.
-
-      const executionName = await provider.runTenantMigrations(
-        tenantId,
-        appConfig,
-      );
-
-      await vi.runAllTimersAsync();
-
-      expect(executionName).toBe("exec-1");
+      expect(opName).toBe("job-op-1");
       expect(mockJobsCreate).toHaveBeenCalled();
+    });
+  });
+
+  describe("triggerMigrationJob", () => {
+    it("should trigger job execution and return execution operation", async () => {
+      mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
+
+      const opName = await provider.triggerMigrationJob("tenant-1");
+
+      expect(opName).toBe("exec-op-1");
       expect(mockJobsRun).toHaveBeenCalled();
-      // mockExecutionsGet should NOT be called in trigger phase anymore
-      expect(mockExecutionsGet).not.toHaveBeenCalled();
-    });
-
-    it("should throw if operation fails with error", async () => {
-      mockJobsGet.mockResolvedValue({ data: {} });
-      mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
-      mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
-
-      setupMigrationOperations({ error: { message: "Internal error" } });
-
-      const promise = provider.runTenantMigrations(tenantId, appConfig);
-
-      await expectToRejectWithTimers(
-        promise,
-        "Migration trigger failed: Internal error",
-      );
-    });
-
-    it("should throw if execution name is missing in operation response", async () => {
-      mockJobsGet.mockResolvedValue({ data: {} });
-      mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
-      mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
-
-      setupMigrationOperations({ response: {} });
-
-      const promise = provider.runTenantMigrations(tenantId, appConfig);
-
-      await expectToRejectWithTimers(
-        promise,
-        "Job trigger completed but execution name is missing",
-      );
-    });
-
-    it("should timeout if execution operation never completes", async () => {
-      mockJobsGet.mockResolvedValue({ data: {} });
-      mockJobsPatch.mockResolvedValue({ data: { name: "job-op-1" } });
-      mockJobsRun.mockResolvedValue({ data: { name: "exec-op-1" } });
-
-      mockOperationsGet.mockImplementation(({ name }) => {
-        if (name === "job-op-1") return { data: { done: true } };
-        // exec-op-1 never completes
-        return { data: { done: false } };
-      });
-
-      const promise = provider.runTenantMigrations(tenantId, appConfig);
-
-      await expectToRejectWithTimers(
-        promise,
-        "Timeout waiting for migration job to trigger",
-      );
     });
   });
 
@@ -206,24 +132,32 @@ describe("CloudRunProvider", () => {
     });
   });
 
-  describe("deployTenantInstance", () => {
-    it("should deploy successfully", async () => {
+  describe("startDeployTenantInstance", () => {
+    it("should start deployment and return operation name", async () => {
       mockServicesGet.mockRejectedValueOnce({ code: 404 });
       mockServicesCreate.mockResolvedValue({ data: { name: "svc-op-1" } });
-      mockOperationsGet.mockResolvedValue({ data: { done: true } });
-      mockServicesGetIamPolicy.mockResolvedValue({ data: { bindings: [] } });
-      mockServicesSetIamPolicy.mockResolvedValue({ data: {} });
-      mockServicesGet.mockResolvedValue({ data: { uri: "https://svc-url" } });
 
-      const url = await provider.deployTenantInstance("tenant-1", {
+      const opName = await provider.startDeployTenantInstance("tenant-1", {
         databaseUrl: "postgres://",
         redisUrl: "redis://",
         redisPrefix: "t_1:",
         subdomain: "tenant-1",
       });
 
-      expect(url).toBe("https://svc-url");
+      expect(opName).toBe("svc-op-1");
       expect(mockServicesCreate).toHaveBeenCalled();
+    });
+  });
+
+  describe("finalizeTenantService", () => {
+    it("should finalize and return URI", async () => {
+      mockServicesGetIamPolicy.mockResolvedValue({ data: { bindings: [] } });
+      mockServicesSetIamPolicy.mockResolvedValue({ data: {} });
+      mockServicesGet.mockResolvedValue({ data: { uri: "https://svc-url" } });
+
+      const url = await provider.finalizeTenantService("tenant-1");
+
+      expect(url).toBe("https://svc-url");
       expect(mockServicesSetIamPolicy).toHaveBeenCalled();
     });
   });
