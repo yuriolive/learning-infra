@@ -114,7 +114,10 @@ export class ProvisioningController {
         );
       }
       case "rollback": {
-        const { reason } = body as { reason?: string };
+        const rollbackSchema = z.object({
+          reason: z.string().optional(),
+        });
+        const { reason } = rollbackSchema.parse(body);
         return this.handleStep(tenantId, "rollback", () =>
           this.provisioningService.rollbackResources(tenantId, reason),
         );

@@ -257,6 +257,31 @@ describe("ProvisioningController", () => {
     );
   });
 
+  it("should return 400 if /rollback has invalid body", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = new Request(
+      "http://localhost/internal/provisioning/rollback",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Internal-Key": TEST_INTERNAL_KEY,
+        },
+        body: JSON.stringify({
+          tenantId,
+          reason: 123, // Invalid: should be a string
+        }),
+      },
+    );
+
+    const response = await controller.handleRequest(request);
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.error).toBeDefined();
+    expect(body.error[0].path).toContain("reason");
+  });
+
   it("should return 400 for invalid action", async () => {
     const request = createRequest("unknown-action");
 
