@@ -90,6 +90,13 @@ main:
         except:
           as: e
           steps:
+            - rollback_ensure_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
             - raise_ensure_status_error:
                 raise: ${e}
 
@@ -145,6 +152,13 @@ main:
         except:
           as: e
           steps:
+            - rollback_trigger_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
             - raise_trigger_status_error:
                 raise: ${e}
 
@@ -187,7 +201,7 @@ main:
         except:
           as: e
           steps:
-            - rollback_check:
+            - rollback_check_status:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
@@ -257,6 +271,13 @@ main:
         except:
           as: e
           steps:
+            - rollback_deploy_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
             - raise_deploy_status_error:
                 raise: ${e}
 
