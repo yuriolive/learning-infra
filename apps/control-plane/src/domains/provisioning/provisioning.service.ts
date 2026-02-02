@@ -129,6 +129,8 @@ export class ProvisioningService {
       },
     );
 
+    // Returns operationName if a long-running operation was initiated.
+    // Returns empty object if the job already exists or no changes were needed (synchronous completion).
     return operationName ? { operationName } : {};
   }
 

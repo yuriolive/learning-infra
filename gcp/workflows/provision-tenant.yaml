@@ -59,6 +59,8 @@ main:
                 raise: ${e}
 
     - check_ensure_op_start:
+        # If operationName is missing, the job already exists or completed synchronously.
+        # In this case, we proceed immediately to the next step.
         switch:
           - condition: ${"operationName" in ensure_job_result.body}
             next: wait_for_ensure_op
@@ -366,6 +368,8 @@ perform_rollback:
                 raise: ${e}
 
     - check_rollback_op:
+        # If operationName is missing, the rollback completed synchronously or the resource was not found.
+        # We consider the rollback initiated/completed and return the status without waiting.
         switch:
           - condition: ${"operationName" in rollback_result.body}
             next: wait_for_rollback_op
