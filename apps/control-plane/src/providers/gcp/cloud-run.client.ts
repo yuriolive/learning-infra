@@ -181,6 +181,33 @@ export class CloudRunProvider {
     return executionOperation;
   }
 
+  // Delete Job.
+  async deleteMigrationJob(tenantId: string): Promise<void> {
+    const jobId = `migration-${tenantId}`;
+    const parent = `projects/${this.projectId}/locations/${this.region}`;
+    const jobPath = `${parent}/jobs/${jobId}`;
+
+    this.logger.info({ tenantId }, "Deleting migration job");
+
+    try {
+      await this.runClient.projects.locations.jobs.delete({
+        name: jobPath,
+      });
+      this.logger.info({ tenantId }, "Deleted migration job");
+    } catch (error) {
+      // If it doesn't exist, that's fine (idempotent)
+      if ((error as { code: number }).code === 404) {
+        this.logger.info(
+          { tenantId },
+          "Migration job already deleted or not found",
+        );
+        return;
+      }
+      this.logger.error({ error, tenantId }, "Failed to delete migration job");
+      throw error;
+    }
+  }
+
   // Check generic operation status
   async getOperation(
     name: string,

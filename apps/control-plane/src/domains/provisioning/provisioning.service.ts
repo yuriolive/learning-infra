@@ -162,6 +162,13 @@ export class ProvisioningService {
     return this.cloudRunProvider.getJobExecutionStatus(executionName);
   }
 
+  async deleteMigrationJob(tenantId: string): Promise<void> {
+    if (!this.cloudRunProvider) {
+      throw new Error("Cloud Run provider not initialized");
+    }
+    await this.cloudRunProvider.deleteMigrationJob(tenantId);
+  }
+
   async getOperationStatus(
     operationName: string,
   ): Promise<{ done: boolean; error?: string; response?: unknown }> {
