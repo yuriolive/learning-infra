@@ -242,4 +242,14 @@ describe("ProvisioningController", () => {
       tenantId,
     );
   });
+
+  it("should return 400 for invalid action", async () => {
+    const request = createRequest("unknown-action");
+
+    const response = await controller.handleRequest(request);
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid action" });
+  });
 });
