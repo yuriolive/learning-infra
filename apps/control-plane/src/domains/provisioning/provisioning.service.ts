@@ -272,8 +272,9 @@ export class ProvisioningService {
 
   async rollbackResources(
     tenantId: string,
+    reason?: string,
   ): Promise<{ operationName?: string }> {
-    this.logger.info({ tenantId }, "Rolling back resources");
+    this.logger.info({ tenantId, reason }, "Rolling back resources");
     let operationName: string | undefined;
 
     if (this.neonProvider && this.cloudRunProvider) {
@@ -306,7 +307,7 @@ export class ProvisioningService {
 
     await this.tenantRepository.update(tenantId, {
       status: "provisioning_failed",
-      failureReason: "Provisioning workflow failed and rolled back",
+      failureReason: reason || "Provisioning workflow failed and rolled back",
     });
 
     return operationName ? { operationName } : {};

@@ -235,11 +235,25 @@ describe("ProvisioningController", () => {
 
   it("should handle /rollback", async () => {
     const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
-    const request = createRequest("rollback");
+    const request = new Request(
+      "http://localhost/internal/provisioning/rollback",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Internal-Key": TEST_INTERNAL_KEY,
+        },
+        body: JSON.stringify({
+          tenantId,
+          reason: "Something went wrong",
+        }),
+      },
+    );
 
     await controller.handleRequest(request);
     expect(mockProvisioningService.rollbackResources).toHaveBeenCalledWith(
       tenantId,
+      "Something went wrong",
     );
   });
 

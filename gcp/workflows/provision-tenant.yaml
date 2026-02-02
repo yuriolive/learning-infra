@@ -33,6 +33,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Database provisioning failed: " + default(e.message, "Unknown error")}
             - raise_db_error:
                 raise: ${e}
 
@@ -59,6 +60,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Migration job creation failed: " + default(e.message, "Unknown error")}
             - raise_ensure_error:
                 raise: ${e}
 
@@ -97,6 +99,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Migration job creation status check failed: " + default(e.message, "Unknown error")}
             - raise_ensure_status_error:
                 raise: ${e}
 
@@ -130,6 +133,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Migration job trigger failed: " + default(e.message, "Unknown error")}
             - raise_trigger_error:
                 raise: ${e}
 
@@ -159,6 +163,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Migration trigger status check failed: " + default(e.message, "Unknown error")}
             - raise_trigger_status_error:
                 raise: ${e}
 
@@ -173,6 +178,7 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
+                    reason: ${"Migration trigger operation failed: " + default(trigger_op_status.body.error.message, "Unknown error")}
               - raise_trigger_op_error:
                   raise: '${"Migration trigger operation failed: " + default(trigger_op_status.body.error.message, "Unknown error")}'
           - condition: ${trigger_op_status.body.done}
@@ -208,6 +214,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Migration status check failed: " + default(e.message, "Unknown error")}
             - raise_check_error:
                 raise: ${e}
 
@@ -226,6 +233,7 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
+                    reason: ${"Migration failed: " + default(status_response.body.error, "Unknown error")}
               - raise_migration_failed:
                   raise: '${"Migration failed: " + default(status_response.body.error, "Unknown error")}'
     - deploy_service:
@@ -249,6 +257,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Service deployment initiation failed: " + default(e.message, "Unknown error")}
             - raise_service_start_error:
                 raise: ${e}
 
@@ -278,6 +287,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Service deployment status check failed: " + default(e.message, "Unknown error")}
             - raise_deploy_status_error:
                 raise: ${e}
 
@@ -292,6 +302,7 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
+                    reason: ${"Service deployment operation failed: " + default(deploy_op_status.body.error.message, "Unknown error")}
               - raise_deploy_op_error:
                   raise: '${"Service deployment operation failed: " + default(deploy_op_status.body.error.message, "Unknown error")}'
           - condition: ${deploy_op_status.body.done}
@@ -320,6 +331,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Service finalization failed: " + default(e.message, "Unknown error")}
             - raise_service_finalize_error:
                 raise: ${e}
 
@@ -344,6 +356,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Domain configuration failed: " + default(e.message, "Unknown error")}
             - raise_domain_error:
                 raise: ${e}
 
@@ -368,6 +381,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
+                  reason: ${"Tenant activation failed: " + default(e.message, "Unknown error")}
             - raise_activation_error:
                 raise: ${e}
 
@@ -377,7 +391,7 @@ main:
           tenantId: ${tenantId}
 
 perform_rollback:
-  params: [baseUrl, postHeaders, commonHeaders, tenantId]
+  params: [baseUrl, postHeaders, commonHeaders, tenantId, reason: "Unknown error"]
   steps:
     - call_rollback_endpoint:
         try:
@@ -387,6 +401,7 @@ perform_rollback:
             headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
+              reason: ${reason}
             auth:
               type: OIDC
           result: rollback_result
