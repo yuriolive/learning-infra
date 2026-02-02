@@ -137,6 +137,7 @@ export class ProvisioningController {
       });
     }
 
+    this.logger.info({ executionName }, "Checking migration status");
     const status =
       await this.provisioningService.getMigrationStatus(executionName);
     return new Response(JSON.stringify(status), {
@@ -154,6 +155,7 @@ export class ProvisioningController {
       });
     }
 
+    this.logger.info({ operationName }, "Checking operation status");
     const status =
       await this.provisioningService.getOperationStatus(operationName);
     return new Response(JSON.stringify(status), {

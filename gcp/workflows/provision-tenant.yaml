@@ -6,7 +6,9 @@ main:
           - baseUrl: ${args.baseUrl}
           - tenantId: ${args.tenantId}
           - internalKey: ${args.internalApiKey}
-          - headers:
+          - commonHeaders:
+              X-Internal-Key: ${internalKey}
+          - postHeaders:
               Content-Type: "application/json"
               X-Internal-Key: ${internalKey}
 
@@ -15,7 +17,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/database"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -28,7 +30,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_db_error:
                 raise: ${e}
@@ -38,7 +41,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/migrations"}
-            headers: ${headers}
+            headers: ${postHeaders}
             query:
               action: "ensure"
             body:
@@ -53,7 +56,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_ensure_error:
                 raise: ${e}
@@ -77,7 +81,7 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${headers}
+            headers: ${commonHeaders}
             query:
               name: ${ensure_job_result.body.operationName}
             auth:
@@ -86,6 +90,13 @@ main:
         except:
           as: e
           steps:
+            - rollback_ensure_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
             - raise_ensure_status_error:
                 raise: ${e}
 
@@ -101,7 +112,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/migrations"}
-            headers: ${headers}
+            headers: ${postHeaders}
             query:
               action: "trigger"
             body:
@@ -116,7 +127,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_trigger_error:
                 raise: ${e}
@@ -131,7 +143,7 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${headers}
+            headers: ${commonHeaders}
             query:
               name: ${trigger_job_result.body.operationName}
             auth:
@@ -140,6 +152,13 @@ main:
         except:
           as: e
           steps:
+            - rollback_trigger_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
             - raise_trigger_status_error:
                 raise: ${e}
 
@@ -151,7 +170,8 @@ main:
                   call: perform_rollback
                   args:
                     baseUrl: ${baseUrl}
-                    headers: ${headers}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
               - raise_trigger_op_error:
                   raise: '${"Migration trigger operation failed: " + default(trigger_op_status.body.error.message, "Unknown error")}'
@@ -172,7 +192,7 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/migrations/status"}
-            headers: ${headers}
+            headers: ${commonHeaders}
             query:
               name: ${executionName}
             auth:
@@ -181,11 +201,12 @@ main:
         except:
           as: e
           steps:
-            - rollback_check:
+            - rollback_check_status:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_check_error:
                 raise: ${e}
@@ -202,7 +223,8 @@ main:
                   call: perform_rollback
                   args:
                     baseUrl: ${baseUrl}
-                    headers: ${headers}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
               - raise_migration_failed:
                   raise: '${"Migration failed: " + default(status_response.body.error, "Unknown error")}'
@@ -211,7 +233,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/service"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -224,7 +246,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_service_start_error:
                 raise: ${e}
@@ -239,7 +262,7 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${headers}
+            headers: ${commonHeaders}
             query:
               name: ${deploy_start_result.body.operationName}
             auth:
@@ -248,6 +271,13 @@ main:
         except:
           as: e
           steps:
+            - rollback_deploy_status:
+                call: perform_rollback
+                args:
+                  baseUrl: ${baseUrl}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
+                  tenantId: ${tenantId}
             - raise_deploy_status_error:
                 raise: ${e}
 
@@ -259,7 +289,8 @@ main:
                   call: perform_rollback
                   args:
                     baseUrl: ${baseUrl}
-                    headers: ${headers}
+                    postHeaders: ${postHeaders}
+                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
               - raise_deploy_op_error:
                   raise: '${"Service deployment operation failed: " + default(deploy_op_status.body.error.message, "Unknown error")}'
@@ -273,7 +304,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/service/finalize"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -286,7 +317,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_service_finalize_error:
                 raise: ${e}
@@ -296,7 +328,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/domain"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -309,7 +341,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_domain_error:
                 raise: ${e}
@@ -319,7 +352,7 @@ main:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/activate"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -332,7 +365,8 @@ main:
                 call: perform_rollback
                 args:
                   baseUrl: ${baseUrl}
-                  headers: ${headers}
+                  postHeaders: ${postHeaders}
+                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
             - raise_activation_error:
                 raise: ${e}
@@ -343,14 +377,14 @@ main:
           tenantId: ${tenantId}
 
 perform_rollback:
-  params: [baseUrl, headers, tenantId]
+  params: [baseUrl, postHeaders, commonHeaders, tenantId]
   steps:
     - call_rollback_endpoint:
         try:
           call: http.post
           args:
             url: ${baseUrl + "/internal/provisioning/rollback"}
-            headers: ${headers}
+            headers: ${postHeaders}
             body:
               tenantId: ${tenantId}
             auth:
@@ -386,7 +420,7 @@ perform_rollback:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${headers}
+            headers: ${commonHeaders}
             query:
               name: ${rollback_result.body.operationName}
             auth:
