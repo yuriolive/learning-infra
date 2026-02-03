@@ -13,6 +13,7 @@ const mockProvisioningService = {
   provisionDatabase: vi.fn(),
   triggerMigrationJob: vi.fn(),
   ensureMigrationJob: vi.fn(),
+  deleteMigrationJob: vi.fn(),
   getMigrationStatus: vi.fn(),
   startDeployService: vi.fn(),
   finalizeDeployment: vi.fn(),
@@ -134,6 +135,26 @@ describe("ProvisioningController", () => {
 
     await controller.handleRequest(request);
     expect(mockProvisioningService.ensureMigrationJob).toHaveBeenCalledWith(
+      tenantId,
+    );
+  });
+
+  it("should handle /migrations?action=delete (POST)", async () => {
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = new Request(
+      `http://localhost/internal/provisioning/migrations?action=delete`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Internal-Key": TEST_INTERNAL_KEY,
+        },
+        body: JSON.stringify({ tenantId }),
+      },
+    );
+
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.deleteMigrationJob).toHaveBeenCalledWith(
       tenantId,
     );
   });
