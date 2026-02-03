@@ -12,6 +12,7 @@ interface CloudRunProviderConfig {
   tenantImageTag: string;
   serviceAccount?: string;
   logger: Logger;
+  geminiApiKey?: string;
 }
 
 export type MigrationStatus = "running" | "success" | "failed";
@@ -30,6 +31,7 @@ export class CloudRunProvider {
   private region: string;
   private tenantImageTag: string;
   private serviceAccount: string | undefined;
+  private geminiApiKey: string | undefined;
 
   constructor(config: CloudRunProviderConfig) {
     this.logger = config.logger;
@@ -37,6 +39,7 @@ export class CloudRunProvider {
     this.region = config.region;
     this.tenantImageTag = config.tenantImageTag;
     this.serviceAccount = config.serviceAccount;
+    this.geminiApiKey = config.geminiApiKey;
 
     const authOptions: {
       credentials?: object;
@@ -86,6 +89,7 @@ export class CloudRunProvider {
       NODE_ENV: "production",
       STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
       ADMIN_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+      ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
     const serviceRequest = this.prepareServiceRequest(environmentVariables);
@@ -135,9 +139,7 @@ export class CloudRunProvider {
     tenantId: string,
     config: TenantAppConfig,
   ): Promise<string | undefined> {
-    const jobId = `migration-${tenantId}`;
-    const parent = `projects/${this.projectId}/locations/${this.region}`;
-    const jobPath = `${parent}/jobs/${jobId}`;
+    const { jobId, parent, jobPath } = this.getJobPaths(tenantId);
 
     this.logger.info({ tenantId }, "Ensuring migration job exists");
 
@@ -161,9 +163,7 @@ export class CloudRunProvider {
 
   // Trigger Job. Returns Operation Name (for the trigger itself).
   async triggerMigrationJob(tenantId: string): Promise<string> {
-    const jobId = `migration-${tenantId}`;
-    const parent = `projects/${this.projectId}/locations/${this.region}`;
-    const jobPath = `${parent}/jobs/${jobId}`;
+    const { jobPath } = this.getJobPaths(tenantId);
 
     this.logger.info({ tenantId }, "Triggering migration job execution");
 
@@ -175,6 +175,31 @@ export class CloudRunProvider {
     }
 
     return executionOperation;
+  }
+
+  // Delete Job.
+  async deleteMigrationJob(tenantId: string): Promise<void> {
+    const { jobPath } = this.getJobPaths(tenantId);
+
+    this.logger.info({ tenantId }, "Deleting migration job");
+
+    try {
+      await this.runClient.projects.locations.jobs.delete({
+        name: jobPath,
+      });
+      this.logger.info({ tenantId }, "Deleted migration job");
+    } catch (error) {
+      // If it doesn't exist, that's fine (idempotent)
+      if ((error as { code: number }).code === 404) {
+        this.logger.info(
+          { tenantId },
+          "Migration job already deleted or not found",
+        );
+        return;
+      }
+      this.logger.error({ error, tenantId }, "Failed to delete migration job");
+      throw error;
+    }
   }
 
   // Check generic operation status
@@ -534,5 +559,12 @@ export class CloudRunProvider {
         },
       },
     };
+  }
+
+  private getJobPaths(tenantId: string) {
+    const jobId = `migration-${tenantId}`;
+    const parent = `projects/${this.projectId}/locations/${this.region}`;
+    const jobPath = `${parent}/jobs/${jobId}`;
+    return { jobId, parent, jobPath };
   }
 }

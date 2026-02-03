@@ -60,6 +60,11 @@
           "secret_name": "upstash-redis-url"
         },
         {
+          "binding": "GEMINI_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "gemini-api-key"
+        },
+        {
           "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_1",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "google-application-credentials-part-1"

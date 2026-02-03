@@ -10,6 +10,17 @@ const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
 // Check if we are running a migration command
 const isMigrating = process.argv.some((argument) => argument.startsWith("db:"));
 
+const redisUrl = process.env.REDIS_URL;
+const shouldForceTls =
+  redisUrl?.includes("upstash") || redisUrl?.startsWith("rediss://");
+
+const redisOptions = {
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  family: 0,
+  ...(shouldForceTls ? { tls: { rejectUnauthorized: false } } : {}),
+};
+
 const modules = isMigrating
   ? []
   : [
@@ -18,10 +29,7 @@ const modules = isMigrating
         options: {
           redisUrl: process.env.REDIS_URL,
           namespace: redisPrefix,
-          redisOptions: {
-            maxRetriesPerRequest: null,
-            enableReadyCheck: false,
-          },
+          redisOptions,
         },
       },
       {
@@ -32,10 +40,7 @@ const modules = isMigrating
           jobOptions: {
             removeOnComplete: true,
           },
-          redisOptions: {
-            maxRetriesPerRequest: null,
-            enableReadyCheck: false,
-          },
+          redisOptions,
         },
       },
       {
@@ -65,6 +70,7 @@ export default defineConfig({
           }
         : { connection: { ssl: true } },
     redisUrl: process.env.REDIS_URL,
+    redisOptions,
     http: {
       storeCors: process.env.STORE_CORS || "",
       adminCors: process.env.ADMIN_CORS || "",

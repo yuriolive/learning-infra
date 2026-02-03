@@ -87,6 +87,12 @@ export class ProvisioningController {
           );
         }
 
+        if (subAction === "delete") {
+          return this.handleStep(tenantId, "delete_migration_job", () =>
+            this.provisioningService.deleteMigrationJob(tenantId),
+          );
+        }
+
         // Default to trigger, or explicit trigger
         return this.handleStep(tenantId, "trigger_migration_job", () =>
           this.provisioningService.triggerMigrationJob(tenantId),

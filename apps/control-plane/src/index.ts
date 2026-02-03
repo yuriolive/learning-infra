@@ -166,6 +166,7 @@ function createServices(
   upstashRedisUrl: string | undefined,
   cloudRunServiceAccount: string | undefined,
   internalApiKey: string | undefined,
+  geminiApiKey: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
@@ -181,6 +182,7 @@ function createServices(
     upstashRedisUrl,
     cloudRunServiceAccount,
     internalApiKey,
+    geminiApiKey,
   });
 
   const tenantService = new TenantService(
@@ -220,6 +222,7 @@ export default {
       cloudRunServiceAccount,
 
       internalApiKey,
+      geminiApiKey,
     } = await resolveEnvironmentSecrets(environment);
 
     initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -246,6 +249,7 @@ export default {
       cloudRunServiceAccount,
 
       internalApiKey,
+      geminiApiKey,
     );
     if (configError) return configError;
 
@@ -260,6 +264,7 @@ export default {
       upstashRedisUrl,
       cloudRunServiceAccount,
       internalApiKey as string,
+      geminiApiKey,
     );
 
     const tenantRoutes = createTenantRoutes({
