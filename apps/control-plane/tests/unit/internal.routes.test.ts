@@ -11,9 +11,6 @@ const mockLogger = createLogger();
 const mockDatabase = {} as unknown as Database;
 const mockService = {} as unknown as TenantService;
 const mockProvisioningService = {} as unknown as ProvisioningService;
-const TEST_INTERNAL_SECRET =
-  process.env.INTERNAL_API_KEY ?? "test-internal-key-mock-value";
-
 describe("Internal Routes", () => {
   let routes: ReturnType<typeof createInternalRoutes>;
 
@@ -24,7 +21,6 @@ describe("Internal Routes", () => {
       tenantService: mockService,
       provisioningService: mockProvisioningService,
       db: mockDatabase,
-      internalApiKey: TEST_INTERNAL_SECRET,
     });
   });
 
@@ -47,14 +43,12 @@ describe("Internal Routes", () => {
       tenantService: mockService,
       provisioningService: mockProvisioningService,
       db: minimalDatabase,
-      internalApiKey: TEST_INTERNAL_SECRET,
     });
 
     const response = await routes.handleRequest(
       new Request("http://localhost/internal/provisioning/database", {
         method: "POST",
         headers: {
-          "X-Internal-Key": TEST_INTERNAL_SECRET,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

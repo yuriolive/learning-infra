@@ -155,6 +155,93 @@ function createMiddlewareOptions(
   };
 }
 
+async function initializeApplication(
+  environment: Environment,
+  context?: { waitUntil: (promise: Promise<unknown>) => void },
+) {
+  const nodeEnvironment = environment.NODE_ENV ?? "development";
+  const logger = createCloudflareLogger({
+    logLevel: environment.LOG_LEVEL,
+    nodeEnv: nodeEnvironment,
+  });
+
+  const {
+    databaseUrl,
+    neonApiKey,
+    neonProjectId,
+    adminApiKey,
+    postHogApiKey,
+    upstashRedisUrl,
+    googleApplicationCredentials,
+    cloudRunServiceAccount,
+    geminiApiKey,
+  } = await resolveEnvironmentSecrets(environment);
+
+  initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
+
+  const middlewareOptions = createMiddlewareOptions(
+    logger,
+    adminApiKey,
+    nodeEnvironment,
+    environment.ALLOWED_ORIGINS,
+  );
+
+  const configError = validateConfiguration(
+    logger,
+    databaseUrl,
+    adminApiKey,
+    nodeEnvironment,
+    upstashRedisUrl,
+    neonApiKey,
+    neonProjectId,
+    environment.GCP_PROJECT_ID,
+    environment.GCP_REGION,
+    environment.TENANT_IMAGE_TAG,
+    googleApplicationCredentials,
+    cloudRunServiceAccount,
+    geminiApiKey,
+  );
+
+  if (configError) {
+    return { logger, middlewareOptions, errorResponse: configError };
+  }
+
+  const { tenantService, provisioningService, database } = createServices(
+    logger,
+    databaseUrl as string,
+    nodeEnvironment,
+    environment,
+    neonApiKey,
+    neonProjectId,
+    googleApplicationCredentials,
+    upstashRedisUrl,
+    cloudRunServiceAccount,
+    geminiApiKey,
+  );
+
+  const tenantRoutes = createTenantRoutes({
+    logger,
+    tenantService,
+    ...(context?.waitUntil
+      ? { waitUntil: context.waitUntil.bind(context) }
+      : {}),
+  });
+
+  const internalRoutes = createInternalRoutes({
+    logger,
+    tenantService,
+    provisioningService,
+    db: database,
+  });
+
+  return {
+    logger,
+    middlewareOptions,
+    services: { tenantService, provisioningService, database },
+    routes: { tenantRoutes, internalRoutes },
+  };
+}
+
 function createServices(
   logger: ReturnType<typeof createCloudflareLogger>,
   databaseUrl: string,
@@ -165,7 +252,6 @@ function createServices(
   googleApplicationCredentials: string | undefined,
   upstashRedisUrl: string | undefined,
   cloudRunServiceAccount: string | undefined,
-  internalApiKey: string | undefined,
   geminiApiKey: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
@@ -181,7 +267,6 @@ function createServices(
     tenantImageTag: environment.TENANT_IMAGE_TAG,
     upstashRedisUrl,
     cloudRunServiceAccount,
-    internalApiKey,
     geminiApiKey,
   });
 
@@ -204,83 +289,12 @@ export default {
     environment: Environment,
     context?: { waitUntil: (promise: Promise<unknown>) => void },
   ): Promise<Response> {
-    const nodeEnvironment = environment.NODE_ENV ?? "development";
-    const logger = createCloudflareLogger({
-      logLevel: environment.LOG_LEVEL,
-      nodeEnv: nodeEnvironment,
-    });
+    const { logger, middlewareOptions, routes, errorResponse } =
+      await initializeApplication(environment, context);
 
-    const {
-      databaseUrl,
-      neonApiKey,
-      neonProjectId,
-      adminApiKey,
-      postHogApiKey,
-      upstashRedisUrl,
-      googleApplicationCredentials,
-      cloudRunServiceAccount,
+    if (errorResponse) return errorResponse;
 
-      internalApiKey,
-      geminiApiKey,
-    } = await resolveEnvironmentSecrets(environment);
-
-    initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
-
-    const middlewareOptions = createMiddlewareOptions(
-      logger,
-      adminApiKey,
-      nodeEnvironment,
-      environment.ALLOWED_ORIGINS,
-    );
-
-    const configError = validateConfiguration(
-      logger,
-      databaseUrl,
-      adminApiKey,
-      nodeEnvironment,
-      upstashRedisUrl,
-      neonApiKey,
-      neonProjectId,
-      environment.GCP_PROJECT_ID,
-      environment.GCP_REGION,
-      environment.TENANT_IMAGE_TAG,
-      googleApplicationCredentials,
-      cloudRunServiceAccount,
-
-      internalApiKey,
-      geminiApiKey,
-    );
-    if (configError) return configError;
-
-    const { tenantService, provisioningService, database } = createServices(
-      logger,
-      databaseUrl as string,
-      nodeEnvironment,
-      environment,
-      neonApiKey,
-      neonProjectId,
-      googleApplicationCredentials,
-      upstashRedisUrl,
-      cloudRunServiceAccount,
-      internalApiKey as string,
-      geminiApiKey,
-    );
-
-    const tenantRoutes = createTenantRoutes({
-      logger,
-      tenantService,
-      ...(context?.waitUntil
-        ? { waitUntil: context.waitUntil.bind(context) }
-        : {}),
-    });
-
-    const internalRoutes = createInternalRoutes({
-      logger,
-      tenantService,
-      provisioningService,
-      db: database,
-      internalApiKey: internalApiKey as string, // validated in config
-    });
+    const { tenantRoutes, internalRoutes } = routes;
 
     const url = new URL(request.url);
     const origin = `${url.protocol}//${url.host}`;

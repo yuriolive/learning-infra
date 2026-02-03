@@ -15,13 +15,9 @@ export class ProvisioningController {
     private provisioningService: ProvisioningService,
     private database: Database,
     private logger: Logger,
-    private internalApiKey: string,
   ) {}
 
   async handleRequest(request: Request): Promise<Response> {
-    const authResponse = this.checkAuth(request);
-    if (authResponse) return authResponse;
-
     const url = new URL(request.url);
     const action = url.pathname.split("/").pop();
 
@@ -52,17 +48,6 @@ export class ProvisioningController {
         headers: { "Content-Type": "application/json" },
       });
     }
-  }
-
-  private checkAuth(request: Request): Response | null {
-    const key = request.headers.get("X-Internal-Key");
-    if (!key || key !== this.internalApiKey) {
-      this.logger.warn(
-        "Unauthorized attempt to access provisioning controller",
-      );
-      return new Response("Unauthorized", { status: 401 });
-    }
-    return null;
   }
 
   private dispatchAction(

@@ -32,20 +32,14 @@ const mockDatabase = {
   values: vi.fn().mockResolvedValue({}),
 } as unknown as Database;
 
-const TEST_INTERNAL_KEY = "test-internal-api-key-123";
 const controller = new ProvisioningController(
   mockTenantService,
   mockProvisioningService,
   mockDatabase,
   mockLogger,
-  TEST_INTERNAL_KEY,
 );
 
-const createRequest = (
-  action: string,
-  key: string = TEST_INTERNAL_KEY,
-  method = "POST",
-) => {
+const createRequest = (action: string, method = "POST") => {
   const body =
     method === "POST"
       ? JSON.stringify({ tenantId: "b0e41783-6236-47a6-a36c-8c345330a111" })
@@ -54,7 +48,6 @@ const createRequest = (
     method,
     headers: {
       "Content-Type": "application/json",
-      "X-Internal-Key": key,
     },
     body,
   });
@@ -63,21 +56,6 @@ const createRequest = (
 describe("ProvisioningController", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("should return 401 if unauthorized", async () => {
-    const request = createRequest("database", "");
-    request.headers.delete("X-Internal-Key");
-
-    const response = await controller.handleRequest(request);
-    expect(response.status).toBe(401);
-  });
-
-  it("should return 401 if wrong key", async () => {
-    const request = createRequest("database", "wrong-key");
-
-    const response = await controller.handleRequest(request);
-    expect(response.status).toBe(401);
   });
 
   it("should handle /database successfully", async () => {
@@ -127,7 +105,6 @@ describe("ProvisioningController", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Internal-Key": TEST_INTERNAL_KEY,
         },
         body: JSON.stringify({ tenantId }),
       },
@@ -147,7 +124,6 @@ describe("ProvisioningController", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Internal-Key": TEST_INTERNAL_KEY,
         },
         body: JSON.stringify({ tenantId }),
       },
@@ -164,9 +140,6 @@ describe("ProvisioningController", () => {
       "http://localhost/internal/provisioning/migrations/status?name=exec-123",
       {
         method: "GET",
-        headers: {
-          "X-Internal-Key": TEST_INTERNAL_KEY,
-        },
       },
     );
 
@@ -181,9 +154,6 @@ describe("ProvisioningController", () => {
       "http://localhost/internal/provisioning/operations?name=op-123",
       {
         method: "GET",
-        headers: {
-          "X-Internal-Key": TEST_INTERNAL_KEY,
-        },
       },
     );
 
@@ -204,9 +174,6 @@ describe("ProvisioningController", () => {
       "http://localhost/internal/provisioning/operations",
       {
         method: "GET",
-        headers: {
-          "X-Internal-Key": TEST_INTERNAL_KEY,
-        },
       },
     );
 
@@ -262,7 +229,6 @@ describe("ProvisioningController", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Internal-Key": TEST_INTERNAL_KEY,
         },
         body: JSON.stringify({
           tenantId,
@@ -286,7 +252,6 @@ describe("ProvisioningController", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Internal-Key": TEST_INTERNAL_KEY,
         },
         body: JSON.stringify({
           tenantId,

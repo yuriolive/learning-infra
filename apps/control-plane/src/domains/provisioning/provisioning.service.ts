@@ -19,7 +19,6 @@ export interface ProvisioningServiceConfig {
   upstashRedisUrl?: string | undefined;
   cloudRunServiceAccount?: string | undefined;
   geminiApiKey?: string | undefined;
-  internalApiKey?: string | undefined;
   logger: Logger;
 }
 
@@ -27,7 +26,6 @@ export class ProvisioningService {
   private neonProvider: NeonProvider | null = null;
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
-  private internalApiKey: string | undefined;
   private upstashRedisUrl: string | undefined;
   private logger: Logger;
 
@@ -37,7 +35,7 @@ export class ProvisioningService {
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
-    this.internalApiKey = config.internalApiKey;
+    this.upstashRedisUrl = config.upstashRedisUrl;
 
     this.initializeProviders(config);
   }
@@ -274,7 +272,6 @@ export class ProvisioningService {
       await this.executionsClient.triggerProvisionTenant({
         tenantId,
         baseUrl,
-        internalApiKey: this.internalApiKey,
       });
 
       await this.tenantRepository.logProvisioningEvent(

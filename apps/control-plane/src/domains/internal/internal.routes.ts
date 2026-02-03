@@ -10,7 +10,6 @@ export interface InternalRouteContext {
   tenantService: TenantService;
   provisioningService: ProvisioningService;
   db: Database;
-  internalApiKey: string;
 }
 
 export function createInternalRoutes(context: InternalRouteContext) {
@@ -19,7 +18,6 @@ export function createInternalRoutes(context: InternalRouteContext) {
     context.provisioningService,
     context.db,
     context.logger,
-    context.internalApiKey,
   );
 
   return {
