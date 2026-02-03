@@ -28,7 +28,6 @@ export class ProvisioningService {
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
   private internalApiKey: string | undefined;
-  private geminiApiKey: string | undefined;
   private upstashRedisUrl: string | undefined;
   private logger: Logger;
 
@@ -39,7 +38,6 @@ export class ProvisioningService {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
     this.internalApiKey = config.internalApiKey;
-    this.geminiApiKey = config.geminiApiKey;
 
     this.initializeProviders(config);
   }
