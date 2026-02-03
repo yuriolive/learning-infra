@@ -1,4 +1,5 @@
 import { captureError, initAnalytics } from "@vendin/analytics";
+import { createCloudflareLogger } from "@vendin/utils/logger-cloudflare-factory";
 import { LRUCache } from "lru-cache";
 
 import {
@@ -14,7 +15,6 @@ import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
 import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
-import { createLogger } from "./utils/logger";
 
 const openApiSpecs = new LRUCache<
   string,
@@ -140,7 +140,7 @@ function initApplicationAnalytics(
 }
 
 function createMiddlewareOptions(
-  logger: ReturnType<typeof createLogger>,
+  logger: ReturnType<typeof createCloudflareLogger>,
   adminApiKey: string | undefined,
   nodeEnvironment: string,
   allowedOrigins: string | undefined,
@@ -156,7 +156,7 @@ function createMiddlewareOptions(
 }
 
 function createServices(
-  logger: ReturnType<typeof createLogger>,
+  logger: ReturnType<typeof createCloudflareLogger>,
   databaseUrl: string,
   nodeEnvironment: string,
   environment: Environment,
@@ -190,7 +190,6 @@ function createServices(
     provisioningService,
     {
       logger,
-      internalApiKey,
       gcpProjectId: environment.GCP_PROJECT_ID,
       gcpRegion: environment.GCP_REGION,
     },
@@ -206,7 +205,7 @@ export default {
     context?: { waitUntil: (promise: Promise<unknown>) => void },
   ): Promise<Response> {
     const nodeEnvironment = environment.NODE_ENV ?? "development";
-    const logger = createLogger({
+    const logger = createCloudflareLogger({
       logLevel: environment.LOG_LEVEL,
       nodeEnv: nodeEnvironment,
     });

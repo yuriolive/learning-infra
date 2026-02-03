@@ -29,6 +29,8 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     deletedAt: databaseTenant.deletedAt ?? null,
     metadata: databaseTenant.metadata ?? null,
     failureReason: databaseTenant.failureReason ?? null,
+    jwtSecret: databaseTenant.jwtSecret ?? null,
+    cookieSecret: databaseTenant.cookieSecret ?? null,
   };
 }
 
@@ -100,6 +102,10 @@ export class TenantRepository {
         ...(input.metadata !== undefined && { metadata: input.metadata }),
         ...(input.failureReason !== undefined && {
           failureReason: input.failureReason,
+        }),
+        ...(input.jwtSecret !== undefined && { jwtSecret: input.jwtSecret }),
+        ...(input.cookieSecret !== undefined && {
+          cookieSecret: input.cookieSecret,
         }),
         updatedAt: new Date(),
       })

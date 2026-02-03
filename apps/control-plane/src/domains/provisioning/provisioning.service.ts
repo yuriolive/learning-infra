@@ -1,3 +1,5 @@
+import * as crypto from "node:crypto";
+
 import {
   CloudRunProvider,
   type MigrationStatus,
@@ -17,6 +19,7 @@ export interface ProvisioningServiceConfig {
   upstashRedisUrl?: string | undefined;
   cloudRunServiceAccount?: string | undefined;
   geminiApiKey?: string | undefined;
+  internalApiKey?: string | undefined;
   logger: Logger;
 }
 
@@ -31,7 +34,7 @@ export class ProvisioningService {
 
   constructor(
     private tenantRepository: TenantRepository,
-    config: ProvisioningServiceConfig & { internalApiKey?: string | undefined },
+    config: ProvisioningServiceConfig,
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
@@ -123,6 +126,22 @@ export class ProvisioningService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
+    let jwtSecret = tenant.jwtSecret;
+    let cookieSecret = tenant.cookieSecret;
+
+    if (!jwtSecret || !cookieSecret) {
+      this.logger.info(
+        { tenantId },
+        "Secrets not found, generating and persisting...",
+      );
+      jwtSecret = crypto.randomBytes(32).toString("hex");
+      cookieSecret = crypto.randomBytes(32).toString("hex");
+      await this.tenantRepository.update(tenantId, {
+        jwtSecret,
+        cookieSecret,
+      });
+    }
+
     this.logger.info({ tenantId }, "Ensuring migration job exists");
     const operationName = await this.cloudRunProvider?.ensureMigrationJob(
       tenantId,
@@ -130,6 +149,8 @@ export class ProvisioningService {
         databaseUrl,
         redisUrl: upstashRedisUrl,
         redisPrefix,
+        jwtSecret,
+        cookieSecret,
       },
     );
 
@@ -190,6 +211,16 @@ export class ProvisioningService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
+    // Generate persistent secrets
+    const jwtSecret = crypto.randomBytes(32).toString("hex");
+    const cookieSecret = crypto.randomBytes(32).toString("hex");
+
+    // Persist secrets to database
+    await this.tenantRepository.update(tenantId, {
+      jwtSecret,
+      cookieSecret,
+    });
+
     this.logger.info({ tenantId }, "Starting service deployment operation");
     const operationName =
       (await this.cloudRunProvider?.startDeployTenantInstance(tenantId, {
@@ -197,6 +228,8 @@ export class ProvisioningService {
         redisUrl: upstashRedisUrl,
         redisPrefix,
         subdomain: tenant.subdomain!,
+        jwtSecret,
+        cookieSecret,
       })) ?? "";
 
     return { operationName };

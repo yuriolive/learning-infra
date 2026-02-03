@@ -24,24 +24,27 @@ The Storefront is a "Shell" that adapts its content and style based on the **Hos
 3.  **Page Render (`server`)**:
     - Reads Tenant ID from headers/params.
     - Fetches **Tenant Config** (Name, Logo, Colors, Backend URL).
-    - Fetches **Products** from that specific Backend URL.
+    - **Server-Side Data Fetching**: Generates OIDC Token -> Calls Private Backend directly.
 4.  **Client Hydration**:
-    - `TenantProvider` injects CSS Variables for the theme.
-    - `MedusaProvider` configures the API client to point to the Tenant's Backend.
+    - `TenantProvider` injects CSS Variables.
+    - `MedusaProvider` configured to use **Local Proxy** (`/api/medusa`).
 
 ## 3. Connecting to Backends
 
-The Storefront is **Headless**. It does not have a local database. It connects to **Isolated Cloud Run Instances**.
+The Storefront acts as a **Secure Gateway** to the backends.
 
-- **API Host**: Dynamic. Determined by Tenant Config.
-- **Headers**:
-  - `x-publishable-api-key`: Tenant's public key.
+- **Browser**: Talks to `https://store.com/api/medusa/*` (Storefront Proxy).
+- **Storefront (Server)**:
+  - Resolves Tenant Backend URL (e.g., `https://tenant-123.run.app`).
+  - Generates **Google OIDC Token** (using Service Account).
+  - Forwards request with `Authorization: Bearer <token>`.
+- **Backend**: Private Cloud Run instance (Ingress: All, Auth: Required).
 
 ```typescript
-// Example: Dynamic Client
+// Example: Proxy Client (medusa-client.ts)
 const medusa = new MedusaClient({
-  baseUrl: tenantConfig.backendUrl, // e.g., https://tenant-123-xyz.run.app
-  publishableKey: tenantConfig.publishableKey,
+  baseUrl: "/api/medusa", // Proxies to private backend
+  publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
 });
 ```
 

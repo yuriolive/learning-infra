@@ -4,27 +4,12 @@ import { AGENT_MODULE } from "../../../../modules/agent";
 import { POST } from "../route";
 
 describe("Agent API Route", () => {
-  const originalEnvironment = process.env;
-
   beforeEach(() => {
     vi.resetModules();
-    process.env = { ...originalEnvironment, INTERNAL_API_TOKEN: "test-secret" };
   });
 
   afterEach(() => {
-    process.env = originalEnvironment;
     vi.clearAllMocks();
-  });
-
-  it("should return 401 if header is missing or invalid", async () => {
-    const { request, response } = createMockRequestResponse({
-      secret: "wrong-secret",
-    });
-
-    await POST(request, response);
-
-    expect(response.status).toHaveBeenCalledWith(401);
-    expect(response.json).toHaveBeenCalledWith({ message: "Unauthorized" });
   });
 
   it("should handle Direct Format correctly", async () => {
@@ -169,19 +154,17 @@ interface LoggerMock {
 
 const createMockRequestResponse = ({
   body = {},
-  secret = "test-secret",
   processMessageMock,
   loggerMock = { error: vi.fn(), warn: vi.fn() },
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
-  secret?: string;
   processMessageMock?: unknown;
   loggerMock?: LoggerMock;
 } = {}) => {
   const request = {
     body,
-    headers: { "x-internal-secret": secret },
+    headers: {},
     scope: {
       resolve: vi.fn().mockImplementation((key) => {
         if (key === AGENT_MODULE && processMessageMock) {

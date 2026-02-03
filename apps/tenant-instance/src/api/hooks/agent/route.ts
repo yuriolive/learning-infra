@@ -165,14 +165,7 @@ export const POST = async (
   medusaRequest: MedusaRequest,
   medusaResponse: MedusaResponse,
 ) => {
-  const internalSecret = medusaRequest.headers["x-internal-secret"];
-  const configuredSecret = process.env.INTERNAL_API_TOKEN;
   const logger = medusaRequest.scope.resolve<Logger>("logger");
-
-  if (!configuredSecret || internalSecret !== configuredSecret) {
-    medusaResponse.status(401).json({ message: "Unauthorized" });
-    return;
-  }
 
   try {
     const extraction = validateAndExtractBody(

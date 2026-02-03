@@ -83,6 +83,8 @@ describe("CloudRunProvider", () => {
       databaseUrl: "postgres://",
       redisUrl: "redis://",
       redisPrefix: "t_1:",
+      jwtSecret: "secret",
+      cookieSecret: "secret",
     };
 
     it("should create/patch job successfully", async () => {
@@ -142,6 +144,8 @@ describe("CloudRunProvider", () => {
         redisUrl: "redis://",
         redisPrefix: "t_1:",
         subdomain: "tenant-1",
+        jwtSecret: "secret",
+        cookieSecret: "secret",
       });
 
       expect(opName).toBe("svc-op-1");
@@ -151,14 +155,11 @@ describe("CloudRunProvider", () => {
 
   describe("finalizeTenantService", () => {
     it("should finalize and return URI", async () => {
-      mockServicesGetIamPolicy.mockResolvedValue({ data: { bindings: [] } });
-      mockServicesSetIamPolicy.mockResolvedValue({ data: {} });
       mockServicesGet.mockResolvedValue({ data: { uri: "https://svc-url" } });
 
       const url = await provider.finalizeTenantService("tenant-1");
 
       expect(url).toBe("https://svc-url");
-      expect(mockServicesSetIamPolicy).toHaveBeenCalled();
     });
   });
 });

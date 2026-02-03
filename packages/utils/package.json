@@ -13,6 +13,14 @@
     "./logger": {
       "import": "./dist/logger.js",
       "default": "./src/logger.ts"
+    },
+    "./logger-cloudflare": {
+      "import": "./dist/logger-cloudflare.js",
+      "default": "./src/logger-cloudflare.ts"
+    },
+    "./logger-cloudflare-factory": {
+      "import": "./dist/logger-cloudflare-factory.js",
+      "default": "./src/logger-cloudflare-factory.ts"
     }
   },
   "scripts": {
