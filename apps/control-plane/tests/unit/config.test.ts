@@ -15,6 +15,19 @@ const mockLogger = {
   warn: vi.fn(),
 } as unknown as ReturnType<typeof createLogger>;
 
+const assertCriticalKeysMissing = (missingVariables: string[]) => {
+  expect(mockLogger.error).toHaveBeenCalled();
+  const calls = (mockLogger.error as Mock).mock.calls;
+  expect(calls[0]![0]).toEqual(
+    expect.objectContaining({
+      missingVariables,
+    }),
+  );
+  expect(calls[0]![1]).toBe(
+    "Critical infrastructure keys are missing in production",
+  );
+};
+
 describe("validateConfiguration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -162,16 +175,8 @@ describe("validateConfiguration", () => {
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
-    expect(mockLogger.error).toHaveBeenCalled();
-    const calls = (mockLogger.error as Mock).mock.calls;
-    expect(calls[0]![0]).toEqual(
-      expect.objectContaining({
-        missingVariables: ["NEON_API_KEY"],
-      }),
-    );
-    expect(calls[0]![1]).toBe(
-      "Critical infrastructure keys are missing in production",
-    );
+
+    assertCriticalKeysMissing(["NEON_API_KEY"]);
   });
 
   it("should return 500 Response if multiple critical keys are missing in production", () => {
@@ -194,16 +199,8 @@ describe("validateConfiguration", () => {
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
-    expect(mockLogger.error).toHaveBeenCalled();
-    const calls = (mockLogger.error as Mock).mock.calls;
-    expect(calls[0]![0]).toEqual(
-      expect.objectContaining({
-        missingVariables: ["NEON_PROJECT_ID", "GCP_PROJECT_ID"],
-      }),
-    );
-    expect(calls[0]![1]).toBe(
-      "Critical infrastructure keys are missing in production",
-    );
+
+    assertCriticalKeysMissing(["NEON_PROJECT_ID", "GCP_PROJECT_ID"]);
   });
 });
 
