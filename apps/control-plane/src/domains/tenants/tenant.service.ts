@@ -99,6 +99,14 @@ export class TenantService {
     return tenant;
   }
 
+  async getTenantBySubdomain(subdomain: string): Promise<Tenant> {
+    const tenant = await this.repository.findBySubdomain(subdomain);
+    if (!tenant) {
+      throw new Error("Tenant not found");
+    }
+    return tenant;
+  }
+
   async updateTenant(id: string, input: UpdateTenantInput): Promise<Tenant> {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
