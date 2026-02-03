@@ -139,9 +139,7 @@ export class CloudRunProvider {
     tenantId: string,
     config: TenantAppConfig,
   ): Promise<string | undefined> {
-    const jobId = `migration-${tenantId}`;
-    const parent = `projects/${this.projectId}/locations/${this.region}`;
-    const jobPath = `${parent}/jobs/${jobId}`;
+    const { jobId, parent, jobPath } = this.getJobPaths(tenantId);
 
     this.logger.info({ tenantId }, "Ensuring migration job exists");
 
@@ -165,9 +163,7 @@ export class CloudRunProvider {
 
   // Trigger Job. Returns Operation Name (for the trigger itself).
   async triggerMigrationJob(tenantId: string): Promise<string> {
-    const jobId = `migration-${tenantId}`;
-    const parent = `projects/${this.projectId}/locations/${this.region}`;
-    const jobPath = `${parent}/jobs/${jobId}`;
+    const { jobPath } = this.getJobPaths(tenantId);
 
     this.logger.info({ tenantId }, "Triggering migration job execution");
 
@@ -183,9 +179,7 @@ export class CloudRunProvider {
 
   // Delete Job.
   async deleteMigrationJob(tenantId: string): Promise<void> {
-    const jobId = `migration-${tenantId}`;
-    const parent = `projects/${this.projectId}/locations/${this.region}`;
-    const jobPath = `${parent}/jobs/${jobId}`;
+    const { jobPath } = this.getJobPaths(tenantId);
 
     this.logger.info({ tenantId }, "Deleting migration job");
 
@@ -565,5 +559,12 @@ export class CloudRunProvider {
         },
       },
     };
+  }
+
+  private getJobPaths(tenantId: string) {
+    const jobId = `migration-${tenantId}`;
+    const parent = `projects/${this.projectId}/locations/${this.region}`;
+    const jobPath = `${parent}/jobs/${jobId}`;
+    return { jobId, parent, jobPath };
   }
 }
