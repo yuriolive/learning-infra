@@ -112,6 +112,7 @@ describe("Security Integration Tests", () => {
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
         INTERNAL_API_KEY: "mock-internal-key",
+        GEMINI_API_KEY: "mock-gemini-key",
       };
 
       const request = new Request(`${origin}/health`, {

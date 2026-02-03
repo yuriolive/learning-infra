@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 import {
   validateConfiguration,
@@ -35,6 +35,7 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "mock-sa",
       "internal-api-key",
+      "gemini-api-key",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -116,6 +117,8 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "sa", // missing internal api key
+      undefined,
+      "gemini-api-key",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -154,14 +157,19 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "sa",
       "internal-key",
+      "gemini-api-key",
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
-    expect(mockLogger.error).toHaveBeenCalledWith(
+    expect(mockLogger.error).toHaveBeenCalled();
+    const calls = (mockLogger.error as Mock).mock.calls;
+    expect(calls[0]![0]).toEqual(
       expect.objectContaining({
         missingVariables: ["NEON_API_KEY"],
       }),
+    );
+    expect(calls[0]![1]).toBe(
       "Critical infrastructure keys are missing in production",
     );
   });
@@ -181,14 +189,19 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "sa",
       "internal-key",
+      "gemini-api-key",
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
-    expect(mockLogger.error).toHaveBeenCalledWith(
+    expect(mockLogger.error).toHaveBeenCalled();
+    const calls = (mockLogger.error as Mock).mock.calls;
+    expect(calls[0]![0]).toEqual(
       expect.objectContaining({
         missingVariables: ["NEON_PROJECT_ID", "GCP_PROJECT_ID"],
       }),
+    );
+    expect(calls[0]![1]).toBe(
       "Critical infrastructure keys are missing in production",
     );
   });
@@ -205,6 +218,7 @@ describe("resolveEnvironmentSecrets", () => {
       UPSTASH_REDIS_URL: "redis://upstash",
       GOOGLE_APPLICATION_CREDENTIALS: "full-creds",
       INTERNAL_API_KEY: "internal-key",
+      GEMINI_API_KEY: "gemini-key",
     };
 
     const result = await resolveEnvironmentSecrets(environment);
@@ -218,6 +232,7 @@ describe("resolveEnvironmentSecrets", () => {
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
       internalApiKey: "internal-key",
+      geminiApiKey: "gemini-key",
     });
   });
 
