@@ -1,5 +1,3 @@
-import * as crypto from "node:crypto";
-
 import {
   CloudRunProvider,
   type MigrationStatus,
@@ -122,21 +120,8 @@ export class ProvisioningService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
-    let jwtSecret = tenant.jwtSecret;
-    let cookieSecret = tenant.cookieSecret;
-
-    if (!jwtSecret || !cookieSecret) {
-      this.logger.info(
-        { tenantId },
-        "Secrets not found, generating and persisting...",
-      );
-      jwtSecret = crypto.randomBytes(32).toString("hex");
-      cookieSecret = crypto.randomBytes(32).toString("hex");
-      await this.tenantRepository.update(tenantId, {
-        jwtSecret,
-        cookieSecret,
-      });
-    }
+    const jwtSecret = tenant.jwtSecret;
+    const cookieSecret = tenant.cookieSecret;
 
     this.logger.info({ tenantId }, "Ensuring migration job exists");
     const operationName = await this.cloudRunProvider?.ensureMigrationJob(
@@ -207,15 +192,8 @@ export class ProvisioningService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
-    // Generate persistent secrets
-    const jwtSecret = crypto.randomBytes(32).toString("hex");
-    const cookieSecret = crypto.randomBytes(32).toString("hex");
-
-    // Persist secrets to database
-    await this.tenantRepository.update(tenantId, {
-      jwtSecret,
-      cookieSecret,
-    });
+    const jwtSecret = tenant.jwtSecret;
+    const cookieSecret = tenant.cookieSecret;
 
     this.logger.info({ tenantId }, "Starting service deployment operation");
     const operationName =

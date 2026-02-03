@@ -38,8 +38,8 @@ export const tenants = pgTable("tenants", {
   deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   failureReason: text("failure_reason"),
-  jwtSecret: text("jwt_secret"),
-  cookieSecret: text("cookie_secret"),
+  jwtSecret: text("jwt_secret").notNull(),
+  cookieSecret: text("cookie_secret").notNull(),
 });
 
 export const tenantProvisioningEvents = pgTable("tenant_provisioning_events", {

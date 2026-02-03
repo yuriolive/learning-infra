@@ -13,8 +13,8 @@ export interface Tenant {
   deletedAt: Date | null;
   metadata: Record<string, unknown> | null;
   failureReason: string | null;
-  jwtSecret: string | null;
-  cookieSecret: string | null;
+  jwtSecret: string;
+  cookieSecret: string;
 }
 
 export type TenantStatus =

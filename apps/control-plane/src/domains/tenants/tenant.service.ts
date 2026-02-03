@@ -31,7 +31,6 @@ export class TenantService {
     config: TenantServiceConfig,
   ) {
     this.logger = config.logger;
-
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
   }
