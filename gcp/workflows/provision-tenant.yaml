@@ -33,7 +33,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Database provisioning failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Database provisioning failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_db_error:
                 raise: ${e}
 
@@ -60,7 +60,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Migration job creation failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Migration job creation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_ensure_error:
                 raise: ${e}
 
@@ -99,7 +99,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Migration job creation status check failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Migration job creation status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_ensure_status_error:
                 raise: ${e}
 
@@ -114,9 +114,9 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
-                    reason: '${"Migration job creation operation failed: " + json.encode(default(ensure_op_status.body.error, "Unknown error"))}'
+                    reason: '${"Migration job creation operation failed: " + text.decode(json.encode(default(ensure_op_status.body.error, "Unknown error")), "UTF-8")}'
               - raise_ensure_op_error:
-                  raise: '${"Migration job creation operation failed: " + json.encode(default(ensure_op_status.body.error, "Unknown error"))}'
+                  raise: '${"Migration job creation operation failed: " + text.decode(json.encode(default(ensure_op_status.body.error, "Unknown error")), "UTF-8")}'
           - condition: ${ensure_op_status.body.done}
             next: trigger_migrations
           - condition: true
@@ -145,7 +145,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Migration job trigger failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Migration job trigger failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_trigger_error:
                 raise: ${e}
 
@@ -175,7 +175,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Migration trigger status check failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Migration trigger status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_trigger_status_error:
                 raise: ${e}
 
@@ -190,9 +190,9 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
-                    reason: '${"Migration trigger operation failed: " + json.encode(default(trigger_op_status.body.error, "Unknown error"))}'
+                    reason: '${"Migration trigger operation failed: " + text.decode(json.encode(default(trigger_op_status.body.error, "Unknown error")), "UTF-8")}'
               - raise_trigger_op_error:
-                  raise: '${"Migration trigger operation failed: " + json.encode(default(trigger_op_status.body.error, "Unknown error"))}'
+                  raise: '${"Migration trigger operation failed: " + text.decode(json.encode(default(trigger_op_status.body.error, "Unknown error")), "UTF-8")}'
           - condition: ${trigger_op_status.body.done}
             assign:
               - executionName: ${trigger_op_status.body.response.name}
@@ -226,7 +226,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Migration status check failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Migration status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_check_error:
                 raise: ${e}
 
@@ -245,9 +245,9 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
-                    reason: '${"Migration failed: " + json.encode(default(status_response.body.error, "Unknown error"))}'
+                    reason: '${"Migration failed: " + text.decode(json.encode(default(status_response.body.error, "Unknown error")), "UTF-8")}'
               - raise_migration_failed:
-                  raise: '${"Migration failed: " + json.encode(default(status_response.body.error, "Unknown error"))}'
+                  raise: '${"Migration failed: " + text.decode(json.encode(default(status_response.body.error, "Unknown error")), "UTF-8")}'
 
     - delete_migration_job:
         try:
@@ -290,7 +290,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Service deployment initiation failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Service deployment initiation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_service_start_error:
                 raise: ${e}
 
@@ -320,7 +320,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Service deployment status check failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Service deployment status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_deploy_status_error:
                 raise: ${e}
 
@@ -335,9 +335,9 @@ main:
                     postHeaders: ${postHeaders}
                     commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
-                    reason: '${"Service deployment operation failed: " + json.encode(default(deploy_op_status.body.error, "Unknown error"))}'
+                    reason: '${"Service deployment operation failed: " + text.decode(json.encode(default(deploy_op_status.body.error, "Unknown error")), "UTF-8")}'
               - raise_deploy_op_error:
-                  raise: '${"Service deployment operation failed: " + json.encode(default(deploy_op_status.body.error, "Unknown error"))}'
+                  raise: '${"Service deployment operation failed: " + text.decode(json.encode(default(deploy_op_status.body.error, "Unknown error")), "UTF-8")}'
           - condition: ${deploy_op_status.body.done}
             next: finalize_service
           - condition: true
@@ -364,7 +364,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Service finalization failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Service finalization failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_service_finalize_error:
                 raise: ${e}
 
@@ -389,7 +389,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Domain configuration failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Domain configuration failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_domain_error:
                 raise: ${e}
 
@@ -414,7 +414,7 @@ main:
                   postHeaders: ${postHeaders}
                   commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
-                  reason: '${"Tenant activation failed: " + json.encode(default(e.body, e.message))}'
+                  reason: '${"Tenant activation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_activation_error:
                 raise: ${e}
 
@@ -445,7 +445,7 @@ perform_rollback:
             - log_rollback_failure:
                 call: sys.log
                 args:
-                  text: '${"Rollback initiation failed: " + json.encode(default(e.body, e.message))}'
+                  text: '${"Rollback initiation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
                   severity: "ERROR"
             - raise_rollback_error:
                 raise: ${e}
