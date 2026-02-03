@@ -30,6 +30,7 @@ describe("ProvisioningService Granular Steps", () => {
     deleteTenantInstance: ReturnType<typeof vi.fn>;
     getOperation: ReturnType<typeof vi.fn>;
     ensureMigrationJob: ReturnType<typeof vi.fn>;
+    deleteMigrationJob: ReturnType<typeof vi.fn>;
     getJobExecutionStatus: ReturnType<typeof vi.fn>;
   };
   let mockWorkflowsClient: {
@@ -75,6 +76,7 @@ describe("ProvisioningService Granular Steps", () => {
       getOperation: vi.fn().mockResolvedValue({ done: true }),
       ensureMigrationJob: vi.fn().mockResolvedValue("mock-operation"),
       getJobExecutionStatus: vi.fn().mockResolvedValue({ status: "success" }),
+      deleteMigrationJob: vi.fn().mockResolvedValue("mock-operation"),
     };
     vi.mocked(CloudRunProvider).mockImplementation(
       () => mockCloudRunProvider as unknown as CloudRunProvider,
@@ -301,6 +303,27 @@ describe("ProvisioningService Granular Steps", () => {
       expect(result.status).toBe("success");
       expect(mockCloudRunProvider.getJobExecutionStatus).toHaveBeenCalledWith(
         "exec-123",
+      );
+    });
+  });
+  describe("deleteMigrationJob", () => {
+    it("should delete migration job", async () => {
+      await service.deleteMigrationJob("tenant-1");
+      expect(mockCloudRunProvider.deleteMigrationJob).toHaveBeenCalledWith(
+        "tenant-1",
+      );
+    });
+
+    it("should throw error if provider initialization fails", async () => {
+      vi.mocked(NeonProvider).mockImplementationOnce(() => {
+        throw new Error("Neon Init Error");
+      });
+
+      // Force cloudRunProvider to be undefined to test the guard clause
+      (service as unknown as { cloudRunProvider: unknown }).cloudRunProvider =
+        undefined;
+      await expect(service.deleteMigrationJob("tenant-1")).rejects.toThrow(
+        "Cloud Run provider not initialized",
       );
     });
   });

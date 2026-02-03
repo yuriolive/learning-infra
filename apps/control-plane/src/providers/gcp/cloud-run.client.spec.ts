@@ -34,6 +34,7 @@ vi.mock("googleapis", () => {
               get: vi.fn(),
               patch: vi.fn(),
               create: vi.fn(),
+              delete: vi.fn(), // Added delete
               run: vi.fn(),
               executions: {
                 get: vi.fn(),
@@ -75,6 +76,7 @@ interface MockRunClient {
         get: MockedFunction;
         patch: MockedFunction;
         create: MockedFunction;
+        delete: MockedFunction; // Added delete
         run: MockedFunction;
         executions: {
           get: MockedFunction;
@@ -404,6 +406,52 @@ describe("CloudRunProvider", () => {
       expect(config.logger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ error: expect.any(Error) }),
         "Failed to delete Cloud Run service",
+      );
+    });
+  });
+  describe("deleteMigrationJob", () => {
+    it("should delete job and log success", async () => {
+      mockRunClient.projects.locations.jobs.delete.mockResolvedValueOnce({
+        data: { name: "delete-op-job-1" },
+      });
+
+      await provider.deleteMigrationJob("tenant-1");
+
+      expect(mockRunClient.projects.locations.jobs.delete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "projects/test-project/locations/us-central1/jobs/migration-tenant-1",
+        }),
+      );
+      expect(config.logger.info).toHaveBeenCalledWith(
+        { tenantId: "tenant-1" },
+        "Deleted migration job",
+      );
+    });
+
+    it("should return undefined and match 404 behavior (idempotent) if job not found", async () => {
+      mockRunClient.projects.locations.jobs.delete.mockRejectedValueOnce({
+        code: 404,
+      });
+
+      await provider.deleteMigrationJob("tenant-1");
+
+      expect(config.logger.info).toHaveBeenCalledWith(
+        { tenantId: "tenant-1" },
+        "Migration job already deleted or not found",
+      );
+    });
+
+    it("should throw error if API call fails with non-404 error", async () => {
+      const error = new Error("API Failure");
+      mockRunClient.projects.locations.jobs.delete.mockRejectedValueOnce(error);
+
+      await expect(provider.deleteMigrationJob("tenant-1")).rejects.toThrow(
+        "API Failure",
+      );
+
+      expect(config.logger.error).toHaveBeenCalledWith(
+        { error, tenantId: "tenant-1" },
+        "Failed to delete migration job",
       );
     });
   });

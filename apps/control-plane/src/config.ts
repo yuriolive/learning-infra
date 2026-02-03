@@ -26,6 +26,7 @@ export interface Environment {
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
   CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
   INTERNAL_API_KEY?: BoundSecret;
+  GEMINI_API_KEY?: BoundSecret;
 }
 
 function resolveSecret(
@@ -51,6 +52,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleAppCredsP3,
     cloudRunServiceAccount,
     internalApiKey,
+    geminiApiKey,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -64,6 +66,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
     resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
     resolveSecret(environment.INTERNAL_API_KEY),
+    resolveSecret(environment.GEMINI_API_KEY),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -89,6 +92,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleApplicationCredentials,
     cloudRunServiceAccount,
     internalApiKey,
+    geminiApiKey,
   };
 }
 
@@ -120,6 +124,7 @@ function validateProductionConfig(
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
   internalApiKey?: string,
+  geminiApiKey?: string,
 ): Response | undefined {
   if (!adminApiKey) {
     logger.error(
@@ -145,6 +150,7 @@ function validateProductionConfig(
     missingVariables.push("GOOGLE_APPLICATION_CREDENTIALS");
   if (!cloudRunServiceAccount)
     missingVariables.push("CLOUD_RUN_SERVICE_ACCOUNT");
+  if (!geminiApiKey) missingVariables.push("GEMINI_API_KEY");
 
   if (missingVariables.length > 0) {
     logger.error(
@@ -173,6 +179,7 @@ export function validateConfiguration(
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
   internalApiKey?: string,
+  geminiApiKey?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -196,6 +203,7 @@ export function validateConfiguration(
       googleApplicationCredentials,
       cloudRunServiceAccount,
       internalApiKey,
+      geminiApiKey,
     );
   }
 

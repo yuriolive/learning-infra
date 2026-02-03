@@ -18,6 +18,7 @@ This document consolidates all environment variable and secrets management for t
 | `DATABASE_URL`                   | Secret    | Secrets Store    | PostgreSQL connection string                                   |
 | `NEON_API_KEY`                   | Secret    | Secrets Store    | Neon API authentication                                        |
 | `NEON_PROJECT_ID`                | Secret    | Secrets Store    | Neon project identifier                                        |
+| `GEMINI_API_KEY`                 | Secret    | Secrets Store    | Gemini API Key for AI assistance                               |
 | `ADMIN_API_KEY`                  | Secret    | Secrets Store    | API authentication (Bearer)                                    |
 | `INTERNAL_API_KEY`               | Secret    | Secrets Store    | Internal API authentication                                    |
 | `CLOUDFLARE_API_TOKEN`           | Secret    | Secrets Store    | Cloudflare API access                                          |
@@ -60,6 +61,7 @@ Save this value - you'll need it for both Cloudflare Secrets Store and GitHub Se
 - **DATABASE_URL**: Neon PostgreSQL connection string
 - **NEON_API_KEY**: From [Neon Console](https://console.neon.tech) → Account Settings → API Keys
 - **NEON_PROJECT_ID**: From Neon project URL or dashboard
+- **GEMINI_API_KEY**: From [Google AI Studio](https://aistudio.google.com/app/apikey)
 - **CLOUDFLARE_API_TOKEN**: Create at [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
   - Required permissions: **Workers Scripts (Edit)**, **Workers Secrets (Edit)**
 - **CLOUDFLARE_ZONE_ID**: From Cloudflare dashboard → vendin.store → Overview → Zone ID
@@ -94,6 +96,7 @@ export SECRETS_STORE_ID="your-secrets-store-uuid-here"
 echo -n "postgresql://user:pass@host:5432/db" | pnpm wrangler secrets-store secret put control-plane-db-url --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-neon-api-key" | pnpm wrangler secrets-store secret put neon-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-neon-project-id" | pnpm wrangler secrets-store secret put neon-project-id --secrets-store-id=$SECRETS_STORE_ID
+echo -n "your-gemini-api-key" | pnpm wrangler secrets-store secret put gemini-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "$(openssl rand -base64 32)" | pnpm wrangler secrets-store secret put control-plane-admin-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "$(openssl rand -base64 32)" | pnpm wrangler secrets-store secret put internal-api-key --secrets-store-id=$SECRETS_STORE_ID
 echo -n "your-cloudflare-api-token" | pnpm wrangler secrets-store secret put cloudflare-api-token --secrets-store-id=$SECRETS_STORE_ID
@@ -129,6 +132,7 @@ Update `apps/control-plane/wrangler.jsonc`:
       { "binding": "DATABASE_URL", "name": "control-plane-db-url" },
       { "binding": "NEON_API_KEY", "name": "neon-api-key" },
       { "binding": "NEON_PROJECT_ID", "name": "neon-project-id" },
+      { "binding": "GEMINI_API_KEY", "name": "gemini-api-key" },
       { "binding": "ADMIN_API_KEY", "name": "control-plane-admin-api-key" },
       { "binding": "INTERNAL_API_KEY", "name": "internal-api-key" },
       { "binding": "CLOUDFLARE_API_TOKEN", "name": "cloudflare-api-token" },
@@ -189,6 +193,7 @@ Create `apps/control-plane/.dev.vars` for local development:
 DATABASE_URL="postgresql://user:pass@localhost:5432/control_plane_dev"
 NEON_API_KEY="your-neon-api-key"
 NEON_PROJECT_ID="your-neon-project-id"
+GEMINI_API_KEY="your-gemini-api-key"
 ADMIN_API_KEY="dev-api-key-change-me"
 INTERNAL_API_KEY="dev-internal-api-key-change-me"
 CLOUDFLARE_API_TOKEN="your-cloudflare-token"
