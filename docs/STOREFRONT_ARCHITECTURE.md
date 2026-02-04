@@ -38,7 +38,7 @@ The Storefront acts as a **Secure Gateway** to the backends.
   - Resolves Tenant Backend URL (e.g., `https://tenant-123.run.app`).
   - Generates **Google OIDC Token** (using Service Account).
   - Forwards request with `Authorization: Bearer <token>`.
-- **Backend**: Private Cloud Run instance (Ingress: All, Auth: Required).
+- **Backend**: Private Cloud Run instance (Ingress: **All**, Auth: Required via IAM).
 
 ```typescript
 // Example: Proxy Client (medusa-client.ts)

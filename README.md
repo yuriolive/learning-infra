@@ -88,9 +88,12 @@ pnpm run lint:fix
 
 ### Control Plane (`apps/control-plane/`)
 
-Orchestrator API for managing tenant provisioning in the multi-tenant e-commerce platform.
+### Control Plane (`apps/control-plane/`)
+
+Orchestrator API for managing tenant provisioning and **secure proxy access**.
 
 - RESTful API with tenant provisioning endpoints
+- **Proxy Service**: Securely forwards requests to private Tenant Instances via Google IAM
 - Domain-driven design structure
 - In-memory storage (will be replaced with PostgreSQL)
 - Comprehensive unit test suite (96% coverage)
@@ -99,25 +102,27 @@ See [`apps/control-plane/README.md`](apps/control-plane/README.md) for details.
 
 ### Marketing App (`apps/marketing/`)
 
-Marketing landing page for the platform.
+Marketing landing page and **Unified Admin Dashboard**.
 
 - Landing page, pricing, and signup
+- **Authentication Provider**: Manages user sessions via Better Auth
+- **Admin Proxy**: Proxies admin requests to Control Plane via Cloudflare Service Bindings
 - Deployed to Cloudflare Pages on root domain (`vendin.store`)
-- Separate from storefront router
 
 ### Storefront Router (`apps/storefront/`)
 
 Router-only Next.js app for tenant domain routing.
 
 - Resolves tenant by hostname
-- Redirects/proxies to tenant instances
+- **Store Proxy**: Securely proxies customer requests to private Tenant Instances
 - Deployed to Cloudflare Pages for tenant subdomains
-- Does not render customer UI (tenant instances serve custom UI)
+- Does not render customer UI (tenant instances serve custom UI via proxy)
 
 ### Tenant Instance (`apps/tenant-instance/`)
 
 MedusaJS 2.0 template for individual merchant stores.
 
+- **Private Service**: Running on Cloud Run with `ingress: all` (IAM Auth only)
 - Custom storefront UI per tenant (themes, customizations)
 - Store API (`/store`) for customer operations
 - Admin Dashboard (`/admin`) for merchant management
