@@ -24,6 +24,8 @@ globs: apps/**/*, infrastructure/**/*
 - **Configuration**:
   - `min-instances: 0` (scale-to-zero, critical for cost efficiency)
   - `max-instances: 10`
+  - `ingress`: **Internal** (Private, no public access)
+  - `authentication`: **IAM** (Invoker: Control Plane Service Account)
   - `cpu: 1`
   - `memory: 512Mi`
   - `port: 3000`
@@ -37,6 +39,8 @@ See [docs/examples/cloud-run-deployment.sh](../../docs/examples/cloud-run-deploy
 ### Tenant Instance Deployment (Programmatic)
 
 The Control Plane creates tenant instances using Cloud Run Admin API.
+- **Must enforce** `--ingress=internal`
+- **Must grant** `roles/run.invoker` ONLY to Control Plane Service Account
 
 See [docs/examples/cloud-run-tenant-deployment.ts](../../docs/examples/cloud-run-tenant-deployment.ts) for programmatic deployment pattern.
 
@@ -59,7 +63,7 @@ All Cloud Run services use the same service account:
 ## Domain Mapping
 
 - **Control Plane**: `control.vendin.store`
-- **Tenant Instances**: No direct domain mapping (accessed via storefront routing)
+- **Tenant Instances**: **NO direct domain mapping**. Accessed exclusively via **Control Plane Proxy**.
 
 ## Cleanup
 

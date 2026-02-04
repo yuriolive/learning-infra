@@ -11,10 +11,10 @@ The Control Plane orchestrates complete tenant provisioning:
 1. **Merchant Signup** → Receive tenant creation request
 2. **Create Neon Database** → Via Neon API
 3. **Store Database URL** → In GCP Secret Manager
-4. **Create Cloud Run Service** → Deploy tenant instance (`tenant-{id}`)
+4. **Create Cloud Run Service** → Deploy tenant instance (`tenant-{id}`) as **Private Service** (Internal Ingress)
 5. **Configure Secrets** → Database URL, Redis namespace, tenant ID
-6. **Add Subdomain** → Assign `{store}-my.vendin.store`
-7. **Add Custom Hostname** → Via Cloudflare SaaS API (if provided)
+6. **Add Subdomain** → Assign `{store}-my.vendin.store` (Points to Marketing App Proxy)
+7. **Add Custom Hostname** → Via Cloudflare SaaS API (Points to Marketing App Proxy)
 8. **Wait for SSL** → Poll Cloudflare API for certificate status
 9. **Initialize MedusaJS** → Bootstrap tenant database
 10. **Health Check** → Verify tenant instance is responding
