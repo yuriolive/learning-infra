@@ -1,4 +1,4 @@
-import { createLogger } from "@vendin/utils/logger";
+import { createLogger } from "@vendin/logger";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { GcpWorkflowsClient } from "../../../../src/providers/gcp/workflows.client";

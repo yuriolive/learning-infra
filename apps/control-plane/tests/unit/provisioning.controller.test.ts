@@ -1,4 +1,4 @@
-import { createLogger } from "@vendin/utils/logger";
+import { createLogger } from "@vendin/logger";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { type Database } from "../../src/database/database";

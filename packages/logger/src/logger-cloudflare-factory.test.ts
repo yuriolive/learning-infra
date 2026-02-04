@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   consoleLogger,
   createCloudflareLogger,
-} from "./cloudflare-logger-factory";
+} from "./logger-cloudflare-factory";
 
 vi.mock("./cloudflare-logger", () => ({
   consoleLogger: {

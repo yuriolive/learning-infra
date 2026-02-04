@@ -13,6 +13,10 @@
     "./cloudflare": {
       "import": "./dist/logger-cloudflare-factory.js",
       "default": "./src/logger-cloudflare-factory.ts"
+    },
+    "./pino": {
+      "import": "./dist/pino-logger.js",
+      "default": "./src/pino-logger.ts"
     }
   },
   "scripts": {
