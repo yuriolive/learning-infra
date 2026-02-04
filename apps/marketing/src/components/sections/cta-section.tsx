@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { useRouter } from "../../i18n/routing";
 import { useTranslations } from "next-intl";
+
+import { useRouter } from "../../i18n/routing";
 
 export const CTASection = () => {
   const router = useRouter();
@@ -13,10 +14,11 @@ export const CTASection = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 opacity-50"></div>
 
       <div className="container mx-auto px-6 text-center relative z-10">
-        <h2
-            className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-none"
-            dangerouslySetInnerHTML={{__html: t.raw("title")}}
-        />
+        <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-none">
+          {t.rich("title", {
+            br: () => <br />,
+          })}
+        </h2>
         <p className="text-xl text-default-400 max-w-2xl mx-auto mb-12">
           {t("subtitle")}
         </p>
@@ -27,7 +29,9 @@ export const CTASection = () => {
             color="primary"
             variant="shadow"
             className="font-bold px-12 h-16 text-xl"
-          onPress={() => { router.push("/signup"); }}
+            onPress={() => {
+              router.push("/signup");
+            }}
           >
             {t("button")}
           </Button>
