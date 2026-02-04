@@ -6,7 +6,9 @@ import { createAgentGraph } from "./graph";
 import type { BaseMessage } from "@langchain/core/messages";
 import type { MedusaContainer } from "@medusajs/medusa";
 
-class AgentModuleService extends MedusaService({}) {
+const Base = MedusaService({});
+
+class AgentModuleService extends Base {
   protected container: MedusaContainer;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

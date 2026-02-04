@@ -2,7 +2,6 @@ import { z } from "zod";
 
 import { AGENT_MODULE } from "../../../modules/agent";
 
-import type AgentModuleService from "../../../modules/agent/service";
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 
 interface Logger {
@@ -113,6 +112,10 @@ const extractDirectMessage = (body: unknown): ExtractionResult => {
   };
 };
 
+interface IAgentModuleService {
+  processMessage(phone: string, text: string): Promise<string>;
+}
+
 const handleMessageProcessing = async (
   phone: string,
   text: string,
@@ -120,7 +123,7 @@ const handleMessageProcessing = async (
   medusaResponse: MedusaResponse,
 ) => {
   const agentModule =
-    medusaRequest.scope.resolve<AgentModuleService>(AGENT_MODULE);
+    medusaRequest.scope.resolve<IAgentModuleService>(AGENT_MODULE);
   const response = await agentModule.processMessage(phone, text);
   medusaResponse.status(200).json({ response });
 };
