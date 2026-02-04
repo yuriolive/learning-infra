@@ -104,9 +104,6 @@ export class CloudRunProvider {
       );
     }
 
-    // Set public access via IAM policy
-    await this.makeServicePublic(servicePath, tenantId);
-
     return operationName;
   }
 
@@ -127,64 +124,6 @@ export class CloudRunProvider {
 
     this.logger.info({ tenantId, uri }, "Cloud Run deployment finalized");
     return uri;
-  }
-
-  /**
-   * Make a Cloud Run service publicly accessible by granting
-   * allUsers the run.invoker role
-   */
-  private async makeServicePublic(
-    servicePath: string,
-    tenantId: string,
-  ): Promise<void> {
-    this.logger.info({ tenantId }, "Setting IAM policy for public access");
-
-    try {
-      // Get current policy
-      const policyResponse =
-        await this.runClient.projects.locations.services.getIamPolicy({
-          resource: servicePath,
-        });
-
-      // Access the nested policy object
-      const currentPolicy = policyResponse.data;
-      const bindings = currentPolicy.bindings || [];
-
-      // Check if allUsers already has run.invoker
-      const invokerBinding = bindings.find(
-        (b: { role?: string | null }) => b.role === "roles/run.invoker",
-      );
-
-      if (invokerBinding) {
-        if (!invokerBinding.members?.includes("allUsers")) {
-          invokerBinding.members = [
-            ...(invokerBinding.members || []),
-            "allUsers",
-          ];
-        }
-      } else {
-        bindings.push({
-          role: "roles/run.invoker",
-          members: ["allUsers"],
-        });
-      }
-
-      // Set updated policy
-      await this.runClient.projects.locations.services.setIamPolicy({
-        resource: servicePath,
-        requestBody: {
-          policy: {
-            ...currentPolicy,
-            bindings,
-          },
-        },
-      });
-
-      this.logger.info({ tenantId }, "Set IAM policy for public access");
-    } catch (error) {
-      this.logger.error({ error, tenantId }, "Failed to set IAM policy");
-      throw error;
-    }
   }
 
   // Modified to be non-blocking
