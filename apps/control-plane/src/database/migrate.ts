@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { createLogger } from "@vendin/utils/logger";
+import { createLogger } from "@vendin/logger";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";

@@ -1,4 +1,4 @@
-import { createLogger } from "@vendin/utils/logger";
+import { createLogger } from "@vendin/logger";
 import { GoogleAuth } from "google-auth-library";
 import { run_v2 } from "googleapis";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";

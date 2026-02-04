@@ -1,4 +1,4 @@
-import Medusa from "@medusajs/medusa-js";
+import Medusa from "@medusajs/js-sdk";
 
 import { getTenantAuthToken } from "./auth";
 
@@ -21,8 +21,7 @@ export async function getMedusaClient(tenantUrl?: string) {
   if (globalThis.window !== undefined) {
     return new Medusa({
       baseUrl: PROXY_URL,
-      maxRetries: 3,
-      publishableApiKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
+      publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
     });
   }
 
@@ -38,8 +37,7 @@ export async function getMedusaClient(tenantUrl?: string) {
 
   return new Medusa({
     baseUrl: tenantUrl,
-    maxRetries: 3,
-    customHeaders: {
+    globalHeaders: {
       Authorization: authHeader,
     },
     // If you have a publishable key on server, inject it too

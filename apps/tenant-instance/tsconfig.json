@@ -11,7 +11,10 @@
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@vendin/medusa-ai-agent": ["../../packages/medusa/plugins/ai/agent/src"]
+    }
   },
   "include": ["src", "medusa-config.ts"],
   "exclude": ["node_modules", "dist", ".medusa"]

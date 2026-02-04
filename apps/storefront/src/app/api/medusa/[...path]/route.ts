@@ -1,8 +1,11 @@
+import { createCloudflareLogger } from "@vendin/logger";
 import { NextResponse } from "next/server";
 
 import { getTenantAuthToken } from "@/lib/auth";
 
 import type { NextRequest } from "next/server";
+
+const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
 export const dynamic = "force-dynamic";
 
@@ -80,9 +83,7 @@ async function proxyRequest(
       headers: responseHeaders,
     });
   } catch (error) {
-    // TODO: Replace with shared @vendin/logger once created
-    // eslint-disable-next-line no-console
-    console.error("Proxy Error:", error);
+    logger.error({ error, targetUrl, method: request.method }, "Proxy Error");
     return NextResponse.json(
       { message: "Internal Server Error during proxying" },
       { status: 500 },

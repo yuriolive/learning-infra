@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { createLogger } from "@vendin/utils/logger";
+import { createLogger } from "@vendin/logger";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock NeonProvider
