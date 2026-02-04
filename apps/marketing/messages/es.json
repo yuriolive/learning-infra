@@ -1,0 +1,68 @@
+{
+  "Navbar": {
+    "features": "Características",
+    "pricing": "Precios",
+    "about": "Nosotros",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse"
+  },
+  "Hero": {
+    "chip": "Infraestructura lista en < 2 minutos",
+    "title": "Lanza tu Tienda",
+    "titleHighlight": "En Segundos",
+    "subtitle": "Provisiona infraestructura de comercio electrónico físicamente aislada con bases de datos y cómputo dedicados. Comercio de alto rendimiento para la era moderna.",
+    "startTrial": "Prueba Gratis",
+    "learnMore": "Más Información"
+  },
+  "Footer": {
+    "product": "Producto",
+    "features": "Características",
+    "pricing": "Precios",
+    "integrations": "Integraciones",
+    "changelog": "Cambios",
+    "company": "Empresa",
+    "about": "Nosotros",
+    "blog": "Blog",
+    "careers": "Carreras",
+    "contact": "Contacto",
+    "resources": "Recursos",
+    "documentation": "Documentación",
+    "apiReference": "Referencia API",
+    "statusPage": "Estado",
+    "community": "Comunidad",
+    "legal": "Legal",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio",
+    "security": "Seguridad",
+    "gdpr": "GDPR",
+    "copyright": "© 2026 Vendin. Todos los derechos reservados."
+  },
+  "LanguageSwitcher": {
+    "label": "Idioma",
+    "en": "Inglés",
+    "es": "Español",
+    "pt-br": "Portugués"
+  },
+  "Login": {
+    "title": "Bienvenido de nuevo",
+    "subtitle": "Inicia sesión para continuar",
+    "noAccount": "¿No tienes una cuenta?",
+    "signup": "Regístrate",
+    "email": "Correo",
+    "whatsapp": "WhatsApp"
+  },
+  "Signup": {
+    "title": "Crear una cuenta",
+    "subtitle": "Ingresa tus datos para comenzar",
+    "alreadyAccount": "¿Ya tienes una cuenta?",
+    "login": "Inicia sesión",
+    "email": "Correo",
+    "whatsapp": "WhatsApp"
+  },
+  "CTA": {
+    "title": "¿Listo para escalar tu <br /> negocio de comercio?",
+    "subtitle": "Únete a la próxima generación de comerciantes que construyen sobre infraestructura de alto rendimiento. No se requiere tarjeta de crédito.",
+    "button": "Empieza Ahora",
+    "footer": "Nivel gratuito disponible para siempre • 99.9% de tiempo de actividad SLA • Configuración instantánea"
+  }
+}

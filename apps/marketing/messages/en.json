@@ -1,0 +1,68 @@
+{
+  "Navbar": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "Hero": {
+    "chip": "Infrastructure Ready in < 2 minutes",
+    "title": "Launch Your Store",
+    "titleHighlight": "In Seconds",
+    "subtitle": "Provision physically isolated e-commerce infrastructure with dedicated databases and compute. High-performance commerce for the modern era.",
+    "startTrial": "Start Free Trial",
+    "learnMore": "Learn More"
+  },
+  "Footer": {
+    "product": "Product",
+    "features": "Features",
+    "pricing": "Pricing",
+    "integrations": "Integrations",
+    "changelog": "Changelog",
+    "company": "Company",
+    "about": "About",
+    "blog": "Blog",
+    "careers": "Careers",
+    "contact": "Contact",
+    "resources": "Resources",
+    "documentation": "Documentation",
+    "apiReference": "API Reference",
+    "statusPage": "Status Page",
+    "community": "Community",
+    "legal": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "security": "Security",
+    "gdpr": "GDPR",
+    "copyright": "© 2026 Vendin. All rights reserved."
+  },
+  "LanguageSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "es": "Spanish",
+    "pt-br": "Portuguese"
+  },
+  "Login": {
+    "title": "Welcome back",
+    "subtitle": "Log in to your account to continue",
+    "noAccount": "Don't have an account?",
+    "signup": "Sign up",
+    "email": "Email",
+    "whatsapp": "WhatsApp"
+  },
+  "Signup": {
+    "title": "Create an account",
+    "subtitle": "Enter your details to get started",
+    "alreadyAccount": "Already have an account?",
+    "login": "Log in",
+    "email": "Email",
+    "whatsapp": "WhatsApp"
+  },
+  "CTA": {
+    "title": "Ready to scale your <br /> commerce business?",
+    "subtitle": "Join the next generation of merchants building on high-performance infrastructure. No credit card required.",
+    "button": "Get Started Now",
+    "footer": "Free forever tier available • 99.9% Uptime SLA • Instant setup"
+  }
+}
