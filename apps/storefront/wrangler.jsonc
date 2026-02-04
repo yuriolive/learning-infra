@@ -19,5 +19,10 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "CONTROL_PLANE_API_URL": "http://control-plane.vendin.internal",
+    "MARKETING_APP_URL": "http://marketing.vendin.internal",
+    "NODE_ENV": "production"
   }
 }

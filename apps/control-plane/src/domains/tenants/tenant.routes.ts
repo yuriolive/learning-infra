@@ -87,7 +87,10 @@ async function handleCollectionRequest(
     return response;
   }
   if (request.method === "GET") {
-    const response = await handleListTenants(service, logger);
+    const url = new URL(request.url);
+    const subdomain = url.searchParams.get("subdomain") || undefined;
+
+    const response = await handleListTenants(service, logger, { subdomain });
     return response;
   }
   return new Response("Not found", { status: 404 });
@@ -218,9 +221,10 @@ async function handleGetTenant(
 async function handleListTenants(
   service: TenantService,
   logger: Logger,
+  filters?: { subdomain?: string },
 ): Promise<Response> {
   try {
-    const tenants = await service.listTenants();
+    const tenants = await service.listTenants(filters);
 
     return new Response(JSON.stringify(tenants), {
       status: 200,
