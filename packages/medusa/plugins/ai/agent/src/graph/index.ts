@@ -4,10 +4,10 @@ import { StateGraph } from "@langchain/langgraph";
 import { RedisSaver } from "@langchain/langgraph-checkpoint-redis";
 import { ToolNode, toolsCondition } from "@langchain/langgraph/prebuilt";
 
-import { getCartTools } from "../tools/cart";
-import { getStoreTools } from "../tools/products";
+import { getCartTools } from "../tools/cart.js";
+import { getStoreTools } from "../tools/products.js";
 
-import { AgentState } from "./state";
+import { AgentState } from "./state.js";
 
 import type { MedusaContainer } from "@medusajs/medusa";
 

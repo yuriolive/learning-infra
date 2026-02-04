@@ -1,7 +1,7 @@
 import { HumanMessage } from "@langchain/core/messages";
 import { MedusaService } from "@medusajs/framework/utils";
 
-import { createAgentGraph } from "./graph";
+import { createAgentGraph } from "./graph/index.js";
 
 import type { BaseMessage } from "@langchain/core/messages";
 import type { MedusaContainer } from "@medusajs/medusa";
