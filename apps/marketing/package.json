@@ -9,6 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply marketing-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply marketing-db --remote",
     "pages:build": "opennextjs-cloudflare build",
     "pages:preview": "opennextjs-cloudflare dev",
     "pages:deploy": "opennextjs-cloudflare deploy"
