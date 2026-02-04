@@ -44,6 +44,9 @@ function getGetOrCreateCartTool(container: MedusaContainer) {
         }
 
         const defaultRegion = regions[0];
+        if (!defaultRegion) {
+          throw new Error("Store not configured: No regions found.");
+        }
 
         // Try to find active cart for customer
         const carts = await cartModule.listCarts(
@@ -131,6 +134,9 @@ function getAddItemToCartTool(container: MedusaContainer) {
         }
 
         const variant = variants[0];
+        if (!variant) {
+          throw new Error(`Variant ${variant_id} not found.`);
+        }
 
         // Fetch cart to get currency and region context
         const cart = await cartModule.retrieveCart(cart_id);

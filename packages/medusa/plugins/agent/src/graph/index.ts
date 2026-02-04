@@ -30,7 +30,7 @@ export async function createAgentGraph(container: MedusaContainer) {
   // 1. Initialize Model
   const model = new ChatGoogleGenerativeAI({
     model: process.env.GEMINI_MODEL || "gemini-3.0-flash",
-    apiKey: process.env.GEMINI_API_KEY,
+    apiKey: process.env.GEMINI_API_KEY || "",
   });
 
   // 2. Initialize Tools

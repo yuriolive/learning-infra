@@ -1,6 +1,6 @@
+import { AGENT_MODULE } from "@vendin/agent";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AGENT_MODULE } from "../../../../modules/agent";
 import { POST } from "../route";
 
 describe("Agent API Route", () => {

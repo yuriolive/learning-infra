@@ -46,7 +46,7 @@ const modules = isMigrating
         },
       },
       {
-        resolve: "./src/modules/agent",
+        resolve: "@vendin/agent",
         options: {
           modelName: "gemini-3.0-flash",
         },

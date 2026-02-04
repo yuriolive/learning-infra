@@ -11,7 +11,10 @@
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@vendin/agent": ["../../packages/medusa/plugins/agent/src/index.ts"]
+    }
   },
   "include": ["src", "medusa-config.ts"],
   "exclude": ["node_modules", "dist", ".medusa"]

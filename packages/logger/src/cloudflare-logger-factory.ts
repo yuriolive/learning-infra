@@ -1,9 +1,5 @@
-import { consoleLogger, type Logger } from "./logger-cloudflare";
-
-export interface LoggerOptions {
-  logLevel?: string | undefined;
-  nodeEnv?: string;
-}
+import { consoleLogger, type Logger } from "./cloudflare-logger";
+import { type LoggerOptions } from "./pino-logger";
 
 const LOG_LEVELS = {
   debug: 0,
@@ -75,4 +71,4 @@ export const createCloudflareLogger = (options: LoggerOptions = {}): Logger => {
 
 // Re-export consoleLogger for testing
 
-export { consoleLogger } from "./logger-cloudflare";
+export { consoleLogger } from "./cloudflare-logger";

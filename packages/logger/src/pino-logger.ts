@@ -29,5 +29,3 @@ export const createLogger = (options: LoggerOptions = {}) => {
 };
 
 export const logger = createLogger();
-
-export type Logger = ReturnType<typeof createLogger>;
