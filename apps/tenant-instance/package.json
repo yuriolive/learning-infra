@@ -25,7 +25,7 @@
     "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
-    "@vendin/agent": "workspace:*",
+    "@vendin/medusa-ai-agent": "workspace:*",
     "@medusajs/admin-sdk": "^2.13.0",
     "@medusajs/admin-shared": "^2.13.1",
     "@medusajs/cli": "^2.13.0",
@@ -34,7 +34,7 @@
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
     "@vendin/analytics": "workspace:*",
-    "medusa-plugin-neon-search": "workspace:*",
+    "@vendin/medusa-search-neon": "workspace:*",
     "ioredis": "^5.9.2",
     "pg": "^8.17.2",
     "react": "^18.3.1",

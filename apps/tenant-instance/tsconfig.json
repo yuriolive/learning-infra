@@ -13,7 +13,7 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@vendin/agent": ["../../packages/medusa/plugins/agent/src/index.ts"]
+      "@vendin/medusa-ai-agent": ["../../packages/medusa/plugins/ai/agent/src"]
     }
   },
   "include": ["src", "medusa-config.ts"],

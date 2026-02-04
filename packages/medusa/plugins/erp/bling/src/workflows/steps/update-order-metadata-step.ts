@@ -4,8 +4,8 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
 interface UpdateOrderMetadataStepInput {
   orderId: string;
   blingId?: string | number;
-  payload?: any;
-  response?: any;
+  payload?: unknown;
+  response?: unknown;
   warnings?: string[];
 }
 
@@ -23,9 +23,9 @@ export const updateOrderMetadataStep = createStep(
       : {};
 
     const baseMetadata = { ...order.metadata };
-    const existingBling = (baseMetadata.bling as Record<string, any>) || {};
+    const existingBling = (baseMetadata.bling as Record<string, unknown>) || {};
 
-    const blingMetadata: Record<string, any> = {
+    const blingMetadata: Record<string, unknown> = {
       ...existingBling,
       last_sync_at: new Date().toISOString(),
       warnings,

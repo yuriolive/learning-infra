@@ -10,7 +10,7 @@ export interface ProductSnapshot {
   images: string[];
   stock: Array<{ warehouse_id: string | null; quantity: number }>;
   variants: VariantSnapshot[];
-  raw: any;
+  raw: unknown;
 }
 
 export interface VariantSnapshot {
@@ -28,7 +28,7 @@ export interface VariantSnapshot {
 
 export class BlingProductMapper {
   static normalizeProductSnapshot(
-    source: any,
+    source: unknown,
     preferences: BlingSyncPreferences,
   ): ProductSnapshot {
     const productWrapper = this.toJsonObject(source);
@@ -96,12 +96,14 @@ export class BlingProductMapper {
   }
 
   private static extractVariantSnapshots(
-    productData: any,
+    productData: unknown,
     preferences: BlingSyncPreferences,
     includeInventory: boolean,
   ): VariantSnapshot[] {
     const rawVariants = this.toJsonArray(
-      productData.variacoes ?? productData.variantes,
+      this.isJsonObject(productData)
+        ? (productData.variacoes ?? productData.variantes)
+        : [],
     );
 
     if (rawVariants.length === 0) {
@@ -144,7 +146,9 @@ export class BlingProductMapper {
     });
   }
 
-  private static extractImageUrls(productData: any): string[] {
+  private static extractImageUrls(
+    productData: Record<string, unknown>,
+  ): string[] {
     const imagesRaw = productData.imagens ?? productData.imagem;
 
     if (Array.isArray(imagesRaw)) {
@@ -178,7 +182,7 @@ export class BlingProductMapper {
   }
 
   private static extractStockSnapshots(
-    data: any,
+    data: Record<string, unknown>,
   ): Array<{ warehouse_id: string | null; quantity: number }> {
     const rawEntries = data.estoques ?? data.depositos ?? data.saldo ?? null;
 
@@ -193,7 +197,7 @@ export class BlingProductMapper {
   }
 
   private static normalizeStockEntry(
-    value: any,
+    value: unknown,
   ): { warehouse_id: string | null; quantity: number } | null {
     if (value === null || value === undefined) {
       return null;
@@ -237,7 +241,7 @@ export class BlingProductMapper {
     };
   }
 
-  private static parseNumber(value: any): number | null {
+  private static parseNumber(value: unknown): number | null {
     if (typeof value === "number") {
       return Number.isNaN(value) ? null : value;
     }
@@ -249,14 +253,14 @@ export class BlingProductMapper {
     return null;
   }
 
-  private static toJsonObject(value: any): any {
+  private static toJsonObject(value: unknown): Record<string, unknown> {
     if (this.isJsonObject(value)) {
       return value;
     }
     return {};
   }
 
-  private static toJsonArray(value: any): any[] {
+  private static toJsonArray(value: unknown): unknown[] {
     if (Array.isArray(value)) {
       return value;
     }
@@ -266,11 +270,13 @@ export class BlingProductMapper {
     return [value];
   }
 
-  private static isJsonObject(value: any): boolean {
+  private static isJsonObject(
+    value: unknown,
+  ): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
-  private static toOptionalString(value: any): string | null {
+  private static toOptionalString(value: unknown): string | null {
     if (typeof value === "string") {
       return value;
     }

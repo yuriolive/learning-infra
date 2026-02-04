@@ -1,8 +1,8 @@
-import { AGENT_MODULE } from "@vendin/agent";
+import { AGENT_MODULE } from "@vendin/medusa-ai-agent";
 import { z } from "zod";
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import type { AgentModuleService } from "@vendin/agent";
+import type { AgentModuleService } from "@vendin/medusa-ai-agent";
 
 interface Logger {
   warn: (message: string, context?: unknown) => void;

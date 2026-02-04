@@ -14,10 +14,14 @@ export const updateInventoryStep = createStep(
     const inventoryModule = container.resolve(Modules.INVENTORY);
     const { products } = input;
 
-    const [locations] = await (inventoryModule as any).listStockLocations(
-      {},
-      { take: 1 },
-    );
+    const [locations] = (await (
+      inventoryModule as unknown as {
+        listStockLocations: (
+          selector: Record<string, unknown>,
+          config?: Record<string, unknown>,
+        ) => Promise<[unknown[], number]>;
+      }
+    ).listStockLocations({}, { take: 1 })) as [Array<{ id: string }>, number];
     const defaultLocationId = locations?.[0]?.id;
 
     if (!defaultLocationId) {
@@ -32,11 +36,6 @@ export const updateInventoryStep = createStep(
     for (const p of products) {
       for (const v of p.variants) {
         if (!v.sku) continue;
-
-        // Fix: Retrieve array correctly. listInventoryItems returns InventoryItemDTO[] in some versions or [items, count]
-        // We'll treat it as standard list response which is usually [items, count] in V2 modules?
-        // But previous errors suggested direct array.
-        // Safer way:
         const itemsList = await inventoryModule.listInventoryItems({
           sku: v.sku,
         });
@@ -48,12 +47,11 @@ export const updateInventoryStep = createStep(
             : itemsList // Handle [items, count] or items[]
           : [];
 
-        // inventoryItems is now any[] or InventoryItemDTO[]
-
         if (inventoryItems.length > 0) {
           const item = inventoryItems[0] as unknown as InventoryItemDTO;
           const totalStock = v.stock.reduce(
-            (accumulator: number, s: any) => accumulator + s.quantity,
+            (accumulator: number, s: { quantity: number }) =>
+              accumulator + s.quantity,
             0,
           );
 
@@ -69,7 +67,17 @@ export const updateInventoryStep = createStep(
             : [];
 
           await (levels.length > 0
-            ? (inventoryModule as any).updateInventoryLevels([
+            ? (
+                inventoryModule as unknown as {
+                  updateInventoryLevels: (
+                    data: Array<{
+                      inventory_item_id: string;
+                      location_id: string;
+                      stocked_quantity: number;
+                    }>,
+                  ) => Promise<unknown>;
+                }
+              ).updateInventoryLevels([
                 {
                   inventory_item_id: item.id,
                   location_id: defaultLocationId,
@@ -85,7 +93,8 @@ export const updateInventoryStep = createStep(
           updatedCount++;
         } else {
           const totalStock = v.stock.reduce(
-            (accumulator: number, s: any) => accumulator + s.quantity,
+            (accumulator: number, s: { quantity: number }) =>
+              accumulator + s.quantity,
             0,
           );
           const item = await inventoryModule.createInventoryItems({

@@ -196,7 +196,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       if (error_.message.includes("insufficient_amount")) {
         errorMessage = "Payment declined: Insufficient funds";
       } else if (error_.message.includes("bad_request")) {
-         errorMessage = "Payment declined: Invalid payment data";
+        errorMessage = "Payment declined: Invalid payment data";
       }
 
       throw new Error(errorMessage);
@@ -251,8 +251,10 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
 
       return { status: medusaStatus, data: { ...input.data, status } };
     } catch (error) {
-       this.logger_.error(`MercadoPago get status error: ${(error as Error).message}`);
-       return { status: "error", data: input.data || {} };
+      this.logger_.error(
+        `MercadoPago get status error: ${(error as Error).message}`,
+      );
+      return { status: "error", data: input.data || {} };
     }
   }
 
@@ -307,7 +309,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
       })) as unknown as MercadoPagoPaymentResponse;
 
       switch (payment.status) {
-        case "approved":
+        case "approved": {
           return {
             action: "authorized",
             data: {
@@ -315,10 +317,13 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
               amount: convertFromDecimal(payment.transaction_amount!),
             },
           };
-        case "rejected":
+        }
+        case "rejected": {
           return { action: "failed" };
-        default:
+        }
+        default: {
           return { action: "not_supported" };
+        }
       }
     } catch (error) {
       this.logger_.error(`Webhook error: ${(error as Error).message}`);

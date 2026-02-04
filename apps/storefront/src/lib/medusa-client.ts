@@ -1,6 +1,6 @@
 import Medusa from "@medusajs/js-sdk";
 
-import { getTenantAuthToken } from "./auth.js";
+import { getTenantAuthToken } from "./auth";
 
 const PROXY_URL = "/api/medusa";
 

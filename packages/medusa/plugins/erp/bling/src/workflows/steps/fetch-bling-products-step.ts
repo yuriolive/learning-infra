@@ -24,7 +24,7 @@ export const fetchBlingProductsStep = createStep(
 
     try {
       // Improved pagination logic for robust fetching
-      const allProducts: any[] = [];
+      const allProducts: unknown[] = [];
       let page = 1;
       const limit = 100; // Configurable limit could be added to preferences
       let hasMore = true;
@@ -55,13 +55,14 @@ export const fetchBlingProductsStep = createStep(
         }
       }
 
-      const normalized = allProducts.map((p: any) =>
+      const normalized = allProducts.map((p: unknown) =>
         BlingProductMapper.normalizeProductSnapshot(p, preferences),
       );
 
       return new StepResponse(normalized);
-    } catch (error: any) {
-      logger.error(`Failed to fetch products from Bling: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to fetch products from Bling: ${message}`);
       throw error;
     }
   },

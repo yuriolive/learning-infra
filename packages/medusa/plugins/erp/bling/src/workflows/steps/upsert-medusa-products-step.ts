@@ -26,7 +26,7 @@ export const upsertMedusaProductsStep = createStep(
     const existingMap = new Map(
       existingProducts.map((p) => [p.external_id, p]),
     );
-    const upsertData: any[] = [];
+    const upsertData: unknown[] = [];
     let created = 0;
     let updated = 0;
 
@@ -42,7 +42,7 @@ export const upsertMedusaProductsStep = createStep(
         },
       }));
 
-      const productInput: any = {
+      const productInput: Record<string, unknown> = {
         title: snapshot.name,
         description: snapshot.description,
         external_id: snapshot.external_id,

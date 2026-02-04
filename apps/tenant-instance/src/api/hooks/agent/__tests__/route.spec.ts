@@ -1,4 +1,4 @@
-import { AGENT_MODULE } from "@vendin/agent";
+import { AGENT_MODULE } from "@vendin/medusa-ai-agent";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { POST } from "../route";

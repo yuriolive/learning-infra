@@ -1,3 +1,3 @@
 export * from "./pino-logger";
-export * from "./cloudflare-logger-factory";
+export * from "./logger-cloudflare-factory";
 export * from "./cloudflare-logger";

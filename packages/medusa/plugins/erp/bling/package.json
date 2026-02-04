@@ -1,5 +1,5 @@
 {
-  "name": "@vendin/medusa-plugin-bling",
+  "name": "@vendin/medusa-erp-bling",
   "version": "1.0.0",
   "description": "Bling ERP integration for MedusaJS v2",
   "private": true,

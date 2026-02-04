@@ -17,8 +17,8 @@ export interface SyncOrderStepOutput {
   success: boolean;
   message?: string;
   blingId?: string | number;
-  payload?: any;
-  response?: any;
+  payload?: unknown;
+  response?: unknown;
   warnings?: string[];
 }
 
@@ -70,8 +70,9 @@ export const syncOrderToBlingStep = createStep(
         options,
         warnings,
       );
-    } catch (error: any) {
-      logger.error(`Failed to map order ${orderId} to Bling: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to map order ${orderId} to Bling: ${message}`);
       throw error;
     }
 
@@ -87,8 +88,9 @@ export const syncOrderToBlingStep = createStep(
         response: response.data,
         warnings,
       });
-    } catch (error: any) {
-      logger.error(`Failed to create order in Bling: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to create order in Bling: ${message}`);
       throw error;
     }
   },
