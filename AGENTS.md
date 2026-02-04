@@ -12,22 +12,27 @@ This document describes the agent architecture and guidelines for AI assistants 
    - Central API managing tenant provisioning
    - Handles merchant signup and store creation
    - Manages database and compute resource allocation
+   - **Proxies requests to private Tenant Instances** (via Google IAM)
    - Location: `apps/control-plane/`
 
-2. **Marketing App (Landing Page)**
-   - Marketing site for landing, pricing, and signup
+2. **Marketing App (Dashboard & Auth)**
+   - Marketing site + **Unified Admin Dashboard**
+   - Handles User Authentication (Better Auth)
+   - **Proxies Admin requests** to Control Plane (via Service Bindings)
    - Root domain: `vendin.store`
    - Location: `apps/marketing/`
 
 3. **Storefront Router**
-   - Shared Next.js router (no customer UI)
-   - Resolves tenant by hostname and redirects/proxies
+   - Shared Next.js router (customer-facing)
+   - Resolves tenant by hostname
+   - **Proxies Store requests** to Tenant Instances (via SSR/API routes)
    - Location: `apps/storefront/`
 
 4. **Tenant Instances (Individual Stores)**
    - Isolated MedusaJS 2.0 instances per tenant
+   - **Private Cloud Run services** (Ingress: All, Auth: IAM)
+   - Accessed securely via Control Plane Proxy
    - Each tenant has dedicated database and compute
-   - Serves custom storefront UI + MedusaJS APIs + Admin UI
    - Location: `apps/tenant-instance/` (template)
 
 ## Agent Responsibilities
@@ -85,6 +90,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 2. **Serverless Priority**: All components must be serverless
 3. **TypeScript Only**: All backend code must be TypeScript
 4. **Isolation**: 100% physical database isolation per merchant
+5. **Private By Default**: Tenant Cloud Run instances must have **Ingress: All** (Public) but require **IAM Authentication** (no unauthenticated access).
 
 ### Performance Requirements
 
@@ -143,9 +149,12 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ### API Design
 
-- Control Plane API: RESTful endpoints for tenant management
-- Tenant API: Standard MedusaJS REST/GraphQL endpoints
-- Storefront API: Next.js API routes for tenant resolution
+### API Design
+
+- **Control Plane API**: RESTful endpoints + **Proxy Routes** (`/proxy/:tenantId/*`)
+- **Marketing App**: Internal API routes (`/api/admin/*`) proxying to Control Plane
+- **Tenant API**: Private MedusaJS endpoints (accessed via Proxy)
+- **Storefront API**: Next.js API routes for tenant resolution & proxying
 
 ### Environment Variables
 

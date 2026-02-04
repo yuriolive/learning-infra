@@ -94,19 +94,23 @@ flowchart TB
 - Central API managing tenant provisioning
 - Handles merchant signup and store creation
 - Manages database and compute resource allocation
+- **Proxy Service**: Securely forwards requests to Private Tenant Instances
 - Location: `/control-plane/`
 
 **Tenant Instances (Individual Stores)**
 
 - Isolated MedusaJS 2.0 instances per tenant
 - Each tenant has dedicated database and compute
+- **Private Access Only**: No public ingress (requires Proxy)
 - Headless MedusaJS API (Store API and Admin UI)
 - Does **NOT** render customer UI
 - Location: `apps/tenant-instance/` (template)
 
 **Marketing App**
 
-- Marketing landing page on root domain
+- Marketing landing page on root domain (`vendin.store`)
+- **Unified Admin Dashboard**: Proxy for Tenant Admin UIs
+- **Authentication**: Centralized auth via Better Auth
 - Pricing, signup, and platform information
 - Location: `apps/marketing/`
 - Deployed to Cloudflare Pages
@@ -115,6 +119,7 @@ flowchart TB
 
 - Single Next.js application that renders the shopping UI for all tenants
 - Resolves tenant by hostname and adapts theme/content dynamically
+- **Store Proxy**: Securely calls private Tenant APIs via internal proxy routes
 - Connects to the respective tenant's backend Medusa API
 - Location: `apps/storefront/`
 - Deployed to Cloudflare Pages
@@ -399,10 +404,11 @@ interface TenantConfig {
 - Graceful fallback to error page for unknown domains
 - Response time: < 50ms for routing decision
 
-**AC4: Scale-to-Zero**
+**AC4: Scale-to-Zero & Private Access**
 
 - Cloud Run services must be configured with `min-instances: 0`
 - Instances scale down to zero after 15 minutes of inactivity
+- **Private Access**: Services must accept traffic only from authenticated callers (IAM) - Ingress set to 'all'
 - Cold start time remains < 2 seconds
 - Cost savings: 60% reduction for idle tenants
 
