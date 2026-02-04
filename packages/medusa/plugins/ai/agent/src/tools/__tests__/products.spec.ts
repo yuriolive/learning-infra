@@ -1,7 +1,12 @@
 import { Modules } from "@medusajs/framework/utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { getStoreTools } from "../products";
+import { getStoreTools } from "../products.js";
+
+interface MinimalTool {
+  name: string;
+  invoke: (input: Record<string, unknown>) => Promise<string>;
+}
 
 describe("Product Tools", () => {
   const mockProductService = {
@@ -16,7 +21,7 @@ describe("Product Tools", () => {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tools = getStoreTools(mockContainer as any);
+  const tools = getStoreTools(mockContainer as any) as unknown as MinimalTool[];
   const searchTool = tools.find((t) => t.name === "search_products");
 
   if (!searchTool) {

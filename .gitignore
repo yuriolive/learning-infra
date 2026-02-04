@@ -58,6 +58,7 @@ out/
 .dev.vars
 .vercel
 .wrangler/
+.medusa/
 
 # OS generated files
 .DS_Store

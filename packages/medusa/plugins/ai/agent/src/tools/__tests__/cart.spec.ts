@@ -1,7 +1,12 @@
 import { Modules } from "@medusajs/framework/utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { getCartTools } from "../cart";
+import { getCartTools } from "../cart.js";
+
+interface MinimalTool {
+  name: string;
+  invoke: (input: Record<string, unknown>) => Promise<string>;
+}
 
 describe("Cart Tools", () => {
   const mockCartService = {
@@ -39,7 +44,7 @@ describe("Cart Tools", () => {
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tools = getCartTools(mockContainer as any);
+  const tools = getCartTools(mockContainer as any) as unknown as MinimalTool[];
   const getOrCreateTool = tools.find((t) => t.name === "get_or_create_cart");
   const addItemTool = tools.find((t) => t.name === "add_item_to_cart");
 
