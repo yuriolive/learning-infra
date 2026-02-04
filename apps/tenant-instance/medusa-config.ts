@@ -36,13 +36,13 @@ const modules = isMigrating
         resolve: "@medusajs/medusa/event-bus-redis",
         options: {
           redisUrl: process.env.REDIS_URL,
+          queueOptions: {
+            prefix: redisPrefix,
+          },
           jobOptions: {
             removeOnComplete: true,
           },
-          redisOptions: {
-            ...redisOptions,
-            keyPrefix: redisPrefix,
-          },
+          redisOptions,
         },
       },
       {
