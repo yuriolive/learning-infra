@@ -16,8 +16,8 @@ export const CTASection = () => {
           commerce business?
         </h2>
         <p className="text-xl text-default-400 max-w-2xl mx-auto mb-12">
-          Join the next generation of merchants building on high-performance
-          infrastructure. No credit card required.
+          Join the next generation of merchants running on autonomous
+          infrastructure. AI-managed, human-owned.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -26,7 +26,9 @@ export const CTASection = () => {
             color="primary"
             variant="shadow"
             className="font-bold px-12 h-16 text-xl"
-          onPress={() => { router.push("/signup"); }}
+            onPress={() => {
+              router.push("/signup");
+            }}
           >
             Get Started Now
           </Button>

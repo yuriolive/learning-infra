@@ -40,9 +40,9 @@ export const HowItWorksSection = () => {
 
           <StepCard
             number={3}
-            icon="🚀"
-            title="Start Selling"
-            description="Access your admin dashboard, add products, and go live."
+            icon="🤖"
+            title="Agents Take Over"
+            description="Your AI workforce starts managing products, orders, and customer support instantly."
           />
         </div>
       </div>

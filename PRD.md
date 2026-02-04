@@ -1,34 +1,36 @@
-# PRD: Multi-Tenant E-commerce Platform (MedusaJS 2.0)
+# PRD: Vendin - Multi-Tenant Agentic E-commerce Platform
 
 ## Executive Summary
 
 ### Problem Statement
 
-Small and medium-sized merchants need a scalable e-commerce platform without managing complex infrastructure. Existing solutions either lack isolation (shared-database multi-tenancy with security risks) or require expensive dedicated servers.
+Small and medium-sized merchants need an AI-powered e-commerce platform that runs autonomously without requiring technical expertise or constant manual management. Existing solutions either lack true AI autonomy (requiring heavy merchant involvement) or use risky shared-database architectures with security vulnerabilities.
 
 ### Proposed Solution
 
-A serverless SaaS e-commerce platform using a multi-instance provisioning model. Each merchant receives a dedicated backend instance with its own database, ensuring complete data isolation while maintaining cost-efficiency through scale-to-zero architecture.
+A multi-tenant agentic e-commerce platform powered by autonomous AI agents. Each merchant receives a dedicated AI-operated store with its own backend and database, ensuring complete data isolation while AI agents handle everything from customer service to inventory management - with true scale-to-zero cost efficiency.
 
 ### Key Differentiators
 
-- **True Isolation**: Physical database separation (not just logical)
+- **Full AI Autonomy**: AI agents autonomously run your entire store (customer service, inventory, pricing, marketing)
+- **True Isolation**: Physical database separation per merchant (not just logical)
 - **Serverless-First**: All infrastructure scales to zero when idle
-- **Rapid Provisioning**: Full store setup in under 2 minutes
+- **Rapid Provisioning**: Full AI-powered store setup in under 2 minutes
 - **Cost-Efficient**: Pay only for active resources
 
 ### Expected Outcomes
 
-- Enable merchants to launch stores without technical expertise
+- Enable merchants to launch AI-powered stores without technical expertise
+- Reduce manual store management by 80% through AI automation
 - Maintain 99.9% uptime with automatic scaling
 - Reduce infrastructure costs by 60% compared to always-on instances
-- Support thousands of concurrent merchants
+- Support thousands of concurrent AI-operated merchant stores
 
 ---
 
 ## 1. Introduction
 
-This project builds a scalable SaaS e-commerce platform similar to Shopify or Nuvemshop. The architecture utilizes a **Multi-Instance (Provisioning) model**, ensuring each merchant has a dedicated backend and database for maximum isolation.
+This project builds a multi-tenant agentic e-commerce platform - where autonomous AI agents run entire stores. The architecture utilizes a **Multi-Instance (Provisioning) model**, ensuring each merchant has a dedicated AI-powered backend and database for maximum isolation and autonomy.
 
 ---
 
@@ -56,9 +58,9 @@ flowchart TB
     end
 
     subgraph tenantInstances [Tenant Instances]
-        T1[Tenant 1 MedusaJS]
-        T2[Tenant 2 MedusaJS]
-        T3[Tenant N MedusaJS]
+        T1[Tenant 1 AI Store]
+        T2[Tenant 2 AI Store]
+        T3[Tenant N AI Store]
     end
 
     subgraph infrastructure [Infrastructure]
@@ -99,10 +101,10 @@ flowchart TB
 
 **Tenant Instances (Individual Stores)**
 
-- Isolated MedusaJS 2.0 instances per tenant
+- AI-powered autonomous store instances per tenant
 - Each tenant has dedicated database and compute
 - **Private Access Only**: No public ingress (requires Proxy)
-- Headless MedusaJS API (Store API and Admin UI)
+- Headless e-commerce API (Store API and Admin UI)
 - Does **NOT** render customer UI
 - Location: `apps/tenant-instance/` (template)
 
@@ -149,7 +151,7 @@ flowchart TB
 - **So that**: I can operate my store securely without affecting other merchants
 - **Priority**: P0 (Critical)
 - **Acceptance Criteria**:
-  - Access to MedusaJS admin panel
+  - Access to AI-powered admin dashboard
   - Product catalog management (CRUD operations)
   - Order processing and fulfillment
   - Customer management

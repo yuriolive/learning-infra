@@ -1,8 +1,8 @@
-# AGENTS.md - Multi-Tenant E-commerce Platform
+# AGENTS.md - Vendin: Multi-Tenant Agentic E-commerce Platform
 
 ## Overview
 
-This document describes the agent architecture and guidelines for AI assistants working on this multi-tenant e-commerce platform project.
+This document describes the agent architecture and guidelines for AI assistants working on Vendin - a multi-tenant agentic e-commerce platform where autonomous AI agents run entire stores.
 
 ## Project Architecture
 
@@ -29,7 +29,7 @@ This document describes the agent architecture and guidelines for AI assistants 
    - Location: `apps/storefront/`
 
 4. **Tenant Instances (Individual Stores)**
-   - Isolated MedusaJS 2.0 instances per tenant
+   - AI-powered autonomous store instances per tenant
    - **Private Cloud Run services** (Ingress: All, Auth: IAM)
    - Accessed securely via Control Plane Proxy
    - Each tenant has dedicated database and compute
@@ -48,9 +48,9 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ### Tenant Instance Agent
 
-- **Purpose**: Configure and maintain individual MedusaJS store instances
+- **Purpose**: Configure and maintain individual AI-powered store instances
 - **Key Tasks**:
-  - Set up MedusaJS 2.0 with tenant-specific configuration
+  - Set up autonomous store backend with tenant-specific configuration
   - Configure database connections (Neon PostgreSQL)
   - Set up Redis caching (Upstash)
   - Serve custom storefront UI per tenant
@@ -102,7 +102,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 
 ### Backend
 
-- **Framework**: MedusaJS 2.0+
+- **Framework**: Node.js / TypeScript
 - **Language**: TypeScript
 - **Database**: Neon Serverless PostgreSQL
 - **Cache**: Upstash Redis (Serverless)
@@ -129,7 +129,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 │   ├── control-plane/      # Orchestrator API
 │   ├── marketing/          # Marketing landing app (root domain)
 │   ├── storefront/         # Router-only storefront (tenant domains)
-│   └── tenant-instance/    # MedusaJS template/boilerplate
+│   └── tenant-instance/    # AI-powered store template
 ├── packages/               # Shared utilities/types
 └── docs/                   # Architecture and setup guides
 ```
@@ -196,7 +196,7 @@ This document describes the agent architecture and guidelines for AI assistants 
 2. **Database Creation** → Neon API creates new database
 3. **Compute Provisioning** → Google Cloud Run service created
 4. **DNS Configuration** → Cloudflare SaaS configures domain
-5. **Store Initialization** → MedusaJS instance bootstrapped
+5. **Store Initialization** → AI-powered store instance bootstrapped
 6. **Verification** → Health checks confirm store is live
 
 ## Common Agent Tasks
@@ -232,12 +232,11 @@ This document describes the agent architecture and guidelines for AI assistants 
 - Look for best practices and patterns in official documentation
 - Verify API changes and breaking changes in library versions
 - Find code examples and implementation patterns
-- Use context7 for: MedusaJS 2.0, Neon API, Google Cloud Run, Cloudflare for SaaS, Next.js edge functions, Upstash Redis
+- Use context7 for: Neon API, Google Cloud Run, Cloudflare for SaaS, Next.js edge functions, Upstash Redis
 - Prefer context7 over web searches for library-specific documentation
 
 ## Resources
 
-- [MedusaJS Documentation](https://docs.medusajs.com/)
 - [Neon API Documentation](https://neon.tech/docs/api)
 - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
 - [Cloudflare for SaaS](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/)

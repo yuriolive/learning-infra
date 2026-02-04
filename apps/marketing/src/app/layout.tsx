@@ -10,9 +10,9 @@ import type { Metadata } from "next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Vendin - Launch Your Store in Seconds",
+  title: "Vendin - The Shopify for the AI Era",
   description:
-    "Multi-tenant e-commerce platform with dedicated infrastructure.",
+    "First full agentic e-commerce platform. Autonomous AI agents run your entire store.",
 };
 
 export default function RootLayout({

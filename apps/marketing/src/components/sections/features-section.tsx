@@ -31,9 +31,9 @@ const features = [
   },
   {
     icon: Wrench,
-    title: "Built on MedusaJS 2.0",
+    title: "Autonomous AI Agents",
     description:
-      "Full-featured store API with products, orders, customers, and payments out of the box.",
+      "AI agents run your store operations 24/7 - from customer support to inventory management.",
   },
   {
     icon: Palette,

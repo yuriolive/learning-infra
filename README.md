@@ -1,6 +1,8 @@
-# Vendin - Multi-Tenant E-commerce Platform
+# Vendin - Multi-Tenant Agentic E-commerce Platform
 
-Multi-tenant e-commerce platform using MedusaJS 2.0 with multi-instance provisioning. Each merchant gets a dedicated backend and database.
+**The Shopify for the AI Era**
+
+Revolutionary multi-tenant platform where autonomous AI agents run entire stores. Complete physical isolation with dedicated backend and database per merchant, powered by intelligent automation.
 
 ## Overview
 
@@ -14,7 +16,7 @@ This project uses a **monorepo architecture** with Turborepo and PNPM workspaces
 │   ├── control-plane/      # Orchestrator API (tenant provisioning)
 │   ├── marketing/          # Marketing landing app (root domain)
 │   ├── storefront/         # Router-only storefront (tenant domains)
-│   └── tenant-instance/    # MedusaJS template (per-tenant)
+│   └── tenant-instance/    # AI-powered store instance (per-tenant)
 ├── packages/
 │   └── config/             # Shared config (ESLint, TS, Prettier)
 └── docs/                   # Architecture and setup guides
@@ -120,7 +122,7 @@ Router-only Next.js app for tenant domain routing.
 
 ### Tenant Instance (`apps/tenant-instance/`)
 
-MedusaJS 2.0 template for individual merchant stores.
+AI-powered autonomous store engine for individual merchants.
 
 - **Private Service**: Running on Cloud Run with `ingress: all` (IAM Auth only)
 - Custom storefront UI per tenant (themes, customizations)

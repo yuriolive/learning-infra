@@ -6,7 +6,7 @@ const faqs = [
   {
     question: "How is this different from Shopify?",
     answer:
-      "Vendin uses a multi-instance model where each store gets physically isolated infrastructure with its own database and compute. Shopify uses shared multi-tenancy. This gives you true data isolation and better security.",
+      "Vendin is designed for the AI era. While Shopify requires manual management, Vendin's autonomous agents run your store operations for you. Plus, you get true physical isolation for enterprise-grade security.",
   },
   {
     question: "What is the provisioning time?",
@@ -26,7 +26,7 @@ const faqs = [
   {
     question: "What payment gateways are supported?",
     answer:
-      "We support Stripe, PayPal, and other major payment processors via MedusaJS plugins. Additional gateways can be added through the plugin ecosystem.",
+      "We support Stripe, PayPal, and other major payment processors. Our AI agents can also help you configure custom payment workflows.",
   },
   {
     question: "Is there a free tier?",

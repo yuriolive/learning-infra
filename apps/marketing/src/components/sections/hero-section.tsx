@@ -36,9 +36,9 @@ export const HeroSection = () => {
           </h1>
 
           <p className="text-xl text-default-500 max-w-2xl mb-12 leading-relaxed">
-            Provision physically isolated e-commerce infrastructure with
-            dedicated databases and compute. High-performance commerce for the
-            modern era.
+            The Shopify for the AI Era. Provision physically isolated
+            infrastructure where autonomous agents run your entire store 24/7.
+            True ownership with zero maintenance.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto">
@@ -48,7 +48,9 @@ export const HeroSection = () => {
               variant="shadow"
               className="font-bold px-10 h-14 text-lg"
               endContent={<ArrowRight size={20} />}
-                onPress={() => { router.push("/signup"); }}
+              onPress={() => {
+                router.push("/signup");
+              }}
             >
               Start Free Trial
             </Button>
