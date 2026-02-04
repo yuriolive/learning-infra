@@ -3,7 +3,7 @@
 import { HeroUIProvider } from "@heroui/react";
 import { PostHogProvider } from "@vendin/analytics/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../i18n/routing";
 import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {

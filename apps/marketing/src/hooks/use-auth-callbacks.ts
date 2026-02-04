@@ -1,4 +1,4 @@
-import { useRouter } from "next/navigation";
+import { useRouter } from "../i18n/routing";
 import { toast } from "sonner";
 
 interface UseAuthCallbacksProperties {
