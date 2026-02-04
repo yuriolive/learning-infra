@@ -189,15 +189,6 @@ describe("CloudRunProvider", () => {
     });
   });
 
-  const setupIamPolicyMock = (bindings: unknown[] = []) => {
-    mockRunClient.projects.locations.services.getIamPolicy.mockResolvedValue({
-      data: { bindings },
-    });
-    mockRunClient.projects.locations.services.setIamPolicy.mockResolvedValue(
-      {},
-    );
-  };
-
   describe("startDeployTenantInstance", () => {
     it("should create a new service if it does not exist", async () => {
       mockRunClient.projects.locations.services.get.mockRejectedValueOnce({
@@ -209,6 +200,8 @@ describe("CloudRunProvider", () => {
         redisUrl: "redis://...",
         redisPrefix: "t_1:",
         subdomain: "tenant-1",
+        jwtSecret: "secret",
+        cookieSecret: "secret",
       });
 
       expect(opName).toBe(
@@ -233,6 +226,8 @@ describe("CloudRunProvider", () => {
         redisUrl: "redis://...",
         redisPrefix: "t_1:",
         subdomain: "tenant-1",
+        jwtSecret: "secret",
+        cookieSecret: "secret",
       });
 
       expect(opName).toBe(
@@ -245,18 +240,14 @@ describe("CloudRunProvider", () => {
   });
 
   describe("finalizeTenantService", () => {
-    it("should make service public and return URI", async () => {
+    it("should return service URI", async () => {
       mockRunClient.projects.locations.services.get.mockResolvedValueOnce({
         data: { uri: "https://final-uri.a.run.app" },
       });
-      setupIamPolicyMock([]);
 
       const uri = await provider.finalizeTenantService("tenant-1");
 
       expect(uri).toBe("https://final-uri.a.run.app");
-      expect(
-        mockRunClient.projects.locations.services.setIamPolicy,
-      ).toHaveBeenCalled();
     });
   });
 
@@ -273,6 +264,8 @@ describe("CloudRunProvider", () => {
         databaseUrl: "postgres://",
         redisUrl: "redis://",
         redisPrefix: "t_1:",
+        jwtSecret: "secret",
+        cookieSecret: "secret",
       });
 
       expect(opName).toBe("job-op-1");
@@ -310,64 +303,6 @@ describe("CloudRunProvider", () => {
 
       const status = await provider.getOperation("op-1");
       expect(status).toEqual({ done: true, error: "Failed" });
-    });
-  });
-
-  describe("makeServicePublic", () => {
-    it("should add public binding if not present", async () => {
-      setupIamPolicyMock([]);
-
-      await (
-        provider as unknown as {
-          makeServicePublic: (id: string) => Promise<void>;
-        }
-      ).makeServicePublic("test-service");
-
-      expect(
-        mockRunClient.projects.locations.services.setIamPolicy,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          requestBody: {
-            policy: {
-              bindings: [
-                {
-                  role: "roles/run.invoker",
-                  members: ["allUsers"],
-                },
-              ],
-            },
-          },
-        }),
-      );
-    });
-
-    it("should update existing invoker binding to include allUsers", async () => {
-      setupIamPolicyMock([
-        {
-          role: "roles/run.invoker",
-          members: ["user:special@example.com"],
-        },
-      ]);
-
-      await (
-        provider as unknown as {
-          makeServicePublic: (id: string) => Promise<void>;
-        }
-      ).makeServicePublic("test-service");
-
-      const calls =
-        mockRunClient.projects.locations.services.setIamPolicy.mock.calls;
-      expect(calls.length).toBeGreaterThan(0);
-      const call = calls[0]?.[0];
-      if (!call) {
-        throw new Error("Expected setIamPolicy to have been called");
-      }
-      const invokerBinding = call.requestBody.policy.bindings.find(
-        (b: { role: string; members: string[] }) =>
-          b.role === "roles/run.invoker",
-      );
-      expect(invokerBinding.members).toContain("allUsers");
-      expect(invokerBinding.members).toContain("user:special@example.com");
     });
   });
 

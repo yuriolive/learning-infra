@@ -110,6 +110,8 @@ describe("CloudRunProvider", () => {
           redisUrl: "redis-url",
           redisPrefix: "prefix:",
           subdomain: "sub",
+          jwtSecret: "secret",
+          cookieSecret: "secret",
         }),
       ).rejects.toThrow(
         "Failed to start deployment: No operation name returned from Cloud Run API",

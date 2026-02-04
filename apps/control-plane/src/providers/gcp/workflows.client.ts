@@ -18,7 +18,6 @@ interface CreateExecutionOptions {
 export interface ProvisionTenantPayload {
   tenantId: string;
   baseUrl: string;
-  internalApiKey: string | undefined;
 }
 
 export class GcpWorkflowsClient {

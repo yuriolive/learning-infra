@@ -15,14 +15,12 @@ import type {
 } from "./tenant.types";
 
 interface TenantServiceConfig {
-  internalApiKey?: string | undefined;
   logger: Logger;
   gcpProjectId?: string | undefined;
   gcpRegion?: string | undefined;
 }
 
 export class TenantService {
-  private internalApiKey: string | undefined;
   private logger: Logger;
   private gcpProjectId: string | undefined;
   private gcpRegion: string | undefined;
@@ -33,7 +31,6 @@ export class TenantService {
     config: TenantServiceConfig,
   ) {
     this.logger = config.logger;
-    this.internalApiKey = config.internalApiKey;
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
   }

@@ -1,5 +1,3 @@
-import { randomBytes } from "node:crypto";
-
 import { GoogleAuth } from "google-auth-library";
 import { run_v2 } from "googleapis";
 
@@ -22,6 +20,8 @@ export interface TenantAppConfig {
   redisUrl: string;
   redisPrefix: string;
   subdomain?: string; // Optional for migrations
+  jwtSecret: string;
+  cookieSecret: string;
 }
 
 export class CloudRunProvider {
@@ -75,16 +75,12 @@ export class CloudRunProvider {
 
     this.logger.info({ tenantId }, "Starting Cloud Run deployment (Async)");
 
-    // Generate secrets and config internally
-    const cookieSecret = randomBytes(32).toString("hex");
-    const jwtSecret = randomBytes(32).toString("hex");
-
     const environmentVariables = {
       DATABASE_URL: config.databaseUrl,
       REDIS_URL: config.redisUrl,
       REDIS_PREFIX: config.redisPrefix,
-      COOKIE_SECRET: cookieSecret,
-      JWT_SECRET: jwtSecret,
+      COOKIE_SECRET: config.cookieSecret,
+      JWT_SECRET: config.jwtSecret,
       HOST: "0.0.0.0",
       NODE_ENV: "production",
       STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
@@ -115,9 +111,6 @@ export class CloudRunProvider {
     const serviceName = `tenant-${tenantId}`;
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const servicePath = `${parent}/services/${serviceName}`;
-
-    // Make service public (idempotent)
-    await this.makeServicePublic(servicePath);
 
     // Fetch the final service to get the URL
     const service = await this.runClient.projects.locations.services.get({
@@ -324,44 +317,6 @@ export class CloudRunProvider {
       }
     }
     return undefined;
-  }
-
-  private async makeServicePublic(servicePath: string): Promise<void> {
-    this.logger.info(
-      { servicePath },
-      "Setting IAM policy to allow public access",
-    );
-
-    const policyResponse =
-      await this.runClient.projects.locations.services.getIamPolicy({
-        resource: servicePath,
-      });
-
-    const policy = policyResponse.data;
-    policy.bindings = policy.bindings || [];
-
-    const publicBinding = policy.bindings.find(
-      (b: { role?: string | null; members?: string[] | null }) =>
-        b.role === "roles/run.invoker",
-    );
-    if (publicBinding) {
-      if (publicBinding.members?.includes("allUsers")) {
-        // Already public
-        return;
-      } else {
-        publicBinding.members = [...(publicBinding.members || []), "allUsers"];
-      }
-    } else {
-      policy.bindings.push({
-        role: "roles/run.invoker",
-        members: ["allUsers"],
-      });
-    }
-
-    await this.runClient.projects.locations.services.setIamPolicy({
-      resource: servicePath,
-      requestBody: { policy },
-    });
   }
 
   private getOrCreateService(

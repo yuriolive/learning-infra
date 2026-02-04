@@ -24,19 +24,16 @@ export class ProvisioningService {
   private neonProvider: NeonProvider | null = null;
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
-  private internalApiKey: string | undefined;
-  private geminiApiKey: string | undefined;
   private upstashRedisUrl: string | undefined;
   private logger: Logger;
 
   constructor(
     private tenantRepository: TenantRepository,
-    config: ProvisioningServiceConfig & { internalApiKey?: string | undefined },
+    config: ProvisioningServiceConfig,
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
-    this.internalApiKey = config.internalApiKey;
-    this.geminiApiKey = config.geminiApiKey;
+    this.upstashRedisUrl = config.upstashRedisUrl;
 
     this.initializeProviders(config);
   }
@@ -123,6 +120,9 @@ export class ProvisioningService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
+    const jwtSecret = tenant.jwtSecret;
+    const cookieSecret = tenant.cookieSecret;
+
     this.logger.info({ tenantId }, "Ensuring migration job exists");
     const operationName = await this.cloudRunProvider?.ensureMigrationJob(
       tenantId,
@@ -130,6 +130,8 @@ export class ProvisioningService {
         databaseUrl,
         redisUrl: upstashRedisUrl,
         redisPrefix,
+        jwtSecret,
+        cookieSecret,
       },
     );
 
@@ -190,6 +192,9 @@ export class ProvisioningService {
 
     const redisPrefix = `t_${tenant.redisHash}:`;
 
+    const jwtSecret = tenant.jwtSecret;
+    const cookieSecret = tenant.cookieSecret;
+
     this.logger.info({ tenantId }, "Starting service deployment operation");
     const operationName =
       (await this.cloudRunProvider?.startDeployTenantInstance(tenantId, {
@@ -197,6 +202,8 @@ export class ProvisioningService {
         redisUrl: upstashRedisUrl,
         redisPrefix,
         subdomain: tenant.subdomain!,
+        jwtSecret,
+        cookieSecret,
       })) ?? "";
 
     return { operationName };
@@ -243,7 +250,6 @@ export class ProvisioningService {
       await this.executionsClient.triggerProvisionTenant({
         tenantId,
         baseUrl,
-        internalApiKey: this.internalApiKey,
       });
 
       await this.tenantRepository.logProvisioningEvent(

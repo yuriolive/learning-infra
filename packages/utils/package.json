@@ -13,13 +13,23 @@
     "./logger": {
       "import": "./dist/logger.js",
       "default": "./src/logger.ts"
+    },
+    "./logger-cloudflare": {
+      "import": "./dist/logger-cloudflare.js",
+      "default": "./src/logger-cloudflare.ts"
+    },
+    "./logger-cloudflare-factory": {
+      "import": "./dist/logger-cloudflare-factory.js",
+      "default": "./src/logger-cloudflare-factory.ts"
     }
   },
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "pino": "^10.1.0",
@@ -29,8 +39,10 @@
   "devDependencies": {
     "@types/validator": "^13.15.10",
     "@vendin/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.37.0",
     "pino-pretty": "^13.1.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

@@ -47,7 +47,6 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "mock-sa",
-      "internal-api-key",
       "gemini-api-key",
     );
     expect(result).toBeUndefined();
@@ -116,31 +115,6 @@ describe("validateConfiguration", () => {
     );
   });
 
-  it("should return 500 Response if NODE_ENV is production and INTERNAL_API_KEY is missing", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      "admin-api-key",
-      "production",
-      "redis://localhost:6379",
-      "neon-api-key",
-      "neon-project-id",
-      "gcp-project-id",
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "sa", // missing internal api key
-      undefined,
-      "gemini-api-key",
-    );
-
-    expect(result).toBeInstanceOf(Response);
-    expect(result?.status).toBe(500);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      "INTERNAL_API_KEY is required in production but was not configured",
-    );
-  });
-
   it("should return undefined if ADMIN_API_KEY is missing but NODE_ENV is not production", () => {
     const result = validateConfiguration(
       mockLogger,
@@ -169,7 +143,6 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "sa",
-      "internal-key",
       "gemini-api-key",
     );
 
@@ -193,7 +166,6 @@ describe("validateConfiguration", () => {
       "tenant-image-tag",
       "google-app-creds",
       "sa",
-      "internal-key",
       "gemini-api-key",
     );
 
@@ -214,7 +186,6 @@ describe("resolveEnvironmentSecrets", () => {
       POSTHOG_API_KEY: "posthog-key",
       UPSTASH_REDIS_URL: "redis://upstash",
       GOOGLE_APPLICATION_CREDENTIALS: "full-creds",
-      INTERNAL_API_KEY: "internal-key",
       GEMINI_API_KEY: "gemini-key",
     };
 
@@ -228,7 +199,6 @@ describe("resolveEnvironmentSecrets", () => {
       postHogApiKey: "posthog-key",
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
-      internalApiKey: "internal-key",
       geminiApiKey: "gemini-key",
     });
   });

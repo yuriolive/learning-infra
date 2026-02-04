@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { and, eq, ne } from "drizzle-orm";
 
@@ -29,6 +29,8 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     deletedAt: databaseTenant.deletedAt ?? null,
     metadata: databaseTenant.metadata ?? null,
     failureReason: databaseTenant.failureReason ?? null,
+    jwtSecret: databaseTenant.jwtSecret!,
+    cookieSecret: databaseTenant.cookieSecret!,
   };
 }
 
@@ -56,6 +58,8 @@ export class TenantRepository {
         plan: input.plan,
         metadata: input.metadata,
         redisHash,
+        jwtSecret: randomBytes(32).toString("hex"),
+        cookieSecret: randomBytes(32).toString("hex"),
       })
       .returning();
 
@@ -100,6 +104,10 @@ export class TenantRepository {
         ...(input.metadata !== undefined && { metadata: input.metadata }),
         ...(input.failureReason !== undefined && {
           failureReason: input.failureReason,
+        }),
+        ...(input.jwtSecret !== undefined && { jwtSecret: input.jwtSecret }),
+        ...(input.cookieSecret !== undefined && {
+          cookieSecret: input.cookieSecret,
         }),
         updatedAt: new Date(),
       })

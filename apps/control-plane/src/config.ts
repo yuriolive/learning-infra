@@ -25,7 +25,6 @@ export interface Environment {
   GOOGLE_APPLICATION_CREDENTIALS_PART_2?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
   CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
-  INTERNAL_API_KEY?: BoundSecret;
   GEMINI_API_KEY?: BoundSecret;
 }
 
@@ -51,7 +50,6 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleAppCredsP2,
     googleAppCredsP3,
     cloudRunServiceAccount,
-    internalApiKey,
     geminiApiKey,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
@@ -65,7 +63,6 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_2),
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
     resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
-    resolveSecret(environment.INTERNAL_API_KEY),
     resolveSecret(environment.GEMINI_API_KEY),
   ]);
 
@@ -91,7 +88,6 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     upstashRedisUrl,
     googleApplicationCredentials,
     cloudRunServiceAccount,
-    internalApiKey,
     geminiApiKey,
   };
 }
@@ -123,7 +119,6 @@ function validateProductionConfig(
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
-  internalApiKey?: string,
   geminiApiKey?: string,
 ): Response | undefined {
   if (!adminApiKey) {
@@ -133,24 +128,20 @@ function validateProductionConfig(
     return createErrorResponse("Service is not properly configured");
   }
 
-  if (!internalApiKey) {
-    logger.error(
-      "INTERNAL_API_KEY is required in production but was not configured",
-    );
-    return createErrorResponse("Service is not properly configured");
-  }
+  const requiredVariables = {
+    NEON_API_KEY: neonApiKey,
+    NEON_PROJECT_ID: neonProjectId,
+    GCP_PROJECT_ID: gcpProjectId,
+    GCP_REGION: gcpRegion,
+    TENANT_IMAGE_TAG: tenantImageTag,
+    GOOGLE_APPLICATION_CREDENTIALS: googleApplicationCredentials,
+    CLOUD_RUN_SERVICE_ACCOUNT: cloudRunServiceAccount,
+    GEMINI_API_KEY: geminiApiKey,
+  };
 
-  const missingVariables: string[] = [];
-  if (!neonApiKey) missingVariables.push("NEON_API_KEY");
-  if (!neonProjectId) missingVariables.push("NEON_PROJECT_ID");
-  if (!gcpProjectId) missingVariables.push("GCP_PROJECT_ID");
-  if (!gcpRegion) missingVariables.push("GCP_REGION");
-  if (!tenantImageTag) missingVariables.push("TENANT_IMAGE_TAG");
-  if (!googleApplicationCredentials)
-    missingVariables.push("GOOGLE_APPLICATION_CREDENTIALS");
-  if (!cloudRunServiceAccount)
-    missingVariables.push("CLOUD_RUN_SERVICE_ACCOUNT");
-  if (!geminiApiKey) missingVariables.push("GEMINI_API_KEY");
+  const missingVariables = Object.entries(requiredVariables)
+    .filter(([_, value]) => !value)
+    .map(([key]) => key);
 
   if (missingVariables.length > 0) {
     logger.error(
@@ -178,7 +169,6 @@ export function validateConfiguration(
   tenantImageTag?: string,
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
-  internalApiKey?: string,
   geminiApiKey?: string,
 ): Response | undefined {
   if (!databaseUrl) {
@@ -202,7 +192,6 @@ export function validateConfiguration(
       tenantImageTag,
       googleApplicationCredentials,
       cloudRunServiceAccount,
-      internalApiKey,
       geminiApiKey,
     );
   }

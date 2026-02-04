@@ -1,1 +1,0 @@
-ALTER TABLE "tenants" ADD COLUMN "redis_hash" text;

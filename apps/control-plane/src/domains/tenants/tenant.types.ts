@@ -13,6 +13,8 @@ export interface Tenant {
   deletedAt: Date | null;
   metadata: Record<string, unknown> | null;
   failureReason: string | null;
+  jwtSecret: string;
+  cookieSecret: string;
 }
 
 export type TenantStatus =
@@ -42,4 +44,6 @@ export interface UpdateTenantInput {
   redisHash?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
   failureReason?: string | undefined;
+  jwtSecret?: string | undefined;
+  cookieSecret?: string | undefined;
 }

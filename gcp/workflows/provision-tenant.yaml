@@ -5,12 +5,8 @@ main:
         assign:
           - baseUrl: ${args.baseUrl}
           - tenantId: ${args.tenantId}
-          - internalKey: ${args.internalApiKey}
-          - commonHeaders:
-              X-Internal-Key: ${internalKey}
           - postHeaders:
               Content-Type: "application/json"
-              X-Internal-Key: ${internalKey}
 
     - provision_database:
         try:
@@ -31,7 +27,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Database provisioning failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_db_error:
@@ -58,7 +53,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Migration job creation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_ensure_error:
@@ -83,7 +77,6 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${commonHeaders}
             query:
               name: ${ensure_job_result.body.operationName}
             auth:
@@ -97,7 +90,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Migration job creation status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_ensure_status_error:
@@ -112,7 +104,6 @@ main:
                   args:
                     baseUrl: ${baseUrl}
                     postHeaders: ${postHeaders}
-                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
                     reason: '${"Migration job creation operation failed: " + text.decode(json.encode(default(ensure_op_status.body.error, "Unknown error")), "UTF-8")}'
               - raise_ensure_op_error:
@@ -143,7 +134,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Migration job trigger failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_trigger_error:
@@ -159,7 +149,6 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${commonHeaders}
             query:
               name: ${trigger_job_result.body.operationName}
             auth:
@@ -173,7 +162,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Migration trigger status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_trigger_status_error:
@@ -188,7 +176,6 @@ main:
                   args:
                     baseUrl: ${baseUrl}
                     postHeaders: ${postHeaders}
-                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
                     reason: '${"Migration trigger operation failed: " + text.decode(json.encode(default(trigger_op_status.body.error, "Unknown error")), "UTF-8")}'
               - raise_trigger_op_error:
@@ -210,7 +197,6 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/migrations/status"}
-            headers: ${commonHeaders}
             query:
               name: ${executionName}
             auth:
@@ -224,7 +210,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Migration status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_check_error:
@@ -243,7 +228,6 @@ main:
                   args:
                     baseUrl: ${baseUrl}
                     postHeaders: ${postHeaders}
-                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
                     reason: '${"Migration failed: " + text.decode(json.encode(default(status_response.body.error, "Unknown error")), "UTF-8")}'
               - raise_migration_failed:
@@ -256,7 +240,7 @@ main:
             url: ${baseUrl + "/internal/provisioning/migrations?action=delete"}
             body:
               tenantId: ${tenantId}
-            headers: ${commonHeaders}
+            headers: ${postHeaders}
             auth:
               type: OIDC
         except:
@@ -288,7 +272,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Service deployment initiation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_service_start_error:
@@ -304,7 +287,6 @@ main:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${commonHeaders}
             query:
               name: ${deploy_start_result.body.operationName}
             auth:
@@ -318,7 +300,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Service deployment status check failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_deploy_status_error:
@@ -333,7 +314,6 @@ main:
                   args:
                     baseUrl: ${baseUrl}
                     postHeaders: ${postHeaders}
-                    commonHeaders: ${commonHeaders}
                     tenantId: ${tenantId}
                     reason: '${"Service deployment operation failed: " + text.decode(json.encode(default(deploy_op_status.body.error, "Unknown error")), "UTF-8")}'
               - raise_deploy_op_error:
@@ -362,7 +342,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Service finalization failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_service_finalize_error:
@@ -387,7 +366,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Domain configuration failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_domain_error:
@@ -412,7 +390,6 @@ main:
                 args:
                   baseUrl: ${baseUrl}
                   postHeaders: ${postHeaders}
-                  commonHeaders: ${commonHeaders}
                   tenantId: ${tenantId}
                   reason: '${"Tenant activation failed: " + text.decode(json.encode(default(e.body, e.message)), "UTF-8")}'
             - raise_activation_error:
@@ -424,8 +401,7 @@ main:
           tenantId: ${tenantId}
 
 perform_rollback:
-  params:
-    [baseUrl, postHeaders, commonHeaders, tenantId, reason: "Unknown error"]
+  params: [baseUrl, postHeaders, tenantId, reason: "Unknown error"]
   steps:
     - call_rollback_endpoint:
         try:
@@ -469,7 +445,6 @@ perform_rollback:
           call: http.get
           args:
             url: ${baseUrl + "/internal/provisioning/operations"}
-            headers: ${commonHeaders}
             query:
               name: ${rollback_result.body.operationName}
             auth:
