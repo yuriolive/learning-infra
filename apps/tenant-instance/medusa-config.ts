@@ -36,11 +36,13 @@ const modules = isMigrating
         resolve: "@medusajs/medusa/event-bus-redis",
         options: {
           redisUrl: process.env.REDIS_URL,
-          redisPrefix,
           jobOptions: {
             removeOnComplete: true,
           },
-          redisOptions,
+          redisOptions: {
+            ...redisOptions,
+            keyPrefix: redisPrefix,
+          },
         },
       },
       {
@@ -70,6 +72,7 @@ export default defineConfig({
           }
         : { connection: { ssl: true } },
     redisUrl: process.env.REDIS_URL,
+    redisPrefix,
     redisOptions,
     http: {
       storeCors: process.env.STORE_CORS || "",
