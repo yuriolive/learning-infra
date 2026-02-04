@@ -1,4 +1,4 @@
-import { logger } from "@vendin/utils/logger";
+import { consoleLogger as logger } from "@vendin/utils/logger-cloudflare-factory";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { phoneNumber } from "better-auth/plugins";

@@ -57,6 +57,7 @@ next-env.d.ts
 out/
 .dev.vars
 .vercel
+.wrangler/
 
 # OS generated files
 .DS_Store

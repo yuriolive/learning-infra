@@ -1,4 +1,4 @@
-import { logger } from "@vendin/utils/logger";
+import { consoleLogger as logger } from "@vendin/utils/logger-cloudflare-factory";
 import { useState } from "react";
 import { toast } from "sonner";
 
