@@ -1,7 +1,6 @@
 {
   "name": "@vendin/tenant-instance",
   "version": "0.0.1",
-  "type": "module",
   "description": "MedusaJS Tenant Instance Template",
   "author": "",
   "license": "MIT",
@@ -23,6 +22,7 @@
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
     "db:migrate": "TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
+    "db:migrate:prod": "medusa db:migrate",
     "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
