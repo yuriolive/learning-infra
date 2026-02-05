@@ -31,8 +31,14 @@ RUN pnpm build --filter=@vendin/tenant-instance...
 # Deploy the app to a clean directory with production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
-# Copy the build output (dist) as it is ignored by .gitignore (and thus pnpm deploy)
+# Copy the compiled backend code (dist directory contains transpiled TypeScript)
 RUN cp -r /app/apps/tenant-instance/dist/. /app/deploy/
+
+# Copy admin dashboard files from build output to runtime-expected location
+# medusa build creates files in .medusa/client/, but runtime expects them in .medusa/server/public/admin/
+RUN mkdir -p /app/deploy/.medusa/server/public && \
+    cp -r /app/apps/tenant-instance/.medusa/client /app/deploy/.medusa/server/public/admin
+
 
 # Stage 4: Runner
 FROM node:20-alpine AS runner

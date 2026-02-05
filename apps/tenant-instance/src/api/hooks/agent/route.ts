@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-import { AGENT_MODULE } from "../../../modules/agent";
-
-import type AgentModuleService from "../../../modules/agent/service";
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import type { AgentModuleService } from "@vendin/medusa-ai-agent";
 
 interface Logger {
   warn: (message: string, context?: unknown) => void;
@@ -120,7 +118,7 @@ const handleMessageProcessing = async (
   medusaResponse: MedusaResponse,
 ) => {
   const agentModule =
-    medusaRequest.scope.resolve<AgentModuleService>(AGENT_MODULE);
+    medusaRequest.scope.resolve<AgentModuleService>("agentModuleService");
   const response = await agentModule.processMessage(phone, text);
   medusaResponse.status(200).json({ response });
 };

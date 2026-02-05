@@ -1,0 +1,55 @@
+{
+  "name": "@vendin/medusa-erp-bling",
+  "version": "1.0.0",
+  "description": "Bling ERP integration for MedusaJS v2",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./api/*": "./dist/api/*",
+    "./modules/*": "./dist/modules/*",
+    "./workflows/*": "./dist/workflows/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "medusa plugin:build",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist .medusa",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "^2.13.0",
+    "@medusajs/admin-shared": "^2.13.0",
+    "@medusajs/framework": "^2.13.0",
+    "@medusajs/medusa": "^2.13.0",
+    "@medusajs/types": "^2.13.0",
+    "@medusajs/ui": "^4.1.0",
+    "@medusajs/utils": "^2.13.0",
+    "@mikro-orm/core": "^6.6.5",
+    "axios": "^1.6.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@medusajs/cli": "^2.13.0",
+    "@medusajs/orchestration": "^2.13.1",
+    "@types/node": "^20.0.0",
+    "@vendin/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "@medusajs/framework": "^2.0.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

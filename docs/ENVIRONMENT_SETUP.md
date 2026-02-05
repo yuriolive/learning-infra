@@ -63,7 +63,10 @@ Save this value - you'll need it for both Cloudflare Secrets Store and GitHub Se
 - **NEON_PROJECT_ID**: From Neon project URL or dashboard
 - **GEMINI_API_KEY**: From [Google AI Studio](https://aistudio.google.com/app/apikey)
 - **CLOUDFLARE_API_TOKEN**: Create at [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
-  - Required permissions: **Workers Scripts (Edit)**, **Workers Secrets (Edit)**
+  - Required permissions:
+    - **Account**: **D1 (Edit)** - Required for D1 database migrations
+    - **Workers Scripts (Edit)** - Required for deploying Workers
+    - **Workers Secrets (Edit)** - Required for managing Worker secrets
 - **CLOUDFLARE_ZONE_ID**: From Cloudflare dashboard → vendin.store → Overview → Zone ID
 - **POSTHOG_API_KEY**: From PostHog Dashboard → Project Settings → Project API Key
 - **POSTHOG_HOST**: Use `https://us.i.posthog.com` for US Cloud or `https://eu.i.posthog.com` for EU.
@@ -303,6 +306,18 @@ gh secret set ADMIN_API_KEY --body "$NEW_KEY"
 - This means code is trying to use `process.env` directly
 - All env vars must be accessed through the `env` binding in Cloudflare Workers
 - See code examples in `apps/control-plane/src/index.ts`
+
+**\"Authentication error\" during D1 migrations**
+
+```
+✘ [ERROR] Authentication error [code: 10000]
+✘ [ERROR] Unable to authenticate request [code: 10001]
+```
+
+- The Cloudflare API token is missing **D1 (Edit)** permission
+- Go to [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+- Edit the token and ensure **Account** → **D1** → **Edit** permission is enabled
+- Update the token value in GitHub Secrets (`CLOUDFLARE_API_TOKEN`)
 
 ---
 

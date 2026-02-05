@@ -1,0 +1,68 @@
+{
+  "Navbar": {
+    "features": "Recursos",
+    "pricing": "Preços",
+    "about": "Sobre",
+    "login": "Entrar",
+    "signup": "Cadastrar"
+  },
+  "Hero": {
+    "chip": "Infraestrutura pronta em < 2 minutos",
+    "title": "Lance sua Loja",
+    "titleHighlight": "Em Segundos",
+    "subtitle": "Provisione infraestrutura de e-commerce fisicamente isolada com bancos de dados e computação dedicados. Comércio de alta performance para a era moderna.",
+    "startTrial": "Teste Grátis",
+    "learnMore": "Saiba Mais"
+  },
+  "Footer": {
+    "product": "Produto",
+    "features": "Recursos",
+    "pricing": "Preços",
+    "integrations": "Integrações",
+    "changelog": "Novidades",
+    "company": "Empresa",
+    "about": "Sobre",
+    "blog": "Blog",
+    "careers": "Carreiras",
+    "contact": "Contato",
+    "resources": "Recursos",
+    "documentation": "Documentação",
+    "apiReference": "Referência da API",
+    "statusPage": "Status",
+    "community": "Comunidade",
+    "legal": "Legal",
+    "privacyPolicy": "Política de Privacidade",
+    "termsOfService": "Termos de Uso",
+    "security": "Segurança",
+    "gdpr": "LGPD",
+    "copyright": "© 2026 Vendin. Todos os direitos reservados."
+  },
+  "LanguageSwitcher": {
+    "label": "Idioma",
+    "en": "Inglês",
+    "es": "Espanhol",
+    "pt-br": "Português"
+  },
+  "Login": {
+    "title": "Bem-vindo de volta",
+    "subtitle": "Entre na sua conta para continuar",
+    "noAccount": "Não tem uma conta?",
+    "signup": "Cadastre-se",
+    "email": "Email",
+    "whatsapp": "WhatsApp"
+  },
+  "Signup": {
+    "title": "Crie uma conta",
+    "subtitle": "Insira seus dados para começar",
+    "alreadyAccount": "Já tem uma conta?",
+    "login": "Entre",
+    "email": "Email",
+    "whatsapp": "WhatsApp"
+  },
+  "CTA": {
+    "title": "Pronto para escalar seu <br /> negócio de comércio?",
+    "subtitle": "Junte-se à próxima geração de comerciantes construindo em infraestrutura de alta performance. Sem cartão de crédito.",
+    "button": "Comece Agora",
+    "footer": "Nível gratuito disponível para sempre • 99.9% de Uptime SLA • Configuração instantânea"
+  }
+}

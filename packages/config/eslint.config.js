@@ -23,6 +23,11 @@ export default [
       "**/*.d.ts",
       "scripts/",
       "docs/examples/**",
+      ".medusa/",
+      ".next/",
+      ".open-next/",
+      ".wrangler/",
+      ".turbo/",
     ],
   },
 

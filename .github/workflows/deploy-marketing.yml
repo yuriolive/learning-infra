@@ -37,6 +37,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run Database Migrations
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/marketing
+          command: d1 migrations apply marketing-db --remote
+
       - name: Build Marketing App
         run: pnpm turbo run build --filter=marketing
         env:

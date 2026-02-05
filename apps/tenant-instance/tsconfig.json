@@ -11,7 +11,8 @@
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {}
   },
   "include": ["src", "medusa-config.ts"],
   "exclude": ["node_modules", "dist", ".medusa"]

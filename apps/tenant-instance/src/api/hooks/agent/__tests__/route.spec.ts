@@ -1,7 +1,7 @@
+import { AGENT_MODULE } from "@vendin/medusa-ai-agent";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AGENT_MODULE } from "../../../../modules/agent";
-import { POST } from "../route";
+import { POST } from "../route.js";
 
 describe("Agent API Route", () => {
   beforeEach(() => {

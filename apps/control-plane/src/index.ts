@@ -1,5 +1,5 @@
 import { captureError, initAnalytics } from "@vendin/analytics";
-import { createCloudflareLogger } from "@vendin/utils/logger-cloudflare-factory";
+import { createCloudflareLogger } from "@vendin/logger/cloudflare";
 import { LRUCache } from "lru-cache";
 
 import {

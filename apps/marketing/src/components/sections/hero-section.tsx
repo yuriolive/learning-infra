@@ -2,12 +2,14 @@
 
 import { Button, Chip } from "@heroui/react";
 import { ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "../../i18n/routing";
+import { useTranslations } from "next-intl";
 
 import { MockDashboard } from "../ui/mock-dashboard";
 
 export const HeroSection = () => {
   const router = useRouter();
+  const t = useTranslations("Hero");
 
   return (
     <section className="relative overflow-hidden py-24 sm:py-32 bg-background">
@@ -25,20 +27,18 @@ export const HeroSection = () => {
             className="mb-8 border-primary/20 bg-primary/5 px-4 py-1"
             size="md"
           >
-            Infrastructure Ready in &lt; 2 minutes
+            {t("chip")}
           </Chip>
 
           <h1 className="text-6xl sm:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
-            Launch Your Store <br />
+            {t("title")} <br />
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              In Seconds
+              {t("titleHighlight")}
             </span>
           </h1>
 
           <p className="text-xl text-default-500 max-w-2xl mb-12 leading-relaxed">
-            Provision physically isolated e-commerce infrastructure with
-            dedicated databases and compute. High-performance commerce for the
-            modern era.
+            {t("subtitle")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto">
@@ -50,7 +50,7 @@ export const HeroSection = () => {
               endContent={<ArrowRight size={20} />}
                 onPress={() => { router.push("/signup"); }}
             >
-              Start Free Trial
+              {t("startTrial")}
             </Button>
             <Button
               size="lg"
@@ -61,7 +61,7 @@ export const HeroSection = () => {
                 element?.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              Learn More
+              {t("learnMore")}
             </Button>
           </div>
         </div>

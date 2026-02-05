@@ -1,0 +1,29 @@
+{
+  "name": "@vendin/medusa-search-neon",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Neon Search Plugin for Medusa v2",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@google/genai": "^1.39.0",
+    "@medusajs/framework": "^2.13.0",
+    "@medusajs/utils": "^2.13.0",
+    "@mikro-orm/knex": "^6.0.0"
+  },
+  "peerDependencies": {
+    "@medusajs/types": "^2.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@vendin/config": "workspace:*"
+  }
+}

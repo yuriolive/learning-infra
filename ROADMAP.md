@@ -66,6 +66,13 @@ Tasks follow dependency patterns similar to `turbo.json`:
   - PNPM workspaces configuration
   - **Depends on**: Control Plane API Foundation
 
+- [ ] **Proxy Access Implementation** (`apps/control-plane/src/proxy/`)
+  - Internal Proxy Hono App (Service Binding target)
+  - IAM-authenticated requests to Cloud Run
+  - Proxy route implementation (`/proxy/:tenantId/*`)
+  - Error handling and timeouts
+  - **Depends on**: Cloud Run Deployment Automation, Development Tooling
+
 - [ ] **Testing Infrastructure** (`apps/control-plane/tests/`)
   - Unit test setup (Vitest)
   - Integration test setup
@@ -86,6 +93,7 @@ Tasks follow dependency patterns similar to `turbo.json`:
   - Automated Cloud Run service creation per tenant
   - Container image building and deployment
   - Scale-to-zero configuration (min-instances: 0)
+  - **Private Access Configuration** (`ingress: all`, `--no-allow-unauthenticated`)
   - Environment variable injection
   - Health check configuration
   - **Depends on**: Neon Database Automation
@@ -141,12 +149,12 @@ Tasks follow dependency patterns similar to `turbo.json`:
   - Coverage configuration
   - **Depends on**: Database Tooling, Development Tooling
 
-- [ ] **Authentication & Authorization** (`apps/tenant-instance/src/auth/`)
-  - JWT-based authentication
-  - Role-based access control (RBAC)
-  - Admin dashboard access
-  - Secure token storage
-  - **Depends on**: MedusaJS 2.0 Template Setup
+- [ ] **Authentication & Proxy** (`apps/marketing/src/app/api/admin/`) [MOVED FROM TENANT INSTANCE]
+  - **Unified Authentication**: Better Auth integration in Marketing App
+  - **Admin Proxy Route**: Next.js API route proxying to Control Plane
+  - **Service Binding**: Configuration for `control-plane` binding
+  - Secure session management
+  - **Depends on**: Control Plane Proxy Access Implementation
 
 - [ ] **Basic Admin Dashboard** (`apps/tenant-instance/src/admin/`)
   - Product catalog management (CRUD)

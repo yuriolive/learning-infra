@@ -16,7 +16,7 @@ vi.mock("cloudflare", () => {
 });
 
 // Mock logger
-vi.mock("@vendin/utils/logger", () => ({
+vi.mock("@vendin/logger", () => ({
   createLogger: vi.fn().mockReturnValue({
     error: vi.fn(),
     info: vi.fn(),
