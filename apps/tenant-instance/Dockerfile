@@ -34,6 +34,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-i
 # Copy the build output (dist) as it is ignored by .gitignore (and thus pnpm deploy)
 RUN cp -r /app/apps/tenant-instance/dist/. /app/deploy/
 
+# Copy the .medusa directory which contains admin dashboard build
+RUN cp -r /app/apps/tenant-instance/.medusa /app/deploy/
+
 # Stage 4: Runner
 FROM node:20-alpine AS runner
 WORKDIR /app
