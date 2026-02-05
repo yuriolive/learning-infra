@@ -4,23 +4,18 @@ import { resolveTenant } from "./lib/tenant-resolution";
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    // Skip Next.js internals and all static files, but process everything else
+    "/((?!_next|favicon.ico|public|.*\\..*).*)",
+    // Explicitly ensure our proxy is caught if the above regex is too aggressive
+    "/api/medusa/:path*",
   ],
 };
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
-
   const hostname = request.headers.get("host");
 
   if (!hostname) {
-     // Should technically not happen in HTTP, but fallthrough
      return NextResponse.next();
   }
 
@@ -41,12 +36,15 @@ export async function middleware(request: NextRequest) {
   const rewriteUrl = new URL(newPath, request.url);
   rewriteUrl.search = url.search;
 
-  // Create response with rewrite
-  const response = NextResponse.rewrite(rewriteUrl);
+  // Prepare headers for downstream
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-tenant-id", tenant.id);
+  requestHeaders.set("x-tenant-url", tenant.backendUrl);
 
-  // Set headers for downstream components to know the tenant context
-  response.headers.set("x-tenant-id", tenant.id);
-  response.headers.set("x-tenant-url", tenant.backendUrl);
-
-  return response;
+  // Create response with rewrite and modified request headers
+  return NextResponse.rewrite(rewriteUrl, {
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }

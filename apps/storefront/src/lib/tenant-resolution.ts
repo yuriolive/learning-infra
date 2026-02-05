@@ -3,11 +3,8 @@ import { Tenant } from "../types/tenant";
 const TENANT_CACHE_TTL = 60; // 60 seconds
 
 export async function resolveTenant(hostname: string): Promise<Tenant | null> {
-  // Construct a synthetic request for the cache key
   const cacheKey = new Request(`http://tenant-resolution/${hostname}`);
 
-  // Use the standard Cloudflare cache
-  // In Edge Runtime, caches.default is often available
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cache = (caches as any).default;
 
@@ -43,8 +40,8 @@ export async function resolveTenant(hostname: string): Promise<Tenant | null> {
         return null;
     }
 
-    const tenants = await res.json();
-    // API returns Tenant[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tenants: any = await res.json();
     const tenantData = Array.isArray(tenants) ? tenants[0] : null;
 
     if (!tenantData) return null;
@@ -74,6 +71,7 @@ export async function resolveTenant(hostname: string): Promise<Tenant | null> {
         },
       });
 
+      // Explicitly await cache.put as requested
       await cache.put(cacheKey, response);
     }
 
