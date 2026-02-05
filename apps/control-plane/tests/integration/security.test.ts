@@ -113,6 +113,8 @@ describe("Security Integration Tests", () => {
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
         INTERNAL_API_KEY: "mock-internal-key",
         GEMINI_API_KEY: "mock-gemini-key",
+        CLOUDFLARE_API_TOKEN: "mock-cf-token",
+        CLOUDFLARE_ZONE_ID: "mock-cf-zone",
       };
 
       const request = new Request(`${origin}/health`, {
@@ -144,6 +146,8 @@ describe("Security Integration Tests", () => {
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
         INTERNAL_API_KEY: "mock-internal-key",
+        CLOUDFLARE_API_TOKEN: "mock-cf-token",
+        CLOUDFLARE_ZONE_ID: "mock-cf-zone",
       };
 
       const request = new Request(`${origin}/health`, {

@@ -175,6 +175,9 @@ async function initializeApplication(
     googleApplicationCredentials,
     cloudRunServiceAccount,
     geminiApiKey,
+    cloudflareApiToken,
+    cloudflareZoneId,
+    tenantBaseDomain,
   } = await resolveEnvironmentSecrets(environment);
 
   initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -200,6 +203,8 @@ async function initializeApplication(
     googleApplicationCredentials,
     cloudRunServiceAccount,
     geminiApiKey,
+    cloudflareApiToken,
+    cloudflareZoneId,
   );
 
   if (configError) {
@@ -217,6 +222,9 @@ async function initializeApplication(
     upstashRedisUrl,
     cloudRunServiceAccount,
     geminiApiKey,
+    cloudflareApiToken,
+    cloudflareZoneId,
+    tenantBaseDomain,
   );
 
   const tenantRoutes = createTenantRoutes({
@@ -253,6 +261,9 @@ function createServices(
   upstashRedisUrl: string | undefined,
   cloudRunServiceAccount: string | undefined,
   geminiApiKey: string | undefined,
+  cloudflareApiToken: string | undefined,
+  cloudflareZoneId: string | undefined,
+  tenantBaseDomain: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
@@ -268,6 +279,9 @@ function createServices(
     upstashRedisUrl,
     cloudRunServiceAccount,
     geminiApiKey,
+    cloudflareApiToken,
+    cloudflareZoneId,
+    tenantBaseDomain,
   });
 
   const tenantService = new TenantService(

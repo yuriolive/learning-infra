@@ -48,6 +48,8 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "mock-sa",
       "gemini-api-key",
+      "cf-token",
+      "cf-zone",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -149,7 +151,11 @@ describe("validateConfiguration", () => {
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
 
-    assertCriticalKeysMissing(["NEON_API_KEY"]);
+    assertCriticalKeysMissing([
+      "NEON_API_KEY",
+      "CLOUDFLARE_API_TOKEN",
+      "CLOUDFLARE_ZONE_ID",
+    ]);
   });
 
   it("should return 500 Response if multiple critical keys are missing in production", () => {
@@ -172,7 +178,12 @@ describe("validateConfiguration", () => {
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
 
-    assertCriticalKeysMissing(["NEON_PROJECT_ID", "GCP_PROJECT_ID"]);
+    assertCriticalKeysMissing([
+      "NEON_PROJECT_ID",
+      "GCP_PROJECT_ID",
+      "CLOUDFLARE_API_TOKEN",
+      "CLOUDFLARE_ZONE_ID",
+    ]);
   });
 });
 
@@ -187,6 +198,8 @@ describe("resolveEnvironmentSecrets", () => {
       UPSTASH_REDIS_URL: "redis://upstash",
       GOOGLE_APPLICATION_CREDENTIALS: "full-creds",
       GEMINI_API_KEY: "gemini-key",
+      CLOUDFLARE_API_TOKEN: "cf-token",
+      CLOUDFLARE_ZONE_ID: "cf-zone",
     };
 
     const result = await resolveEnvironmentSecrets(environment);
@@ -200,6 +213,10 @@ describe("resolveEnvironmentSecrets", () => {
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
       geminiApiKey: "gemini-key",
+      cloudflareApiToken: "cf-token",
+      cloudflareZoneId: "cf-zone",
+      cloudRunServiceAccount: undefined,
+      tenantBaseDomain: "vendin.store",
     });
   });
 
