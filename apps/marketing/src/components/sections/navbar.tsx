@@ -5,7 +5,7 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
-  Link,
+  Link as HeroLink,
   Button,
   NavbarMenuToggle,
   NavbarMenu,
@@ -14,18 +14,21 @@ import {
 import { LogoPrimary } from "@vendin/assets";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link as NextLink } from "../../i18n/routing";
 
 import { ThemeSwitch } from "../ui/theme-switch";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const t = useTranslations("Navbar");
 
   const menuItems = [
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "About", href: "#about" },
-    { name: "Login", href: "/login" },
-    { name: "Sign Up", href: "/signup" },
+    { name: t("features"), href: "#features" },
+    { name: t("pricing"), href: "#pricing" },
+    { name: t("about"), href: "#about" },
+    { name: t("login"), href: "/login" },
+    { name: t("signup"), href: "/signup" },
   ];
 
   return (
@@ -45,42 +48,45 @@ export const Navbar = () => {
           icon={(isOpen) => (isOpen ? <X size={24} /> : <Menu size={24} />)}
         />
         <NavbarBrand>
-          <Link href="/" className="flex items-center gap-2">
+          <HeroLink as={NextLink} href="/" className="flex items-center gap-2">
             <LogoPrimary size={40} className="text-foreground" />
             <span className="font-black text-2xl tracking-tighter text-foreground">
               Vendin
             </span>
-          </Link>
+          </HeroLink>
         </NavbarBrand>
       </NavbarContent>
 
       <NavbarContent className="hidden sm:flex gap-8" justify="center">
         <NavbarItem>
-          <Link
+          <HeroLink
+            as={NextLink}
             color="foreground"
             href="#features"
             className="text-sm font-semibold hover:text-primary transition-colors"
           >
-            Features
-          </Link>
+            {t("features")}
+          </HeroLink>
         </NavbarItem>
         <NavbarItem>
-          <Link
+          <HeroLink
+            as={NextLink}
             color="foreground"
             href="#pricing"
             className="text-sm font-semibold hover:text-primary transition-colors"
           >
-            Pricing
-          </Link>
+            {t("pricing")}
+          </HeroLink>
         </NavbarItem>
         <NavbarItem>
-          <Link
+          <HeroLink
+            as={NextLink}
             color="foreground"
             href="#about"
             className="text-sm font-semibold hover:text-primary transition-colors"
           >
-            About
-          </Link>
+            {t("about")}
+          </HeroLink>
         </NavbarItem>
       </NavbarContent>
 
@@ -89,23 +95,24 @@ export const Navbar = () => {
           <ThemeSwitch />
         </NavbarItem>
         <NavbarItem className="hidden lg:flex">
-          <Link
+          <HeroLink
+            as={NextLink}
             href="/login"
             color="foreground"
             className="text-sm font-semibold"
           >
-            Login
-          </Link>
+            {t("login")}
+          </HeroLink>
         </NavbarItem>
         <NavbarItem className="flex items-center">
           <Button
-            as={Link}
+            as={NextLink}
             color="primary"
             href="/signup"
             variant="flat"
             className="font-bold whitespace-nowrap"
           >
-            Sign Up
+            {t("signup")}
           </Button>
         </NavbarItem>
       </NavbarContent>
@@ -113,14 +120,15 @@ export const Navbar = () => {
       <NavbarMenu>
         {menuItems.map((item, index) => (
           <NavbarMenuItem key={`${item.name}-${index}`}>
-            <Link
+            <HeroLink
+              as={NextLink}
               color="foreground"
               className="w-full"
               href={item.href}
               size="lg"
             >
               {item.name}
-            </Link>
+            </HeroLink>
           </NavbarMenuItem>
         ))}
       </NavbarMenu>

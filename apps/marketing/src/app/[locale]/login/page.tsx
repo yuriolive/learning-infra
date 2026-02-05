@@ -1,26 +1,29 @@
 "use client";
 
-import { Link, Tabs, Tab } from "@heroui/react";
+import { Link as HeroLink, Tabs, Tab } from "@heroui/react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link as NextLink } from "../../../i18n/routing";
 
-import { AuthCardWrapper } from "../../components/auth/auth-card-wrapper";
-import { EmailLoginForm } from "../../components/auth/email-login-form";
-import { WhatsAppAuthForm } from "../../components/auth/whatsapp-auth-form";
+import { AuthCardWrapper } from "../../../components/auth/auth-card-wrapper";
+import { EmailLoginForm } from "../../../components/auth/email-login-form";
+import { WhatsAppAuthForm } from "../../../components/auth/whatsapp-auth-form";
 
 export default function LoginPage() {
   const [selected, setSelected] = useState("email");
+  const t = useTranslations("Login");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-default-50 p-4">
       <AuthCardWrapper
-        title="Welcome back"
-        subtitle="Log in to your account to continue"
+        title={t("title")}
+        subtitle={t("subtitle")}
         footerContent={
           <p className="text-small text-default-500">
-            Don&apos;t have an account?{" "}
-            <Link size="sm" href="/signup">
-              Sign up
-            </Link>
+            {t("noAccount")}{" "}
+            <HeroLink as={NextLink} size="sm" href="/signup">
+              {t("signup")}
+            </HeroLink>
           </p>
         }
       >
@@ -34,10 +37,10 @@ export default function LoginPage() {
           }}
           className="mb-4"
         >
-          <Tab key="email" title="Email">
+          <Tab key="email" title={t("email")}>
             <EmailLoginForm />
           </Tab>
-          <Tab key="whatsapp" title="WhatsApp">
+          <Tab key="whatsapp" title={t("whatsapp")}>
             <WhatsAppAuthForm />
           </Tab>
         </Tabs>

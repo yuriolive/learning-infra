@@ -3,111 +3,115 @@
 import { Divider, Link } from "@heroui/react";
 import { LogoPrimary } from "@vendin/assets";
 import { Github, Twitter, MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { LanguageSwitcher } from "../ui/language-switcher";
 
 export const Footer = () => {
+  const t = useTranslations("Footer");
+
   return (
     <footer className="py-16 bg-default-50">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div>
-            <h4 className="font-bold mb-4">Product</h4>
+            <h4 className="font-bold mb-4">{t("product")}</h4>
             <ul className="space-y-2 text-sm text-default-500">
               <li>
                 <Link href="#" color="foreground">
-                  Features
+                  {t("features")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Pricing
+                  {t("pricing")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Integrations
+                  {t("integrations")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Changelog
+                  {t("changelog")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Company</h4>
+            <h4 className="font-bold mb-4">{t("company")}</h4>
             <ul className="space-y-2 text-sm text-default-500">
               <li>
                 <Link href="#" color="foreground">
-                  About
+                  {t("about")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Blog
+                  {t("blog")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Careers
+                  {t("careers")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Contact
+                  {t("contact")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Resources</h4>
+            <h4 className="font-bold mb-4">{t("resources")}</h4>
             <ul className="space-y-2 text-sm text-default-500">
               <li>
                 <Link href="#" color="foreground">
-                  Documentation
+                  {t("documentation")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  API Reference
+                  {t("apiReference")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Status Page
+                  {t("statusPage")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Community
+                  {t("community")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Legal</h4>
+            <h4 className="font-bold mb-4">{t("legal")}</h4>
             <ul className="space-y-2 text-sm text-default-500">
               <li>
                 <Link href="#" color="foreground">
-                  Privacy Policy
+                  {t("privacyPolicy")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Terms of Service
+                  {t("termsOfService")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  Security
+                  {t("security")}
                 </Link>
               </li>
               <li>
                 <Link href="#" color="foreground">
-                  GDPR
+                  {t("gdpr")}
                 </Link>
               </li>
             </ul>
@@ -122,19 +126,22 @@ export const Footer = () => {
             className="flex items-center gap-2 text-sm text-default-400 hover:text-foreground transition-colors"
           >
             <LogoPrimary size={32} />
-            <span>© 2026 Vendin. All rights reserved.</span>
+            <span>{t("copyright")}</span>
           </Link>
 
-          <div className="flex gap-4">
-            <Link href="#" color="foreground">
-              <Github size={20} />
-            </Link>
-            <Link href="#" color="foreground">
-              <Twitter size={20} />
-            </Link>
-            <Link href="#" color="foreground">
-              <MessageCircle size={20} />
-            </Link>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <LanguageSwitcher />
+            <div className="flex gap-4">
+              <Link href="#" color="foreground">
+                <Github size={20} />
+              </Link>
+              <Link href="#" color="foreground">
+                <Twitter size={20} />
+              </Link>
+              <Link href="#" color="foreground">
+                <MessageCircle size={20} />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
