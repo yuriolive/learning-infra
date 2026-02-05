@@ -1,11 +1,10 @@
 import { headers } from "next/headers";
 
-export default async function TenantHomePage({
-  params,
-}: {
-  params: Promise<{ tenantId: string }>;
+export default async function TenantHomePage(properties: {
+  params: { tenantId: string };
 }) {
-  const { tenantId } = await params;
+  // In Next.js 15+, params is a promise in the async component
+  const { tenantId } = await properties.params;
 
   // Example of accessing headers set by middleware
   const headersList = await headers();
@@ -19,7 +18,8 @@ export default async function TenantHomePage({
         <code className="bg-gray-100 p-1 rounded">{tenantId}</code>
       </p>
       <p>
-        Backend URL: <code className="bg-gray-100 p-1 rounded">{tenantUrl}</code>
+        Backend URL:{" "}
+        <code className="bg-gray-100 p-1 rounded">{tenantUrl}</code>
       </p>
     </div>
   );

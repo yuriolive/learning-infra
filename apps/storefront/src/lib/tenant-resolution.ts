@@ -1,84 +1,89 @@
-import { Tenant } from "../types/tenant";
+import { cache } from "@vendin/cache";
+import { createCloudflareLogger } from "@vendin/logger";
+
+import type { Tenant, TenantApiResponse } from "../types/tenant";
 
 const TENANT_CACHE_TTL = 60; // 60 seconds
 
-export async function resolveTenant(hostname: string): Promise<Tenant | null> {
-  const cacheKey = new Request(`http://tenant-resolution/${hostname}`);
+const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cache = (caches as any).default;
+/**
+ * Maps the API response to the Storefront Tenant type.
+ */
+function mapTenantData(
+  tenantData: TenantApiResponse,
+  hostname: string,
+): Tenant {
+  const metadata = tenantData.metadata;
+
+  return {
+    id: tenantData.id,
+    name: tenantData.name,
+    subdomain: tenantData.subdomain || hostname,
+    backendUrl: tenantData.apiUrl || "",
+    theme: metadata?.theme || {
+      primaryColor: "#000000",
+      fontFamily: "Inter",
+      logoUrl: "",
+    },
+  };
+}
+
+export async function resolveTenant(hostname: string): Promise<Tenant | null> {
+  const cacheKey = `tenant-resolution:${hostname}`;
 
   // 1. Cache Lookup
-  if (cache) {
-    const cachedResponse = await cache.match(cacheKey);
-    if (cachedResponse) {
-      const data = await cachedResponse.json();
-      return data as Tenant;
-    }
+  const cachedTenant = await cache.get<Tenant>(cacheKey);
+  if (cachedTenant) {
+    return cachedTenant;
   }
 
   // 2. Source Fetch
   const controlPlaneUrl = process.env.CONTROL_PLANE_API_URL;
 
   if (!controlPlaneUrl) {
-    console.error("CONTROL_PLANE_API_URL not defined");
+    logger.error("CONTROL_PLANE_API_URL not defined");
     return null;
   }
 
   try {
-    const res = await fetch(`${controlPlaneUrl}/api/tenants?subdomain=${encodeURIComponent(hostname)}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${controlPlaneUrl}/api/tenants?subdomain=${encodeURIComponent(hostname)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        next: { revalidate: 0 },
       },
-      next: { revalidate: 0 }
-    });
+    );
 
-    if (!res.ok) {
-        if (res.status === 404) return null;
-        console.error(`Failed to fetch tenant: ${res.status} ${res.statusText}`);
-        return null;
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      logger.error(
+        { status: response.status, statusText: response.statusText },
+        "Failed to fetch tenant",
+      );
+      return null;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tenants: any = await res.json();
-    const tenantData = Array.isArray(tenants) ? tenants[0] : null;
+    const tenants: TenantApiResponse | TenantApiResponse[] =
+      await response.json();
+    const tenantData: TenantApiResponse | null = Array.isArray(tenants)
+      ? tenants[0]
+      : tenants;
 
     if (!tenantData) return null;
 
     // Map to Storefront Tenant
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const metadata = tenantData.metadata as any;
-
-    const tenant: Tenant = {
-      id: tenantData.id,
-      name: tenantData.name,
-      subdomain: tenantData.subdomain || hostname,
-      backendUrl: tenantData.apiUrl || "",
-      theme: metadata?.theme || {
-        primaryColor: "#000000",
-        fontFamily: "Inter",
-        logoUrl: "",
-      },
-    };
+    const tenant = mapTenantData(tenantData, hostname);
 
     // 3. Cache Update
-    if (cache) {
-      const response = new Response(JSON.stringify(tenant), {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": `public, s-maxage=${TENANT_CACHE_TTL}`,
-        },
-      });
-
-      // Explicitly await cache.put as requested
-      await cache.put(cacheKey, response);
-    }
+    await cache.set(cacheKey, tenant, { ttlSeconds: TENANT_CACHE_TTL });
 
     return tenant;
-
   } catch (error) {
-    console.error("Error resolving tenant:", error);
+    logger.error({ error, hostname }, "Error resolving tenant");
     return null;
   }
 }

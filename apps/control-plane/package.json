@@ -27,6 +27,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@scalar/api-reference": "^1.28.0",
     "@vendin/analytics": "workspace:*",
+    "@vendin/cache": "workspace:*",
     "@vendin/logger": "workspace:*",
     "@vendin/utils": "workspace:*",
     "axios": "^1.13.2",
@@ -34,7 +35,6 @@
     "drizzle-orm": "^0.45.1",
     "google-auth-library": "^10.5.0",
     "googleapis": "^170.1.0",
-    "lru-cache": "^11.2.4",
     "postgres": "^3.4.8",
     "zod": "^3.25.76"
   },

@@ -121,6 +121,9 @@ importers:
       "@vendin/analytics":
         specifier: workspace:*
         version: link:../../packages/analytics
+      "@vendin/cache":
+        specifier: workspace:*
+        version: link:../../packages/cache
       "@vendin/logger":
         specifier: workspace:*
         version: link:../../packages/logger
@@ -142,9 +145,6 @@ importers:
       googleapis:
         specifier: ^170.1.0
         version: 170.1.0
-      lru-cache:
-        specifier: ^11.2.4
-        version: 11.2.5
       postgres:
         specifier: ^3.4.8
         version: 3.4.8
@@ -345,6 +345,9 @@ importers:
       "@vendin/analytics":
         specifier: workspace:*
         version: link:../../packages/analytics
+      "@vendin/cache":
+        specifier: workspace:*
+        version: link:../../packages/cache
       "@vendin/logger":
         specifier: workspace:*
         version: link:../../packages/logger
@@ -364,6 +367,9 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      "@cloudflare/workers-types":
+        specifier: ^4.20260127.0
+        version: 4.20260131.0
       "@opennextjs/cloudflare":
         specifier: ^1.15.1
         version: 1.16.1(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))
@@ -538,6 +544,34 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/cache:
+    dependencies:
+      "@vendin/logger":
+        specifier: workspace:*
+        version: link:../logger
+      lru-cache:
+        specifier: ^11.2.4
+        version: 11.2.5
+    devDependencies:
+      "@cloudflare/workers-types":
+        specifier: ^4.20260127.0
+        version: 4.20260131.0
+      "@vendin/config":
+        specifier: workspace:*
+        version: link:../config
+      "@vitest/coverage-v8":
+        specifier: ^4.0.18
+        version: 4.0.18(vitest@4.0.18(@opentelemetry/api@1.9.0)(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))
+      eslint:
+        specifier: ^9.37.0
+        version: 9.39.2(jiti@2.6.1)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.18
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@24.10.9)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/config:
     devDependencies:

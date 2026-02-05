@@ -88,9 +88,13 @@ async function handleCollectionRequest(
   }
   if (request.method === "GET") {
     const url = new URL(request.url);
-    const subdomain = url.searchParams.get("subdomain") || undefined;
+    const subdomain = url.searchParams.get("subdomain");
 
-    const response = await handleListTenants(service, logger, { subdomain });
+    const response = await handleListTenants(
+      service,
+      logger,
+      subdomain ? { subdomain } : undefined,
+    );
     return response;
   }
   return new Response("Not found", { status: 404 });
