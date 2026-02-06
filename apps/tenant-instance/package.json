@@ -13,7 +13,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc -b && medusa build",
+    "build": "tsc -b && cp dist/medusa-config.js medusa-config.js && medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "eslint .",
