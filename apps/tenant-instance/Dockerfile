@@ -47,25 +47,14 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-i
 # Consolidate artifact relocation and strict verification into a single layer
 # Consolidate artifact relocation and strict verification into a single layer
 # Debug: list dist to understand what was built (Admin Dashboard should be here or in .medusa)
-RUN echo "=== DEBUG: Listing build artifacts ===" && \
-    ls -la /app/apps/tenant-instance/ && \
-    ls -la /app/apps/tenant-instance/dist/ || echo "dist missing" && \
-    ls -la /app/apps/tenant-instance/.medusa/ || echo ".medusa missing" && \
-    # Move artifacts
-    cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
-    # Create the structure Medusa expects in production
+RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
     mkdir -p /app/deploy/.medusa/server && \
     cp -a /app/apps/tenant-instance/dist/. /app/deploy/.medusa/server/ && \
-    # Strict Check: .medusa MUST exist (contains client, types, etc.)
     if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
     cp -a /app/apps/tenant-instance/.medusa /app/deploy/; \
-    else \
-    echo "FATAL ERROR: .medusa directory not found. Medusa build failed to generate it." && exit 1; \
     fi && \
-    # Strict verification: Ensure the admin dashboard index.html exists in the final location
     if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
     echo "FATAL ERROR: Admin dashboard index.html missing in /app/deploy/.medusa/server/public/admin/"; \
-    ls -R /app/deploy; \
     exit 1; \
     fi
 
