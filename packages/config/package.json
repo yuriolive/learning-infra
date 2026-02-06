@@ -1,15 +1,18 @@
 {
   "name": "@vendin/config",
-  "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "echo 'Config package has no build step'"
+    "build": "echo 'Config package has no build step'",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
-    "./eslint.config.js": "./eslint.config.js",
+    "./eslint.config.js": "./eslint.config.mjs",
+    "./eslint.config.mjs": "./eslint.config.mjs",
     "./tsconfig.base.json": "./tsconfig.base.json",
-    "./prettier.config.js": "./prettier.config.js",
+    "./prettier.config.js": "./prettier.config.mjs",
+    "./prettier.config.mjs": "./prettier.config.mjs",
     "./vitest.base.ts": "./vitest.base.ts"
   },
   "devDependencies": {
