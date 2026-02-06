@@ -10,6 +10,7 @@ import type { ProvisioningService } from "../provisioning/provisioning.service";
 import type { TenantRepository } from "./tenant.repository";
 import type {
   CreateTenantInput,
+  ListTenantsFilters,
   Tenant,
   UpdateTenantInput,
 } from "./tenant.types";
@@ -128,7 +129,11 @@ export class TenantService {
     await this.repository.logProvisioningEvent(tenantId, step, status, details);
   }
 
-  async listTenants(): Promise<Tenant[]> {
+  async listTenants(filters?: ListTenantsFilters): Promise<Tenant[]> {
+    if (filters?.subdomain) {
+      const tenant = await this.repository.findBySubdomain(filters.subdomain);
+      return tenant ? [tenant] : [];
+    }
     const tenants = await this.repository.findAll();
     return tenants;
   }
