@@ -3,12 +3,7 @@ FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate && npm install -g turbo@2.6.1
 WORKDIR /app
 
-# Stage 2: Pruner
-FROM base AS pruner
-COPY . .
-RUN turbo prune --scope=@vendin/tenant-instance --docker
-
-# Stage 3: Builder
+# Stage 2: Builder
 FROM base AS builder
 WORKDIR /app
 
@@ -19,13 +14,14 @@ RUN apk add --no-cache python3 make g++ gcc
 ENV PNPM_STORE_DIR=/pnpm/store
 
 # Copy lockfile and package.json's of isolated subworkspace
-COPY --from=pruner /app/out/json/ /app/out/pnpm-lock.yaml ./
+COPY out/json/ .
+COPY out/pnpm-lock.yaml ./
 
 # Install dependencies with cache mount
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source code of isolated subworkspace
-COPY --from=pruner /app/out/full/ .
+COPY out/full/ .
 
 # Remove local .env to prevent overrides during build
 RUN rm -f apps/tenant-instance/.env
