@@ -43,15 +43,8 @@ ENV NODE_ENV=production \
     ADMIN_CORS=http://localhost:7001 \
     AUTH_CORS=http://localhost:9000
 
-# Temporary cache buster (remove after debugging)
-RUN echo "Cache bust for debug: $(date)" > /tmp/bust.txt
-
 # Build the project (explicitly pass NODE_ENV)
 RUN NODE_ENV=production pnpm build --filter=@vendin/tenant-instance...
-
-# Diagnostics to verify build artifacts (Recursive search)
-RUN find /app/apps/tenant-instance/.medusa -name "index.html" || echo "[DEBUG] index.html not found in .medusa"
-RUN ls -R /app/apps/tenant-instance/.medusa/server/public/admin || echo "[DEBUG] Admin dir structure missing!"
 
 # Deploy the app to a clean directory with production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
@@ -60,20 +53,22 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-i
 RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/
 
 # Handle both old and new admin output paths (Medusa 2.13+ compatibility)
-# Build outputs many files to .medusa/client/ or .medusa/admin/
-# Runtime expects them in .medusa/server/public/admin/
 RUN if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
     cp -a /app/apps/tenant-instance/.medusa /app/deploy/ && \
     mkdir -p /app/deploy/.medusa/server/public/admin && \
+    # Move artifacts from client/ or admin/ to the expected public path
     (cp -r /app/deploy/.medusa/client/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
     (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true); \
     else \
-    echo "Warning: .medusa directory not found during build!"; \
+    echo "ERROR: .medusa directory not found. Admin build likely failed!" && exit 1; \
     fi
 
-# Diagnostics AFTER copy/move (in /app/deploy)
-RUN find /app/deploy/.medusa -name "index.html" || echo "[DEBUG] index.html not found in deploy .medusa!"
-RUN ls -R /app/deploy/.medusa/server/public/admin || echo "[DEBUG] Deployed admin dir missing!"
+# STRICT VERIFICATION: fail the build if index.html is missing in the production layout
+RUN if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
+    echo "FATAL ERROR: Admin dashboard index.html missing in /app/deploy/.medusa/server/public/admin/"; \
+    echo "Dir content:"; ls -R /app/deploy/.medusa; \
+    exit 1; \
+    fi
 
 
 # Stage 4: Runner

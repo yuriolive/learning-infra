@@ -1,19 +1,6 @@
 import { loadEnv, defineConfig } from "@medusajs/framework/utils";
-console.log("[DEBUG] Starting medusa-config load");
-console.log("[DEBUG] NODE_ENV:", process.env.NODE_ENV || "undefined!");
-console.log("[DEBUG] DATABASE_URL:", process.env.DATABASE_URL || "undefined!");
-console.log("[DEBUG] REDIS_URL:", process.env.REDIS_URL || "undefined!");
-console.log("[DEBUG] JWT_SECRET:", process.env.JWT_SECRET || "undefined!");
-console.log("[DEBUG] COOKIE_SECRET:", process.env.COOKIE_SECRET || "undefined!");
-console.log("[DEBUG] GEMINI_API_KEY:", process.env.GEMINI_API_KEY || "undefined!");
-console.log("[DEBUG] ADMIN_CORS:", process.env.ADMIN_CORS || "undefined!");
-console.log("[DEBUG] STORE_CORS:", process.env.STORE_CORS || "undefined!");
-console.log("[DEBUG] AUTH_CORS:", process.env.AUTH_CORS || "undefined!");
-console.log("[DEBUG] cwd:", process.cwd());
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
-
-console.log("[DEBUG] After loadEnv → DATABASE_URL:", process.env.DATABASE_URL || "still undefined!");
 
 const jwtSecret = process.env.JWT_SECRET || "supersecret";
 const cookieSecret = process.env.COOKIE_SECRET || "supersecret";
@@ -22,8 +9,6 @@ const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
 
 // Check if we are running a migration command
 const isMigrating = process.argv.some((argument) => argument.startsWith("db:"));
-
-console.log("[DEBUG] isMigrating:", isMigrating);
 
 const redisUrl = process.env.REDIS_URL;
 const shouldForceTls =
