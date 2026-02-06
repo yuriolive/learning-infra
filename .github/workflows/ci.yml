@@ -116,21 +116,17 @@ jobs:
 
       - name: Enable PostgreSQL extensions
         run: |
-          psql ${{ env.DATABASE_URL }} -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
-          psql ${{ env.DATABASE_URL }} -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
+          psql $DATABASE_URL -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
+          psql $DATABASE_URL -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
 
       - name: Build utils package
         run: pnpm turbo run build --filter=@vendin/utils
 
       - name: Run database migrations
         run: cd apps/control-plane && pnpm run db:migrate
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Run tests
         run: pnpm run test:coverage
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Run Codacy Coverage Reporter
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
@@ -192,3 +188,11 @@ jobs:
           cache-from: type=gha,scope=tenant-instance
           cache-to: type=gha,mode=max,scope=tenant-instance
           platforms: linux/amd64
+
+      - name: Image Smoke Test
+        run: |
+          IMAGE_TAG="${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:test"
+          echo "Smoke testing image: $IMAGE_TAG"
+          # Image is already loaded via 'load: true' in build-push-action
+          # Verify admin index.html exists in the final image layout
+          docker run --rm $IMAGE_TAG ls -l /app/.medusa/server/public/admin/index.html || (echo "FATAL: Admin dashboard missing in built image!" && exit 1)
