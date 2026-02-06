@@ -59,10 +59,14 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-i
 # Copy backend dist
 RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/
 
-# Copy the .medusa directory which contains admin dashboard build artifacts
-# Medusa 2.x outputs to .medusa/server/public/admin/
+# Handle both old and new admin output paths (Medusa 2.13+ compatibility)
+# Build outputs many files to .medusa/client/ or .medusa/admin/
+# Runtime expects them in .medusa/server/public/admin/
 RUN if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
-    cp -a /app/apps/tenant-instance/.medusa /app/deploy/; \
+    cp -a /app/apps/tenant-instance/.medusa /app/deploy/ && \
+    mkdir -p /app/deploy/.medusa/server/public/admin && \
+    (cp -r /app/deploy/.medusa/client/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
+    (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true); \
     else \
     echo "Warning: .medusa directory not found during build!"; \
     fi
