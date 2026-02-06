@@ -1,9 +1,14 @@
+console.log("[DEBUG] Loading medusa-config.ts...");
+console.log(`[DEBUG] NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`[DEBUG] CWD: ${process.cwd()}`);
+
 import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
 // Fail-fast validation for critical environment variables in production
 if (process.env.NODE_ENV === "production") {
+  console.log("[DEBUG] Validating production environment variables...");
   const missing: string[] = [];
   if (!process.env.DATABASE_URL) {
     missing.push("DATABASE_URL");
@@ -19,6 +24,7 @@ if (process.env.NODE_ENV === "production") {
     throw new Error(`[FATAL] Missing required production environment variables: ${missing.join(", ")}. 
     These must be provided (either as actual values or dummy build-time values) to prevent silent configuration failures.`);
   }
+  console.log("[DEBUG] Environment validation passed.");
 }
 
 const jwtSecret = process.env.JWT_SECRET || "supersecret";
@@ -28,6 +34,7 @@ const redisPrefix = process.env.REDIS_PREFIX || "medusa:";
 
 // Check if we are running a migration command
 const isMigrating = process.argv.some((argument) => argument.startsWith("db:"));
+console.log(`[DEBUG] isMigrating: ${isMigrating}`);
 
 const redisUrl = process.env.REDIS_URL;
 const shouldForceTls =
@@ -79,7 +86,7 @@ const modules = isMigrating
       },
     ];
 
-export default defineConfig({
+const config = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     databaseLogging: true,
@@ -118,3 +125,7 @@ export default defineConfig({
   },
   modules,
 });
+
+console.log("[DEBUG] Config object created:", JSON.stringify(config, null, 2));
+
+export default config;
