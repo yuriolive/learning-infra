@@ -1,22 +1,31 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+
 import { resolveTenant } from "./lib/tenant-resolution";
+
+import type { NextRequest } from "next/server";
 
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, but process everything else
-    "/((?!_next|favicon.ico|public|.*\\..*).*)",
+    String.raw`/((?!_next|favicon.ico|public|.*\..*).*)`,
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
     "/api/medusa/:path*",
   ],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
+
+  // Security check: Block direct access to /mnt routes
+  // These routes should only be accessible via internal rewrites
+  if (url.pathname.startsWith("/mnt")) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const hostname = request.headers.get("host");
 
   if (!hostname) {
-     return NextResponse.next();
+    return NextResponse.next();
   }
 
   // Resolve Tenant
@@ -24,13 +33,14 @@ export async function middleware(request: NextRequest) {
 
   if (!tenant) {
     // If tenant not found, redirect to Marketing App
-    const marketingUrl = process.env.MARKETING_APP_URL || "https://vendin.store";
+    const marketingUrl =
+      process.env.MARKETING_APP_URL || "https://vendin.store";
     return NextResponse.redirect(marketingUrl);
   }
 
   // Rewrite to tenant-specific path
-  // Target: /_mnt/:tenantId/:path
-  const newPath = `/_mnt/${tenant.id}${url.pathname}`;
+  // Target: /mnt/:tenantId/:path
+  const newPath = `/mnt/${tenant.id}${url.pathname}`;
 
   // Construct the rewrite URL
   const rewriteUrl = new URL(newPath, request.url);

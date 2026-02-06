@@ -11,35 +11,31 @@ export interface Product {
   badge?: string;
 }
 
-interface ProductGridProps {
+interface ProductGridProperties {
   products: Product[];
-  primaryColor?: string;
   onAddToCart?: (productId: string) => void;
   columns?: number;
 }
 
 export function ProductGrid({
   products,
-  primaryColor = "#000000",
   onAddToCart,
   columns = 4,
-}: ProductGridProps) {
-  const gridColsClass = {
-    1: "grid-cols-1",
-    2: "grid-cols-2",
-    3: "grid-cols-3",
-    4: "grid-cols-4",
-  }[columns] || "grid-cols-4";
+}: ProductGridProperties) {
+  const gridColsClass =
+    {
+      1: "grid-cols-1",
+      2: "grid-cols-2",
+      3: "grid-cols-3",
+      4: "grid-cols-4",
+    }[columns] || "grid-cols-4";
 
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:${gridColsClass} gap-6`}>
+    <div
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:${gridColsClass} gap-6`}
+    >
       {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          {...product}
-          primaryColor={primaryColor}
-          onAddToCart={onAddToCart}
-        />
+        <ProductCard key={product.id} {...product} onAddToCart={onAddToCart} />
       ))}
     </div>
   );

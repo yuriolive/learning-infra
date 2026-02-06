@@ -10,37 +10,37 @@ export interface Category {
   productCount?: number;
 }
 
-interface CategoryGridProps {
+interface CategoryGridProperties {
   categories: Category[];
-  primaryColor?: string;
 }
 
-export function CategoryGrid({ categories, primaryColor = "#000000" }: CategoryGridProps) {
+export function CategoryGrid({ categories }: CategoryGridProperties) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
       {categories.map((category) => (
         <Link
           key={category.id}
           href={`/products?category=${category.slug}`}
-          className="no-underline"
+          className="no-underline group"
         >
           <Card
             isPressable
-            className="h-32 hover:shadow-lg transition-shadow"
-            style={{ borderColor: primaryColor, borderWidth: "1px" }}
+            className="h-48 border-none bg-default-50 hover:bg-default-100 shadow-md hover:shadow-xl transition-all rounded-3xl overflow-hidden"
           >
-            <CardBody className="flex items-center justify-center p-4">
-              <div className="text-center space-y-2">
-                {category.image && (
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-12 h-12 mx-auto object-contain"
-                  />
-                )}
-                <p className="font-semibold text-sm line-clamp-2">{category.name}</p>
+            <CardBody className="p-0 relative h-full">
+              {category.image && (
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
+                <p className="font-bold text-lg text-white group-hover:translate-x-1 transition-transform">
+                  {category.name}
+                </p>
                 {category.productCount && (
-                  <p className="text-xs text-default-400">
+                  <p className="text-xs text-white/80">
                     {category.productCount} products
                   </p>
                 )}

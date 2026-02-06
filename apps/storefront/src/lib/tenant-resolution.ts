@@ -30,6 +30,21 @@ function mapTenantData(
 }
 
 export async function resolveTenant(hostname: string): Promise<Tenant | null> {
+  // Local development mock based on environment variable
+  if (process.env.NODE_ENV === "development" && process.env.LOCAL_TENANT_ID) {
+    return {
+      id: process.env.LOCAL_TENANT_ID,
+      name: "Local Test Tenant",
+      subdomain: "localhost",
+      backendUrl: "http://localhost:3000",
+      theme: {
+        primaryColor: "#7c3aed",
+        fontFamily: "Inter",
+        logoUrl: "",
+      },
+    };
+  }
+
   const cacheKey = `tenant-resolution:${hostname}`;
 
   // 1. Cache Lookup
