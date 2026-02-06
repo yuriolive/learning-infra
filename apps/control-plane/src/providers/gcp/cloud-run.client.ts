@@ -440,7 +440,7 @@ export class CloudRunProvider {
           containers: [
             {
               image: this.tenantImageTag,
-              command: ["pnpm", "run", "db:migrate"],
+              command: ["./node_modules/.bin/medusa", "db:migrate"],
               env: Object.entries(environmentVariables).map(
                 ([name, value]) => ({
                   name,
