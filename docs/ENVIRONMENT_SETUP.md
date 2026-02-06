@@ -23,6 +23,7 @@ This document consolidates all environment variable and secrets management for t
 | `INTERNAL_API_KEY`               | Secret    | Secrets Store    | Internal API authentication                                    |
 | `CLOUDFLARE_API_TOKEN`           | Secret    | Secrets Store    | Cloudflare API access                                          |
 | `CLOUDFLARE_ZONE_ID`             | Secret    | Secrets Store    | Zone ID for vendin.store                                       |
+| `TENANT_BASE_DOMAIN`             | Plain Var | `wrangler.jsonc` | Base domain for tenant subdomains (e.g., vendin.store)         |
 | `ALLOWED_ORIGINS`                | Plain Var | `wrangler.jsonc` | CORS allowed origins                                           |
 | `LOG_LEVEL`                      | Plain Var | `wrangler.jsonc` | Logging verbosity (info/debug)                                 |
 | `NODE_ENV`                       | Plain Var | `wrangler.jsonc` | Runtime environment (production)                               |
@@ -157,6 +158,7 @@ Update `apps/control-plane/wrangler.jsonc`:
     "GCP_PROJECT_ID": "VALUE_PLACEHOLDER",
     "GCP_REGION": "us-central1",
     "TENANT_IMAGE_TAG": "europe-docker.pkg.dev/VALUE_PLACEHOLDER/repo/tenant-instance:latest",
+    "TENANT_BASE_DOMAIN": "vendin.store",
   },
 }
 ```
@@ -213,6 +215,7 @@ GOOGLE_APPLICATION_CREDENTIALS="{}"
 GCP_PROJECT_ID="your-gcp-project-id"
 GCP_REGION="us-central1"
 TENANT_IMAGE_TAG="europe-docker.pkg.dev/project/repo/tenant-instance:latest"
+TENANT_BASE_DOMAIN="vendin.store"
 ```
 
 > ⚠️ **Important**: `.dev.vars` is gitignored. Never commit secrets to version control.

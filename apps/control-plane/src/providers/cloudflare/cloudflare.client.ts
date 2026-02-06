@@ -1,6 +1,6 @@
 import Cloudflare from "cloudflare";
 
-import { consoleLogger as logger } from "../../utils/logger";
+import { type Logger } from "../../utils/logger";
 
 export interface CreateHostnameOptions {
   ssl?: {
@@ -9,26 +9,23 @@ export interface CreateHostnameOptions {
   };
 }
 
+export interface CloudflareProviderConfig {
+  apiToken: string;
+  zoneId: string;
+  logger: Logger;
+}
+
 export class CloudflareProvider {
   private client: Cloudflare;
   private zoneId: string;
+  private logger: Logger;
 
-  constructor() {
-    const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-    const zoneId = process.env.CLOUDFLARE_ZONE_ID;
-
-    if (!apiToken) {
-      throw new Error("CLOUDFLARE_API_TOKEN environment variable is not set");
-    }
-
-    if (!zoneId) {
-      throw new Error("CLOUDFLARE_ZONE_ID environment variable is not set");
-    }
-
+  constructor(config: CloudflareProviderConfig) {
     this.client = new Cloudflare({
-      apiToken,
+      apiToken: config.apiToken,
     });
-    this.zoneId = zoneId;
+    this.zoneId = config.zoneId;
+    this.logger = config.logger;
   }
 
   async createCustomHostname(
@@ -37,7 +34,7 @@ export class CloudflareProvider {
     options?: CreateHostnameOptions,
   ): Promise<void> {
     try {
-      logger.info(
+      this.logger.info(
         { tenantId, hostname },
         "Creating Cloudflare custom hostname",
       );
@@ -51,12 +48,12 @@ export class CloudflareProvider {
         },
       });
 
-      logger.info(
+      this.logger.info(
         { tenantId, hostname },
         "Successfully created Cloudflare custom hostname",
       );
     } catch (error) {
-      logger.error(
+      this.logger.error(
         { error, tenantId, hostname },
         "Failed to create Cloudflare custom hostname",
       );
@@ -91,7 +88,7 @@ export class CloudflareProvider {
           : {}),
       };
     } catch (error) {
-      logger.error(
+      this.logger.error(
         { error, tenantId, hostname },
         "Failed to get hostname status",
       );

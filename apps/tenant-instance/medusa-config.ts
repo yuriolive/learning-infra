@@ -2,6 +2,25 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
+// Fail-fast validation for critical environment variables in production
+if (process.env.NODE_ENV === "production") {
+  const missing: string[] = [];
+  if (!process.env.DATABASE_URL) {
+    missing.push("DATABASE_URL");
+  }
+  if (!process.env.JWT_SECRET) {
+    missing.push("JWT_SECRET");
+  }
+  if (!process.env.COOKIE_SECRET) {
+    missing.push("COOKIE_SECRET");
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`[FATAL] Missing required production environment variables: ${missing.join(", ")}. 
+    These must be provided (either as actual values or dummy build-time values) to prevent silent configuration failures.`);
+  }
+}
+
 const jwtSecret = process.env.JWT_SECRET || "supersecret";
 const cookieSecret = process.env.COOKIE_SECRET || "supersecret";
 
@@ -83,7 +102,7 @@ export default defineConfig({
     },
   },
   admin: {
-    vite: (config) => {
+    vite: (config: Record<string, unknown> = {}) => {
       return {
         ...config,
         server: {

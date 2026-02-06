@@ -1,3 +1,4 @@
+import { CloudflareProvider } from "../../providers/cloudflare/cloudflare.client";
 import {
   CloudRunProvider,
   type MigrationStatus,
@@ -17,6 +18,9 @@ export interface ProvisioningServiceConfig {
   upstashRedisUrl?: string | undefined;
   cloudRunServiceAccount?: string | undefined;
   geminiApiKey?: string | undefined;
+  cloudflareApiToken?: string | undefined;
+  cloudflareZoneId?: string | undefined;
+  tenantBaseDomain?: string | undefined;
   logger: Logger;
 }
 
@@ -24,7 +28,9 @@ export class ProvisioningService {
   private neonProvider: NeonProvider | null = null;
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
+  private cloudflareProvider: CloudflareProvider | null = null;
   private upstashRedisUrl: string | undefined;
+  private tenantBaseDomain: string;
   private logger: Logger;
 
   constructor(
@@ -33,7 +39,7 @@ export class ProvisioningService {
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
-    this.upstashRedisUrl = config.upstashRedisUrl;
+    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
 
     this.initializeProviders(config);
   }
@@ -42,6 +48,7 @@ export class ProvisioningService {
     this.initializeNeonProvider(config);
     this.initializeCloudRunProvider(config);
     this.initializeWorkflowsClient(config);
+    this.initializeCloudflareProvider(config);
   }
 
   private initializeNeonProvider(config: ProvisioningServiceConfig): void {
@@ -76,6 +83,7 @@ export class ProvisioningService {
           ...(config.cloudRunServiceAccount
             ? { serviceAccount: config.cloudRunServiceAccount }
             : {}),
+          tenantBaseDomain: this.tenantBaseDomain,
         });
       } catch (error) {
         this.logger.error({ error }, "Failed to initialize Cloud Run provider");
@@ -99,6 +107,30 @@ export class ProvisioningService {
     } catch (error) {
       this.logger.error({ error }, "Failed to initialize GCP Workflows client");
       throw error;
+    }
+  }
+
+  private initializeCloudflareProvider(
+    config: ProvisioningServiceConfig,
+  ): void {
+    if (config.cloudflareApiToken && config.cloudflareZoneId) {
+      try {
+        this.cloudflareProvider = new CloudflareProvider({
+          apiToken: config.cloudflareApiToken,
+          zoneId: config.cloudflareZoneId,
+          logger: this.logger,
+        });
+      } catch (error) {
+        this.logger.error(
+          { error },
+          "Failed to initialize Cloudflare provider",
+        );
+        throw error;
+      }
+    } else {
+      this.logger.warn(
+        "Cloudflare credentials not found. Domain configuration will be skipped.",
+      );
     }
   }
 
@@ -225,11 +257,23 @@ export class ProvisioningService {
   async configureDomain(tenantId: string): Promise<void> {
     const tenant = await this.tenantRepository.findById(tenantId);
     if (!tenant || !tenant.subdomain) throw new Error("Subdomain missing");
-    // Placeholder for domain configuration logic
+
+    if (!this.cloudflareProvider) {
+      this.logger.warn(
+        { tenantId },
+        "Cloudflare provider not initialized, skipping domain configuration",
+      );
+      return;
+    }
+
+    const hostname = `${tenant.subdomain}.${this.tenantBaseDomain}`;
+
     this.logger.info(
-      { tenantId, subdomain: tenant.subdomain },
-      "Configuring domain (placeholder)",
+      { tenantId, subdomain: tenant.subdomain, hostname },
+      "Configuring Cloudflare domain",
     );
+
+    await this.cloudflareProvider.createCustomHostname(tenantId, hostname);
   }
 
   async triggerProvisioningWorkflow(

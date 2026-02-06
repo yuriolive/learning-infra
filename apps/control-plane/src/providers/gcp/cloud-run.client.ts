@@ -11,6 +11,7 @@ interface CloudRunProviderConfig {
   serviceAccount?: string;
   logger: Logger;
   geminiApiKey?: string;
+  tenantBaseDomain?: string;
 }
 
 export type MigrationStatus = "running" | "success" | "failed";
@@ -32,12 +33,14 @@ export class CloudRunProvider {
   private tenantImageTag: string;
   private serviceAccount: string | undefined;
   private geminiApiKey: string | undefined;
+  private tenantBaseDomain: string;
 
   constructor(config: CloudRunProviderConfig) {
     this.logger = config.logger;
     this.projectId = config.projectId;
     this.region = config.region;
     this.tenantImageTag = config.tenantImageTag;
+    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
     this.serviceAccount = config.serviceAccount;
     this.geminiApiKey = config.geminiApiKey;
 
@@ -83,8 +86,8 @@ export class CloudRunProvider {
       JWT_SECRET: config.jwtSecret,
       HOST: "0.0.0.0",
       NODE_ENV: "production",
-      STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
-      ADMIN_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+      STORE_CORS: `https://${config.subdomain}.${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
+      ADMIN_CORS: `https://${config.subdomain}.${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
       ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
@@ -141,6 +144,8 @@ export class CloudRunProvider {
       REDIS_URL: config.redisUrl,
       REDIS_PREFIX: config.redisPrefix,
       NODE_ENV: "production",
+      JWT_SECRET: config.jwtSecret,
+      COOKIE_SECRET: config.cookieSecret,
     });
 
     // Returns operation name (LRO)
@@ -440,7 +445,7 @@ export class CloudRunProvider {
           containers: [
             {
               image: this.tenantImageTag,
-              command: ["pnpm", "run", "db:migrate"],
+              command: ["./node_modules/.bin/medusa", "db:migrate"],
               env: Object.entries(environmentVariables).map(
                 ([name, value]) => ({
                   name,
