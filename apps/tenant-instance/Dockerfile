@@ -71,6 +71,10 @@ RUN if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
     echo "Warning: .medusa directory not found during build!"; \
     fi
 
+# Diagnostics AFTER copy/move (in /app/deploy)
+RUN find /app/deploy/.medusa -name "index.html" || echo "[DEBUG] index.html not found in deploy .medusa!"
+RUN ls -R /app/deploy/.medusa/server/public/admin || echo "[DEBUG] Deployed admin dir missing!"
+
 
 # Stage 4: Runner
 FROM node:20-alpine AS runner
