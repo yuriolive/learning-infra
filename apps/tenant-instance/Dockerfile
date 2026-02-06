@@ -25,8 +25,27 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Copy source code of isolated subworkspace
 COPY --from=pruner /app/out/full/ .
 
+# Essential dummies for config/modules to load without null (real values injected at runtime)
+ENV NODE_ENV=production \
+    DATABASE_URL=postgres://dummy:dummy@dummy:5432/dummy_db?sslmode=require \
+    REDIS_URL=redis://dummy:6379 \
+    REDIS_PREFIX=medusa: \
+    JWT_SECRET=build-dummy-secret-abc123 \
+    COOKIE_SECRET=build-dummy-secret-abc123 \
+    GEMINI_API_KEY=build-dummy-key-abc123 \
+    STORE_CORS=http://localhost:8000 \
+    ADMIN_CORS=http://localhost:7001 \
+    AUTH_CORS=http://localhost:9000
+
+# Temporary cache buster (remove after debugging)
+RUN echo "Cache bust for debug: $(date)" > /tmp/bust.txt
+
 # Build the project
 RUN pnpm build --filter=@vendin/tenant-instance...
+
+# Diagnostics to verify build artifacts
+RUN ls -la /app/apps/tenant-instance/.medusa/server/public/admin || echo "[DEBUG] Admin dir missing!"
+RUN if [ -f "/app/apps/tenant-instance/.medusa/server/public/admin/index.html" ]; then echo "[DEBUG] index.html found"; else echo "[DEBUG] index.html MISSING"; fi
 
 # Deploy the app to a clean directory with production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
