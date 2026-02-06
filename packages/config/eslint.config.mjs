@@ -11,6 +11,7 @@ import tsdoc from "eslint-plugin-tsdoc";
 import unicorn from "eslint-plugin-unicorn";
 import vitest from "eslint-plugin-vitest";
 
+/** @type {import('eslint').Linter.Config[]} */
 export default [
   // Ignore patterns
   {

@@ -1,6 +1,6 @@
-import type { UserConfig } from "vitest/config";
+import { type ViteUserConfig } from "vitest/config";
 
-export const vitestBaseConfig: UserConfig = {
+export const vitestBaseConfig: ViteUserConfig = {
   test: {
     coverage: {
       provider: "v8",
