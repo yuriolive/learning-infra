@@ -3,15 +3,10 @@
   "version": "1.0.0",
   "description": "MercadoPago payment provider for MedusaJS v2",
   "private": true,
-  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
+    ".": "./dist/index.js",
     "./modules/*": "./dist/modules/*",
     "./package.json": "./package.json"
   },

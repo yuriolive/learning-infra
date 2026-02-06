@@ -1,8 +1,8 @@
 {
   "name": "@vendin/config",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "echo 'Config package has no build step'"
   },

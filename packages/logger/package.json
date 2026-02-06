@@ -2,22 +2,12 @@
   "name": "@vendin/logger",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "default": "./src/index.ts"
-    },
-    "./cloudflare": {
-      "import": "./dist/logger-cloudflare-factory.js",
-      "default": "./src/logger-cloudflare-factory.ts"
-    },
-    "./pino": {
-      "import": "./dist/pino-logger.js",
-      "default": "./src/pino-logger.ts"
-    }
+    ".": "./dist/index.js",
+    "./cloudflare": "./dist/logger-cloudflare-factory.js",
+    "./pino": "./dist/pino-logger.js"
   },
   "scripts": {
     "build": "tsc",

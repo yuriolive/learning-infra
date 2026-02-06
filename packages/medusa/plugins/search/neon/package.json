@@ -1,7 +1,6 @@
 {
   "name": "@vendin/medusa-search-neon",
   "version": "1.0.0",
-  "type": "module",
   "description": "Neon Search Plugin for Medusa v2",
   "files": [
     "dist"

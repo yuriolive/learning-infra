@@ -3,15 +3,10 @@
   "version": "1.0.0",
   "description": "Bling ERP integration for MedusaJS v2",
   "private": true,
-  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    },
+    ".": "./dist/index.js",
     "./api/*": "./dist/api/*",
     "./modules/*": "./dist/modules/*",
     "./workflows/*": "./dist/workflows/*",
