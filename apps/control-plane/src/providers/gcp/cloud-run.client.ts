@@ -141,6 +141,8 @@ export class CloudRunProvider {
       REDIS_URL: config.redisUrl,
       REDIS_PREFIX: config.redisPrefix,
       NODE_ENV: "production",
+      JWT_SECRET: config.jwtSecret,
+      COOKIE_SECRET: config.cookieSecret,
     });
 
     // Returns operation name (LRO)
