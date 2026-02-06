@@ -1,7 +1,6 @@
 # Stage 1: Base
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
-RUN npm install -g turbo@2.6.1
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate && npm install -g turbo@2.6.1
 WORKDIR /app
 
 # Stage 2: Pruner
@@ -12,6 +11,9 @@ RUN turbo prune --scope=@vendin/tenant-instance --docker
 # Stage 3: Builder
 FROM base AS builder
 WORKDIR /app
+
+# Install build tools for native modules EARLIER to ensure pnpm install can use them if needed
+RUN apk add --no-cache python3 make g++ gcc
 
 # Enable pnpm store caching
 ENV PNPM_STORE_DIR=/pnpm/store
@@ -24,9 +26,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source code of isolated subworkspace
 COPY --from=pruner /app/out/full/ .
-
-# Install build tools for native modules (needed by cpu-features, etc.)
-RUN apk add --no-cache python3 make g++ gcc
 
 # Remove local .env to prevent overrides during build
 RUN rm -f apps/tenant-instance/.env
@@ -49,24 +48,18 @@ RUN NODE_ENV=production pnpm build --filter=@vendin/tenant-instance...
 # Deploy the app to a clean directory with production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
-# Copy backend dist
-RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/
-
-# Handle both old and new admin output paths (Medusa 2.13+ compatibility)
-RUN if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
+# Consolidate artifact relocation and strict verification into a single layer
+RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
+    if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
     cp -a /app/apps/tenant-instance/.medusa /app/deploy/ && \
     mkdir -p /app/deploy/.medusa/server/public/admin && \
-    # Move artifacts from client/ or admin/ to the expected public path
     (cp -r /app/deploy/.medusa/client/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
     (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true); \
     else \
     echo "ERROR: .medusa directory not found. Admin build likely failed!" && exit 1; \
-    fi
-
-# STRICT VERIFICATION: fail the build if index.html is missing in the production layout
-RUN if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
+    fi && \
+    if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
     echo "FATAL ERROR: Admin dashboard index.html missing in /app/deploy/.medusa/server/public/admin/"; \
-    echo "Dir content:"; ls -R /app/deploy/.medusa; \
     exit 1; \
     fi
 
@@ -75,10 +68,7 @@ RUN if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Enable corepack and prepare pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
-
-# Copy the deployed application
+# Copy the deployed application (includes production node_modules from pnpm deploy)
 COPY --from=builder /app/deploy .
 
 # Set production environment
