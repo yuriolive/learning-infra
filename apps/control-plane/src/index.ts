@@ -1,6 +1,6 @@
 import { captureError, initAnalytics } from "@vendin/analytics";
+import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger/cloudflare";
-import { LRUCache } from "lru-cache";
 
 import {
   resolveEnvironmentSecrets,
@@ -16,19 +16,13 @@ import { TenantService } from "./domains/tenants/tenant.service";
 import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
 
-const openApiSpecs = new LRUCache<
-  string,
-  ReturnType<typeof generateOpenAPISpec>
->({
-  max: 100,
-  ttl: 1000 * 60 * 60,
-});
+async function getOpenAPISpec(origin: string) {
+  const cacheKey = `openapi-spec:${origin}`;
+  let spec = await cache.get<ReturnType<typeof generateOpenAPISpec>>(cacheKey);
 
-function getOpenAPISpec(origin: string) {
-  let spec = openApiSpecs.get(origin);
   if (!spec) {
     spec = generateOpenAPISpec(origin);
-    openApiSpecs.set(origin, spec);
+    await cache.set(cacheKey, spec, { ttlSeconds: 3600 });
   }
   return spec;
 }
@@ -73,13 +67,13 @@ function getDocumentationHtml() {
 </html>`;
 }
 
-function handleApiRequest(
+async function handleApiRequest(
   request: Request,
   url: URL,
   origin: string,
   tenantRoutes: ReturnType<typeof createTenantRoutes>,
   internalRoutes: ReturnType<typeof createInternalRoutes>,
-): Response | Promise<Response> {
+): Promise<Response> {
   if (url.pathname === "/health" || url.pathname === "/") {
     return new Response(
       JSON.stringify({
@@ -102,7 +96,7 @@ function handleApiRequest(
   }
 
   if (url.pathname === "/openapi.json") {
-    const spec = getOpenAPISpec(origin);
+    const spec = await getOpenAPISpec(origin);
     return new Response(JSON.stringify(spec), {
       status: 200,
       headers: {
