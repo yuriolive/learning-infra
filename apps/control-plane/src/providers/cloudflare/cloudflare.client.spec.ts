@@ -1,6 +1,8 @@
 import Cloudflare from "cloudflare";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { type Logger } from "../../utils/logger";
+
 import { CloudflareProvider } from "./cloudflare.client";
 
 // Mock the Cloudflare SDK
@@ -15,14 +17,11 @@ vi.mock("cloudflare", () => {
   };
 });
 
-// Mock logger
-vi.mock("@vendin/logger", () => ({
-  createLogger: vi.fn().mockReturnValue({
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  }),
-}));
+const mockLogger = {
+  error: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+};
 
 describe("CloudflareProvider", () => {
   const originalEnvironment = process.env;
@@ -36,12 +35,13 @@ describe("CloudflareProvider", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env = { ...originalEnvironment };
-    process.env.CLOUDFLARE_API_TOKEN = "test-token";
-    process.env.CLOUDFLARE_ZONE_ID = "test-zone-id";
 
     // Initialize provider and extract mock
-    provider = new CloudflareProvider();
+    provider = new CloudflareProvider({
+      apiToken: "test-token",
+      zoneId: "test-zone-id",
+      logger: mockLogger as unknown as Logger,
+    });
     const client = (provider as unknown as { client: Cloudflare }).client;
     mockCustomHostnames = client.customHostnames as unknown as {
       create: MockedFunction;
@@ -53,23 +53,13 @@ describe("CloudflareProvider", () => {
     process.env = originalEnvironment;
   });
 
-  it("should throw error if CLOUDFLARE_API_TOKEN is missing", () => {
-    delete process.env.CLOUDFLARE_API_TOKEN;
-    expect(() => new CloudflareProvider()).toThrow(
-      "CLOUDFLARE_API_TOKEN environment variable is not set",
-    );
-  });
-
-  it("should throw error if CLOUDFLARE_ZONE_ID is missing", () => {
-    delete process.env.CLOUDFLARE_ZONE_ID;
-    expect(() => new CloudflareProvider()).toThrow(
-      "CLOUDFLARE_ZONE_ID environment variable is not set",
-    );
-  });
-
   it("should initialize with correct credentials", () => {
     // Re-init to trigger constructor
-    new CloudflareProvider();
+    new CloudflareProvider({
+      apiToken: "test-token",
+      zoneId: "test-zone-id",
+      logger: mockLogger as unknown as Logger,
+    });
     expect(Cloudflare).toHaveBeenCalledWith({ apiToken: "test-token" });
   });
 
