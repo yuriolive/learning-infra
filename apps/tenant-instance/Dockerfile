@@ -45,17 +45,27 @@ RUN NODE_ENV=production pnpm build --filter=@vendin/tenant-instance...
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
 # Consolidate artifact relocation and strict verification into a single layer
-RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
+# Consolidate artifact relocation and strict verification into a single layer
+# Debug: list dist to understand what was built (Admin Dashboard should be here or in .medusa)
+RUN echo "=== DEBUG: Listing build artifacts ===" && \
+    ls -la /app/apps/tenant-instance/ && \
+    ls -la /app/apps/tenant-instance/dist/ || echo "dist missing" && \
+    ls -la /app/apps/tenant-instance/.medusa/ || echo ".medusa missing" && \
+    # Move artifacts
+    cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
+    # Create the structure Medusa expects in production
+    mkdir -p /app/deploy/.medusa/server && \
+    cp -a /app/apps/tenant-instance/dist/. /app/deploy/.medusa/server/ && \
+    # Strict Check: .medusa MUST exist (contains client, types, etc.)
     if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
-    cp -a /app/apps/tenant-instance/.medusa /app/deploy/ && \
-    mkdir -p /app/deploy/.medusa/server/public/admin && \
-    (cp -r /app/deploy/.medusa/client/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
-    (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true); \
+    cp -a /app/apps/tenant-instance/.medusa /app/deploy/; \
     else \
-    echo "ERROR: .medusa directory not found. Admin build likely failed!" && exit 1; \
+    echo "FATAL ERROR: .medusa directory not found. Medusa build failed to generate it." && exit 1; \
     fi && \
+    # Strict verification: Ensure the admin dashboard index.html exists in the final location
     if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
     echo "FATAL ERROR: Admin dashboard index.html missing in /app/deploy/.medusa/server/public/admin/"; \
+    ls -R /app/deploy; \
     exit 1; \
     fi
 
