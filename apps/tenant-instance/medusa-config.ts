@@ -99,7 +99,7 @@ export default defineConfig({
     },
   },
   admin: {
-    vite: (config) => {
+    vite: (config: Record<string, unknown> = {}) => {
       return {
         ...config,
         server: {

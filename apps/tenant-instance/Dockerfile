@@ -56,20 +56,15 @@ RUN ls -R /app/apps/tenant-instance/.medusa/server/public/admin || echo "[DEBUG]
 # Deploy the app to a clean directory with production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
-# Copy the build output (dist)
+# Copy backend dist
 RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/
 
-# Copy the .medusa directory which contains admin dashboard build
-# medusa build creates files in .medusa/client/ in some versions, but runtime expects them in .medusa/server/public/admin/
-# We ensure the structure exists in the deployment directory
+# Copy the .medusa directory which contains admin dashboard build artifacts
+# Medusa 2.x outputs to .medusa/server/public/admin/
 RUN if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
     cp -a /app/apps/tenant-instance/.medusa /app/deploy/; \
-    if [ -d "/app/apps/tenant-instance/.medusa/client" ]; then \
-    mkdir -p /app/deploy/.medusa/server/public && \
-    cp -r /app/apps/tenant-instance/.medusa/client /app/deploy/.medusa/server/public/admin; \
-    fi \
     else \
-    echo "Warning: .medusa directory not found!"; \
+    echo "Warning: .medusa directory not found during build!"; \
     fi
 
 
