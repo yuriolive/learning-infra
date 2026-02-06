@@ -25,6 +25,12 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Copy source code of isolated subworkspace
 COPY --from=pruner /app/out/full/ .
 
+# Install build tools for native modules (needed by cpu-features, etc.)
+RUN apk add --no-cache python3 make g++ gcc
+
+# Remove local .env to prevent overrides during build
+RUN rm -f apps/tenant-instance/.env
+
 # Essential dummies for config/modules to load without null (real values injected at runtime)
 ENV NODE_ENV=production \
     DATABASE_URL=postgres://dummy:dummy@dummy:5432/dummy_db?sslmode=require \
@@ -40,23 +46,31 @@ ENV NODE_ENV=production \
 # Temporary cache buster (remove after debugging)
 RUN echo "Cache bust for debug: $(date)" > /tmp/bust.txt
 
-# Build the project
-RUN pnpm build --filter=@vendin/tenant-instance...
+# Build the project (explicitly pass NODE_ENV)
+RUN NODE_ENV=production pnpm build --filter=@vendin/tenant-instance...
 
-# Diagnostics to verify build artifacts
-RUN ls -la /app/apps/tenant-instance/.medusa/server/public/admin || echo "[DEBUG] Admin dir missing!"
-RUN if [ -f "/app/apps/tenant-instance/.medusa/server/public/admin/index.html" ]; then echo "[DEBUG] index.html found"; else echo "[DEBUG] index.html MISSING"; fi
+# Diagnostics to verify build artifacts (Recursive search)
+RUN find /app/apps/tenant-instance/.medusa -name "index.html" || echo "[DEBUG] index.html not found in .medusa"
+RUN ls -R /app/apps/tenant-instance/.medusa/server/public/admin || echo "[DEBUG] Admin dir structure missing!"
 
 # Deploy the app to a clean directory with production dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
-# Copy the compiled backend code (dist directory contains transpiled TypeScript)
-RUN cp -r /app/apps/tenant-instance/dist/. /app/deploy/
+# Copy the build output (dist)
+RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/
 
-# Copy admin dashboard files from build output to runtime-expected location
-# medusa build creates files in .medusa/client/, but runtime expects them in .medusa/server/public/admin/
-RUN mkdir -p /app/deploy/.medusa/server/public && \
-    cp -r /app/apps/tenant-instance/.medusa/client /app/deploy/.medusa/server/public/admin
+# Copy the .medusa directory which contains admin dashboard build
+# medusa build creates files in .medusa/client/ in some versions, but runtime expects them in .medusa/server/public/admin/
+# We ensure the structure exists in the deployment directory
+RUN if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
+    cp -a /app/apps/tenant-instance/.medusa /app/deploy/; \
+    if [ -d "/app/apps/tenant-instance/.medusa/client" ]; then \
+    mkdir -p /app/deploy/.medusa/server/public && \
+    cp -r /app/apps/tenant-instance/.medusa/client /app/deploy/.medusa/server/public/admin; \
+    fi \
+    else \
+    echo "Warning: .medusa directory not found!"; \
+    fi
 
 
 # Stage 4: Runner
