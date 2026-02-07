@@ -1,7 +1,6 @@
 {
   "name": "@vendin/tenant-instance",
   "version": "0.0.1",
-  "type": "module",
   "description": "MedusaJS Tenant Instance Template",
   "author": "",
   "license": "MIT",
