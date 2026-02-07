@@ -1,7 +1,7 @@
 {
   "name": "@vendin/tenant-instance",
   "version": "0.0.1",
-  "type": "commonjs",
+  "type": "module",
   "description": "MedusaJS Tenant Instance Template",
   "author": "",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc -b && medusa build",
+    "build": "tsc -b && cp dist/medusa-config.js medusa-config.js && medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "eslint .",

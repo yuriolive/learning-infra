@@ -79,7 +79,7 @@ const modules = isMigrating
       },
     ];
 
-export default defineConfig({
+const config = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     databaseLogging: true,
@@ -118,3 +118,5 @@ export default defineConfig({
   },
   modules,
 });
+
+export default config;

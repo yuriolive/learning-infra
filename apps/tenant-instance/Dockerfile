@@ -46,19 +46,14 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-i
 
 # Consolidate artifact relocation and strict verification into a single layer
 RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
-    if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
     cp -a /app/apps/tenant-instance/.medusa /app/deploy/ && \
     mkdir -p /app/deploy/.medusa/server/public/admin && \
+    (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
     (cp -r /app/deploy/.medusa/client/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
-    (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true); \
-    else \
-    echo "ERROR: .medusa directory not found. Admin build likely failed!" && exit 1; \
-    fi && \
     if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
     echo "FATAL ERROR: Admin dashboard index.html missing in /app/deploy/.medusa/server/public/admin/"; \
     exit 1; \
     fi
-
 
 # Stage 4: Runner
 FROM node:20-alpine AS runner
