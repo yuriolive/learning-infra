@@ -64,19 +64,19 @@ const modules = isMigrating
           redisOptions,
         },
       },
-      {
-        resolve: "@vendin/medusa-ai-agent",
-        options: {
-          modelName: "gemini-3.0-flash",
-        },
-      },
-      {
-        resolve: "@vendin/medusa-search-neon",
-        key: "search", // Using string literal since Modules.SEARCH might be missing in this version
-        options: {
-          gemini_api_key: process.env.GEMINI_API_KEY,
-        },
-      },
+      // {
+      //   resolve: "@vendin/medusa-ai-agent",
+      //   options: {
+      //     modelName: "gemini-3.0-flash",
+      //   },
+      // },
+      // {
+      //   resolve: "@vendin/medusa-search-neon",
+      //   key: "search", // Using string literal since Modules.SEARCH might be missing in this version
+      //   options: {
+      //     gemini_api_key: process.env.GEMINI_API_KEY,
+      //   },
+      // },
     ];
 
 const config = defineConfig({
