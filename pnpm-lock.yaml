@@ -424,15 +424,9 @@ importers:
       "@medusajs/medusa":
         specifier: ^2.13.0
         version: 2.13.1(@medusajs/admin-sdk@2.13.1)(@medusajs/cli@2.13.1(@types/node@20.19.30)(better-sqlite3@12.6.2))(@medusajs/framework@2.13.1(@aws-sdk/client-dynamodb@3.978.0)(@medusajs/cli@2.13.1(@types/node@20.19.30)(better-sqlite3@12.6.2))(@types/node@20.19.30)(better-sqlite3@12.6.2)(ioredis@5.9.2)(vite@6.4.1(@types/node@20.19.30)(jiti@1.21.7)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(zod@3.25.76))(@medusajs/icons@2.13.1(react@18.3.1))(@medusajs/test-utils@2.13.1)(@medusajs/ui@4.1.1(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3))(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@20.19.30)(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(awilix@8.0.1)(jiti@1.21.7)(lightningcss@1.30.2)(posthog-node@5.24.4)(react-dom@18.3.1(react@18.3.1))(react-router-dom@6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(terser@5.16.9)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
-      "@vendin/analytics":
-        specifier: workspace:*
-        version: link:../../packages/analytics
       "@vendin/medusa-ai-agent":
         specifier: workspace:*
         version: link:../../packages/medusa/plugins/ai/agent
-      "@vendin/medusa-search-neon":
-        specifier: workspace:*
-        version: link:../../packages/medusa/plugins/search/neon
       ioredis:
         specifier: ^5.9.2
         version: 5.9.2
