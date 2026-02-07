@@ -45,19 +45,15 @@ RUN NODE_ENV=production pnpm build --filter=@vendin/tenant-instance...
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --filter @vendin/tenant-instance --prod deploy /app/deploy
 
 # Consolidate artifact relocation and strict verification into a single layer
-# Consolidate artifact relocation and strict verification into a single layer
-# Debug: list dist to understand what was built (Admin Dashboard should be here or in .medusa)
 RUN cp -a /app/apps/tenant-instance/dist/. /app/deploy/ && \
-    mkdir -p /app/deploy/.medusa/server && \
-    cp -a /app/apps/tenant-instance/dist/. /app/deploy/.medusa/server/ && \
-    if [ -d "/app/apps/tenant-instance/.medusa" ]; then \
-    cp -a /app/apps/tenant-instance/.medusa /app/deploy/; \
-    fi && \
+    cp -a /app/apps/tenant-instance/.medusa /app/deploy/ && \
+    mkdir -p /app/deploy/.medusa/server/public/admin && \
+    (cp -r /app/deploy/.medusa/admin/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
+    (cp -r /app/deploy/.medusa/client/* /app/deploy/.medusa/server/public/admin/ 2>/dev/null || true) && \
     if [ ! -f "/app/deploy/.medusa/server/public/admin/index.html" ]; then \
     echo "FATAL ERROR: Admin dashboard index.html missing in /app/deploy/.medusa/server/public/admin/"; \
     exit 1; \
     fi
-
 
 # Stage 4: Runner
 FROM node:20-alpine AS runner
