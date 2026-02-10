@@ -38,9 +38,67 @@ interface StorefrontNavbarProperties {
   tenant: Tenant;
 }
 
+function NavbarLogo({ tenant }: { tenant: Tenant }) {
+  return (
+    <NavbarBrand>
+      <HeroLink as={Link} href="/" className="flex items-center gap-2">
+        {tenant.theme.logoUrl ? (
+          <Image
+            src={tenant.theme.logoUrl}
+            alt={tenant.name}
+            height={40}
+            width={160}
+            className="h-10 w-auto object-contain"
+            priority
+          />
+        ) : (
+          <span className="font-black text-2xl tracking-tighter text-foreground">
+            {tenant.name}
+          </span>
+        )}
+      </HeroLink>
+    </NavbarBrand>
+  );
+}
+
+function NavbarActions() {
+  return (
+    <NavbarContent justify="end">
+      <NavbarItem className="hidden sm:flex">
+        <Button
+          as={Link}
+          isIconOnly
+          variant="light"
+          href="/account"
+          aria-label="Account"
+          className="hover:scale-110 transition-transform"
+        >
+          <User size={20} />
+        </Button>
+      </NavbarItem>
+      <NavbarItem>
+        <Button
+          as={Link}
+          color="primary"
+          href="/cart"
+          variant="flat"
+          className="font-bold gap-2 hover:translate-y-[-2px] transition-all"
+          startContent={<ShoppingCart size={18} />}
+        >
+          <span className="hidden sm:inline">Cart</span>
+          <div className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-black">
+            0
+          </div>
+        </Button>
+      </NavbarItem>
+    </NavbarContent>
+  );
+}
+
 export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // TODO: Make these menu items configurable per tenant (fetch from backend)
   const menuItems = [
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
@@ -64,24 +122,7 @@ export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
           className="sm:hidden"
           icon={(isOpen) => (isOpen ? <X size={24} /> : <Menu size={24} />)}
         />
-        <NavbarBrand>
-          <HeroLink as={Link} href="/" className="flex items-center gap-2">
-            {tenant.theme.logoUrl ? (
-              <Image
-                src={tenant.theme.logoUrl}
-                alt={tenant.name}
-                height={40}
-                width={160}
-                className="h-10 w-auto object-contain"
-                priority
-              />
-            ) : (
-              <span className="font-black text-2xl tracking-tighter text-foreground">
-                {tenant.name}
-              </span>
-            )}
-          </HeroLink>
-        </NavbarBrand>
+        <NavbarLogo tenant={tenant} />
       </NavbarContent>
 
       <NavbarContent className="hidden sm:flex gap-8" justify="center">
@@ -99,35 +140,7 @@ export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
         ))}
       </NavbarContent>
 
-      <NavbarContent justify="end">
-        <NavbarItem className="hidden sm:flex">
-          <Button
-            as={Link}
-            isIconOnly
-            variant="light"
-            href="/account"
-            aria-label="Account"
-            className="hover:scale-110 transition-transform"
-          >
-            <User size={20} />
-          </Button>
-        </NavbarItem>
-        <NavbarItem>
-          <Button
-            as={Link}
-            color="primary"
-            href="/cart"
-            variant="flat"
-            className="font-bold gap-2 hover:translate-y-[-2px] transition-all"
-            startContent={<ShoppingCart size={18} />}
-          >
-            <span className="hidden sm:inline">Cart</span>
-            <div className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-black">
-              0
-            </div>
-          </Button>
-        </NavbarItem>
-      </NavbarContent>
+      <NavbarActions />
 
       <NavbarMenu className="pt-6">
         {menuItems.map((item, index) => (

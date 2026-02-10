@@ -22,13 +22,8 @@ export function ProductGrid({
   onAddToCart,
   columns = 4,
 }: ProductGridProperties) {
-  const gridColsClass =
-    {
-      1: "grid-cols-1",
-      2: "grid-cols-2",
-      3: "grid-cols-3",
-      4: "grid-cols-4",
-    }[columns] || "grid-cols-4";
+  // Safe to use template literal here as values are limited to 1-4 and likely used elsewhere
+  const gridColsClass = `grid-cols-${columns}`;
 
   return (
     <div
