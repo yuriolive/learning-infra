@@ -6,6 +6,8 @@ import type { NextRequest } from "next/server";
 
 export const config = {
   matcher: [
+    // Keep matcher values as literal strings: Next.js statically validates this export
+    // and rejects computed values (e.g., String.raw) during segment config analysis.
     // Skip Next.js internals and all static files, but process everything else
     String.raw`/((?!_next|favicon.ico|public|.*\..*).*)`,
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
