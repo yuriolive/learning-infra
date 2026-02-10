@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardBody, Link } from "@heroui/react";
+import NextImage from "next/image";
 
 export interface Category {
   id: string;
@@ -29,10 +30,11 @@ export function CategoryGrid({ categories }: CategoryGridProperties) {
           >
             <CardBody className="p-0 relative h-full">
               {category.image && (
-                <img
+                <NextImage
                   src={category.image}
                   alt={category.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6">
