@@ -7,8 +7,6 @@ import type { NextRequest } from "next/server";
 
 const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
-export const dynamic = "force-dynamic";
-
 /**
  * Resolves the Tenant Backend URL.
  * In a real implementation, this would look up the tenant based on the hostname or a header.
