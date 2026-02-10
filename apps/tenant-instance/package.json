@@ -1,7 +1,6 @@
 {
   "name": "@vendin/tenant-instance",
   "version": "0.0.1",
-  "type": "commonjs",
   "description": "MedusaJS Tenant Instance Template",
   "author": "",
   "license": "MIT",
@@ -13,7 +12,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc -b && medusa build",
+    "build": "tsc -b && cp dist/medusa-config.js medusa-config.js && medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "eslint .",
@@ -35,8 +34,6 @@
     "@medusajs/draft-order": "^2.13.0",
     "@medusajs/framework": "^2.13.0",
     "@medusajs/medusa": "^2.13.0",
-    "@vendin/analytics": "workspace:*",
-    "@vendin/medusa-search-neon": "workspace:*",
     "ioredis": "^5.9.2",
     "pg": "^8.17.2",
     "react": "^18.3.1",
