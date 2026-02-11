@@ -1,3 +1,4 @@
+import { resolveHost } from "@vendin/utils";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
@@ -16,7 +17,7 @@ export default async function TenantLayout({
 }) {
   const { tenantId } = await params;
   const headersList = await headers();
-  const host = headersList.get("host") || "";
+  const host = resolveHost(headersList);
 
   // In a real scenario, the middleware already resolved the tenant.
   // We can re-resolve here to get the full tenant object including theme.

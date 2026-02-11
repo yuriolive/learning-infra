@@ -1,3 +1,4 @@
+import { resolveHost } from "@vendin/utils";
 import { NextResponse } from "next/server";
 
 import { resolveTenant } from "./lib/tenant-resolution";
@@ -24,7 +25,7 @@ export async function proxy(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  const hostname = request.headers.get("host");
+  const hostname = resolveHost(request.headers);
 
   if (!hostname) {
     return NextResponse.next();

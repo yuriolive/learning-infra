@@ -10,12 +10,9 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 
+import type { IconComponent } from "@/types/icons";
+
 // Cast Lucide icons to a generic functional component type to avoid monorepo type mismatches while satisfying ESLint
-type IconComponent = (properties: {
-  size?: number;
-  className?: string;
-  [key: string]: unknown;
-}) => React.ReactNode;
 const ShoppingCart = LucideShoppingCart as unknown as IconComponent;
 const Heart = LucideHeart as unknown as IconComponent;
 const Eye = LucideEye as unknown as IconComponent;

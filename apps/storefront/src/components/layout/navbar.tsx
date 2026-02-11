@@ -9,13 +9,9 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+import type { IconComponent } from "../../types/icons";
 import type { Tenant } from "../../types/tenant";
 
-type IconComponent = (properties: {
-  size?: number;
-  className?: string;
-  [key: string]: unknown;
-}) => React.ReactNode;
 const ShoppingCart = LucideShoppingCart as unknown as IconComponent;
 const User = LucideUser as unknown as IconComponent;
 
