@@ -4,19 +4,17 @@ import { resolveTenant } from "./lib/tenant-resolution";
 
 import type { NextRequest } from "next/server";
 
-/* prettier-ignore-start */
 export const config = {
   matcher: [
     // Keep matcher values as literal strings: Next.js statically validates this export
     // and rejects computed values during segment config analysis.
     // Skip Next.js internals and all static files, but process everything else
     // prettier-ignore
-    String.raw`/((?!_next|favicon.ico|public|.*\..*).*)`,
+    "/((?!_next|favicon.ico|public|.*\\..*).*)",
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
     "/api/medusa/:path*",
   ],
 };
-/* prettier-ignore-end */
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
