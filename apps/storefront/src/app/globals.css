@@ -1,9 +1,16 @@
 @import "tailwindcss";
 @plugin "../hero";
 
+@source "../**/*.{ts,tsx}";
+@source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+
+@custom-variant dark (&:where(.dark, [data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  --color-primary: var(--primary-color, #7c3aed);
 }
 
 :root {
@@ -22,4 +29,5 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }

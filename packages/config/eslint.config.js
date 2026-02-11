@@ -129,6 +129,7 @@ export default [
       "unicorn/no-array-for-each": "off",
       "unicorn/no-null": "off",
       "unicorn/prefer-node-protocol": "error",
+      "unicorn/prefer-string-raw": "off",
     },
     settings: {
       "import/core-modules": ["node:crypto", "node:path", "node:url"],

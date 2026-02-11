@@ -251,6 +251,9 @@ importers:
       "@vendin/logger":
         specifier: workspace:*
         version: link:../../packages/logger
+      "@vendin/ui":
+        specifier: workspace:*
+        version: link:../../packages/ui
       "@vendin/utils":
         specifier: workspace:^
         version: link:../../packages/utils
@@ -351,15 +354,27 @@ importers:
       "@vendin/logger":
         specifier: workspace:*
         version: link:../../packages/logger
+      "@vendin/ui":
+        specifier: workspace:*
+        version: link:../../packages/ui
+      "@vendin/utils":
+        specifier: workspace:*
+        version: link:../../packages/utils
       framer-motion:
         specifier: ^12.27.2
         version: 12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       google-auth-library:
         specifier: ^10.5.0
         version: 10.5.0
+      lucide-react:
+        specifier: ^0.473.0
+        version: 0.473.0(react@18.3.1)
       next:
         specifier: 16.1.5
         version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -370,6 +385,9 @@ importers:
       "@cloudflare/workers-types":
         specifier: ^4.20260127.0
         version: 4.20260131.0
+      "@heroui/theme":
+        specifier: ^2.4.26
+        version: 2.4.26(tailwindcss@4.1.18)
       "@opennextjs/cloudflare":
         specifier: ^1.15.1
         version: 1.16.1(next@16.1.5(@opentelemetry/api@1.9.0)(@playwright/test@1.58.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.61.0(@cloudflare/workers-types@4.20260131.0))
@@ -747,6 +765,40 @@ importers:
         version: link:../../../../config
       typescript:
         specifier: ^5.0.0
+        version: 5.9.3
+
+  packages/ui:
+    dependencies:
+      "@heroui/react":
+        specifier: ^2.8.7
+        version: 2.8.7(@types/react@18.3.27)(framer-motion@12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@4.1.18)
+      lucide-react:
+        specifier: ^0.473.0
+        version: 0.473.0(react@18.3.1)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: 18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: 18.3.1
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      "@types/react":
+        specifier: ^18.3.2
+        version: 18.3.27
+      "@types/react-dom":
+        specifier: ^18.2.25
+        version: 18.3.7(@types/react@18.3.27)
+      "@vendin/config":
+        specifier: workspace:*
+        version: link:../config
+      eslint:
+        specifier: ^9.37.0
+        version: 9.39.2(jiti@2.6.1)
+      typescript:
+        specifier: ^5.9.3
         version: 5.9.3
 
   packages/utils:
