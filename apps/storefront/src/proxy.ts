@@ -4,6 +4,7 @@ import { resolveTenant } from "./lib/tenant-resolution";
 
 import type { NextRequest } from "next/server";
 
+/* prettier-ignore-start */
 export const config = {
   matcher: [
     // Keep matcher values as literal strings: Next.js statically validates this export
@@ -15,6 +16,7 @@ export const config = {
     "/api/medusa/:path*",
   ],
 };
+/* prettier-ignore-end */
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
