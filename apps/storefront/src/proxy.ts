@@ -9,7 +9,7 @@ export const config = {
     // Keep matcher values as literal strings: Next.js statically validates this export
     // and rejects computed values during segment config analysis.
     // Skip Next.js internals and all static files, but process everything else
-    "/((?!_next|favicon.ico|public|.*\\..*).*)",
+    String.raw`/((?!_next|favicon.ico|public|.*\..*).*)`,
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
     "/api/medusa/:path*",
   ],
@@ -40,13 +40,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(marketingUrl);
   }
 
-  // Rewrite to tenant-specific path
   // Target: /mnt/:tenantId/:path
-  const newPath = `/mnt/${tenant.id}${url.pathname}`;
-
-  // Construct the rewrite URL
-  const rewriteUrl = new URL(newPath, request.url);
-  rewriteUrl.search = url.search;
+  url.pathname = `/mnt/${tenant.id}${url.pathname}`;
 
   // Prepare headers for downstream
   const requestHeaders = new Headers(request.headers);
@@ -54,7 +49,7 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set("x-tenant-url", tenant.backendUrl);
 
   // Create response with rewrite and modified request headers
-  return NextResponse.rewrite(rewriteUrl, {
+  return NextResponse.rewrite(url, {
     request: {
       headers: requestHeaders,
     },

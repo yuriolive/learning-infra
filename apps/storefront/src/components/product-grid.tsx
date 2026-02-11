@@ -22,12 +22,16 @@ export function ProductGrid({
   onAddToCart,
   columns = 4,
 }: ProductGridProperties) {
-  // Safe to use template literal here as values are limited to 1-4 and likely used elsewhere
-  const gridColsClass = `grid-cols-${columns}`;
+  const gridCols: Record<number, string> = {
+    1: "lg:grid-cols-1",
+    2: "lg:grid-cols-2",
+    3: "lg:grid-cols-3",
+    4: "lg:grid-cols-4",
+  };
 
   return (
     <div
-      className={`grid grid-cols-1 sm:grid-cols-2 lg:${gridColsClass} gap-6`}
+      className={`grid grid-cols-1 sm:grid-cols-2 ${gridCols[columns] || "lg:grid-cols-4"} gap-6`}
     >
       {products.map((product) => (
         <ProductCard key={product.id} {...product} onAddToCart={onAddToCart} />

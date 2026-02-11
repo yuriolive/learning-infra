@@ -21,6 +21,7 @@
     "@vendin/analytics": "workspace:*",
     "@vendin/cache": "workspace:*",
     "@vendin/logger": "workspace:*",
+    "@vendin/ui": "workspace:*",
     "framer-motion": "^12.27.2",
     "google-auth-library": "^10.5.0",
     "lucide-react": "^0.473.0",
