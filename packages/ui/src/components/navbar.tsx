@@ -29,7 +29,7 @@ export function SharedNavbar({
   menuItems,
   actions,
   linkComponent,
-}: SharedNavbarProperties) {
+}: SharedNavbarProperties): JSX.Element {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
