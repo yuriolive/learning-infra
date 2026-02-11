@@ -9,7 +9,6 @@ export const config = {
     // Keep matcher values as literal strings: Next.js statically validates this export
     // and rejects computed values during segment config analysis.
     // Skip Next.js internals and all static files, but process everything else
-    // prettier-ignore
     "/((?!_next|favicon.ico|public|.*\\..*).*)",
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
     "/api/medusa/:path*",
