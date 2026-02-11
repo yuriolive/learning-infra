@@ -31,14 +31,12 @@ export default async function TenantLayout({
   return (
     <div
       className="tenant-layout min-h-screen flex flex-col"
-      style={
-        {
-          // Apply primary color as a CSS variable for components to use
-          "--primary-color": tenant.theme.primaryColor,
-          "--heroui-primary": tenant.theme.primaryColor,
-          "--heroui-primary-500": tenant.theme.primaryColor,
-        } as React.CSSProperties
-      }
+      style={{
+        // Apply primary color as a CSS variable for components to use
+        "--primary-color": tenant.theme.primaryColor,
+        "--heroui-primary": tenant.theme.primaryColor,
+        "--heroui-primary-500": tenant.theme.primaryColor,
+      }}
     >
       <StorefrontNavbar tenant={tenant} />
       <main className="flex-grow">{children}</main>

@@ -1,5 +1,6 @@
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger";
+import { cache as reactCache } from "react";
 
 import type { Tenant, TenantApiResponse } from "../types/tenant";
 
@@ -29,7 +30,9 @@ function mapTenantData(
   };
 }
 
-export async function resolveTenant(hostname: string): Promise<Tenant | null> {
+export const resolveTenant = reactCache(async function (
+  hostname: string,
+): Promise<Tenant | null> {
   // Local development mock based on environment variable
   if (process.env.NODE_ENV === "development" && process.env.LOCAL_TENANT_ID) {
     return {
@@ -101,4 +104,4 @@ export async function resolveTenant(hostname: string): Promise<Tenant | null> {
     logger.error({ error, hostname }, "Error resolving tenant");
     return null;
   }
-}
+});
