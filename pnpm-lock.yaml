@@ -357,6 +357,9 @@ importers:
       "@vendin/ui":
         specifier: workspace:*
         version: link:../../packages/ui
+      "@vendin/utils":
+        specifier: workspace:*
+        version: link:../../packages/utils
       framer-motion:
         specifier: ^12.27.2
         version: 12.29.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
