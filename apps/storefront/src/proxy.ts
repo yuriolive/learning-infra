@@ -16,10 +16,10 @@ export const config = {
   ],
 };
 
-// OpenNext Cloudflare Middleware requires Edge Runtime
-export const runtime = "edge";
+// OpenNext Cloudflare Middleware requires Experimental Edge Runtime
+export const runtime = "experimental-edge";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
 
   // Security check: Block direct access to /mnt routes
