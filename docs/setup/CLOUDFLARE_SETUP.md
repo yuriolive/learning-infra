@@ -61,9 +61,9 @@ vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root or alternative storefront
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
-*-my.vendin.store               → Tenant stores (wildcard/hyphenated)
-  ├─ awesome-store-my.vendin.store → Merchant storefront
-  └─ awesome-store-my.vendin.store/admin → Merchant admin (MedusaJS)
+*.my.vendin.store               → Tenant stores (wildcard SSL)
+  ├─ awesome-store.my.vendin.store → Merchant storefront
+  └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
 
 **Custom Domains (Optional):**
@@ -83,7 +83,7 @@ Customer Request Flow:
 └────────┬────────┘
          │
          │ vendin.store (signup) OR
-         │ merchant-name-my.vendin.store (store) OR
+         │ merchant-name.my.vendin.store (store) OR
          │ shop.merchant.com (custom domain)
          ▼
 ┌─────────────────┐
@@ -387,24 +387,65 @@ Proxy status: Proxied (orange cloud)
 
 # Note: This wildcard will match:
 # - awesome-store-my.vendin.store
-# - any-merchant-my.vendin.store
+# - awesome-store.my.vendin.store
+# - any-merchant.my.vendin.store
 # But NOT reserved subdomains (api, admin, www) which should have explicit records
-# The -my prefix provides clear separation from platform services and works with Free SSL
 ```
 
-### Architecture Decision: Hyphens vs. Dots
+### Architecture Decision: Wildcard SSL vs. Per-Tenant SSL
 
-Our default tenant subdomains use the hyphenated pattern `{store}-my.vendin.store` instead of the dotted pattern `{store}.my.vendin.store`.
+Our platform uses a **Wildcard SSL** strategy for all default tenant subdomains under `*.my.vendin.store`.
 
-**Why Hyphens? (SSL Coverage)**
-Cloudflare's **Universal SSL** (Free/Pro) only issues certificates for:
+**Why Wildcard SSL?**
 
-1.  `vendin.store` (The apex domain)
-2.  `*.vendin.store` (First-level wildcards)
+1. **Instant Provisioning**: New tenants don't need to wait for SSL validation.
+2. **Simplified Infrastructure**: No need to manage hundreds of individual custom hostnames in Cloudflare for default subdomains.
+3. **Bypass Redirect Issues**: Avoids issues where HTTP validation tokens are inaccessible due to automatic HTTPS redirects.
 
-A dot separator like `store.my.vendin.store` is a **second-level** subdomain. Cloudflare will not issue a free certificate for it, resulting in a "Hostname is not covered by a certificate" warning and broken HTTPS for users.
+**Implementation**:
 
-By using a hyphen (`store-my.vendin.store`), the hostname remains at the first level, ensuring full, automatic, and free SSL coverage for all tenants.
+- The Control Plane **skips** individual Cloudflare custom hostname creation if the subdomain matches the wildcard base.
+- A single one-time setup of `*.my.vendin.store` in Cloudflare covers all subdomains.
+
+## Part E: Wildcard SSL Setup (Manual)
+
+To support dotted subdomains (e.g., `store.my.vendin.store`), you must provision a Wildcard Custom Hostname in Cloudflare once.
+
+### Step 1: Create Wildcard Custom Hostname
+
+Execute the following cURL command (replace placeholders with your credentials):
+
+```bash
+curl -X POST "https://api.cloudflare.com/client/v4/zones/{ZONE_ID}/custom_hostnames" \
+     -H "Authorization: Bearer {API_TOKEN}" \
+     -H "Content-Type: application/json" \
+     --data '{
+       "hostname": "*.my.vendin.store",
+       "ssl": {
+         "method": "txt",
+         "type": "dv"
+       }
+     }'
+```
+
+### Step 2: Verify Domain Ownership
+
+The API response will contain an `ownership_verification` object with a TXT record. Add this record to your DNS provider:
+
+- **Type**: `TXT`
+- **Name**: `_cf-custom-hostname.my.vendin.store` (example)
+- **Value**: `[Verification Token from Response]`
+
+### Step 3: Monitor Status
+
+Check the status until it becomes `active`:
+
+```bash
+curl -X GET "https://api.cloudflare.com/client/v4/zones/{ZONE_ID}/custom_hostnames?hostname=*.my.vendin.store" \
+     -H "Authorization: Bearer {API_TOKEN}"
+```
+
+Once active, Cloudflare will automatically serve a valid wildcard certificate for any subdomain under `my.vendin.store`.
 
 ### Future Roadmap: Switching to Dotted Subdomains
 
@@ -497,10 +538,10 @@ export async function middleware(request: NextRequest) {
 async function resolveTenantFromHostname(
   hostname: string,
 ): Promise<string | null> {
-  // Check if it's a tenant subdomain pattern: {store}-my.vendin.store
-  if (hostname.endsWith("-my.vendin.store")) {
-    // Extract store name (e.g., "awesome-store" from "awesome-store-my.vendin.store")
-    const storeName = hostname.replace("-my.vendin.store", "");
+  // Check if it's a tenant subdomain pattern: {store}.my.vendin.store
+  if (hostname.endsWith(".my.vendin.store")) {
+    // Extract store name (e.g., "awesome-store" from "awesome-store.my.vendin.store")
+    const storeName = hostname.replace(".my.vendin.store", "");
 
     // Query Control Plane to find tenant by subdomain
     const tenant = await controlPlaneClient.findTenantBySubdomain(storeName);

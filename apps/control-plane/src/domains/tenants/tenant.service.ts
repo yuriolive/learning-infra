@@ -19,12 +19,14 @@ interface TenantServiceConfig {
   logger: Logger;
   gcpProjectId?: string | undefined;
   gcpRegion?: string | undefined;
+  tenantBaseDomain?: string | undefined;
 }
 
 export class TenantService {
   private logger: Logger;
   private gcpProjectId: string | undefined;
   private gcpRegion: string | undefined;
+  private tenantBaseDomain: string;
 
   constructor(
     private repository: TenantRepository,
@@ -34,6 +36,7 @@ export class TenantService {
     this.logger = config.logger;
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
+    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
   }
 
   async createTenant(
@@ -131,7 +134,17 @@ export class TenantService {
 
   async listTenants(filters?: ListTenantsFilters): Promise<Tenant[]> {
     if (filters?.subdomain) {
-      const tenant = await this.repository.findBySubdomain(filters.subdomain);
+      let lookup = filters.subdomain;
+
+      // Handle full hostname by stripping base domain if it matches
+      if (
+        lookup.endsWith(`.${this.tenantBaseDomain}`) &&
+        lookup !== this.tenantBaseDomain
+      ) {
+        lookup = lookup.slice(0, -(this.tenantBaseDomain.length + 1));
+      }
+
+      const tenant = await this.repository.findBySubdomain(lookup);
       return tenant ? [tenant] : [];
     }
     const tenants = await this.repository.findAll();

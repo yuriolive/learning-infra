@@ -285,6 +285,7 @@ function createServices(
       logger,
       gcpProjectId: environment.GCP_PROJECT_ID,
       gcpRegion: environment.GCP_REGION,
+      tenantBaseDomain,
     },
   );
 

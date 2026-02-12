@@ -30,7 +30,7 @@ export class ProvisioningService {
   private executionsClient: GcpWorkflowsClient | null = null;
   private cloudflareProvider: CloudflareProvider | null = null;
   private upstashRedisUrl: string | undefined;
-  private tenantBaseDomain: string;
+  public readonly tenantBaseDomain: string;
   private logger: Logger;
 
   constructor(
@@ -266,14 +266,61 @@ export class ProvisioningService {
       return;
     }
 
-    const hostname = `${tenant.subdomain}.${this.tenantBaseDomain}`;
+    const subdomain = tenant.subdomain;
+    const hostname = subdomain.includes(".")
+      ? subdomain
+      : `${subdomain}.${this.tenantBaseDomain}`;
+
+    // If using the default base domain (e.g. *.my.vendin.store), skip individual Cloudflare setup because we use a wildcard cert.
+    if (hostname.endsWith(`.${this.tenantBaseDomain}`)) {
+      this.logger.info(
+        { tenantId, hostname, baseDomain: this.tenantBaseDomain },
+        "Skipping Cloudflare custom hostname creation for default base domain (Wildcard SSL used)",
+      );
+      return;
+    }
 
     this.logger.info(
       { tenantId, subdomain: tenant.subdomain, hostname },
       "Configuring Cloudflare domain",
     );
 
-    await this.cloudflareProvider.createCustomHostname(tenantId, hostname);
+    const result = await this.cloudflareProvider.createCustomHostname(
+      tenantId,
+      hostname,
+    );
+
+    if (result?.ssl?.validation_records) {
+      const httpValidation = result.ssl.validation_records.find(
+        (r: { http_url?: string; http_body?: string }) =>
+          r.http_url && r.http_body,
+      );
+
+      if (
+        httpValidation &&
+        httpValidation.http_url &&
+        httpValidation.http_body
+      ) {
+        this.logger.info(
+          { tenantId, hostname },
+          "Found ACME HTTP validation record, updating tenant metadata",
+        );
+
+        // Extract token from URL: http://hostname/.well-known/acme-challenge/<token>
+        const token = httpValidation.http_url.split("/").pop();
+        const response = httpValidation.http_body;
+
+        await this.tenantRepository.update(tenantId, {
+          metadata: {
+            ...tenant.metadata,
+            acmeChallenge: {
+              token,
+              response,
+            },
+          },
+        });
+      }
+    }
   }
 
   async triggerProvisioningWorkflow(

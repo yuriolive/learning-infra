@@ -32,14 +32,14 @@ export class CloudflareProvider {
     tenantId: string,
     hostname: string,
     options?: CreateHostnameOptions,
-  ): Promise<void> {
+  ) {
     try {
       this.logger.info(
         { tenantId, hostname },
         "Creating Cloudflare custom hostname",
       );
 
-      await this.client.customHostnames.create({
+      const response = await this.client.customHostnames.create({
         zone_id: this.zoneId,
         hostname,
         ssl: {
@@ -52,6 +52,8 @@ export class CloudflareProvider {
         { tenantId, hostname },
         "Successfully created Cloudflare custom hostname",
       );
+
+      return response;
     } catch (error) {
       this.logger.error(
         { error, tenantId, hostname },

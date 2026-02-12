@@ -27,6 +27,11 @@ function mapTenantData(
       fontFamily: "Inter",
       logoUrl: "",
     },
+    acmeChallenge:
+      (metadata?.acmeChallenge as {
+        token: string;
+        response: string;
+      }) || undefined,
   };
 }
 

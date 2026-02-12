@@ -13,6 +13,7 @@ export const config = {
     "/((?!_next|favicon.ico|public|.*\\..*).*)",
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
     "/api/medusa/:path*",
+    "/.well-known/acme-challenge/:path*",
   ],
 };
 
@@ -42,6 +43,17 @@ export async function middleware(request: NextRequest) {
     const marketingUrl =
       process.env.MARKETING_APP_URL || "https://vendin.store";
     return NextResponse.redirect(marketingUrl);
+  }
+
+  // Handle Cloudflare ACME Challenge
+  if (
+    tenant.acmeChallenge &&
+    url.pathname.startsWith("/.well-known/acme-challenge/")
+  ) {
+    const token = url.pathname.split("/").pop();
+    if (token === tenant.acmeChallenge.token) {
+      return new NextResponse(tenant.acmeChallenge.response);
+    }
   }
 
   // Target: /mnt/:tenantId/:path
