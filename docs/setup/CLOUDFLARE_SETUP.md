@@ -24,7 +24,7 @@
     - [Architecture Decision: Wildcard SSL vs. Per-Tenant SSL](#architecture-decision-wildcard-ssl-vs-per-tenant-ssl)
   - [Part E: Wildcard SSL Setup (Manual)](#part-e-wildcard-ssl-setup-manual)
     - [Step 1: Create Wildcard Custom Hostname](#step-1-create-wildcard-custom-hostname)
-    - [Step 2: Verify Domain Ownership](#step-2-verify-domain-ownership)
+    - [Step 2: Verify Domain Ownership \& SSL Validation](#step-2-verify-domain-ownership--ssl-validation)
     - [Step 3: Monitor Status](#step-3-monitor-status)
     - [Future Roadmap: Switching to Dotted Subdomains](#future-roadmap-switching-to-dotted-subdomains)
     - [Storefront Router Logic](#storefront-router-logic)
@@ -447,13 +447,33 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/cus
      }'
 ```
 
-### Step 2: Verify Domain Ownership
+### Step 2: Verify Domain Ownership & SSL Validation
 
-The API response will contain an `ownership_verification` object with a TXT record. Add this record to your DNS provider:
+Cloudflare will provide two records to add to your DNS provider.
+
+**1. Ownership Verification (TXT Record)**
+This record proves you own the domain.
 
 - **Type**: `TXT`
-- **Name**: `_cf-custom-hostname.my.vendin.store` (example)
-- **Value**: `[Verification Token from Response]`
+- **Name**: `_cf-custom-hostname.my` (or `_cf-custom-hostname.my.vendin.store`)
+- **Value**: (Unique UUID provided by Cloudflare)
+
+**2. SSL Validation (Choose One)**
+
+**Option A: DCV Delegation (Recommended for Auto-Renewal)**
+Use this method for "set-and-forget" automation.
+
+- **Type**: `CNAME`
+- **Name**: `_acme-challenge.my` (or `_acme-challenge.my.vendin.store`)
+- **Target**: `<hostname>.<uuid>.dcv.cloudflare.com` (Copy the exact target from Cloudflare)
+- **Proxy Status**: DNS Only (Grey Cloud)
+
+**Option B: TXT Validation (Manual)**
+Alternatively, you can use a TXT record, but this may require manual updates for renewal.
+
+- **Type**: `TXT`
+- **Name**: `_acme-challenge.my` (or `_acme-challenge.my.vendin.store`)
+- **Value**: (Unique token provided by Cloudflare)
 
 ### Step 3: Monitor Status
 
