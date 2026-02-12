@@ -388,16 +388,15 @@ For default tenant subdomains (e.g., `merchant-name-my.vendin.store`):
 # In Cloudflare DNS → Records
 # Add wildcard CNAME for tenant subdomains:
 Type: CNAME
-Name: *-my
+Name: *.my
 Target: storefront.pages.dev (or your storefront URL)
 TTL: Auto
 Proxy status: Proxied (orange cloud)
 
 # Note: This wildcard will match:
-# - awesome-store-my.vendin.store
 # - awesome-store.my.vendin.store
 # - any-merchant.my.vendin.store
-# But NOT reserved subdomains (api, admin, www) which should have explicit records
+# But NOT reserved subdomains (control, admin, www) which should have explicit records
 ```
 
 ### Architecture Decision: Wildcard SSL vs. Per-Tenant SSL
