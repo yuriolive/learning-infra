@@ -5,11 +5,11 @@
   - [Subdomain Structure](#subdomain-structure)
   - [Architecture](#architecture)
   - [Prerequisites](#prerequisites)
-  - [Part A: Storefront Deployment (Cloudflare Pages)](#part-a-storefront-deployment-cloudflare-pages)
-    - [Step 1: Prepare Storefront for Deployment](#step-1-prepare-storefront-for-deployment)
+  - [Part A: Marketing + Storefront Router Deployment (Cloudflare Pages)](#part-a-marketing--storefront-router-deployment-cloudflare-pages)
+    - [Step 1: Prepare Apps for Deployment](#step-1-prepare-apps-for-deployment)
     - [Step 2: Deploy to Cloudflare](#step-2-deploy-to-cloudflare)
     - [Step 3: Configure Environment Variables](#step-3-configure-environment-variables)
-    - [Step 4: Set Up Custom Domain for Storefront](#step-4-set-up-custom-domain-for-storefront)
+    - [Step 4: Set Up Custom Domains](#step-4-set-up-custom-domains)
   - [Part B: Cloudflare for SaaS Setup](#part-b-cloudflare-for-saas-setup)
     - [Step 1: Enable Cloudflare for SaaS](#step-1-enable-cloudflare-for-saas)
     - [Step 2: Configure Fallback Origin](#step-2-configure-fallback-origin)
@@ -21,14 +21,22 @@
     - [DNS Requirements for Merchants](#dns-requirements-for-merchants)
   - [Part D: Subdomain Routing Setup](#part-d-subdomain-routing-setup)
     - [Wildcard DNS for Tenant Subdomains](#wildcard-dns-for-tenant-subdomains)
-    - [Architecture Decision: Hyphens vs. Dots](#architecture-decision-hyphens-vs-dots)
+    - [Architecture Decision: Wildcard SSL vs. Per-Tenant SSL](#architecture-decision-wildcard-ssl-vs-per-tenant-ssl)
+  - [Part E: Wildcard SSL Setup (Manual)](#part-e-wildcard-ssl-setup-manual)
+    - [Step 1: Create Wildcard Custom Hostname](#step-1-create-wildcard-custom-hostname)
+    - [Step 2: Verify Domain Ownership](#step-2-verify-domain-ownership)
+    - [Step 3: Monitor Status](#step-3-monitor-status)
     - [Future Roadmap: Switching to Dotted Subdomains](#future-roadmap-switching-to-dotted-subdomains)
-    - [Storefront Routing Logic](#storefront-routing-logic)
+    - [Storefront Router Logic](#storefront-router-logic)
   - [Part E: Security Configuration](#part-e-security-configuration)
     - [WAF (Web Application Firewall)](#waf-web-application-firewall)
     - [Rate Limiting](#rate-limiting)
     - [Bot Management](#bot-management)
   - [Part F: Secrets Store Management](#part-f-secrets-store-management)
+    - [Why use Secrets Store?](#why-use-secrets-store)
+    - [Configuration via Dashboard](#configuration-via-dashboard)
+    - [CD Integration (Dynamic Bindings)](#cd-integration-dynamic-bindings)
+    - [Accessing via CLI](#accessing-via-cli)
   - [Part G: Monitoring and Analytics](#part-g-monitoring-and-analytics)
     - [Custom Hostname Status Monitoring](#custom-hostname-status-monitoring)
     - [Analytics](#analytics)
@@ -413,17 +421,28 @@ To support dotted subdomains (e.g., `store.my.vendin.store`), you must provision
 
 ### Step 1: Create Wildcard Custom Hostname
 
+**Option 1: Via Cloudflare Dashboard (Recommended)**
+
+1. Go to **SSL/TLS** → **Custom Hostnames**.
+2. Click **Add Custom Hostname**.
+3. Enter `my.vendin.store` (without the asterisk).
+4. **Enable Wildcard**: Ensure the "Wildcard" option is selected/checked (this adds `*.my.vendin.store` as a Subject Alternative Name).
+5. Click **Add Custom Hostname**.
+
+**Option 2: Via API**
 Execute the following cURL command (replace placeholders with your credentials):
 
 ```bash
-curl -X POST "https://api.cloudflare.com/client/v4/zones/{ZONE_ID}/custom_hostnames" \
-     -H "Authorization: Bearer {API_TOKEN}" \
+curl -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/custom_hostnames" \
+     -H "X-Auth-Email: $CLOUDFLARE_EMAIL" \
+     -H "X-Auth-Key: $CLOUDFLARE_API_KEY" \
      -H "Content-Type: application/json" \
      --data '{
-       "hostname": "*.my.vendin.store",
+       "hostname": "my.vendin.store",
        "ssl": {
          "method": "txt",
-         "type": "dv"
+         "type": "dv",
+         "wildcard": true
        }
      }'
 ```
