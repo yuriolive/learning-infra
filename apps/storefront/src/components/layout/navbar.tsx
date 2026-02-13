@@ -15,9 +15,17 @@ import {
   ShoppingCart as LucideShoppingCart,
   User as LucideUser,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import NextLink from "next/link";
 import { useState } from "react";
+
+const ThemeSwitcher = dynamic(
+  () => import("../theme-switcher").then((module_) => module_.ThemeSwitcher),
+  {
+    ssr: false,
+  },
+);
 
 import type { IconComponent } from "../../types/icons";
 import type { Tenant } from "../../types/tenant";
@@ -40,7 +48,12 @@ export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
   ];
 
   return (
-    <Navbar onMenuOpenChange={setIsMenuOpen} maxWidth="xl" position="sticky">
+    <Navbar
+      onMenuOpenChange={setIsMenuOpen}
+      isMenuOpen={isMenuOpen}
+      maxWidth="xl"
+      position="sticky"
+    >
       <NavbarContent>
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
@@ -77,6 +90,9 @@ export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
       </NavbarContent>
 
       <NavbarContent justify="end">
+        <NavbarItem>
+          <ThemeSwitcher />
+        </NavbarItem>
         <NavbarItem>
           <Button
             as={NextLink}
