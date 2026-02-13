@@ -1,3 +1,4 @@
+import { logger } from "@vendin/logger";
 import {
   formatHex,
   wcagContrast,
@@ -29,8 +30,7 @@ export function generateHeroUIPalette(baseColor: string) {
   }
 
   if (!color) {
-    // eslint-disable-next-line no-console
-    console.warn(`Invalid color: ${baseColor}. Returning fallback palette.`);
+    logger.warn(`Invalid color: ${baseColor}. Returning fallback palette.`);
     return {
       50: "#f9fafb",
       100: "#f3f4f6",
