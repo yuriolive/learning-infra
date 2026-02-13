@@ -1,0 +1,5 @@
+CONTROL_PLANE_API_URL=https://control.vendin.store
+ADMIN_API_KEY=your_admin_api_key_here
+MARKETING_APP_URL=https://vendin.store
+# Optional: Override tenant base domain for local testing if needed
+# TENANT_BASE_DOMAIN=vendin.store

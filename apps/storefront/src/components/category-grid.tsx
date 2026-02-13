@@ -2,6 +2,7 @@
 
 import { Card, CardBody, Link } from "@heroui/react";
 import NextImage from "next/image";
+import NextLink from "next/link";
 
 export interface Category {
   id: string;
@@ -20,6 +21,7 @@ export function CategoryGrid({ categories }: CategoryGridProperties) {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
       {categories.map((category) => (
         <Link
+          as={NextLink}
           key={category.id}
           href={`/products?category=${category.slug}`}
           className="no-underline group"
