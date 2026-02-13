@@ -1,10 +1,6 @@
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
+
 import type { Logger } from "./utils/logger";
-
-interface SecretBinding {
-  get(): Promise<string>;
-}
-
-type BoundSecret = string | SecretBinding;
 
 export interface Environment {
   DATABASE_URL: BoundSecret;
@@ -30,15 +26,6 @@ export interface Environment {
   CLOUDFLARE_ZONE_ID?: BoundSecret;
   TENANT_BASE_DOMAIN?: string;
   STOREFRONT_HOSTNAME?: string;
-}
-
-function resolveSecret(
-  secret: BoundSecret | undefined,
-): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null) {
-    return secret.get();
-  }
-  return Promise.resolve(secret as string | undefined);
 }
 
 export async function resolveEnvironmentSecrets(environment: Environment) {

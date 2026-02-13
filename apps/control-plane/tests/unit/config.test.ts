@@ -6,7 +6,7 @@ import {
   type Environment,
 } from "../../src/config";
 
-import type { createLogger } from "@vendin/utils";
+import type { createLogger } from "@vendin/logger";
 
 // Mock logger
 const mockLogger = {

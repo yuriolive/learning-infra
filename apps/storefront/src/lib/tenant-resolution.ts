@@ -1,5 +1,6 @@
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger";
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
 import { cache as reactCache } from "react";
 
 import type { Tenant, TenantApiResponse } from "../types/tenant";
@@ -75,11 +76,19 @@ export const resolveTenant = reactCache(async function (
     return null;
   }
 
-  const adminApiKey = process.env.ADMIN_API_KEY;
+  const rawAdminApiKey = process.env.ADMIN_API_KEY;
+  const adminApiKey = await resolveSecret(
+    rawAdminApiKey as BoundSecret | undefined,
+  );
+
   if (!adminApiKey) {
     logger.error(
-      { error: "missing_env", var: "ADMIN_API_KEY" },
-      "Environment variable ADMIN_API_KEY is missing",
+      {
+        error: "missing_env",
+        var: "ADMIN_API_KEY",
+        rawStatus: rawAdminApiKey ? typeof rawAdminApiKey : "missing",
+      },
+      "Environment variable ADMIN_API_KEY is missing or could not be resolved",
     );
   }
 
@@ -90,7 +99,7 @@ export const resolveTenant = reactCache(async function (
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.ADMIN_API_KEY}`,
+          Authorization: `Bearer ${adminApiKey}`,
         },
         next: { revalidate: 0 },
       },
@@ -103,7 +112,8 @@ export const resolveTenant = reactCache(async function (
           status: response.status,
           statusText: response.statusText,
           url: response.url,
-          hasAuthHeader: !!process.env.ADMIN_API_KEY,
+          hasAuthHeader: !!adminApiKey,
+          authHeaderType: typeof adminApiKey,
         },
         "Failed to fetch tenant from control plane",
       );
