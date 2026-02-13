@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { BlingProductMapper } from "../product-mapper.js";
 
 // Mock preferences inline since we can't easily import types if they depend on relative paths that might be tricky
@@ -11,8 +12,7 @@ import { BlingProductMapper } from "../product-mapper.js";
 // up 4: src
 // models is in src/models
 // So ../../../models/bling-config is correct.
-
-import type { BlingSyncPreferences } from "../../../models/bling-config.js";
+import type { BlingSyncPreferences } from "../../../../models/bling-config";
 
 describe("BlingProductMapper", () => {
   const preferences: BlingSyncPreferences = {
@@ -65,7 +65,7 @@ describe("BlingProductMapper", () => {
             nome: "T-Shirt Red",
             preco: 100,
             sku: "TSHIRT-RED",
-          }
+          },
         },
         {
           variacao: {
@@ -73,16 +73,19 @@ describe("BlingProductMapper", () => {
             nome: "T-Shirt Blue",
             preco: 100,
             sku: "TSHIRT-BLUE",
-          }
-        }
-      ]
+          },
+        },
+      ],
     };
 
-    const result = BlingProductMapper.normalizeProductSnapshot(raw, preferences);
+    const result = BlingProductMapper.normalizeProductSnapshot(
+      raw,
+      preferences,
+    );
 
     expect(result.variants).toHaveLength(2);
-    expect(result.variants[0].external_id).toBe("v1");
-    expect(result.variants[0].sku).toBe("TSHIRT-RED");
+    expect(result.variants![0]!.external_id).toBe("v1");
+    expect(result.variants![0]!.sku).toBe("TSHIRT-RED");
   });
 
   it("should extract images", () => {
@@ -91,22 +94,31 @@ describe("BlingProductMapper", () => {
       nome: "Product",
       imagem: [
         { link: "http://image.com/1.jpg" },
-        { url: "http://image.com/2.jpg" }
-      ]
+        { url: "http://image.com/2.jpg" },
+      ],
     };
 
-    const result = BlingProductMapper.normalizeProductSnapshot(raw, preferences);
+    const result = BlingProductMapper.normalizeProductSnapshot(
+      raw,
+      preferences,
+    );
 
-    expect(result.images).toEqual(["http://image.com/1.jpg", "http://image.com/2.jpg"]);
+    expect(result.images).toEqual([
+      "http://image.com/1.jpg",
+      "http://image.com/2.jpg",
+    ]);
   });
 
   it("should extract stock from flat structure", () => {
     const raw = {
       id: "123",
       nome: "P",
-      saldo: 10
+      saldo: 10,
     };
-    const result = BlingProductMapper.normalizeProductSnapshot(raw, preferences);
+    const result = BlingProductMapper.normalizeProductSnapshot(
+      raw,
+      preferences,
+    );
     expect(result.stock).toEqual([{ quantity: 10, warehouse_id: null }]);
   });
 
@@ -114,10 +126,13 @@ describe("BlingProductMapper", () => {
     const raw = {
       id: "123",
       nome: "P",
-      preco: "1.050,50"
+      preco: "1.050,50",
     };
 
-    const result = BlingProductMapper.normalizeProductSnapshot(raw, preferences);
+    const result = BlingProductMapper.normalizeProductSnapshot(
+      raw,
+      preferences,
+    );
     expect(result.price).toBe(1050.5);
   });
 });
