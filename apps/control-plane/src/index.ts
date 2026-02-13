@@ -184,7 +184,7 @@ async function initializeApplication(
     environment.ALLOWED_ORIGINS,
   );
 
-  const configError = validateConfiguration(
+  const configError = validateConfiguration({
     logger,
     databaseUrl,
     adminApiKey,
@@ -192,9 +192,9 @@ async function initializeApplication(
     upstashRedisUrl,
     neonApiKey,
     neonProjectId,
-    environment.GCP_PROJECT_ID,
-    environment.GCP_REGION,
-    environment.TENANT_IMAGE_TAG,
+    gcpProjectId: environment.GCP_PROJECT_ID,
+    gcpRegion: environment.GCP_REGION,
+    tenantImageTag: environment.TENANT_IMAGE_TAG,
     googleApplicationCredentials,
     cloudRunServiceAccount,
     geminiApiKey,
@@ -202,7 +202,7 @@ async function initializeApplication(
     cloudflareZoneId,
     tenantBaseDomain,
     storefrontHostname,
-  );
+  });
 
   if (configError) {
     return { logger, middlewareOptions, errorResponse: configError };

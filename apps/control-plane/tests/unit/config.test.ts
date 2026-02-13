@@ -24,7 +24,9 @@ const assertCriticalKeysMissing = (missingVariables: string[]) => {
     }),
   );
   expect(calls[0]![1]).toBe(
-    "Critical infrastructure keys are missing in production",
+    expect.objectContaining({
+      message: `Critical keys missing (${missingVariables.join(", ")})`,
+    }),
   );
 };
 
@@ -34,158 +36,173 @@ describe("validateConfiguration", () => {
   });
 
   it("should return undefined provided valid configuration", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      "admin-api-key",
-      "production",
-      "redis://localhost:6379",
-      "neon-api-key",
-      "neon-project-id",
-      "gcp-project-id",
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "mock-sa",
-      "gemini-api-key",
-      "cf-token",
-      "cf-zone",
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: "neon-api-key",
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "mock-sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: "cf-token",
+      cloudflareZoneId: "cf-zone",
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
-  it("should return 500 Response if DATABASE_URL is missing", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      undefined,
-      "admin-api-key",
-      "production",
-      "redis://localhost:6379",
-      "neon-api-key",
-      "neon-project-id",
-      "gcp-project-id",
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "sa",
-      "gemini-api-key",
-      undefined,
-      undefined,
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+  it("should return 500 Response if DATABASE_URL is missing", async () => {
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: undefined,
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: "neon-api-key",
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: undefined,
+      cloudflareZoneId: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       "DATABASE_URL is required but was not configured",
     );
+    const body = await result?.json();
+    expect(body).toEqual({
+      error: "Configuration Error",
+      message: "DATABASE_URL is missing",
+    });
   });
 
-  it("should return 500 Response if UPSTASH_REDIS_URL is missing", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      "admin-api-key",
-      "production",
-      undefined, // upstashRedisUrl missing
-      "neon-api-key",
-      "neon-project-id",
-      "gcp-project-id",
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "sa",
-      "gemini-api-key",
-      undefined,
-      undefined,
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+  it("should return 500 Response if UPSTASH_REDIS_URL is missing", async () => {
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: undefined, // upstashRedisUrl missing
+      neonApiKey: "neon-api-key",
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: undefined,
+      cloudflareZoneId: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       "UPSTASH_REDIS_URL is required but was not configured",
     );
+    const body = await result?.json();
+    expect(body).toEqual({
+      error: "Configuration Error",
+      message: "UPSTASH_REDIS_URL is missing",
+    });
   });
 
-  it("should return 500 Response if NODE_ENV is production and ADMIN_API_KEY is missing", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      undefined, // adminApiKey missing
-      "production",
-      "redis://localhost:6379",
-      "neon-api-key",
-      "neon-project-id",
-      "gcp-project-id",
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "sa",
-      "gemini-api-key",
-      undefined,
-      undefined,
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+  it("should return 500 Response if NODE_ENV is production and ADMIN_API_KEY is missing", async () => {
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: undefined, // adminApiKey missing
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: "neon-api-key",
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: undefined,
+      cloudflareZoneId: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
     expect(mockLogger.error).toHaveBeenCalledWith(
       "ADMIN_API_KEY is required in production but was not configured",
     );
+    const body = await result?.json();
+    expect(body).toEqual({
+      error: "Configuration Error",
+      message: "ADMIN_API_KEY is missing",
+    });
   });
 
   it("should return undefined if ADMIN_API_KEY is missing but NODE_ENV is not production", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      undefined,
-      "development",
-      "redis://localhost:6379",
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: undefined,
+      nodeEnvironment: "development",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: undefined,
+      neonProjectId: undefined,
+      gcpProjectId: undefined,
+      gcpRegion: undefined,
+      tenantImageTag: undefined,
+      googleApplicationCredentials: undefined,
+      cloudRunServiceAccount: undefined,
+      geminiApiKey: undefined,
+      cloudflareApiToken: undefined,
+      cloudflareZoneId: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
 
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
   it("should return 500 Response if NEON_API_KEY is missing in production", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      "admin-api-key",
-      "production",
-      "redis://localhost:6379",
-      undefined, // neonApiKey missing
-      "neon-project-id",
-      "gcp-project-id",
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "sa",
-      "gemini-api-key",
-      undefined,
-      undefined,
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: undefined, // neonApiKey missing
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: undefined,
+      cloudflareZoneId: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
@@ -198,25 +215,25 @@ describe("validateConfiguration", () => {
   });
 
   it("should return 500 Response if multiple critical keys are missing in production", () => {
-    const result = validateConfiguration(
-      mockLogger,
-      "postgres://localhost:5432/db",
-      "admin-api-key",
-      "production",
-      "redis://localhost:6379",
-      "neon-api-key",
-      undefined, // neonProjectId missing
-      undefined, // gcpProjectId missing
-      "gcp-region",
-      "tenant-image-tag",
-      "google-app-creds",
-      "sa",
-      "gemini-api-key",
-      undefined,
-      undefined,
-      "vendin.store",
-      "storefront.vendin.store",
-    );
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: "neon-api-key",
+      neonProjectId: undefined, // neonProjectId missing
+      gcpProjectId: undefined, // gcpProjectId missing
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: undefined,
+      cloudflareZoneId: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+    });
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
@@ -227,6 +244,71 @@ describe("validateConfiguration", () => {
       "CLOUDFLARE_API_TOKEN",
       "CLOUDFLARE_ZONE_ID",
     ]);
+  });
+  it("should return 500 Response if TENANT_BASE_DOMAIN is missing", async () => {
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: "neon-api-key",
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: "cf-token",
+      cloudflareZoneId: "cf-zone",
+      tenantBaseDomain: undefined, // tenantBaseDomain missing
+      storefrontHostname: "storefront.vendin.store",
+    });
+
+    expect(result).toBeInstanceOf(Response);
+    expect(result?.status).toBe(500);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "TENANT_BASE_DOMAIN is required but was not configured",
+    );
+    const body = await result?.json();
+    expect(body).toEqual({
+      error: "Configuration Error",
+      message: "TENANT_BASE_DOMAIN is missing",
+    });
+  });
+
+  it("should return 500 Response if STOREFRONT_HOSTNAME is missing", async () => {
+    const result = validateConfiguration({
+      logger: mockLogger,
+      databaseUrl: "postgres://localhost:5432/db",
+      adminApiKey: "admin-api-key",
+      nodeEnvironment: "production",
+      upstashRedisUrl: "redis://localhost:6379",
+      neonApiKey: "neon-api-key",
+      neonProjectId: "neon-project-id",
+      gcpProjectId: "gcp-project-id",
+      gcpRegion: "gcp-region",
+      tenantImageTag: "tenant-image-tag",
+      googleApplicationCredentials: "google-app-creds",
+      cloudRunServiceAccount: "sa",
+      geminiApiKey: "gemini-api-key",
+      cloudflareApiToken: "cf-token",
+      cloudflareZoneId: "cf-zone",
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: undefined,
+    });
+
+    expect(result).toBeInstanceOf(Response);
+    expect(result?.status).toBe(500);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "STOREFRONT_HOSTNAME is required but was not configured",
+    );
+    const body = await result?.json();
+    expect(body).toEqual({
+      error: "Configuration Error",
+      message: "STOREFRONT_HOSTNAME is missing",
+    });
   });
 });
 
@@ -245,6 +327,7 @@ describe("resolveEnvironmentSecrets", () => {
       CLOUDFLARE_ZONE_ID: "cf-zone",
       TENANT_BASE_DOMAIN: "vendin.store",
       STOREFRONT_HOSTNAME: "storefront.vendin.store",
+      CLOUDRUN_SERVICE_ACCOUNT: "service-account",
     };
 
     const result = await resolveEnvironmentSecrets(environment);
@@ -260,7 +343,7 @@ describe("resolveEnvironmentSecrets", () => {
       geminiApiKey: "gemini-key",
       cloudflareApiToken: "cf-token",
       cloudflareZoneId: "cf-zone",
-      cloudRunServiceAccount: undefined,
+      cloudRunServiceAccount: "service-account",
       tenantBaseDomain: "vendin.store",
       storefrontHostname: "storefront.vendin.store",
     });
