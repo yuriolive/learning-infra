@@ -1,20 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { mockLogger } from "../tests/utils/test-utils";
 
 import {
+  type MiddlewareOptions,
   createAuthMiddleware,
   createCorsMiddleware,
   wrapResponse,
 } from "./middleware";
 
-import type { MiddlewareOptions } from "./middleware";
 import type { Logger } from "./utils/logger";
-
-const mockLogger = {
-  info: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
-  debug: vi.fn(),
-};
 
 describe("Middleware", () => {
   const options: MiddlewareOptions = {
@@ -34,8 +29,8 @@ describe("Middleware", () => {
       const request = new Request("http://localhost", {
         headers: { Authorization: "Bearer secret-key" },
       });
-      const responseult = middleware(request);
-      expect(responseult).toBeNull();
+      const result = middleware(request);
+      expect(result).toBeNull();
     });
 
     it("should fail if adminApiKey is not configured", async () => {
@@ -44,11 +39,11 @@ describe("Middleware", () => {
         adminApiKey: undefined,
       });
       const request = new Request("http://localhost");
-      const responseult = middleware(request);
+      const result = middleware(request);
 
-      expect(responseult).not.toBeNull();
-      expect(responseult?.status).toBe(500);
-      const body = await responseult?.json();
+      expect(result).not.toBeNull();
+      expect(result?.status).toBe(500);
+      const body = await result?.json();
       expect(body.message).toBe("Server authentication check not configured");
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -56,10 +51,10 @@ describe("Middleware", () => {
     it("should fail if Authorization header is missing", async () => {
       const middleware = createAuthMiddleware(options);
       const request = new Request("http://localhost");
-      const responseult = middleware(request);
+      const result = middleware(request);
 
-      expect(responseult).not.toBeNull();
-      expect(responseult?.status).toBe(401);
+      expect(result).not.toBeNull();
+      expect(result?.status).toBe(401);
     });
 
     it("should fail if Authorization header is invalid format", async () => {
@@ -67,10 +62,10 @@ describe("Middleware", () => {
       const request = new Request("http://localhost", {
         headers: { Authorization: "Basic key" },
       });
-      const responseult = middleware(request);
+      const result = middleware(request);
 
-      expect(responseult).not.toBeNull();
-      expect(responseult?.status).toBe(401);
+      expect(result).not.toBeNull();
+      expect(result?.status).toBe(401);
     });
 
     it("should fail if token does not match", async () => {
@@ -78,10 +73,10 @@ describe("Middleware", () => {
       const request = new Request("http://localhost", {
         headers: { Authorization: "Bearer wrong-key" },
       });
-      const responseult = middleware(request);
+      const result = middleware(request);
 
-      expect(responseult).not.toBeNull();
-      expect(responseult?.status).toBe(401);
+      expect(result).not.toBeNull();
+      expect(result?.status).toBe(401);
     });
 
     // Testing areEqual timing attack prevention logic implicitly:
@@ -91,8 +86,8 @@ describe("Middleware", () => {
       const request = new Request("http://localhost", {
         headers: { Authorization: "Bearer secret" }, // shorter
       });
-      const responseult = middleware(request);
-      expect(responseult?.status).toBe(401);
+      const result = middleware(request);
+      expect(result?.status).toBe(401);
     });
   });
 
@@ -174,7 +169,7 @@ describe("Middleware", () => {
   });
 
   describe("wrapResponse", () => {
-    it("should wrap responseponse with CORS headers", () => {
+    it("should wrap response with CORS headers", () => {
       const request = new Request("http://localhost", {
         headers: { Origin: "https://example.com" },
       });

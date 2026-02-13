@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { mockLogger } from "../../../../tests/utils/test-utils";
+
 import {
   SubdomainInUseError,
   SubdomainRequiredError,
@@ -24,12 +26,6 @@ const mockTenantRepository = {
 
 const mockProvisioningService = {
   triggerProvisioningWorkflow: vi.fn(),
-};
-
-const mockLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
 };
 
 describe("TenantService", () => {

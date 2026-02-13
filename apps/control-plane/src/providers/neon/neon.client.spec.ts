@@ -1,6 +1,8 @@
 import { cache } from "@vendin/cache";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { mockLogger } from "../../../tests/utils/test-utils";
+
 import { NeonProvider } from "./neon.client";
 
 import type { Logger } from "../../utils/logger";
@@ -30,13 +32,6 @@ vi.mock("@vendin/cache", () => ({
     set: vi.fn(),
   },
 }));
-
-const mockLogger = {
-  info: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
-  debug: vi.fn(),
-};
 
 describe("NeonProvider", () => {
   let provider: NeonProvider;

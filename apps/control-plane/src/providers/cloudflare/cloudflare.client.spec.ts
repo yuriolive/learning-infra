@@ -8,6 +8,7 @@ import {
   type MockedFunction,
 } from "vitest";
 
+import { mockLogger } from "../../../tests/utils/test-utils";
 import { type Logger } from "../../utils/logger";
 
 import { CloudflareProvider } from "./cloudflare.client";
@@ -29,13 +30,6 @@ vi.mock("cloudflare", () => {
     default: CloudflareMock,
   };
 });
-
-const mockLogger = {
-  error: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-  debug: vi.fn(),
-};
 
 describe("CloudflareProvider", () => {
   let provider: CloudflareProvider;

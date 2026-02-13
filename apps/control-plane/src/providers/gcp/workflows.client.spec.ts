@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import { mockLogger } from "../../../tests/utils/test-utils";
 import { GoogleAuth } from "../../utils/google-auth";
 
 import { GcpWorkflowsClient } from "./workflows.client";
@@ -18,13 +19,6 @@ vi.mock("../../utils/google-auth", () => {
 // Mock global fetch
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
-
-const mockLogger = {
-  info: vi.fn(),
-  error: vi.fn(),
-  warn: vi.fn(),
-  debug: vi.fn(),
-};
 
 describe("GcpWorkflowsClient", () => {
   let client: GcpWorkflowsClient;
