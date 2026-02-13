@@ -1,7 +1,15 @@
 import Cloudflare from "cloudflare";
-import { afterEach, beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockedFunction,
+} from "vitest";
 
 import { type Logger } from "../../utils/logger";
+
 import { CloudflareProvider } from "./cloudflare.client";
 
 // Mock the Cloudflare SDK
@@ -49,14 +57,14 @@ describe("CloudflareProvider", () => {
     });
 
     // Access the mocked instance
-    const client = (provider as any).client;
+    const client = (provider as unknown as { client: any }).client;
     mockCustomHostnames = client.customHostnames;
     mockDnsRecords = client.dns.records;
   });
 
   describe("constructor", () => {
     it("should initialize with correct credentials", () => {
-        expect(Cloudflare).toHaveBeenCalledWith({ apiToken: "test-token" });
+      expect(Cloudflare).toHaveBeenCalledWith({ apiToken: "test-token" });
     });
   });
 
@@ -74,7 +82,10 @@ describe("CloudflareProvider", () => {
         },
         zone_id: "test-zone-id",
       });
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.anything(), "Successfully created Cloudflare custom hostname");
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.anything(),
+        "Successfully created Cloudflare custom hostname",
+      );
     });
 
     it("should allow overriding SSL settings", async () => {
@@ -84,9 +95,11 @@ describe("CloudflareProvider", () => {
         ssl: { method: "txt", type: "dv" },
       });
 
-      expect(mockCustomHostnames.create).toHaveBeenCalledWith(expect.objectContaining({
-        ssl: { method: "txt", type: "dv" },
-      }));
+      expect(mockCustomHostnames.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ssl: { method: "txt", type: "dv" },
+        }),
+      );
     });
 
     it("should propagate errors from SDK", async () => {
@@ -144,11 +157,14 @@ describe("CloudflareProvider", () => {
 
     it("should return status unknown if missing in response", async () => {
       const mockResponse = {
-          result: [{ hostname: "test.example.com" }] // No status
+        result: [{ hostname: "test.example.com" }], // No status
       };
       mockCustomHostnames.list.mockResolvedValue(mockResponse);
 
-      const result = await provider.getHostnameStatus("tenant-1", "test.example.com");
+      const result = await provider.getHostnameStatus(
+        "tenant-1",
+        "test.example.com",
+      );
       expect(result.status).toBe("unknown");
     });
   });
@@ -170,20 +186,28 @@ describe("CloudflareProvider", () => {
         zone_id: "test-zone-id",
         ...record,
       });
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.anything(), "Successfully created Cloudflare DNS record");
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.anything(),
+        "Successfully created Cloudflare DNS record",
+      );
     });
 
     it("should handle DNS creation failure", async () => {
       const error = new Error("DNS Error");
       mockDnsRecords.create.mockRejectedValue(error);
 
-      await expect(provider.createDnsRecord({
-        type: "A",
-        name: "test",
-        content: "1.2.3.4",
-      })).rejects.toThrow(error);
+      await expect(
+        provider.createDnsRecord({
+          type: "A",
+          name: "test",
+          content: "1.2.3.4",
+        }),
+      ).rejects.toThrow(error);
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.anything(), "Failed to create Cloudflare DNS record");
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.anything(),
+        "Failed to create Cloudflare DNS record",
+      );
     });
   });
 });

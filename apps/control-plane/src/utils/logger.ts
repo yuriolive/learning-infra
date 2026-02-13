@@ -46,12 +46,15 @@ const formatLog = (
 
   // Handle Error objects explicitly to ensure non-enumerable properties are included
   if (object instanceof Error) {
+    const { name, message, stack, cause, ...rest } = object as Error & {
+      cause?: unknown;
+    };
     logObject = {
-      name: object.name,
-      message: object.message,
-      stack: object.stack,
-      cause: (object as any).cause,
-      ...object
+      name,
+      message,
+      stack,
+      cause,
+      ...rest,
     };
   }
 

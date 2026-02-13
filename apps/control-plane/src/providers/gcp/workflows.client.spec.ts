@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GcpWorkflowsClient } from "./workflows.client";
+
 import { GoogleAuth } from "../../utils/google-auth";
-import { Logger } from "../../utils/logger";
+
+import { GcpWorkflowsClient } from "./workflows.client";
+
+import type { Logger } from "../../utils/logger";
 
 // Mock GoogleAuth class
 vi.mock("../../utils/google-auth", () => {
@@ -14,7 +17,7 @@ vi.mock("../../utils/google-auth", () => {
 
 // Mock global fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const mockLogger = {
   info: vi.fn(),
@@ -49,12 +52,15 @@ describe("GcpWorkflowsClient", () => {
 
     it("should log error if GoogleAuth initialization fails", () => {
       const error = new Error("Auth Init Failed");
-      (GoogleAuth as unknown as any).mockImplementationOnce(() => {
+      (GoogleAuth as unknown as { mockImplementationOnce: (fn: () => void) => void }).mockImplementationOnce(() => {
         throw error;
       });
 
       new GcpWorkflowsClient(config);
-      expect(mockLogger.error).toHaveBeenCalledWith({ error }, "Failed to initialize Google Auth for Workflows");
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        { error },
+        "Failed to initialize Google Auth for Workflows",
+      );
     });
   });
 
@@ -66,27 +72,38 @@ describe("GcpWorkflowsClient", () => {
       await client.triggerProvisionTenant(payload);
 
       expect(createExecutionSpy).toHaveBeenCalledWith({
-        parent: "projects/test-project/locations/test-region/workflows/provision-tenant",
+        parent:
+          "projects/test-project/locations/test-region/workflows/provision-tenant",
         execution: {
           argument: JSON.stringify(payload),
         },
       });
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.anything(), "Triggering provisioning workflow");
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.anything(),
+        "Triggering provisioning workflow",
+      );
     });
   });
 
   describe("createExecution", () => {
     it("should throw if auth not initialized (no credentials)", async () => {
-      const clientNoAuth = new GcpWorkflowsClient({ ...config, credentialsJson: undefined });
+      const clientNoAuth = new GcpWorkflowsClient({
+        ...config,
+        credentialsJson: undefined,
+      });
 
-      await expect(clientNoAuth.createExecution({ parent: "p", execution: { argument: "{}" } as any }))
-        .rejects.toThrow("GCP Credentials not configured");
+      await expect(
+        clientNoAuth.createExecution({
+          parent: "p",
+          execution: { argument: "{}" },
+        }),
+      ).rejects.toThrow("GCP Credentials not configured");
     });
 
     it("should call fetch with correct headers and body", async () => {
       await client.createExecution({
         parent: "projects/p/locations/l/workflows/w",
-        execution: { argument: "{}" } as any,
+        execution: { argument: "{}" },
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -98,9 +115,12 @@ describe("GcpWorkflowsClient", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ argument: "{}" }),
-        })
+        }),
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.anything(), "Workflow execution created successfully");
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.anything(),
+        "Workflow execution created successfully",
+      );
     });
 
     it("should throw error if fetch response is not ok", async () => {
@@ -111,14 +131,21 @@ describe("GcpWorkflowsClient", () => {
         text: async () => "Workflow specific error",
       });
 
-      await expect(client.createExecution({
-        parent: "p",
-        execution: { argument: "{}" } as any,
-      })).rejects.toThrow("Workflow execution failed: 500 Internal Server Error - Workflow specific error");
+      await expect(
+        client.createExecution({
+          parent: "p",
+          execution: { argument: "{}" },
+        }),
+      ).rejects.toThrow(
+        "Workflow execution failed: 500 Internal Server Error - Workflow specific error",
+      );
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.objectContaining({
-        errorMessage: expect.stringContaining("Workflow execution failed"),
-      }), "Failed to create workflow execution");
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          errorMessage: expect.stringContaining("Workflow execution failed"),
+        }),
+        "Failed to create workflow execution",
+      );
     });
 
     it("should handle auth token retrieval failure", async () => {
@@ -126,17 +153,22 @@ describe("GcpWorkflowsClient", () => {
       // Access the mock instance
       // The mock accumulates results from calls.
       // Since beforeEach recreates client, we need the *last* instance created.
-      const calls = (GoogleAuth as unknown as any).mock.results;
-      const lastInstance = calls[calls.length - 1].value;
+      const calls = (GoogleAuth as unknown as { mock: { results: Array<{ value: { getAccessToken: { mockRejectedValueOnce: (err: Error) => void } } }> } }).mock.results;
+      const lastInstance = calls.at(-1)?.value;
 
-      lastInstance.getAccessToken.mockRejectedValueOnce(error);
+      lastInstance?.getAccessToken.mockRejectedValueOnce(error);
 
-      await expect(client.createExecution({
-        parent: "p",
-        execution: { argument: "{}" } as any,
-      })).rejects.toThrow(error);
+      await expect(
+        client.createExecution({
+          parent: "p",
+          execution: { argument: "{}" },
+        }),
+      ).rejects.toThrow(error);
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.anything(), "Failed to create workflow execution");
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.anything(),
+        "Failed to create workflow execution",
+      );
     });
   });
 });
