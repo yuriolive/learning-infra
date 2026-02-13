@@ -43,6 +43,16 @@ jobs:
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
           NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
 
+      - name: Inject Secret Store ID
+        working-directory: apps/control-plane
+        run: |
+          STORE_ID="${{ vars.CLOUDFLARE_SECRETS_STORE_ID }}"
+          if [ -z "$STORE_ID" ]; then
+            echo "Error: CLOUDFLARE_SECRETS_STORE_ID variable is not set."
+            exit 1
+          fi
+          sed -i "s/STORE_ID_PLACEHOLDER/$STORE_ID/g" wrangler.jsonc
+
       - name: Build for Pages
         working-directory: apps/storefront
         run: pnpm run pages:build

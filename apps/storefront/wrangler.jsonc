@@ -32,6 +32,12 @@
   },
   "env": {
     "production": {
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "storefront"
+        }
+      ],
       "secrets_store_secrets": [
         {
           "binding": "ADMIN_API_KEY",
