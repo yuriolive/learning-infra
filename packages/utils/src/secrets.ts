@@ -55,3 +55,34 @@ export async function resolveEnvironment(
 
   return undefined;
 }
+
+/**
+ * Resolves the Google Service Account JSON credentials.
+ * Handles splitting the secret into 3 parts to work around environment variable size limits.
+ *
+ * Checks for:
+ * 1. GOOGLE_APPLICATION_CREDENTIALS_PART_1 + _2 + _3
+ * 2. GOOGLE_SERVICE_ACCOUNT_JSON (Legacy/Fallback)
+ */
+export async function resolveGoogleCredentials(
+  contextEnvironment?: Record<string, unknown>,
+): Promise<string | undefined> {
+  const part1 = await resolveEnvironment(
+    "GOOGLE_APPLICATION_CREDENTIALS_PART_1",
+    contextEnvironment,
+  );
+  const part2 = await resolveEnvironment(
+    "GOOGLE_APPLICATION_CREDENTIALS_PART_2",
+    contextEnvironment,
+  );
+  const part3 = await resolveEnvironment(
+    "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
+    contextEnvironment,
+  );
+
+  if (part1 && part2 && part3) {
+    return part1 + part2 + part3;
+  }
+
+  return resolveEnvironment("GOOGLE_SERVICE_ACCOUNT_JSON", contextEnvironment);
+}
