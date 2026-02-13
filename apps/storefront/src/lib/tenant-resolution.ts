@@ -1,6 +1,7 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger";
-import { type BoundSecret, resolveSecret } from "@vendin/utils";
+import { resolveEnvironment } from "@vendin/utils";
 import { cache as reactCache } from "react";
 
 import type { Tenant, TenantApiResponse } from "../types/tenant";
@@ -66,7 +67,18 @@ export const resolveTenant = reactCache(async function (
   }
 
   // 2. Source Fetch
-  const controlPlaneUrl = process.env.CONTROL_PLANE_API_URL;
+  let environment: Record<string, unknown> | undefined;
+  try {
+    const context = await getCloudflareContext({ async: true });
+    environment = context.env as unknown as Record<string, unknown>;
+  } catch {
+    // Ignore error if not running on Cloudflare
+  }
+
+  const controlPlaneUrl = await resolveEnvironment(
+    "CONTROL_PLANE_API_URL",
+    environment,
+  );
 
   if (!controlPlaneUrl) {
     logger.error(
@@ -76,17 +88,14 @@ export const resolveTenant = reactCache(async function (
     return null;
   }
 
-  const rawAdminApiKey = process.env.ADMIN_API_KEY;
-  const adminApiKey = await resolveSecret(
-    rawAdminApiKey as BoundSecret | undefined,
-  );
+  const adminApiKey = await resolveEnvironment("ADMIN_API_KEY", environment);
 
   if (!adminApiKey) {
     logger.error(
       {
         error: "missing_env",
         var: "ADMIN_API_KEY",
-        rawStatus: rawAdminApiKey ? typeof rawAdminApiKey : "missing",
+        rawStatus: "missing",
       },
       "Environment variable ADMIN_API_KEY is missing or could not be resolved",
     );
