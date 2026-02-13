@@ -1,5 +1,8 @@
+import { createCloudflareLogger } from "@vendin/logger";
 import { resolveGoogleCredentials } from "@vendin/utils";
 import { GoogleAuth } from "google-auth-library";
+
+const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
 /**
  * Generates an OIDC ID Token for the specified target URL using the application's default credentials.
@@ -10,9 +13,18 @@ export async function getTenantAuthToken(targetUrl: string): Promise<string> {
   // This is required for environments like Cloudflare Workers or Edge where file system access is restricted.
   const serviceAccountJson = await resolveGoogleCredentials();
 
-  const credentials = serviceAccountJson
-    ? JSON.parse(serviceAccountJson)
-    : undefined;
+  let credentials;
+  try {
+    credentials = serviceAccountJson
+      ? JSON.parse(serviceAccountJson)
+      : undefined;
+  } catch (error) {
+    logger.error(
+      { error, serviceAccountJsonLength: serviceAccountJson?.length },
+      "Failed to parse Google service account credentials",
+    );
+    throw new Error("Invalid Google credentials configuration");
+  }
 
   const auth = new GoogleAuth({
     credentials,

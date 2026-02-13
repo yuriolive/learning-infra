@@ -1,4 +1,8 @@
-import { resolveHost } from "@vendin/utils";
+import {
+  generateHeroUIPalette,
+  getContrastColor,
+  resolveHost,
+} from "@vendin/utils";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
@@ -7,6 +11,10 @@ import { StorefrontNavbar } from "../../../components/layout/navbar";
 import { resolveTenant } from "../../../lib/tenant-resolution";
 
 import type { ReactNode } from "react";
+
+interface CustomCSSProperties extends React.CSSProperties {
+  [key: string]: string | number | undefined;
+}
 
 export default async function TenantLayout({
   children,
@@ -29,9 +37,8 @@ export default async function TenantLayout({
     notFound();
   }
 
-  interface CustomCSSProperties extends React.CSSProperties {
-    [key: string]: string | number | undefined;
-  }
+  const palette = generateHeroUIPalette(tenant.theme.primaryColor);
+  const foregroundColor = getContrastColor(tenant.theme.primaryColor);
 
   return (
     <div
@@ -41,17 +48,17 @@ export default async function TenantLayout({
           // Apply primary color as a CSS variable for components to use
           "--primary-color": tenant.theme.primaryColor,
           "--heroui-primary": tenant.theme.primaryColor,
-          "--heroui-primary-50": `${tenant.theme.primaryColor}10`,
-          "--heroui-primary-100": `${tenant.theme.primaryColor}20`,
-          "--heroui-primary-200": `${tenant.theme.primaryColor}40`,
-          "--heroui-primary-300": `${tenant.theme.primaryColor}60`,
-          "--heroui-primary-400": `${tenant.theme.primaryColor}80`,
-          "--heroui-primary-500": tenant.theme.primaryColor,
-          "--heroui-primary-600": tenant.theme.primaryColor,
-          "--heroui-primary-700": tenant.theme.primaryColor,
-          "--heroui-primary-800": tenant.theme.primaryColor,
-          "--heroui-primary-900": tenant.theme.primaryColor,
-          "--heroui-primary-foreground": "#ffffff",
+          "--heroui-primary-50": palette[50],
+          "--heroui-primary-100": palette[100],
+          "--heroui-primary-200": palette[200],
+          "--heroui-primary-300": palette[300],
+          "--heroui-primary-400": palette[400],
+          "--heroui-primary-500": palette[500],
+          "--heroui-primary-600": palette[600],
+          "--heroui-primary-700": palette[700],
+          "--heroui-primary-800": palette[800],
+          "--heroui-primary-900": palette[900],
+          "--heroui-primary-foreground": foregroundColor,
           "--heroui-focus": tenant.theme.primaryColor,
         } as CustomCSSProperties
       }
