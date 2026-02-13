@@ -140,7 +140,8 @@ export class TenantService {
         lookup.endsWith(this.tenantBaseDomain) &&
         lookup !== this.tenantBaseDomain
       ) {
-        lookup = lookup.slice(0, -this.tenantBaseDomain.length);
+        // Remove the base domain and the preceding dot
+        lookup = lookup.slice(0, -(this.tenantBaseDomain.length + 1));
       }
 
       const tenant = await this.repository.findBySubdomain(lookup);

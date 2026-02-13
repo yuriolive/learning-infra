@@ -265,7 +265,7 @@ describe("TenantService", () => {
         subdomain: "sub.vendin.store",
       });
       expect(result).toEqual([tenant]);
-      expect(mockTenantRepository.findBySubdomain).toHaveBeenCalledWith("sub.");
+      expect(mockTenantRepository.findBySubdomain).toHaveBeenCalledWith("sub");
     });
   });
 });
