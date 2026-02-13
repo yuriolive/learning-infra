@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "storefront",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-01-24",
+  "compatibility_date": "2026-02-13",
   "compatibility_flags": [
     "nodejs_compat_v2",
     "global_fetch_strictly_public"
