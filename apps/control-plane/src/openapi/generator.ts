@@ -190,6 +190,61 @@ registry.registerPath({
   },
 });
 
+// Resolve tenant
+registry.registerPath({
+  method: "get",
+  path: "/api/tenants/resolve",
+  summary: "Resolve tenant",
+  description: "Resolves a tenant by subdomain",
+  tags: ["Tenants"],
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
+  request: {
+    query: z.object({
+      subdomain: z.string().openapi({
+        description: "Subdomain to resolve",
+      }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Tenant details",
+      content: {
+        "application/json": {
+          schema: tenantSchema,
+        },
+      },
+    },
+    400: {
+      description: "Validation error",
+      content: {
+        "application/json": {
+          schema: errorSchema,
+        },
+      },
+    },
+    404: {
+      description: "Tenant not found",
+      content: {
+        "application/json": {
+          schema: errorSchema,
+        },
+      },
+    },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: errorSchema,
+        },
+      },
+    },
+  },
+});
+
 // Get tenant by ID
 registry.registerPath({
   method: "get",

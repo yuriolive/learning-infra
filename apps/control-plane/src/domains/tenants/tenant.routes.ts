@@ -37,33 +37,51 @@ export function createTenantRoutes(context: RouteContext) {
       const url = new URL(request.url);
       const pathParts = url.pathname.split("/").filter(Boolean);
 
+      // Validate base path /api/tenants
       if (
-        pathParts.length === 2 &&
-        pathParts[0] === "api" &&
-        pathParts[1] === "tenants"
+        pathParts.length < 2 ||
+        pathParts[0] !== "api" ||
+        pathParts[1] !== "tenants"
       ) {
-        const response = await handleCollectionRequest(
+        return new Response("Not found", { status: 404 });
+      }
+
+      // 1. Collection: /api/tenants
+      if (pathParts.length === 2) {
+        return handleCollectionRequest(
           request,
           tenantService,
           logger,
           waitUntil,
         );
-        return response;
       }
 
-      if (
-        pathParts.length === 3 &&
-        pathParts[0] === "api" &&
-        pathParts[1] === "tenants"
-      ) {
-        const tenantId = pathParts[2] as string;
-        const response = await handleResourceRequest(
+      // 2. Resource or Resolve: /api/tenants/:id or /api/tenants/resolve
+      if (pathParts.length === 3) {
+        const resourceId = pathParts[2] as string;
+
+        // Specific route: /api/tenants/resolve
+        if (resourceId === "resolve" && request.method === "GET") {
+          const subdomain = url.searchParams.get("subdomain");
+          if (!subdomain) {
+            return new Response(
+              JSON.stringify({ error: "Subdomain is required" }),
+              {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+              },
+            );
+          }
+          return handleResolveTenant(subdomain, tenantService, logger);
+        }
+
+        // Generic resource: /api/tenants/:id
+        return handleResourceRequest(
           request,
-          tenantId,
+          resourceId,
           tenantService,
           logger,
         );
-        return response;
       }
 
       return new Response("Not found", { status: 404 });
@@ -124,6 +142,34 @@ async function handleResourceRequest(
     return response;
   }
   return new Response("Not found", { status: 404 });
+}
+
+async function handleResolveTenant(
+  subdomain: string,
+  service: TenantService,
+  logger: Logger,
+): Promise<Response> {
+  try {
+    const tenant = await service.resolveTenant(subdomain);
+
+    if (!tenant) {
+      return new Response(JSON.stringify({ error: "Tenant not found" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    return new Response(JSON.stringify(tenant), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    return handleError(error, logger);
+  }
 }
 
 /**

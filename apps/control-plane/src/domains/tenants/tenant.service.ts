@@ -136,11 +136,15 @@ export class TenantService {
     if (filters?.subdomain) {
       let lookup = filters.subdomain;
 
+      // Strip base domain if present
       if (
+        this.tenantBaseDomain &&
         lookup.endsWith(this.tenantBaseDomain) &&
         lookup !== this.tenantBaseDomain
       ) {
-        lookup = lookup.slice(0, -this.tenantBaseDomain.length);
+        // Remove .tenant-base.com from subdomain.tenant-base.com
+        // +1 for the dot
+        lookup = lookup.slice(0, -(this.tenantBaseDomain.length + 1));
       }
 
       const tenant = await this.repository.findBySubdomain(lookup);
@@ -148,5 +152,23 @@ export class TenantService {
     }
     const tenants = await this.repository.findAll();
     return tenants;
+  }
+
+  async resolveTenant(subdomain: string): Promise<Tenant | null> {
+    let lookup = subdomain;
+
+    // Strip base domain if present
+    if (
+      this.tenantBaseDomain &&
+      lookup.endsWith(this.tenantBaseDomain) &&
+      lookup !== this.tenantBaseDomain
+    ) {
+      // Remove .tenant-base.com from subdomain.tenant-base.com
+      // +1 for the dot
+      lookup = lookup.slice(0, -(this.tenantBaseDomain.length + 1));
+    }
+
+    const tenant = await this.repository.findBySubdomain(lookup);
+    return tenant;
   }
 }
