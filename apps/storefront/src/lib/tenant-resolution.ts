@@ -1,12 +1,11 @@
-import { type BoundSecret, resolveSecret } from "@vendin/utils";
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger";
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
 import { cache as reactCache } from "react";
 
 const logger = createCloudflareLogger({
   logLevel: "info",
   nodeEnv: process.env.NODE_ENV || "development",
-  service: "storefront-tenant-resolution",
 });
 
 export interface TenantMetadata {
@@ -16,6 +15,16 @@ export interface TenantMetadata {
   status: string;
   databaseUrl: string;
   apiUrl: string;
+  backendUrl: string;
+  acmeChallenge?: {
+    token: string;
+    response: string;
+  };
+  theme: {
+    primaryColor: string;
+    fontFamily: string;
+    logoUrl: string;
+  };
   metadata?: Record<string, unknown>;
 }
 
@@ -44,8 +53,8 @@ export const resolveTenant = reactCache(async (host: string) => {
     if (cachedTenant) {
       return cachedTenant;
     }
-  } catch (err) {
-    logger.warn({ host, err }, "Failed to get tenant from cache");
+  } catch (error) {
+    logger.warn({ host, err: error }, "Failed to get tenant from cache");
   }
 
   // Resolve admin API key ensuring it handles Cloudflare SecretBinding
@@ -56,16 +65,19 @@ export const resolveTenant = reactCache(async (host: string) => {
   }
 
   const rawAdminApiKey = process.env.ADMIN_API_KEY;
-  const adminApiKey = await resolveSecret(rawAdminApiKey as BoundSecret | undefined);
+  const adminApiKey = await resolveSecret(
+    rawAdminApiKey as BoundSecret | undefined,
+  );
 
   if (!adminApiKey) {
     logger.error(
-      { 
-        rawType: typeof rawAdminApiKey,
-        hasRaw: !!rawAdminApiKey,
-        isObject: typeof rawAdminApiKey === 'object' && rawAdminApiKey !== null
+      {
+        error: "missing_env",
+        var: "ADMIN_API_KEY",
+        rawStatus: rawAdminApiKey ? typeof rawAdminApiKey : "missing",
+        isObject: typeof rawAdminApiKey === "object" && rawAdminApiKey !== null,
       },
-      "Environment variable ADMIN_API_KEY is missing or could not be resolved"
+      "Environment variable ADMIN_API_KEY is missing or could not be resolved",
     );
     // In production, this is critical.
     if (process.env.NODE_ENV === "production") {
@@ -79,24 +91,23 @@ export const resolveTenant = reactCache(async (host: string) => {
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: adminApiKey ? `Bearer ${adminApiKey}` : "",
+          Authorization: `Bearer ${adminApiKey || ""}`,
         },
         // Low timeout for tenant resolution to avoid blocking
-        // @ts-expect-error signal is not in the type definition for fetch in some environments
         signal: AbortSignal.timeout(5000),
       },
     );
 
     if (!response.ok) {
       logger.error(
-        { 
-          host, 
-          status: response.status, 
+        {
+          host,
+          status: response.status,
           url: response.url,
+          hasAdminApiKey: !!adminApiKey,
           adminApiKeyType: typeof adminApiKey,
-          hasAdminApiKey: !!adminApiKey
-        }, 
-        "Failed to resolve tenant from control plane"
+        },
+        "Failed to resolve tenant from control plane",
       );
       return null;
     }
@@ -105,14 +116,14 @@ export const resolveTenant = reactCache(async (host: string) => {
 
     // Cache the resolved tenant metadata for 5 minutes
     try {
-      await cache.set(cacheKey, tenant, { ttl: 300 });
-    } catch (err) {
-      logger.warn({ host, err }, "Failed to set tenant in cache");
+      await cache.set(cacheKey, tenant, { ttlSeconds: 300 });
+    } catch (error) {
+      logger.warn({ host, err: error }, "Failed to set tenant in cache");
     }
 
     return tenant;
-  } catch (err) {
-    logger.error({ host, err }, "Error resolving tenant");
+  } catch (error) {
+    logger.error({ host, err: error }, "Error resolving tenant");
     return null;
   }
 });
