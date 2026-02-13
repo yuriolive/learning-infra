@@ -34,11 +34,11 @@ vi.mock("cloudflare", () => {
 describe("CloudflareProvider", () => {
   let provider: CloudflareProvider;
   let mockCustomHostnames: {
-    create: MockedFunction<unknown>;
-    list: MockedFunction<unknown>;
+    create: MockedFunction<any>;
+    list: MockedFunction<any>;
   };
   let mockDnsRecords: {
-    create: MockedFunction<unknown>;
+    create: MockedFunction<any>;
   };
 
   beforeEach(() => {

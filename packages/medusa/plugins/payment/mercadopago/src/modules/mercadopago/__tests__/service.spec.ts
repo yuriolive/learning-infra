@@ -481,10 +481,10 @@ describe("MercadoPagoPaymentProviderService", () => {
       expect(result.status).toBe("canceled");
     });
 
-    it("should return pending if externalId missing", async () => {
+    it("should return error if externalId missing", async () => {
       const input = { data: { foo: "bar" } };
       const result = await service.getPaymentStatus(input as any);
-      expect(result.status).toBe("pending");
+      expect(result.status).toBe("error");
     });
 
     it("should return error status on failure", async () => {
