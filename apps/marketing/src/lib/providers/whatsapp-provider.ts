@@ -57,15 +57,9 @@ export interface WhatsAppConfig {
 }
 
 /**
- * Create a WhatsApp provider based on configuration
- * @param config - Provider configuration
- * @returns WhatsApp provider instance
- * @throws Error if configuration is invalid or provider type is unsupported
- */
-/**
  * Mask a phone number for PII-safe logging
  * Keeps the first 4 and last 4 characters visible
- * Example: +1234567890 -> +123****7890
+ * Example: +1234567890 -\> +123****7890
  */
 export function maskPhoneNumber(phoneNumber: string): string {
   if (!phoneNumber || phoneNumber.length < 8) {

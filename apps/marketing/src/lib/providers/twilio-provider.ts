@@ -31,9 +31,7 @@ export class TwilioWhatsAppProvider implements WhatsAppProvider {
       const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
 
       // Twilio uses Basic Auth with AccountSID:AuthToken
-      const authHeader = Buffer.from(
-        `${this.accountSid}:${this.authToken}`,
-      ).toString("base64");
+      const authHeader = btoa(`${this.accountSid}:${this.authToken}`);
 
       const body = new URLSearchParams({
         From: fromWhatsApp,

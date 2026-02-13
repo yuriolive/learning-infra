@@ -6,6 +6,7 @@ import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "../db/schema";
 
+import type { WhatsAppConfig } from "./providers/whatsapp-provider";
 import type { D1Database } from "@cloudflare/workers-types";
 
 export const auth = betterAuth({
@@ -29,50 +30,49 @@ export const auth = betterAuth({
         const { createWhatsAppProvider } =
           await import("./providers/whatsapp-provider");
 
-        // Configure provider based on type
-        const config =
-          providerType === "facebook"
-            ? {
-                provider: "facebook" as const,
-                facebook: {
-                  accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
-                  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
-                  apiVersion: process.env.WHATSAPP_API_VERSION || "v21.0",
-                },
-                logger,
-              }
-            : {
-                provider: "twilio" as const,
-                twilio: {
-                  accountSid: process.env.TWILIO_ACCOUNT_SID || "",
-                  authToken: process.env.TWILIO_AUTH_TOKEN || "",
-                  fromNumber: process.env.TWILIO_WHATSAPP_FROM || "",
-                },
-                logger,
-              };
+        let config: WhatsAppConfig;
 
-        // Validate required credentials
         if (providerType === "facebook") {
-          if (
-            !config.facebook?.accessToken ||
-            !config.facebook?.phoneNumberId
-          ) {
+          const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+          const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+          if (!accessToken || !phoneNumberId) {
             logger.error(
               "Facebook WhatsApp credentials missing. OTP will not be sent.",
             );
             throw new Error("Facebook WhatsApp credentials not configured.");
           }
+
+          config = {
+            provider: "facebook",
+            facebook: {
+              accessToken,
+              phoneNumberId,
+              apiVersion: process.env.WHATSAPP_API_VERSION || "v21.0",
+            },
+            logger,
+          };
         } else {
-          if (
-            !config.twilio?.accountSid ||
-            !config.twilio?.authToken ||
-            !config.twilio?.fromNumber
-          ) {
+          const accountSid = process.env.TWILIO_ACCOUNT_SID;
+          const authToken = process.env.TWILIO_AUTH_TOKEN;
+          const fromNumber = process.env.TWILIO_WHATSAPP_FROM;
+
+          if (!accountSid || !authToken || !fromNumber) {
             logger.error(
               "Twilio WhatsApp credentials missing. OTP will not be sent.",
             );
             throw new Error("Twilio WhatsApp credentials not configured.");
           }
+
+          config = {
+            provider: "twilio",
+            twilio: {
+              accountSid,
+              authToken,
+              fromNumber,
+            },
+            logger,
+          };
         }
 
         // Create provider and send message

@@ -42,12 +42,26 @@ describe("createWhatsAppProvider", () => {
     ).rejects.toThrow("Unsupported WhatsApp provider");
   });
 
-  it("should use default API version for Facebook when not provided", async () => {
+  it("should create Facebook provider successfully", async () => {
     const provider = await createWhatsAppProvider({
       provider: "facebook",
       facebook: {
         accessToken: "test-token",
         phoneNumberId: "123456789",
+      },
+      logger: mockLogger,
+    });
+
+    expect(provider).toBeDefined();
+  });
+
+  it("should create Twilio provider successfully", async () => {
+    const provider = await createWhatsAppProvider({
+      provider: "twilio",
+      twilio: {
+        accountSid: "test-sid",
+        authToken: "test-token",
+        fromNumber: "123456789",
       },
       logger: mockLogger,
     });
