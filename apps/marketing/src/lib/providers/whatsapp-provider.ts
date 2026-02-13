@@ -1,4 +1,4 @@
-import type { consoleLogger } from "@vendin/utils/logger-cloudflare-factory";
+import type { consoleLogger } from "@vendin/logger";
 
 /**
  * WhatsApp provider interface for sending messages
@@ -62,9 +62,29 @@ export interface WhatsAppConfig {
  * @returns WhatsApp provider instance
  * @throws Error if configuration is invalid or provider type is unsupported
  */
-export function createWhatsAppProvider(
+/**
+ * Mask a phone number for PII-safe logging
+ * Keeps the first 4 and last 4 characters visible
+ * Example: +1234567890 -> +123****7890
+ */
+export function maskPhoneNumber(phoneNumber: string): string {
+  if (!phoneNumber || phoneNumber.length < 8) {
+    return "*****";
+  }
+  const start = phoneNumber.slice(0, 4);
+  const end = phoneNumber.slice(-4);
+  return `${start}****${end}`;
+}
+
+/**
+ * Create a WhatsApp provider based on configuration
+ * @param config - Provider configuration
+ * @returns WhatsApp provider instance
+ * @throws Error if configuration is invalid or provider type is unsupported
+ */
+export async function createWhatsAppProvider(
   config: WhatsAppConfig,
-): WhatsAppProvider {
+): Promise<WhatsAppProvider> {
   switch (config.provider) {
     case "facebook": {
       if (!config.facebook) {
@@ -73,8 +93,7 @@ export function createWhatsAppProvider(
         );
       }
       // Dynamic import to avoid loading unused provider code
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { FacebookWhatsAppProvider } = require("./facebook-provider");
+      const { FacebookWhatsAppProvider } = await import("./facebook-provider");
       return new FacebookWhatsAppProvider(config.facebook, config.logger);
     }
 
@@ -85,8 +104,7 @@ export function createWhatsAppProvider(
         );
       }
       // Dynamic import to avoid loading unused provider code
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { TwilioWhatsAppProvider } = require("./twilio-provider");
+      const { TwilioWhatsAppProvider } = await import("./twilio-provider");
       return new TwilioWhatsAppProvider(config.twilio, config.logger);
     }
 

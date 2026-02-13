@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { TwilioWhatsAppProvider } from "../twilio-provider";
 
-import type { consoleLogger } from "@vendin/utils/logger-cloudflare-factory";
+import type { consoleLogger } from "@vendin/logger";
 
 // Mock logger
 const mockLogger = {
@@ -57,7 +57,7 @@ describe("TwilioWhatsAppProvider", () => {
     expect(body).toContain("Body=Test+message");
 
     expect(mockLogger.info).toHaveBeenCalledWith(
-      { to: "+1234567890" },
+      { to: "+123****7890" },
       "WhatsApp message sent successfully via Twilio",
     );
   });

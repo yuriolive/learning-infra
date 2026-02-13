@@ -76,7 +76,7 @@ export const auth = betterAuth({
         }
 
         // Create provider and send message
-        const provider = createWhatsAppProvider(config);
+        const provider = await createWhatsAppProvider(config);
         await provider.sendMessage(
           phoneNumber,
           `Your verification code is: ${code}`,

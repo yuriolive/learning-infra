@@ -1,8 +1,10 @@
-import type {
-  FacebookWhatsAppConfig,
-  WhatsAppProvider,
+import {
+  type FacebookWhatsAppConfig,
+  type WhatsAppProvider,
+  maskPhoneNumber,
 } from "./whatsapp-provider";
-import type { consoleLogger } from "@vendin/utils/logger-cloudflare-factory";
+
+import type { consoleLogger } from "@vendin/logger";
 
 /**
  * Facebook WhatsApp Business API provider implementation
@@ -53,12 +55,12 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
       }
 
       this.logger.info(
-        { to: recipientPhone },
+        { to: maskPhoneNumber(recipientPhone) },
         "WhatsApp message sent successfully via Facebook",
       );
     } catch (error) {
       this.logger.error(
-        { error, phoneNumber },
+        { error, phoneNumber: maskPhoneNumber(phoneNumber) },
         "Error sending WhatsApp message via Facebook",
       );
       throw error;

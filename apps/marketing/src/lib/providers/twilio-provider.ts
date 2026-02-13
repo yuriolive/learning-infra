@@ -1,8 +1,10 @@
-import type {
-  TwilioWhatsAppConfig,
-  WhatsAppProvider,
+import {
+  type TwilioWhatsAppConfig,
+  type WhatsAppProvider,
+  maskPhoneNumber,
 } from "./whatsapp-provider";
-import type { consoleLogger } from "@vendin/utils/logger-cloudflare-factory";
+
+import type { consoleLogger } from "@vendin/logger";
 
 /**
  * Twilio WhatsApp API provider implementation
@@ -58,12 +60,12 @@ export class TwilioWhatsAppProvider implements WhatsAppProvider {
       }
 
       this.logger.info(
-        { to: phoneNumber },
+        { to: maskPhoneNumber(phoneNumber) },
         "WhatsApp message sent successfully via Twilio",
       );
     } catch (error) {
       this.logger.error(
-        { error, phoneNumber },
+        { error, phoneNumber: maskPhoneNumber(phoneNumber) },
         "Error sending WhatsApp message via Twilio",
       );
       throw error;
