@@ -52,7 +52,7 @@ export const mockProducts = [
     title: "Portable Bluetooth Speaker",
     price: 79.5,
     image:
-      "https://images.unsplash.com/photo-1608156639585-34a0a56ee624?q=80&w=500&h=500&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1582978571763-2d039e56f0c3?q=80&w=500&h=500&auto=format&fit=crop",
   },
   {
     id: "p4",
