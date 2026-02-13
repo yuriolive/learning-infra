@@ -68,7 +68,7 @@ export const resolveTenant = reactCache(async function (
   const controlPlaneUrl = process.env.CONTROL_PLANE_API_URL;
 
   if (!controlPlaneUrl) {
-    logger.error("CONTROL_PLANE_API_URL not defined");
+    logger.error({ error: "missing_env" }, "CONTROL_PLANE_API_URL not defined");
     return null;
   }
 

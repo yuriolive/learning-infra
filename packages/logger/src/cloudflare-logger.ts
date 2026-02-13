@@ -40,14 +40,16 @@ const formatLog = (
   object: object | unknown,
   message?: string,
 ) => {
-  return JSON.stringify(
-    {
-      level,
-      message,
-      ...(object as object),
-    },
-    getCircularReplacer(),
-  );
+  const logObject =
+    typeof object === "string"
+      ? { level, message: object }
+      : {
+          level,
+          message,
+          ...(object as object),
+        };
+
+  return JSON.stringify(logObject, getCircularReplacer());
 };
 
 /**

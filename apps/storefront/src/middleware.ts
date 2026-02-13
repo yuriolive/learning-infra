@@ -52,7 +52,6 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith("/.well-known/acme-challenge/")
   ) {
     const token = url.pathname.split("/").findLast(Boolean);
-    // eslint-disable-next-line
     if (token === tenant.acmeChallenge.token) {
       return new NextResponse(tenant.acmeChallenge.response, {
         headers: { "Content-Type": "text/plain" },
