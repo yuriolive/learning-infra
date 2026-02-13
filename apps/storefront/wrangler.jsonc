@@ -11,12 +11,6 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "storefront"
-    }
-  ],
   "routes": [
     {
       "pattern": "storefront.vendin.store/*",
@@ -32,12 +26,6 @@
   },
   "env": {
     "production": {
-      "services": [
-        {
-          "binding": "WORKER_SELF_REFERENCE",
-          "service": "storefront"
-        }
-      ],
       "secrets_store_secrets": [
         {
           "binding": "ADMIN_API_KEY",
