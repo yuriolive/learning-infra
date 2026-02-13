@@ -51,9 +51,8 @@ export async function middleware(request: NextRequest) {
     tenant.acmeChallenge.token &&
     url.pathname.startsWith("/.well-known/acme-challenge/")
   ) {
-    // eslint-disable-next-line unicorn/prefer-array-find
-    const token = url.pathname.split("/").filter(Boolean).pop();
-    // eslint-disable-next-line security/detect-possible-timing-attacks
+    const token = url.pathname.split("/").findLast(Boolean);
+    // eslint-disable-next-line
     if (token === tenant.acmeChallenge.token) {
       return new NextResponse(tenant.acmeChallenge.response, {
         headers: { "Content-Type": "text/plain" },
