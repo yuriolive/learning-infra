@@ -172,6 +172,7 @@ async function initializeApplication(
     cloudflareApiToken,
     cloudflareZoneId,
     tenantBaseDomain,
+    storefrontHostname,
   } = await resolveEnvironmentSecrets(environment);
 
   initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -199,6 +200,8 @@ async function initializeApplication(
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
+    tenantBaseDomain,
+    storefrontHostname,
   );
 
   if (configError) {
@@ -219,6 +222,7 @@ async function initializeApplication(
     cloudflareApiToken,
     cloudflareZoneId,
     tenantBaseDomain,
+    storefrontHostname,
   );
 
   const tenantRoutes = createTenantRoutes({
@@ -258,6 +262,7 @@ function createServices(
   cloudflareApiToken: string | undefined,
   cloudflareZoneId: string | undefined,
   tenantBaseDomain: string | undefined,
+  storefrontHostname: string | undefined,
 ) {
   const database = createDatabase(databaseUrl, nodeEnvironment);
   const tenantRepository = new TenantRepository(database);
@@ -276,6 +281,7 @@ function createServices(
     cloudflareApiToken,
     cloudflareZoneId,
     tenantBaseDomain,
+    storefrontHostname,
   });
 
   const tenantService = new TenantService(

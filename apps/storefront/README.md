@@ -32,3 +32,15 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Configuration
+
+The Storefront requires the following environment variables for multi-tenant resolution:
+
+- `CONTROL_PLANE_API_URL`: URL of the Control Plane API (e.g., `https://control.vendin.store`).
+- `ADMIN_API_KEY`: Secret key for authenticating with the Control Plane.
+- `MARKETING_APP_URL`: (Optional) URL to redirect to if a tenant is not found. Defaults to `https://vendin.store`.
+
+### Environment Setup
+
+Ensure these variables are configured in your Cloudflare dashboard or `wrangler.jsonc` for production, and in your local `.dev.vars` for development.

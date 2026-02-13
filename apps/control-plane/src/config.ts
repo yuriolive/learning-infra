@@ -29,6 +29,7 @@ export interface Environment {
   CLOUDFLARE_API_TOKEN?: BoundSecret;
   CLOUDFLARE_ZONE_ID?: BoundSecret;
   TENANT_BASE_DOMAIN?: string;
+  STOREFRONT_HOSTNAME?: string;
 }
 
 function resolveSecret(
@@ -98,7 +99,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
-    tenantBaseDomain: environment.TENANT_BASE_DOMAIN || "vendin.store",
+    tenantBaseDomain: environment.TENANT_BASE_DOMAIN,
+    storefrontHostname: environment.STOREFRONT_HOSTNAME,
   };
 }
 
@@ -186,6 +188,8 @@ export function validateConfiguration(
   geminiApiKey?: string,
   cloudflareApiToken?: string,
   cloudflareZoneId?: string,
+  tenantBaseDomain?: string,
+  storefrontHostname?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -195,6 +199,16 @@ export function validateConfiguration(
   if (!upstashRedisUrl) {
     logger.error("UPSTASH_REDIS_URL is required but was not configured");
     return createErrorResponse("Redis configuration is missing");
+  }
+
+  if (!tenantBaseDomain) {
+    logger.error("TENANT_BASE_DOMAIN is required but was not configured");
+    return createErrorResponse("Base domain configuration is missing");
+  }
+
+  if (!storefrontHostname) {
+    logger.error("STOREFRONT_HOSTNAME is required but was not configured");
+    return createErrorResponse("Storefront hostname configuration is missing");
   }
 
   if (nodeEnvironment === "production") {

@@ -86,8 +86,8 @@ export class CloudRunProvider {
       JWT_SECRET: config.jwtSecret,
       HOST: "0.0.0.0",
       NODE_ENV: "production",
-      STORE_CORS: `https://${config.subdomain}.${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
-      ADMIN_CORS: `https://${config.subdomain}.${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
+      STORE_CORS: `https://${config.subdomain}${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
+      ADMIN_CORS: `https://${config.subdomain}${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
       ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
@@ -359,8 +359,7 @@ export class CloudRunProvider {
   }
 
   private async checkResourceExists(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client: any,
+    client: { get: (parameters: { name: string }) => Promise<unknown> },
     resourcePath: string,
   ): Promise<boolean> {
     try {
@@ -402,8 +401,14 @@ export class CloudRunProvider {
         { tenantId },
         `Updating existing Cloud Run ${displayName}`,
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (client as any).patch({
+      const response = await (
+        client as unknown as {
+          patch: (parameters: {
+            name: string;
+            requestBody: object;
+          }) => Promise<{ data: { name?: string } }>;
+        }
+      ).patch({
         name: resourcePath,
         requestBody,
       });
@@ -411,8 +416,15 @@ export class CloudRunProvider {
     }
 
     this.logger.info({ tenantId }, `Creating new Cloud Run ${displayName}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (client as any).create({
+    const response = await (
+      client as unknown as {
+        create: (parameters: {
+          parent: string;
+          [key: string]: string | object;
+          requestBody: object;
+        }) => Promise<{ data: { name?: string } }>;
+      }
+    ).create({
       parent,
       [idField]: resourceId,
       requestBody,

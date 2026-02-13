@@ -94,7 +94,8 @@
         "GCP_REGION": "southamerica-east1",
         "TENANT_IMAGE_TAG": "TENANT_IMAGE_TAG_PLACEHOLDER",
         "CLOUD_RUN_SERVICE_ACCOUNT": "CLOUD_RUN_SERVICE_ACCOUNT_PLACEHOLDER",
-        "TENANT_BASE_DOMAIN": "my.vendin.store"
+        "TENANT_BASE_DOMAIN": "-my.vendin.store",
+        "STOREFRONT_HOSTNAME": "storefront.vendin.store"
       }
     }
   }

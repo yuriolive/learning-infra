@@ -17,12 +17,33 @@
       "service": "storefront"
     }
   ],
+  "routes": [
+    {
+      "pattern": "storefront.vendin.store/*",
+      "zone_name": "vendin.store"
+    },
+    {
+      "pattern": "*-my.vendin.store/*",
+      "zone_name": "vendin.store"
+    }
+  ],
   "observability": {
     "enabled": true
   },
-  "vars": {
-    "CONTROL_PLANE_API_URL": "http://control.vendin.store",
-    "MARKETING_APP_URL": "https://vendin.store",
-    "NODE_ENV": "production"
+  "env": {
+    "production": {
+      "secrets_store_secrets": [
+        {
+          "binding": "ADMIN_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "control-plane-admin-api-key"
+        }
+      ],
+      "vars": {
+        "CONTROL_PLANE_API_URL": "http://control.vendin.store",
+        "MARKETING_APP_URL": "https://vendin.store",
+        "NODE_ENV": "production"
+      }
+    }
   }
 }

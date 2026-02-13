@@ -36,7 +36,7 @@ export class TenantService {
     this.logger = config.logger;
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
-    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
+    this.tenantBaseDomain = config.tenantBaseDomain as string;
   }
 
   async createTenant(
@@ -136,12 +136,11 @@ export class TenantService {
     if (filters?.subdomain) {
       let lookup = filters.subdomain;
 
-      // Handle full hostname by stripping base domain if it matches
       if (
-        lookup.endsWith(`.${this.tenantBaseDomain}`) &&
+        lookup.endsWith(this.tenantBaseDomain) &&
         lookup !== this.tenantBaseDomain
       ) {
-        lookup = lookup.slice(0, -(this.tenantBaseDomain.length + 1));
+        lookup = lookup.slice(0, -this.tenantBaseDomain.length);
       }
 
       const tenant = await this.repository.findBySubdomain(lookup);

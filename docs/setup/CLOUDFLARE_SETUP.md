@@ -69,9 +69,9 @@ vendin.store                    → Landing page & Signup (root domain)
 www.vendin.store                → Redirects to root or alternative storefront
 control.vendin.store            → Control Plane API
 admin.vendin.store              → Platform admin dashboard (optional)
-*.my.vendin.store               → Tenant stores (wildcard SSL)
-  ├─ awesome-store.my.vendin.store → Merchant storefront
-  └─ awesome-store.my.vendin.store/admin → Merchant admin (MedusaJS)
+*-my.vendin.store               → Tenant stores (Flattened subdomains)
+  ├─ awesome-store-my.vendin.store → Merchant storefront
+  └─ awesome-store-my.vendin.store/admin → Merchant admin (MedusaJS)
 ```
 
 **Custom Domains (Optional):**
@@ -386,33 +386,34 @@ For default tenant subdomains (e.g., `merchant-name-my.vendin.store`):
 
 ```bash
 # In Cloudflare DNS → Records
-# Add wildcard CNAME for tenant subdomains:
+# Add wildcard CNAME for all subdomains:
 Type: CNAME
-Name: *.my
+Name: *
 Target: storefront.pages.dev (or your storefront URL)
 TTL: Auto
 Proxy status: Proxied (orange cloud)
 
 # Note: This wildcard will match:
-# - awesome-store.my.vendin.store
-# - any-merchant.my.vendin.store
-# But NOT reserved subdomains (control, admin, www) which should have explicit records
+# - awesome-store-my.vendin.store
+# - any-subdomain.vendin.store
+# Note: DNS does NOT support partial wildcards like *-my.
 ```
 
-### Architecture Decision: Wildcard SSL vs. Per-Tenant SSL
+### Architecture Decision: Flattened Subdomains (Universal SSL)
 
-Our platform uses a **Wildcard SSL** strategy for all default tenant subdomains under `*.my.vendin.store`.
+Our platform uses a **Flattened Subdomain** strategy (`[tenant]-my.vendin.store`) for default domains.
 
-**Why Wildcard SSL?**
+**Why Flattened?**
 
-1. **Instant Provisioning**: New tenants don't need to wait for SSL validation.
-2. **Simplified Infrastructure**: No need to manage hundreds of individual custom hostnames in Cloudflare for default subdomains.
-3. **Bypass Redirect Issues**: Avoids issues where HTTP validation tokens are inaccessible due to automatic HTTPS redirects.
+1.  **Universal SSL Coverage**: Cloudflare's free Universal SSL covers `*.vendin.store` (1 level deep). It does NOT cover `*.*.vendin.store` (2 levels deep, like `store.my.vendin.store`).
+2.  **Cost Efficiency**: Avoids the need for "Advanced Certificate Manager" ($10/mo) or Enterprise plans required for deep wildcards.
+3.  **Simplicity**: We skip Cloudflare Custom Hostname creation for these domains entirely, relying on the zone's default SSL.
 
 **Implementation**:
 
-- The Control Plane **skips** individual Cloudflare custom hostname creation if the subdomain matches the wildcard base.
-- A single one-time setup of `*.my.vendin.store` in Cloudflare covers all subdomains.
+- The Control Plane **generates** `[tenant]-my.vendin.store` hostnames.
+- It **skips** `createCustomHostname` for these domains.
+- It **creates** explicit CNAME records pointing to `STOREFRONT_HOSTNAME` (e.g., `store.vendin.store`).
 
 ## Part E: Wildcard SSL Setup (Manual)
 

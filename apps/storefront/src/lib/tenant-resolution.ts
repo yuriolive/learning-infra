@@ -76,6 +76,7 @@ export const resolveTenant = reactCache(async function (
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.ADMIN_API_KEY}`,
         },
         next: { revalidate: 0 },
       },

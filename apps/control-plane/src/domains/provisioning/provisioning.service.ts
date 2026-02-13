@@ -8,6 +8,8 @@ import { NeonProvider } from "../../providers/neon/neon.client";
 import { type Logger } from "../../utils/logger";
 import { type TenantRepository } from "../tenants/tenant.repository";
 
+import { DomainProvisioningService } from "./domain-provisioning.service";
+
 export interface ProvisioningServiceConfig {
   neonApiKey?: string | undefined;
   neonProjectId?: string | undefined;
@@ -21,6 +23,7 @@ export interface ProvisioningServiceConfig {
   cloudflareApiToken?: string | undefined;
   cloudflareZoneId?: string | undefined;
   tenantBaseDomain?: string | undefined;
+  storefrontHostname?: string | undefined;
   logger: Logger;
 }
 
@@ -29,6 +32,7 @@ export class ProvisioningService {
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
   private cloudflareProvider: CloudflareProvider | null = null;
+  private domainProvisioningService: DomainProvisioningService | null = null;
   private upstashRedisUrl: string | undefined;
   public readonly tenantBaseDomain: string;
   private logger: Logger;
@@ -39,7 +43,7 @@ export class ProvisioningService {
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
-    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
+    this.tenantBaseDomain = config.tenantBaseDomain as string;
 
     this.initializeProviders(config);
   }
@@ -49,6 +53,16 @@ export class ProvisioningService {
     this.initializeCloudRunProvider(config);
     this.initializeWorkflowsClient(config);
     this.initializeCloudflareProvider(config);
+
+    if (this.cloudflareProvider) {
+      this.domainProvisioningService = new DomainProvisioningService({
+        tenantRepository: this.tenantRepository,
+        cloudflareProvider: this.cloudflareProvider,
+        logger: this.logger,
+        tenantBaseDomain: this.tenantBaseDomain,
+        storefrontHostname: config.storefrontHostname as string,
+      });
+    }
   }
 
   private initializeNeonProvider(config: ProvisioningServiceConfig): void {
@@ -255,72 +269,15 @@ export class ProvisioningService {
   }
 
   async configureDomain(tenantId: string): Promise<void> {
-    const tenant = await this.tenantRepository.findById(tenantId);
-    if (!tenant || !tenant.subdomain) throw new Error("Subdomain missing");
-
-    if (!this.cloudflareProvider) {
+    if (!this.domainProvisioningService) {
       this.logger.warn(
         { tenantId },
-        "Cloudflare provider not initialized, skipping domain configuration",
+        "Domain provisioning service not initialized, skipping domain configuration",
       );
       return;
     }
 
-    const subdomain = tenant.subdomain;
-    const hostname = subdomain.includes(".")
-      ? subdomain
-      : `${subdomain}.${this.tenantBaseDomain}`;
-
-    // If using the default base domain (e.g. *.my.vendin.store), skip individual Cloudflare setup because we use a wildcard cert.
-    if (hostname.endsWith(`.${this.tenantBaseDomain}`)) {
-      this.logger.info(
-        { tenantId, hostname, baseDomain: this.tenantBaseDomain },
-        "Skipping Cloudflare custom hostname creation for default base domain (Wildcard SSL used)",
-      );
-      return;
-    }
-
-    this.logger.info(
-      { tenantId, subdomain: tenant.subdomain, hostname },
-      "Configuring Cloudflare domain",
-    );
-
-    const result = await this.cloudflareProvider.createCustomHostname(
-      tenantId,
-      hostname,
-    );
-
-    if (result?.ssl?.validation_records) {
-      const httpValidation = result.ssl.validation_records.find(
-        (r: { http_url?: string; http_body?: string }) =>
-          r.http_url && r.http_body,
-      );
-
-      if (
-        httpValidation &&
-        httpValidation.http_url &&
-        httpValidation.http_body
-      ) {
-        this.logger.info(
-          { tenantId, hostname },
-          "Found ACME HTTP validation record, updating tenant metadata",
-        );
-
-        // Extract token from URL: http://hostname/.well-known/acme-challenge/<token>
-        const token = httpValidation.http_url.split("/").pop();
-        const response = httpValidation.http_body;
-
-        await this.tenantRepository.update(tenantId, {
-          metadata: {
-            ...tenant.metadata,
-            acmeChallenge: {
-              token,
-              response,
-            },
-          },
-        });
-      }
-    }
+    await this.domainProvisioningService.configureDomain(tenantId);
   }
 
   async triggerProvisioningWorkflow(

@@ -23,7 +23,10 @@ describe("TenantRoutes", () => {
     provisioningService = {
       triggerProvisioningWorkflow: vi.fn(),
     } as unknown as ProvisioningService;
-    service = new TenantService(repository, provisioningService, { logger });
+    service = new TenantService(repository, provisioningService, {
+      logger,
+      tenantBaseDomain: "vendin.store",
+    });
     routes = createTenantRoutes({ tenantService: service, logger });
   });
 

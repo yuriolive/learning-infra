@@ -97,4 +97,49 @@ export class CloudflareProvider {
       throw error;
     }
   }
+
+  async createDnsRecord(record: {
+    type:
+      | "A"
+      | "AAAA"
+      | "CNAME"
+      | "TXT"
+      | "MX"
+      | "NS"
+      | "SRV"
+      | "LOC"
+      | "SPF"
+      | "CERT"
+      | "DNSKEY"
+      | "DS"
+      | "NAPTR"
+      | "SMIMEA"
+      | "SSHFP"
+      | "TLSA"
+      | "URI";
+    name: string;
+    content: string;
+    proxied?: boolean;
+    ttl?: number;
+    comment?: string;
+  }) {
+    try {
+      this.logger.info({ record }, "Creating Cloudflare DNS record");
+      const response = await this.client.dns.records.create({
+        zone_id: this.zoneId,
+        ...(record as unknown as Record<string, unknown>),
+      } as Parameters<typeof this.client.dns.records.create>[0]);
+      this.logger.info(
+        { record, response },
+        "Successfully created Cloudflare DNS record",
+      );
+      return response;
+    } catch (error) {
+      this.logger.error(
+        { error, record },
+        "Failed to create Cloudflare DNS record",
+      );
+      throw error;
+    }
+  }
 }
