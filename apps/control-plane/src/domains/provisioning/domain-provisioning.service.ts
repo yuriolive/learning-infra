@@ -3,6 +3,11 @@ import { type Logger } from "../../utils/logger";
 import { type TenantRepository } from "../tenants/tenant.repository";
 import { type Tenant } from "../tenants/tenant.types";
 
+interface AcmeValidationRecord {
+  http_url?: string;
+  http_body?: string;
+}
+
 export interface DomainProvisioningServiceConfig {
   tenantRepository: TenantRepository;
   cloudflareProvider: CloudflareProvider;
@@ -127,7 +132,7 @@ export class DomainProvisioningService {
 
     if (cfResult?.ssl?.validation_records) {
       const httpValidation = cfResult.ssl.validation_records.find(
-        (r) => r.http_url && r.http_body,
+        (r: AcmeValidationRecord) => r.http_url && r.http_body,
       );
 
       if (
@@ -141,7 +146,8 @@ export class DomainProvisioningService {
         );
 
         // Extract token from URL: http://hostname/.well-known/acme-challenge/<token>
-        const token = httpValidation.http_url.split("/").pop();
+        // eslint-disable-next-line unicorn/prefer-array-find
+        const token = httpValidation.http_url.split("/").filter(Boolean).pop();
         const response = httpValidation.http_body;
 
         await this.tenantRepository.update(tenantId, {

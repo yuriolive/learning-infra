@@ -28,10 +28,13 @@ function mapTenantData(
       logoUrl: "",
     },
     acmeChallenge:
-      (metadata?.acmeChallenge as {
-        token: string;
-        response: string;
-      }) || undefined,
+      metadata?.acmeChallenge &&
+      typeof (metadata.acmeChallenge as Record<string, unknown>).token ===
+        "string" &&
+      typeof (metadata.acmeChallenge as Record<string, unknown>).response ===
+        "string"
+        ? (metadata.acmeChallenge as { token: string; response: string })
+        : undefined,
   };
 }
 
