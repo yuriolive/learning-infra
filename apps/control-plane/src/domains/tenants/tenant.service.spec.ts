@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { TenantService } from "./tenant.service";
-import { TenantRepository } from "./tenant.repository";
-import { ProvisioningService } from "../provisioning/provisioning.service";
-import { Logger } from "../../utils/logger";
+
 import {
   SubdomainInUseError,
   SubdomainRequiredError,
   TenantNotFoundError,
 } from "./tenant.errors";
-import { Tenant } from "./tenant.types";
+import { TenantService } from "./tenant.service";
+
+import type { Logger } from "../../utils/logger";
+import type { ProvisioningService } from "../provisioning/provisioning.service";
+import type { TenantRepository } from "./tenant.repository";
 
 // Define mock factories
 const mockTenantRepository = {
@@ -43,8 +44,8 @@ describe("TenantService", () => {
         logger: mockLogger as unknown as Logger,
         gcpProjectId: "test-project",
         gcpRegion: "test-region",
-        tenantBaseDomain: ".vendin.store",
-      }
+        tenantBaseDomain: "vendin.store",
+      },
     );
   });
 
@@ -53,13 +54,15 @@ describe("TenantService", () => {
       await expect(
         service.createTenant(
           { name: "Test", merchantEmail: "test@example.com" },
-          "http://localhost"
-        )
+          "http://localhost",
+        ),
       ).rejects.toThrow(SubdomainRequiredError);
     });
 
     it("should throw SubdomainInUseError if subdomain exists", async () => {
-      mockTenantRepository.findBySubdomain.mockResolvedValue({ id: "existing" });
+      mockTenantRepository.findBySubdomain.mockResolvedValue({
+        id: "existing",
+      });
       await expect(
         service.createTenant(
           {
@@ -67,8 +70,8 @@ describe("TenantService", () => {
             merchantEmail: "test@example.com",
             subdomain: "existing",
           },
-          "http://localhost"
-        )
+          "http://localhost",
+        ),
       ).rejects.toThrow(SubdomainInUseError);
     });
 
@@ -78,7 +81,11 @@ describe("TenantService", () => {
         merchantEmail: "test@example.com",
         subdomain: "new-tenant",
       };
-      const createdTenant = { ...input, id: "tenant-1", status: "provisioning" };
+      const createdTenant = {
+        ...input,
+        id: "tenant-1",
+        status: "provisioning",
+      };
       mockTenantRepository.findBySubdomain.mockResolvedValue(null);
       mockTenantRepository.create.mockResolvedValue(createdTenant);
 
@@ -86,10 +93,10 @@ describe("TenantService", () => {
 
       expect(result).toEqual(createdTenant);
       expect(mockTenantRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining(input)
+        expect.objectContaining(input),
       );
       expect(
-        mockProvisioningService.triggerProvisioningWorkflow
+        mockProvisioningService.triggerProvisioningWorkflow,
       ).toHaveBeenCalledWith("tenant-1", "http://localhost");
     });
 
@@ -100,8 +107,8 @@ describe("TenantService", () => {
         {
           logger: mockLogger as unknown as Logger,
           // No GCP config
-          tenantBaseDomain: ".vendin.store",
-        }
+          tenantBaseDomain: "vendin.store",
+        },
       );
 
       const input = {
@@ -109,18 +116,22 @@ describe("TenantService", () => {
         merchantEmail: "test@example.com",
         subdomain: "new-tenant",
       };
-      const createdTenant = { ...input, id: "tenant-1", status: "provisioning" };
+      const createdTenant = {
+        ...input,
+        id: "tenant-1",
+        status: "provisioning",
+      };
       mockTenantRepository.findBySubdomain.mockResolvedValue(null);
       mockTenantRepository.create.mockResolvedValue(createdTenant);
 
       await service.createTenant(input, "http://localhost");
 
       expect(
-        mockProvisioningService.triggerProvisioningWorkflow
+        mockProvisioningService.triggerProvisioningWorkflow,
       ).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({ tenantId: "tenant-1" }),
-        expect.stringContaining("GCP Project/Region not configured")
+        expect.stringContaining("GCP Project/Region not configured"),
       );
     });
 
@@ -130,16 +141,22 @@ describe("TenantService", () => {
         merchantEmail: "test@example.com",
         subdomain: "fail-tenant",
       };
-      const createdTenant = { ...input, id: "tenant-1", status: "provisioning" };
+      const createdTenant = {
+        ...input,
+        id: "tenant-1",
+        status: "provisioning",
+      };
       mockTenantRepository.findBySubdomain.mockResolvedValue(null);
       mockTenantRepository.create.mockResolvedValue(createdTenant);
 
       const error = new Error("Workflow Error");
-      mockProvisioningService.triggerProvisioningWorkflow.mockRejectedValue(error);
-
-      await expect(service.createTenant(input, "http://localhost")).rejects.toThrow(
-        error
+      mockProvisioningService.triggerProvisioningWorkflow.mockRejectedValue(
+        error,
       );
+
+      await expect(
+        service.createTenant(input, "http://localhost"),
+      ).rejects.toThrow(error);
 
       expect(mockTenantRepository.update).toHaveBeenCalledWith("tenant-1", {
         status: "provisioning_failed",
@@ -161,7 +178,7 @@ describe("TenantService", () => {
     it("should throw TenantNotFoundError if not found", async () => {
       mockTenantRepository.findById.mockResolvedValue(null);
       await expect(service.getTenant("tenant-1")).rejects.toThrow(
-        TenantNotFoundError
+        TenantNotFoundError,
       );
     });
   });
@@ -182,14 +199,14 @@ describe("TenantService", () => {
       });
 
       await expect(
-        service.updateTenant("tenant-1", { subdomain: "taken" })
+        service.updateTenant("tenant-1", { subdomain: "taken" }),
       ).rejects.toThrow(SubdomainInUseError);
     });
 
     it("should throw TenantNotFoundError if update fails (not found)", async () => {
       mockTenantRepository.update.mockResolvedValue(null);
       await expect(
-        service.updateTenant("tenant-1", { name: "Updated" })
+        service.updateTenant("tenant-1", { name: "Updated" }),
       ).rejects.toThrow(TenantNotFoundError);
     });
   });
@@ -204,7 +221,7 @@ describe("TenantService", () => {
     it("should throw TenantNotFoundError if not found", async () => {
       mockTenantRepository.softDelete.mockResolvedValue(false);
       await expect(service.deleteTenant("tenant-1")).rejects.toThrow(
-        TenantNotFoundError
+        TenantNotFoundError,
       );
     });
   });

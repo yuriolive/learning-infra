@@ -52,7 +52,12 @@ describe("GcpWorkflowsClient", () => {
 
     it("should log error if GoogleAuth initialization fails", () => {
       const error = new Error("Auth Init Failed");
-      (GoogleAuth as unknown as { mockImplementationOnce: (fn: () => void) => void }).mockImplementationOnce(() => {
+
+      (
+        GoogleAuth as unknown as {
+          mockImplementationOnce: (function_: () => void) => void;
+        }
+      ).mockImplementationOnce(() => {
         throw error;
       });
 
@@ -95,7 +100,8 @@ describe("GcpWorkflowsClient", () => {
       await expect(
         clientNoAuth.createExecution({
           parent: "p",
-          execution: { argument: "{}" },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          execution: { argument: "{}" } as any,
         }),
       ).rejects.toThrow("GCP Credentials not configured");
     });
@@ -103,7 +109,8 @@ describe("GcpWorkflowsClient", () => {
     it("should call fetch with correct headers and body", async () => {
       await client.createExecution({
         parent: "projects/p/locations/l/workflows/w",
-        execution: { argument: "{}" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        execution: { argument: "{}" } as any,
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -134,7 +141,8 @@ describe("GcpWorkflowsClient", () => {
       await expect(
         client.createExecution({
           parent: "p",
-          execution: { argument: "{}" },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          execution: { argument: "{}" } as any,
         }),
       ).rejects.toThrow(
         "Workflow execution failed: 500 Internal Server Error - Workflow specific error",
@@ -153,7 +161,20 @@ describe("GcpWorkflowsClient", () => {
       // Access the mock instance
       // The mock accumulates results from calls.
       // Since beforeEach recreates client, we need the *last* instance created.
-      const calls = (GoogleAuth as unknown as { mock: { results: Array<{ value: { getAccessToken: { mockRejectedValueOnce: (err: Error) => void } } }> } }).mock.results;
+
+      const calls = (
+        GoogleAuth as unknown as {
+          mock: {
+            results: Array<{
+              value: {
+                getAccessToken: {
+                  mockRejectedValueOnce: (error_: Error) => void;
+                };
+              };
+            }>;
+          };
+        }
+      ).mock.results;
       const lastInstance = calls.at(-1)?.value;
 
       lastInstance?.getAccessToken.mockRejectedValueOnce(error);
@@ -161,7 +182,8 @@ describe("GcpWorkflowsClient", () => {
       await expect(
         client.createExecution({
           parent: "p",
-          execution: { argument: "{}" },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          execution: { argument: "{}" } as any,
         }),
       ).rejects.toThrow(error);
 

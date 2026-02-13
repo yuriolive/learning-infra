@@ -40,11 +40,11 @@ const mockLogger = {
 describe("CloudflareProvider", () => {
   let provider: CloudflareProvider;
   let mockCustomHostnames: {
-    create: MockedFunction<any>;
-    list: MockedFunction<any>;
+    create: MockedFunction<unknown>;
+    list: MockedFunction<unknown>;
   };
   let mockDnsRecords: {
-    create: MockedFunction<any>;
+    create: MockedFunction<unknown>;
   };
 
   beforeEach(() => {
@@ -57,6 +57,7 @@ describe("CloudflareProvider", () => {
     });
 
     // Access the mocked instance
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = (provider as unknown as { client: any }).client;
     mockCustomHostnames = client.customHostnames;
     mockDnsRecords = client.dns.records;

@@ -1,11 +1,11 @@
 import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
   afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
   type MockInstance,
+  vi,
 } from "vitest";
 
 import { consoleLogger } from "./logger";
@@ -53,8 +53,8 @@ describe("consoleLogger", () => {
   });
 
   it("should handle circular references", () => {
-    const object: any = { name: "circular" };
-    object.self = object;
+    const object: unknown = { name: "circular" };
+    (object as Record<string, unknown>).self = object;
 
     consoleLogger.info(object, "circular test");
 
@@ -65,13 +65,14 @@ describe("consoleLogger", () => {
     const parsed = JSON.parse(callArguments);
     expect(parsed.name).toBe("circular");
     expect(parsed.self).toBeDefined();
-    expect((parsed.self as any).name).toBe("circular");
-    expect((parsed.self as any).self).toBeUndefined();
+    expect((parsed.self as Record<string, unknown>).name).toBe("circular");
+    expect((parsed.self as Record<string, unknown>).self).toBeUndefined();
   });
 
   it("should serialize Error objects correctly", () => {
     const error = new Error("Test Error");
     error.stack = "Error: Test Error\n    at test";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).code = "ERR_TEST";
 
     consoleLogger.error(error, "error occurred");
@@ -84,6 +85,7 @@ describe("consoleLogger", () => {
     expect(parsed.message).toBe("Test Error");
     expect(parsed.name).toBe("Error");
     expect(parsed.stack).toBe("Error: Test Error\n    at test");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((parsed as any).code).toBe("ERR_TEST");
   });
 

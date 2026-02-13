@@ -56,7 +56,9 @@ describe("NeonProvider", () => {
       const tenantId = "tenant-123";
 
       // Mock getProjectDefaultBranch
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
 
       // Mock listProjectBranchEndpoints
       mockListProjectBranchEndpoints.mockResolvedValue({
@@ -92,7 +94,9 @@ describe("NeonProvider", () => {
 
     it("should fetch default branch if not in cache", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        null,
+      );
 
       mockListProjectBranches.mockResolvedValue({
         data: {
@@ -124,7 +128,9 @@ describe("NeonProvider", () => {
 
     it("should default to 'production' branch if no default branch found", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        null,
+      );
 
       mockListProjectBranches.mockResolvedValue({
         data: {
@@ -150,7 +156,9 @@ describe("NeonProvider", () => {
 
     it("should throw if no endpoint found for branch", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
 
       mockListProjectBranchEndpoints.mockResolvedValue({
         data: { endpoints: [] },
@@ -164,7 +172,9 @@ describe("NeonProvider", () => {
 
     it("should throw if role creation returns no password", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
       mockListProjectBranchEndpoints.mockResolvedValue({
         data: { endpoints: [{ host: "host" }] },
       });
@@ -180,7 +190,9 @@ describe("NeonProvider", () => {
 
     it("should log error and rethrow if role creation fails", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
       mockListProjectBranchEndpoints.mockResolvedValue({
         data: { endpoints: [{ host: "host" }] },
       });
@@ -199,7 +211,9 @@ describe("NeonProvider", () => {
 
     it("should handle listProjectBranches error", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        null,
+      );
       const error = new Error("API Error");
       mockListProjectBranches.mockRejectedValue(error);
 
@@ -216,7 +230,9 @@ describe("NeonProvider", () => {
   describe("deleteTenantDatabase", () => {
     it("should successfully delete database and role", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
 
       await provider.deleteTenantDatabase(tenantId);
 
@@ -242,7 +258,9 @@ describe("NeonProvider", () => {
 
     it("should warn but not throw if delete fails with non-404", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
 
       const error = { status: 500, message: "Server Error" };
       mockDeleteProjectBranchDatabase.mockRejectedValue(error);
@@ -263,7 +281,9 @@ describe("NeonProvider", () => {
 
     it("should ignore 404 errors during deletion", async () => {
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue("main");
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        "main",
+      );
 
       const error404 = { status: 404 };
       mockDeleteProjectBranchDatabase.mockRejectedValue(error404);
@@ -278,7 +298,9 @@ describe("NeonProvider", () => {
     it("should catch unexpected errors during full process", async () => {
       // If getProjectDefaultBranch throws, it should catch in deleteTenantDatabase
       const tenantId = "tenant-123";
-      (cache.get as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Cache Error"));
+      (cache.get as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error("Cache Error"),
+      );
 
       await provider.deleteTenantDatabase(tenantId);
 
