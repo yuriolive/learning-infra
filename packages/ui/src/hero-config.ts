@@ -1,16 +1,16 @@
 export const MINT_GREEN_PRIMARY = {
-  DEFAULT: "var(--primary-color, #34D399)",
-  foreground: "var(--primary-color-foreground, #000000)",
-  50: "var(--primary-color-50, #ECFDF5)",
-  100: "var(--primary-color-100, #D1FAE5)",
-  200: "var(--primary-color-200, #A7F3D0)",
-  300: "var(--primary-color-300, #6EE7B7)",
-  400: "var(--primary-color-400, #34D399)",
-  500: "var(--primary-color-500, #10B981)",
-  600: "var(--primary-color-600, #059669)",
-  700: "var(--primary-color-700, #047857)",
-  800: "var(--primary-color-800, #065F46)",
-  900: "var(--primary-color-900, #064E3B)",
+  DEFAULT: "var(--primary-color)",
+  foreground: "var(--primary-color-foreground)",
+  50: "var(--primary-color-50)",
+  100: "var(--primary-color-100)",
+  200: "var(--primary-color-200)",
+  300: "var(--primary-color-300)",
+  400: "var(--primary-color-400)",
+  500: "var(--primary-color-500)",
+  600: "var(--primary-color-600)",
+  700: "var(--primary-color-700)",
+  800: "var(--primary-color-800)",
+  900: "var(--primary-color-900)",
 };
 
 export const FOCUS_COLOR = "#34D399";
