@@ -68,8 +68,19 @@ export const resolveTenant = reactCache(async function (
   const controlPlaneUrl = process.env.CONTROL_PLANE_API_URL;
 
   if (!controlPlaneUrl) {
-    logger.error({ error: "missing_env" }, "CONTROL_PLANE_API_URL not defined");
+    logger.error(
+      { error: "missing_env", var: "CONTROL_PLANE_API_URL" },
+      "Environment variable CONTROL_PLANE_API_URL is missing",
+    );
     return null;
+  }
+
+  const adminApiKey = process.env.ADMIN_API_KEY;
+  if (!adminApiKey) {
+    logger.error(
+      { error: "missing_env", var: "ADMIN_API_KEY" },
+      "Environment variable ADMIN_API_KEY is missing",
+    );
   }
 
   try {
@@ -88,8 +99,13 @@ export const resolveTenant = reactCache(async function (
     if (!response.ok) {
       if (response.status === 404) return null;
       logger.error(
-        { status: response.status, statusText: response.statusText },
-        "Failed to fetch tenant",
+        {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          hasAuthHeader: !!process.env.ADMIN_API_KEY,
+        },
+        "Failed to fetch tenant from control plane",
       );
       return null;
     }

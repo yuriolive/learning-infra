@@ -11,21 +11,21 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "routes": [
-    {
-      "pattern": "storefront.vendin.store/*",
-      "zone_name": "vendin.store"
-    },
-    {
-      "pattern": "*-my.vendin.store/*",
-      "zone_name": "vendin.store"
-    }
-  ],
   "observability": {
     "enabled": true
   },
   "env": {
     "production": {
+      "routes": [
+        {
+          "pattern": "storefront.vendin.store",
+          "custom_domain": true
+        },
+        {
+          "pattern": "*-my.vendin.store/*",
+          "zone_name": "vendin.store"
+        }
+      ],
       "secrets_store_secrets": [
         {
           "binding": "ADMIN_API_KEY",
@@ -34,7 +34,7 @@
         }
       ],
       "vars": {
-        "CONTROL_PLANE_API_URL": "http://control.vendin.store",
+        "CONTROL_PLANE_API_URL": "https://control.vendin.store",
         "MARKETING_APP_URL": "https://vendin.store",
         "NODE_ENV": "production"
       }
