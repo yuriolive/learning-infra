@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { mockLogger } from "../tests/utils/test-utils";
+import { mockLogger } from "../tests/utils/test-utilities";
 
 import {
   type MiddlewareOptions,

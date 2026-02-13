@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mocked } from "vitest";
 
-import { mockLogger } from "../../../tests/utils/test-utils";
+import { mockLogger } from "../../../tests/utils/test-utilities";
 
 import {
   SubdomainInUseError,
@@ -22,27 +22,23 @@ const mockTenantRepository: Mocked<TenantRepository> = {
   softDelete: vi.fn(),
   findAll: vi.fn(),
   logProvisioningEvent: vi.fn(),
-} as any;
+} as unknown;
 
 const mockProvisioningService: Mocked<ProvisioningService> = {
   triggerProvisioningWorkflow: vi.fn(),
-} as any;
+} as unknown;
 
 describe("TenantService", () => {
   let service: TenantService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new TenantService(
-      mockTenantRepository,
-      mockProvisioningService,
-      {
-        logger: mockLogger as unknown as Logger,
-        gcpProjectId: "test-project",
-        gcpRegion: "test-region",
-        tenantBaseDomain: "vendin.store",
-      },
-    );
+    service = new TenantService(mockTenantRepository, mockProvisioningService, {
+      logger: mockLogger as unknown as Logger,
+      gcpProjectId: "test-project",
+      gcpRegion: "test-region",
+      tenantBaseDomain: "vendin.store",
+    });
   });
 
   describe("createTenant", () => {
@@ -58,7 +54,7 @@ describe("TenantService", () => {
     it("should throw SubdomainInUseError if subdomain exists", async () => {
       mockTenantRepository.findBySubdomain.mockResolvedValue({
         id: "existing",
-      } as any);
+      } as unknown);
       await expect(
         service.createTenant(
           {
@@ -83,7 +79,7 @@ describe("TenantService", () => {
         status: "provisioning",
       };
       mockTenantRepository.findBySubdomain.mockResolvedValue(null);
-      mockTenantRepository.create.mockResolvedValue(createdTenant as any);
+      mockTenantRepository.create.mockResolvedValue(createdTenant as unknown);
 
       const result = await service.createTenant(input, "http://localhost");
 
@@ -118,7 +114,7 @@ describe("TenantService", () => {
         status: "provisioning",
       };
       mockTenantRepository.findBySubdomain.mockResolvedValue(null);
-      mockTenantRepository.create.mockResolvedValue(createdTenant as any);
+      mockTenantRepository.create.mockResolvedValue(createdTenant as unknown);
 
       await serviceWithoutGcp.createTenant(input, "http://localhost");
 
@@ -143,7 +139,7 @@ describe("TenantService", () => {
         status: "provisioning",
       };
       mockTenantRepository.findBySubdomain.mockResolvedValue(null);
-      mockTenantRepository.create.mockResolvedValue(createdTenant as any);
+      mockTenantRepository.create.mockResolvedValue(createdTenant as unknown);
 
       const error = new Error("Workflow Error");
       mockProvisioningService.triggerProvisioningWorkflow.mockRejectedValue(
@@ -165,7 +161,7 @@ describe("TenantService", () => {
   describe("getTenant", () => {
     it("should return tenant if found", async () => {
       const tenant = { id: "tenant-1", name: "Test" };
-      mockTenantRepository.findById.mockResolvedValue(tenant as any);
+      mockTenantRepository.findById.mockResolvedValue(tenant as unknown);
 
       const result = await service.getTenant("tenant-1");
       expect(result).toEqual(tenant);
@@ -183,7 +179,7 @@ describe("TenantService", () => {
     it("should update tenant if found", async () => {
       const input = { name: "Updated" };
       const updatedTenant = { id: "tenant-1", ...input };
-      mockTenantRepository.update.mockResolvedValue(updatedTenant as any);
+      mockTenantRepository.update.mockResolvedValue(updatedTenant as unknown);
 
       const result = await service.updateTenant("tenant-1", input);
       expect(result).toEqual(updatedTenant);
@@ -192,7 +188,7 @@ describe("TenantService", () => {
     it("should check subdomain uniqueness if subdomain changes", async () => {
       mockTenantRepository.findBySubdomain.mockResolvedValue({
         id: "other-tenant",
-      } as any);
+      } as unknown);
 
       await expect(
         service.updateTenant("tenant-1", { subdomain: "taken" }),
@@ -206,7 +202,7 @@ describe("TenantService", () => {
         name: "Test",
         subdomain: "new-unique-sub",
       };
-      mockTenantRepository.update.mockResolvedValue(updatedTenant as any);
+      mockTenantRepository.update.mockResolvedValue(updatedTenant as unknown);
 
       const result = await service.updateTenant("tenant-1", {
         subdomain: "new-unique-sub",
@@ -244,7 +240,7 @@ describe("TenantService", () => {
   describe("listTenants", () => {
     it("should return all tenants if no filters", async () => {
       const tenants = [{ id: "t1" }, { id: "t2" }];
-      mockTenantRepository.findAll.mockResolvedValue(tenants as any);
+      mockTenantRepository.findAll.mockResolvedValue(tenants as unknown);
 
       const result = await service.listTenants();
       expect(result).toEqual(tenants);
@@ -252,7 +248,7 @@ describe("TenantService", () => {
 
     it("should filter by subdomain", async () => {
       const tenant = { id: "t1", subdomain: "sub" };
-      mockTenantRepository.findBySubdomain.mockResolvedValue(tenant as any);
+      mockTenantRepository.findBySubdomain.mockResolvedValue(tenant as unknown);
 
       const result = await service.listTenants({ subdomain: "sub" });
       expect(result).toEqual([tenant]);
@@ -261,7 +257,7 @@ describe("TenantService", () => {
 
     it("should strip base domain from subdomain lookup", async () => {
       const tenant = { id: "t1", subdomain: "sub" };
-      mockTenantRepository.findBySubdomain.mockResolvedValue(tenant as any);
+      mockTenantRepository.findBySubdomain.mockResolvedValue(tenant as unknown);
 
       const result = await service.listTenants({
         subdomain: "sub.vendin.store",

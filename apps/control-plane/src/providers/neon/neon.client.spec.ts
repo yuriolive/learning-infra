@@ -1,7 +1,7 @@
 import { cache } from "@vendin/cache";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { mockLogger } from "../../../tests/utils/test-utils";
+import { mockLogger } from "../../../tests/utils/test-utilities";
 
 import { NeonProvider } from "./neon.client";
 

@@ -8,7 +8,7 @@ import {
   type MockedFunction,
 } from "vitest";
 
-import { mockLogger } from "../../../tests/utils/test-utils";
+import { mockLogger } from "../../../tests/utils/test-utilities";
 import { type Logger } from "../../utils/logger";
 
 import { CloudflareProvider } from "./cloudflare.client";
@@ -34,11 +34,11 @@ vi.mock("cloudflare", () => {
 describe("CloudflareProvider", () => {
   let provider: CloudflareProvider;
   let mockCustomHostnames: {
-    create: MockedFunction<any>;
-    list: MockedFunction<any>;
+    create: MockedFunction<unknown>;
+    list: MockedFunction<unknown>;
   };
   let mockDnsRecords: {
-    create: MockedFunction<any>;
+    create: MockedFunction<unknown>;
   };
 
   beforeEach(() => {

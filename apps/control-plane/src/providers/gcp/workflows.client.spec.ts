@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { mockLogger } from "../../../tests/utils/test-utils";
+import { mockLogger } from "../../../tests/utils/test-utilities";
 import { GoogleAuth } from "../../utils/google-auth";
 
 import { GcpWorkflowsClient } from "./workflows.client";

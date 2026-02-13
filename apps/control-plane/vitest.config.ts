@@ -18,7 +18,7 @@ export default mergeConfig(
         "src/**/*.{test,spec}.{ts,js}",
         "tests/**/*.{test,spec}.{ts,js}",
       ],
-      hookTimeout: 30000,
+      hookTimeout: 30_000,
     },
   }),
 );
