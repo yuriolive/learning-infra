@@ -25,31 +25,33 @@ export default async function TenantHomePage(properties: {
   }
 
   return (
-    <div className="flex flex-col gap-20 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div>
       {/* Hero Section */}
       <HeroSection
         title={`Welcome to ${tenant.name}`}
         subtitle="Experience our curated collection of high-quality products. Built for speed, security, and scalability."
       />
 
-      {/* Featured Categories */}
-      <section>
-        <SectionHeader
-          title="Featured Categories"
-          subtitle="Find exactly what you're looking for"
-        />
-        <CategoryGrid categories={mockCategories} />
-      </section>
+      <div className="flex flex-col mt-10 gap-20 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Featured Categories */}
+        <section>
+          <SectionHeader
+            title="Featured Categories"
+            subtitle="Find exactly what you're looking for"
+          />
+          <CategoryGrid categories={mockCategories} />
+        </section>
 
-      {/* New Arrivals */}
-      <section>
-        <SectionHeader
-          title="New Arrivals"
-          subtitle="Our latest and greatest additions"
-          viewAllHref="/products"
-        />
-        <ProductGrid products={mockProducts} />
-      </section>
+        {/* New Arrivals */}
+        <section>
+          <SectionHeader
+            title="New Arrivals"
+            subtitle="Our latest and greatest additions"
+            viewAllHref="/products"
+          />
+          <ProductGrid products={mockProducts} />
+        </section>
+      </div>
     </div>
   );
 }

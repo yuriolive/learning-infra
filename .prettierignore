@@ -7,3 +7,4 @@ coverage
 *.lock
 *.log
 docs/examples/**
+pnpm-lock.yaml

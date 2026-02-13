@@ -1,13 +1,31 @@
 "use client";
 
-import { Button } from "@heroui/react";
-import { SharedNavbar } from "@vendin/ui";
+import {
+  Button,
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
+  Link,
+} from "@heroui/react";
 import {
   ShoppingCart as LucideShoppingCart,
   User as LucideUser,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
+import NextLink from "next/link";
+import { useState } from "react";
+
+const ThemeSwitcher = dynamic(
+  () => import("../theme-switcher").then((module_) => module_.ThemeSwitcher),
+  {
+    ssr: false,
+  },
+);
 
 import type { IconComponent } from "../../types/icons";
 import type { Tenant } from "../../types/tenant";
@@ -20,6 +38,8 @@ interface StorefrontNavbarProperties {
 }
 
 export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const menuItems = [
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
@@ -27,59 +47,94 @@ export function StorefrontNavbar({ tenant }: StorefrontNavbarProperties) {
     { name: "Contact", href: "/contact" },
   ];
 
-  const brand = (
-    <div className="flex items-center gap-2">
-      {tenant.theme.logoUrl ? (
-        <Image
-          src={tenant.theme.logoUrl}
-          alt={tenant.name}
-          height={40}
-          width={160}
-          className="h-10 w-auto object-contain"
-          priority
-        />
-      ) : (
-        <span className="font-black text-2xl tracking-tighter text-foreground">
-          {tenant.name}
-        </span>
-      )}
-    </div>
-  );
-
-  const actions = (
-    <>
-      <Button
-        as={Link}
-        isIconOnly
-        variant="light"
-        href="/account"
-        aria-label="Account"
-        className="hover:scale-110 transition-transform"
-      >
-        <User size={20} />
-      </Button>
-      <Button
-        as={Link}
-        color="primary"
-        href="/cart"
-        variant="flat"
-        className="font-bold gap-2 hover:translate-y-[-2px] transition-all"
-        startContent={<ShoppingCart size={18} />}
-      >
-        <span className="hidden sm:inline">Cart</span>
-        <div className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-black">
-          0
-        </div>
-      </Button>
-    </>
-  );
-
   return (
-    <SharedNavbar
-      brand={brand}
-      menuItems={menuItems}
-      actions={actions}
-      linkComponent={Link}
-    />
+    <Navbar
+      onMenuOpenChange={setIsMenuOpen}
+      isMenuOpen={isMenuOpen}
+      maxWidth="xl"
+      position="sticky"
+    >
+      <NavbarContent>
+        <NavbarMenuToggle
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          className="sm:hidden"
+        />
+        <NavbarBrand>
+          <NextLink href="/" className="flex items-center gap-2">
+            {tenant.theme.logoUrl ? (
+              <Image
+                src={tenant.theme.logoUrl}
+                alt={tenant.name}
+                height={40}
+                width={160}
+                className="h-10 w-auto object-contain"
+                priority
+              />
+            ) : (
+              <span className="font-bold text-2xl tracking-tighter text-foreground">
+                {tenant.name}
+              </span>
+            )}
+          </NextLink>
+        </NavbarBrand>
+      </NavbarContent>
+
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        {menuItems.map((item) => (
+          <NavbarItem key={item.name}>
+            <Link color="foreground" as={NextLink} href={item.href}>
+              {item.name}
+            </Link>
+          </NavbarItem>
+        ))}
+      </NavbarContent>
+
+      <NavbarContent justify="end">
+        <NavbarItem>
+          <ThemeSwitcher />
+        </NavbarItem>
+        <NavbarItem>
+          <Button
+            as={NextLink}
+            isIconOnly
+            variant="light"
+            href="/account"
+            aria-label="Account"
+          >
+            <User size={24} />
+          </Button>
+        </NavbarItem>
+        <NavbarItem>
+          <Button
+            as={NextLink}
+            color="primary"
+            href="/cart"
+            variant="flat"
+            startContent={<ShoppingCart size={20} />}
+          >
+            <span className="hidden sm:inline">Cart</span>
+            <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-xs font-bold ml-1">
+              0
+            </span>
+          </Button>
+        </NavbarItem>
+      </NavbarContent>
+
+      <NavbarMenu>
+        {menuItems.map((item, index) => (
+          <NavbarMenuItem key={`${item.name}-${index}`}>
+            <Link
+              color="foreground"
+              className="w-full"
+              as={NextLink}
+              href={item.href}
+              size="lg"
+            >
+              {item.name}
+            </Link>
+          </NavbarMenuItem>
+        ))}
+      </NavbarMenu>
+    </Navbar>
   );
 }
