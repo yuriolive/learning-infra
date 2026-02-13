@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "storefront",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-01-24",
+  "compatibility_date": "2026-02-13",
   "compatibility_flags": [
     "nodejs_compat",
     "global_fetch_strictly_public"
@@ -11,13 +11,48 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "storefront"
-    }
-  ],
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "production": {
+      "routes": [
+        {
+          "pattern": "storefront.vendin.store",
+          "custom_domain": true
+        },
+        {
+          "pattern": "*-my.vendin.store/*",
+          "zone_name": "vendin.store"
+        }
+      ],
+      "secrets_store_secrets": [
+        {
+          "binding": "ADMIN_API_KEY",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "control-plane-admin-api-key"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_1",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-1"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_2",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-2"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-3"
+        }
+      ],
+      "vars": {
+        "CONTROL_PLANE_API_URL": "https://control.vendin.store",
+        "MARKETING_APP_URL": "https://vendin.store",
+        "NODE_ENV": "production"
+      }
+    }
   }
 }

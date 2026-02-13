@@ -9,6 +9,8 @@ const MOCK_ENV = {
   NODE_ENV: "development",
   LOG_LEVEL: "silent",
   UPSTASH_REDIS_URL: "redis://mock:mock@localhost:6379",
+  TENANT_BASE_DOMAIN: "vendin.store",
+  STOREFRONT_HOSTNAME: "storefront.vendin.store",
 };
 
 describe("Security Integration Tests", () => {
@@ -113,6 +115,10 @@ describe("Security Integration Tests", () => {
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
         INTERNAL_API_KEY: "mock-internal-key",
         GEMINI_API_KEY: "mock-gemini-key",
+        CLOUDFLARE_API_TOKEN: "mock-cf-token",
+        CLOUDFLARE_ZONE_ID: "mock-cf-zone",
+        TENANT_BASE_DOMAIN: "vendin.store",
+        STOREFRONT_HOSTNAME: "storefront.vendin.store",
       };
 
       const request = new Request(`${origin}/health`, {
@@ -144,6 +150,10 @@ describe("Security Integration Tests", () => {
         GOOGLE_APPLICATION_CREDENTIALS: "{}",
         CLOUD_RUN_SERVICE_ACCOUNT: "mock-sa",
         INTERNAL_API_KEY: "mock-internal-key",
+        CLOUDFLARE_API_TOKEN: "mock-cf-token",
+        CLOUDFLARE_ZONE_ID: "mock-cf-zone",
+        TENANT_BASE_DOMAIN: "vendin.store",
+        STOREFRONT_HOSTNAME: "storefront.vendin.store",
       };
 
       const request = new Request(`${origin}/health`, {

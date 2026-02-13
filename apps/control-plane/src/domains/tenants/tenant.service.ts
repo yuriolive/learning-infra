@@ -10,6 +10,7 @@ import type { ProvisioningService } from "../provisioning/provisioning.service";
 import type { TenantRepository } from "./tenant.repository";
 import type {
   CreateTenantInput,
+  ListTenantsFilters,
   Tenant,
   UpdateTenantInput,
 } from "./tenant.types";
@@ -18,12 +19,14 @@ interface TenantServiceConfig {
   logger: Logger;
   gcpProjectId?: string | undefined;
   gcpRegion?: string | undefined;
+  tenantBaseDomain?: string | undefined;
 }
 
 export class TenantService {
   private logger: Logger;
   private gcpProjectId: string | undefined;
   private gcpRegion: string | undefined;
+  private tenantBaseDomain: string;
 
   constructor(
     private repository: TenantRepository,
@@ -33,6 +36,7 @@ export class TenantService {
     this.logger = config.logger;
     this.gcpProjectId = config.gcpProjectId;
     this.gcpRegion = config.gcpRegion;
+    this.tenantBaseDomain = config.tenantBaseDomain as string;
   }
 
   async createTenant(
@@ -128,7 +132,20 @@ export class TenantService {
     await this.repository.logProvisioningEvent(tenantId, step, status, details);
   }
 
-  async listTenants(): Promise<Tenant[]> {
+  async listTenants(filters?: ListTenantsFilters): Promise<Tenant[]> {
+    if (filters?.subdomain) {
+      let lookup = filters.subdomain;
+
+      if (
+        lookup.endsWith(this.tenantBaseDomain) &&
+        lookup !== this.tenantBaseDomain
+      ) {
+        lookup = lookup.slice(0, -this.tenantBaseDomain.length);
+      }
+
+      const tenant = await this.repository.findBySubdomain(lookup);
+      return tenant ? [tenant] : [];
+    }
     const tenants = await this.repository.findAll();
     return tenants;
   }

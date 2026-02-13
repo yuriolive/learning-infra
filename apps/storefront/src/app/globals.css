@@ -1,9 +1,17 @@
 @import "tailwindcss";
 @plugin "../hero";
 
+@source "../**/*.{ts,tsx}";
+@source "../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
+@source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+
+@custom-variant dark (&:where(.dark, [data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  --color-primary: var(--primary-color, #7c3aed);
 }
 
 :root {
@@ -11,15 +19,14 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }

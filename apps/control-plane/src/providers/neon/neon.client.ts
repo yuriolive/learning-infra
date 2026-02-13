@@ -1,5 +1,5 @@
 import { createApiClient } from "@neondatabase/api-client";
-import { LRUCache } from "lru-cache";
+import { cache } from "@vendin/cache";
 
 import type { Logger } from "../../utils/logger";
 import type { Api, Branch } from "@neondatabase/api-client";
@@ -10,11 +10,6 @@ interface NeonProviderConfig {
   defaultDatabase?: string;
   logger: Logger;
 }
-
-const projectDefaultBranchCache = new LRUCache<string, string>({
-  max: 100,
-  ttl: 1000 * 60 * 5,
-});
 
 export class NeonProvider {
   private client: Api<unknown>;
@@ -113,7 +108,8 @@ export class NeonProvider {
   }
 
   private async getProjectDefaultBranch(projectId: string): Promise<string> {
-    const cached = projectDefaultBranchCache.get(projectId);
+    const cacheKey = `neon:default-branch:${projectId}`;
+    const cached = await cache.get<string>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -124,7 +120,7 @@ export class NeonProvider {
 
       const branchId = defaultBranch ? defaultBranch.id : "production";
 
-      projectDefaultBranchCache.set(projectId, branchId);
+      await cache.set(cacheKey, branchId, { ttlSeconds: 300 });
       return branchId;
     } catch (error) {
       this.logger.error(

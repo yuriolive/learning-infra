@@ -98,6 +98,10 @@ describe("ProvisioningService Granular Steps", () => {
       gcpRegion: "us-central1",
       tenantImageTag: "tag",
       upstashRedisUrl: "redis://",
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
+      cloudflareApiToken: "cf-token",
+      cloudflareZoneId: "cf-zone",
     });
   });
 
@@ -113,6 +117,8 @@ describe("ProvisioningService Granular Steps", () => {
             logger,
             neonApiKey: "key",
             neonProjectId: "proj",
+            tenantBaseDomain: "vendin.store",
+            storefrontHostname: "storefront.vendin.store",
           } as unknown as ProvisioningServiceConfig),
       ).toThrow("Neon Init Error");
     });
@@ -252,18 +258,30 @@ describe("ProvisioningService Granular Steps", () => {
   });
 
   describe("configureDomain", () => {
-    it("should configure domain (placeholder)", async () => {
-      await expect(service.configureDomain("tenant-1")).resolves.not.toThrow();
+    it("should configure domain successfully", async () => {
+      const mockDomainService = {
+        configureDomain: vi.fn().mockImplementation(async () => {}),
+      };
+      (service as unknown as Record<string, unknown>)[
+        "domainProvisioningService"
+      ] = mockDomainService;
+
+      await service.configureDomain("tenant-1");
+      expect(mockDomainService.configureDomain).toHaveBeenCalledWith(
+        "tenant-1",
+      );
     });
 
-    it("should throw if subdomain missing", async () => {
-      vi.mocked(repository.findById).mockResolvedValueOnce({
-        id: "tenant-1",
-        subdomain: null,
-      } as unknown as Tenant);
+    it("should skip if DomainProvisioningService is not initialized", async () => {
+      (service as unknown as Record<string, unknown>)[
+        "domainProvisioningService"
+      ] = undefined;
+      const warnSpy = vi.spyOn(logger, "warn");
 
-      await expect(service.configureDomain("tenant-1")).rejects.toThrow(
-        "Subdomain missing",
+      await service.configureDomain("tenant-1");
+      expect(warnSpy).toHaveBeenCalledWith(
+        { tenantId: "tenant-1" },
+        "Domain provisioning service not initialized, skipping domain configuration",
       );
     });
   });
@@ -320,7 +338,7 @@ describe("ProvisioningService Granular Steps", () => {
       });
 
       // Force cloudRunProvider to be undefined to test the guard clause
-      (service as unknown as { cloudRunProvider: unknown }).cloudRunProvider =
+      (service as unknown as Record<string, unknown>)["cloudRunProvider"] =
         undefined;
       await expect(service.deleteMigrationJob("tenant-1")).rejects.toThrow(
         "Cloud Run provider not initialized",

@@ -7,8 +7,6 @@ import type { NextRequest } from "next/server";
 
 const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
-export const dynamic = "force-dynamic";
-
 /**
  * Resolves the Tenant Backend URL.
  * In a real implementation, this would look up the tenant based on the hostname or a header.
@@ -16,7 +14,7 @@ export const dynamic = "force-dynamic";
  */
 function resolveBackendUrl(request: NextRequest): string | null {
   // 1. Try to get explicit backend URL from header (set by Middleware)
-  const headerUrl = request.headers.get("x-medusa-backend-url");
+  const headerUrl = request.headers.get("x-tenant-url");
   if (headerUrl) return headerUrl;
 
   // 2. Fallback: Check env var (useful for local dev or single tenant)
@@ -58,7 +56,7 @@ async function proxyRequest(
     // Remove headers that might confuse the backend or are hop-by-hop
     headers.delete("connection");
     headers.delete("content-length"); // Let fetch recalculate
-    headers.delete("x-medusa-backend-url");
+    headers.delete("x-tenant-url");
 
     const body =
       request.method !== "GET" && request.method !== "HEAD"

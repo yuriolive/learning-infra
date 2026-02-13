@@ -1,0 +1,34 @@
+{
+  "name": "@vendin/cache",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "@vendin/logger": "workspace:*",
+    "lru-cache": "^11.2.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260127.0",
+    "@vendin/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.37.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

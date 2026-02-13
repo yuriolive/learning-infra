@@ -71,6 +71,7 @@ describe("TenantService", () => {
       gcpRegion: "mock-region",
       tenantImageTag: "mock-tag",
       upstashRedisUrl: "redis://mock",
+      tenantBaseDomain: "-my.vendin.store",
     };
 
     provisioningService = new ProvisioningService(repository, config);
@@ -361,6 +362,16 @@ describe("TenantService", () => {
 
       expect(tenants).toHaveLength(1);
       expect(tenants[0]?.name).toBe("Store 2");
+    });
+    it("should resolve tenant by full hostname", async () => {
+      const tenant = await createTenantHelper(1);
+      const results = await service.listTenants({
+        subdomain: `store1-my.vendin.store`,
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]?.id).toBe(tenant.id);
+      expect(results[0]?.subdomain).toBe("store1");
     });
   });
 });

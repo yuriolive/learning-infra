@@ -38,8 +38,7 @@ describe("createDatabase", () => {
   });
 
   it("should throw an error if connection string is missing", () => {
-    // eslint-disable-next-line unicorn/no-useless-undefined
-    expect(() => createDatabase(undefined)).toThrow(
+    expect(() => createDatabase(undefined as unknown as string)).toThrow(
       /DATABASE_URL is not defined or is an invalid type/,
     );
     expect(() => createDatabase("")).toThrow(

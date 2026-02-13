@@ -1,7 +1,4 @@
 import { heroui } from "@heroui/react";
+import { sharedHeroUIConfig } from "@vendin/ui";
 
-/**
- * HeroUI Plugin Configuration
- * This exports the HeroUI plugin configuration to be used in globals.css via @import
- */
-export default heroui();
+export default heroui(sharedHeroUIConfig);

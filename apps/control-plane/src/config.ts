@@ -1,10 +1,6 @@
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
+
 import type { Logger } from "./utils/logger";
-
-interface SecretBinding {
-  get(): Promise<string>;
-}
-
-type BoundSecret = string | SecretBinding;
 
 export interface Environment {
   DATABASE_URL: BoundSecret;
@@ -26,15 +22,10 @@ export interface Environment {
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
   CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
   GEMINI_API_KEY?: BoundSecret;
-}
-
-function resolveSecret(
-  secret: BoundSecret | undefined,
-): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null) {
-    return secret.get();
-  }
-  return Promise.resolve(secret as string | undefined);
+  CLOUDFLARE_API_TOKEN?: BoundSecret;
+  CLOUDFLARE_ZONE_ID?: BoundSecret;
+  TENANT_BASE_DOMAIN?: string;
+  STOREFRONT_HOSTNAME?: string;
 }
 
 export async function resolveEnvironmentSecrets(environment: Environment) {
@@ -51,6 +42,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleAppCredsP3,
     cloudRunServiceAccount,
     geminiApiKey,
+    cloudflareApiToken,
+    cloudflareZoneId,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -64,6 +57,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
     resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
     resolveSecret(environment.GEMINI_API_KEY),
+    resolveSecret(environment.CLOUDFLARE_API_TOKEN),
+    resolveSecret(environment.CLOUDFLARE_ZONE_ID),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -89,6 +84,10 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     googleApplicationCredentials,
     cloudRunServiceAccount,
     geminiApiKey,
+    cloudflareApiToken,
+    cloudflareZoneId,
+    tenantBaseDomain: environment.TENANT_BASE_DOMAIN,
+    storefrontHostname: environment.STOREFRONT_HOSTNAME,
   };
 }
 
@@ -120,6 +119,8 @@ function validateProductionConfig(
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
   geminiApiKey?: string,
+  cloudflareApiToken?: string,
+  cloudflareZoneId?: string,
 ): Response | undefined {
   if (!adminApiKey) {
     logger.error(
@@ -137,6 +138,8 @@ function validateProductionConfig(
     GOOGLE_APPLICATION_CREDENTIALS: googleApplicationCredentials,
     CLOUD_RUN_SERVICE_ACCOUNT: cloudRunServiceAccount,
     GEMINI_API_KEY: geminiApiKey,
+    CLOUDFLARE_API_TOKEN: cloudflareApiToken,
+    CLOUDFLARE_ZONE_ID: cloudflareZoneId,
   };
 
   const missingVariables = Object.entries(requiredVariables)
@@ -170,6 +173,10 @@ export function validateConfiguration(
   googleApplicationCredentials?: string,
   cloudRunServiceAccount?: string,
   geminiApiKey?: string,
+  cloudflareApiToken?: string,
+  cloudflareZoneId?: string,
+  tenantBaseDomain?: string,
+  storefrontHostname?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -179,6 +186,16 @@ export function validateConfiguration(
   if (!upstashRedisUrl) {
     logger.error("UPSTASH_REDIS_URL is required but was not configured");
     return createErrorResponse("Redis configuration is missing");
+  }
+
+  if (!tenantBaseDomain) {
+    logger.error("TENANT_BASE_DOMAIN is required but was not configured");
+    return createErrorResponse("Base domain configuration is missing");
+  }
+
+  if (!storefrontHostname) {
+    logger.error("STOREFRONT_HOSTNAME is required but was not configured");
+    return createErrorResponse("Storefront hostname configuration is missing");
   }
 
   if (nodeEnvironment === "production") {
@@ -193,6 +210,8 @@ export function validateConfiguration(
       googleApplicationCredentials,
       cloudRunServiceAccount,
       geminiApiKey,
+      cloudflareApiToken,
+      cloudflareZoneId,
     );
   }
 

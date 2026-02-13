@@ -11,6 +11,7 @@ interface CloudRunProviderConfig {
   serviceAccount?: string;
   logger: Logger;
   geminiApiKey?: string;
+  tenantBaseDomain?: string;
 }
 
 export type MigrationStatus = "running" | "success" | "failed";
@@ -24,6 +25,19 @@ export interface TenantAppConfig {
   cookieSecret: string;
 }
 
+interface CloudRunResourceClient {
+  get(parameters: { name: string }): Promise<unknown>;
+  create(parameters: {
+    parent: string;
+    [key: string]: string | object;
+    requestBody: object;
+  }): Promise<{ data: { name?: string } }>;
+  patch(parameters: {
+    name: string;
+    requestBody: object;
+  }): Promise<{ data: { name?: string } }>;
+}
+
 export class CloudRunProvider {
   private runClient: run_v2.Run;
   private logger: Logger;
@@ -32,12 +46,14 @@ export class CloudRunProvider {
   private tenantImageTag: string;
   private serviceAccount: string | undefined;
   private geminiApiKey: string | undefined;
+  private tenantBaseDomain: string;
 
   constructor(config: CloudRunProviderConfig) {
     this.logger = config.logger;
     this.projectId = config.projectId;
     this.region = config.region;
     this.tenantImageTag = config.tenantImageTag;
+    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
     this.serviceAccount = config.serviceAccount;
     this.geminiApiKey = config.geminiApiKey;
 
@@ -83,8 +99,8 @@ export class CloudRunProvider {
       JWT_SECRET: config.jwtSecret,
       HOST: "0.0.0.0",
       NODE_ENV: "production",
-      STORE_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
-      ADMIN_CORS: `https://${config.subdomain}.vendin.store,http://localhost:9000,https://vendin.store`,
+      STORE_CORS: `https://${config.subdomain}${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
+      ADMIN_CORS: `https://${config.subdomain}${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
       ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
@@ -141,6 +157,8 @@ export class CloudRunProvider {
       REDIS_URL: config.redisUrl,
       REDIS_PREFIX: config.redisPrefix,
       NODE_ENV: "production",
+      JWT_SECRET: config.jwtSecret,
+      COOKIE_SECRET: config.cookieSecret,
     });
 
     // Returns operation name (LRO)
@@ -354,8 +372,7 @@ export class CloudRunProvider {
   }
 
   private async checkResourceExists(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client: any,
+    client: CloudRunResourceClient,
     resourcePath: string,
   ): Promise<boolean> {
     try {
@@ -383,10 +400,10 @@ export class CloudRunProvider {
     resourceType: "services" | "jobs",
     tenantId: string,
   ): Promise<string | undefined> {
-    const client =
-      resourceType === "services"
-        ? this.runClient.projects.locations.services
-        : this.runClient.projects.locations.jobs;
+    const client = (resourceType === "services"
+      ? this.runClient.projects.locations.services
+      : this.runClient.projects.locations
+          .jobs) as unknown as CloudRunResourceClient;
     const idField = resourceType === "services" ? "serviceId" : "jobId";
     const displayName = resourceType === "services" ? "service" : "job";
 
@@ -397,8 +414,7 @@ export class CloudRunProvider {
         { tenantId },
         `Updating existing Cloud Run ${displayName}`,
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (client as any).patch({
+      const response = await client.patch({
         name: resourcePath,
         requestBody,
       });
@@ -406,8 +422,7 @@ export class CloudRunProvider {
     }
 
     this.logger.info({ tenantId }, `Creating new Cloud Run ${displayName}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (client as any).create({
+    const response = await client.create({
       parent,
       [idField]: resourceId,
       requestBody,
@@ -440,7 +455,7 @@ export class CloudRunProvider {
           containers: [
             {
               image: this.tenantImageTag,
-              command: ["pnpm", "run", "db:migrate"],
+              command: ["./node_modules/.bin/medusa", "db:migrate"],
               env: Object.entries(environmentVariables).map(
                 ([name, value]) => ({
                   name,

@@ -78,11 +78,6 @@
           "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "google-application-credentials-part-3"
-        },
-        {
-          "binding": "INTERNAL_API_KEY",
-          "store_id": "STORE_ID_PLACEHOLDER",
-          "secret_name": "internal-api-key"
         }
       ],
       "vars": {
@@ -93,7 +88,9 @@
         "GCP_PROJECT_ID": "GCP_PROJECT_ID_PLACEHOLDER",
         "GCP_REGION": "southamerica-east1",
         "TENANT_IMAGE_TAG": "TENANT_IMAGE_TAG_PLACEHOLDER",
-        "CLOUD_RUN_SERVICE_ACCOUNT": "CLOUD_RUN_SERVICE_ACCOUNT_PLACEHOLDER"
+        "CLOUD_RUN_SERVICE_ACCOUNT": "CLOUD_RUN_SERVICE_ACCOUNT_PLACEHOLDER",
+        "TENANT_BASE_DOMAIN": "-my.vendin.store",
+        "STOREFRONT_HOSTNAME": "storefront.vendin.store"
       }
     }
   }

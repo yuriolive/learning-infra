@@ -6,7 +6,7 @@ import {
   type Environment,
 } from "../../src/config";
 
-import type { createLogger } from "@vendin/utils";
+import type { createLogger } from "@vendin/logger";
 
 // Mock logger
 const mockLogger = {
@@ -48,6 +48,10 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "mock-sa",
       "gemini-api-key",
+      "cf-token",
+      "cf-zone",
+      "vendin.store",
+      "storefront.vendin.store",
     );
     expect(result).toBeUndefined();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -61,11 +65,17 @@ describe("validateConfiguration", () => {
       "production",
       "redis://localhost:6379",
       "neon-api-key",
-      undefined,
-      undefined,
-      undefined,
-      undefined,
+      "neon-project-id",
+      "gcp-project-id",
+      "gcp-region",
+      "tenant-image-tag",
       "google-app-creds",
+      "sa",
+      "gemini-api-key",
+      undefined,
+      undefined,
+      "vendin.store",
+      "storefront.vendin.store",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -81,9 +91,19 @@ describe("validateConfiguration", () => {
       "postgres://localhost:5432/db",
       "admin-api-key",
       "production",
-      undefined,
-      undefined,
+      undefined, // upstashRedisUrl missing
       "neon-api-key",
+      "neon-project-id",
+      "gcp-project-id",
+      "gcp-region",
+      "tenant-image-tag",
+      "google-app-creds",
+      "sa",
+      "gemini-api-key",
+      undefined,
+      undefined,
+      "vendin.store",
+      "storefront.vendin.store",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -97,7 +117,7 @@ describe("validateConfiguration", () => {
     const result = validateConfiguration(
       mockLogger,
       "postgres://localhost:5432/db",
-      undefined,
+      undefined, // adminApiKey missing
       "production",
       "redis://localhost:6379",
       "neon-api-key",
@@ -106,6 +126,12 @@ describe("validateConfiguration", () => {
       "gcp-region",
       "tenant-image-tag",
       "google-app-creds",
+      "sa",
+      "gemini-api-key",
+      undefined,
+      undefined,
+      "vendin.store",
+      "storefront.vendin.store",
     );
 
     expect(result).toBeInstanceOf(Response);
@@ -122,7 +148,18 @@ describe("validateConfiguration", () => {
       undefined,
       "development",
       "redis://localhost:6379",
-      // Optional vars can be undefined in dev
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "vendin.store",
+      "storefront.vendin.store",
     );
 
     expect(result).toBeUndefined();
@@ -144,12 +181,20 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "sa",
       "gemini-api-key",
+      undefined,
+      undefined,
+      "vendin.store",
+      "storefront.vendin.store",
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
 
-    assertCriticalKeysMissing(["NEON_API_KEY"]);
+    assertCriticalKeysMissing([
+      "NEON_API_KEY",
+      "CLOUDFLARE_API_TOKEN",
+      "CLOUDFLARE_ZONE_ID",
+    ]);
   });
 
   it("should return 500 Response if multiple critical keys are missing in production", () => {
@@ -167,12 +212,21 @@ describe("validateConfiguration", () => {
       "google-app-creds",
       "sa",
       "gemini-api-key",
+      undefined,
+      undefined,
+      "vendin.store",
+      "storefront.vendin.store",
     );
 
     expect(result).toBeInstanceOf(Response);
     expect(result?.status).toBe(500);
 
-    assertCriticalKeysMissing(["NEON_PROJECT_ID", "GCP_PROJECT_ID"]);
+    assertCriticalKeysMissing([
+      "NEON_PROJECT_ID",
+      "GCP_PROJECT_ID",
+      "CLOUDFLARE_API_TOKEN",
+      "CLOUDFLARE_ZONE_ID",
+    ]);
   });
 });
 
@@ -187,6 +241,10 @@ describe("resolveEnvironmentSecrets", () => {
       UPSTASH_REDIS_URL: "redis://upstash",
       GOOGLE_APPLICATION_CREDENTIALS: "full-creds",
       GEMINI_API_KEY: "gemini-key",
+      CLOUDFLARE_API_TOKEN: "cf-token",
+      CLOUDFLARE_ZONE_ID: "cf-zone",
+      TENANT_BASE_DOMAIN: "vendin.store",
+      STOREFRONT_HOSTNAME: "storefront.vendin.store",
     };
 
     const result = await resolveEnvironmentSecrets(environment);
@@ -200,6 +258,11 @@ describe("resolveEnvironmentSecrets", () => {
       upstashRedisUrl: "redis://upstash",
       googleApplicationCredentials: "full-creds",
       geminiApiKey: "gemini-key",
+      cloudflareApiToken: "cf-token",
+      cloudflareZoneId: "cf-zone",
+      cloudRunServiceAccount: undefined,
+      tenantBaseDomain: "vendin.store",
+      storefrontHostname: "storefront.vendin.store",
     });
   });
 

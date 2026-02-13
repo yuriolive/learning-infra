@@ -21,6 +21,7 @@
     "@vendin/analytics": "workspace:*",
     "@vendin/assets": "workspace:*",
     "@vendin/logger": "workspace:*",
+    "@vendin/ui": "workspace:*",
     "@vendin/utils": "workspace:^",
     "better-auth": "1.4.18",
     "drizzle-orm": "^0.45.1",

@@ -3,7 +3,8 @@
 if [ "$NODE_ENV" = "production" ]; then
   # Note: Database migrations are handled by the Control Plane via Cloud Run Jobs
   echo "Starting Medusa production server..."
-  exec pnpm start
+  # Use the binary directly to avoid dependency on pnpm in the runner image
+  exec ./node_modules/.bin/medusa start
 else
   # Ensure dependencies are installed (especially important if using volumes in development)
   # Check if we are in the monorepo structure (development)
@@ -16,11 +17,24 @@ else
   fi
 
   echo "Running database migrations..."
-  pnpm run db:migrate
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm run db:migrate
+  else
+    ./node_modules/.bin/medusa db:migrate
+  fi
 
   echo "Seeding database..."
-  pnpm run db:seed || echo "Seeding failed, continuing..."
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm run db:seed || echo "Seeding failed, continuing..."
+  else
+    # Fallback to direct execution for production/slim images
+    NODE_OPTIONS="--loader ts-node/esm" ./node_modules/.bin/medusa exec ./src/scripts/seed.ts || echo "Seeding failed, continuing..."
+  fi
 
   echo "Starting Medusa development server..."
-  pnpm run dev
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm run dev
+  else
+    ./node_modules/.bin/medusa develop
+  fi
 fi

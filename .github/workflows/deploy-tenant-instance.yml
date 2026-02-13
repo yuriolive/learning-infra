@@ -13,6 +13,12 @@ on:
       - "turbo.json"
       - ".github/workflows/deploy-tenant-instance.yml"
   workflow_dispatch:
+    inputs:
+      skip_cache:
+        description: "Skip Docker build cache"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   deploy:
@@ -41,6 +47,12 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }} --quiet
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+
+      - name: Prune for Docker
+        run: npx turbo prune --scope=@vendin/tenant-instance --docker
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
@@ -53,6 +65,6 @@ jobs:
           tags: |
             ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:latest
             ${{ secrets.GCP_ARTIFACT_REGISTRY_DOMAIN }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REGISTRY_REPO }}/tenant-instance:${{ github.sha }}
-          cache-from: type=gha,scope=tenant-instance
-          cache-to: type=gha,mode=max,scope=tenant-instance
+          cache-from: ${{ github.event.inputs.skip_cache == 'true' && '' || 'type=gha,scope=tenant-instance' }}
+          cache-to: ${{ github.event.inputs.skip_cache == 'true' && '' || 'type=gha,mode=max,scope=tenant-instance' }}
           platforms: linux/amd64

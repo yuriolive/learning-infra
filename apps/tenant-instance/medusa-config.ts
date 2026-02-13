@@ -2,6 +2,25 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils";
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd());
 
+// Fail-fast validation for critical environment variables in production
+if (process.env.NODE_ENV === "production") {
+  const missing: string[] = [];
+  if (!process.env.DATABASE_URL) {
+    missing.push("DATABASE_URL");
+  }
+  if (!process.env.JWT_SECRET) {
+    missing.push("JWT_SECRET");
+  }
+  if (!process.env.COOKIE_SECRET) {
+    missing.push("COOKIE_SECRET");
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`[FATAL] Missing required production environment variables: ${missing.join(", ")}. 
+    These must be provided (either as actual values or dummy build-time values) to prevent silent configuration failures.`);
+  }
+}
+
 const jwtSecret = process.env.JWT_SECRET || "supersecret";
 const cookieSecret = process.env.COOKIE_SECRET || "supersecret";
 
@@ -45,22 +64,22 @@ const modules = isMigrating
           redisOptions,
         },
       },
-      {
-        resolve: "@vendin/medusa-ai-agent",
-        options: {
-          modelName: "gemini-3.0-flash",
-        },
-      },
-      {
-        resolve: "@vendin/medusa-search-neon",
-        key: "search", // Using string literal since Modules.SEARCH might be missing in this version
-        options: {
-          gemini_api_key: process.env.GEMINI_API_KEY,
-        },
-      },
+      // {
+      //   resolve: "@vendin/medusa-ai-agent",
+      //   options: {
+      //     modelName: "gemini-3.0-flash",
+      //   },
+      // },
+      // {
+      //   resolve: "@vendin/medusa-search-neon",
+      //   key: "search", // Using string literal since Modules.SEARCH might be missing in this version
+      //   options: {
+      //     gemini_api_key: process.env.GEMINI_API_KEY,
+      //   },
+      // },
     ];
 
-export default defineConfig({
+const config = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     databaseLogging: true,
@@ -83,7 +102,7 @@ export default defineConfig({
     },
   },
   admin: {
-    vite: (config) => {
+    vite: (config: Record<string, unknown> = {}) => {
       return {
         ...config,
         server: {
@@ -99,3 +118,5 @@ export default defineConfig({
   },
   modules,
 });
+
+export default config;

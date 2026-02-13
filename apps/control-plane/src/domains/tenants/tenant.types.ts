@@ -47,3 +47,7 @@ export interface UpdateTenantInput {
   jwtSecret?: string | undefined;
   cookieSecret?: string | undefined;
 }
+
+export interface ListTenantsFilters {
+  subdomain?: string | undefined;
+}
