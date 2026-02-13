@@ -25,6 +25,19 @@ export interface TenantAppConfig {
   cookieSecret: string;
 }
 
+interface CloudRunResourceClient {
+  get(parameters: { name: string }): Promise<unknown>;
+  create(parameters: {
+    parent: string;
+    [key: string]: string | object;
+    requestBody: object;
+  }): Promise<{ data: { name?: string } }>;
+  patch(parameters: {
+    name: string;
+    requestBody: object;
+  }): Promise<{ data: { name?: string } }>;
+}
+
 export class CloudRunProvider {
   private runClient: run_v2.Run;
   private logger: Logger;
@@ -359,7 +372,7 @@ export class CloudRunProvider {
   }
 
   private async checkResourceExists(
-    client: { get: (parameters: { name: string }) => Promise<unknown> },
+    client: CloudRunResourceClient,
     resourcePath: string,
   ): Promise<boolean> {
     try {
@@ -387,10 +400,10 @@ export class CloudRunProvider {
     resourceType: "services" | "jobs",
     tenantId: string,
   ): Promise<string | undefined> {
-    const client =
-      resourceType === "services"
-        ? this.runClient.projects.locations.services
-        : this.runClient.projects.locations.jobs;
+    const client = (resourceType === "services"
+      ? this.runClient.projects.locations.services
+      : this.runClient.projects.locations
+          .jobs) as unknown as CloudRunResourceClient;
     const idField = resourceType === "services" ? "serviceId" : "jobId";
     const displayName = resourceType === "services" ? "service" : "job";
 
@@ -401,14 +414,7 @@ export class CloudRunProvider {
         { tenantId },
         `Updating existing Cloud Run ${displayName}`,
       );
-      const response = await (
-        client as unknown as {
-          patch: (parameters: {
-            name: string;
-            requestBody: object;
-          }) => Promise<{ data: { name?: string } }>;
-        }
-      ).patch({
+      const response = await client.patch({
         name: resourcePath,
         requestBody,
       });
@@ -416,15 +422,7 @@ export class CloudRunProvider {
     }
 
     this.logger.info({ tenantId }, `Creating new Cloud Run ${displayName}`);
-    const response = await (
-      client as unknown as {
-        create: (parameters: {
-          parent: string;
-          [key: string]: string | object;
-          requestBody: object;
-        }) => Promise<{ data: { name?: string } }>;
-      }
-    ).create({
+    const response = await client.create({
       parent,
       [idField]: resourceId,
       requestBody,

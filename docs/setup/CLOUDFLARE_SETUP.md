@@ -21,7 +21,7 @@
     - [DNS Requirements for Merchants](#dns-requirements-for-merchants)
   - [Part D: Subdomain Routing Setup](#part-d-subdomain-routing-setup)
     - [Wildcard DNS for Tenant Subdomains](#wildcard-dns-for-tenant-subdomains)
-    - [Architecture Decision: Wildcard SSL vs. Per-Tenant SSL](#architecture-decision-wildcard-ssl-vs-per-tenant-ssl)
+    - [Architecture Decision: Flattened Subdomains (Universal SSL)](#architecture-decision-flattened-subdomains-universal-ssl)
   - [Part E: Wildcard SSL Setup (Manual)](#part-e-wildcard-ssl-setup-manual)
     - [Step 1: Create Wildcard Custom Hostname](#step-1-create-wildcard-custom-hostname)
     - [Step 2: Verify Domain Ownership \& SSL Validation](#step-2-verify-domain-ownership--ssl-validation)

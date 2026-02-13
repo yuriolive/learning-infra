@@ -48,6 +48,7 @@ export async function middleware(request: NextRequest) {
   // Handle Cloudflare ACME Challenge
   if (
     tenant.acmeChallenge &&
+    tenant.acmeChallenge.token &&
     url.pathname.startsWith("/.well-known/acme-challenge/")
   ) {
     const token = url.pathname.split("/").pop();
