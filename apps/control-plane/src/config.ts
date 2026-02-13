@@ -1,47 +1,95 @@
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
+
 import type { Logger } from "./utils/logger";
 
-interface SecretBinding {
-  get(): Promise<string>;
-}
-
-type BoundSecret = string | SecretBinding;
-
 export interface Environment {
-  DATABASE_URL: BoundSecret;
-  LOG_LEVEL?: string;
-  NODE_ENV?: string;
+  DATABASE_URL?: BoundSecret;
   NEON_API_KEY?: BoundSecret;
   NEON_PROJECT_ID?: BoundSecret;
   ADMIN_API_KEY?: BoundSecret;
-  ALLOWED_ORIGINS?: string;
   POSTHOG_API_KEY?: BoundSecret;
-  POSTHOG_HOST?: string;
-  GCP_PROJECT_ID?: string;
-  GCP_REGION?: string;
-  TENANT_IMAGE_TAG?: string;
   UPSTASH_REDIS_URL?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_1?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_2?: BoundSecret;
   GOOGLE_APPLICATION_CREDENTIALS_PART_3?: BoundSecret;
-  CLOUD_RUN_SERVICE_ACCOUNT?: BoundSecret;
   GEMINI_API_KEY?: BoundSecret;
   CLOUDFLARE_API_TOKEN?: BoundSecret;
   CLOUDFLARE_ZONE_ID?: BoundSecret;
-  TENANT_BASE_DOMAIN?: string;
-  STOREFRONT_HOSTNAME?: string;
+  CLOUDRUN_SERVICE_ACCOUNT?: string;
+  TENANT_BASE_DOMAIN: string;
+  STOREFRONT_HOSTNAME: string;
 }
 
-function resolveSecret(
-  secret: BoundSecret | undefined,
-): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null) {
-    return secret.get();
+export function validateConfiguration(
+  logger: Logger,
+  databaseUrl: string | undefined,
+  adminApiKey: string | undefined,
+  nodeEnv: string | undefined,
+  upstashRedisUrl: string | undefined,
+  neonApiKey: string | undefined,
+  neonProjectId: string | undefined,
+  gcpProjectId: string | undefined,
+  gcpRegion: string | undefined,
+  tenantImageTag: string | undefined,
+  googleApplicationCredentials: string | undefined,
+  cloudRunServiceAccount: string | undefined,
+  geminiApiKey: string | undefined,
+  cloudflareApiToken: string | undefined,
+  cloudflareZoneId: string | undefined,
+  tenantBaseDomain: string | undefined,
+  storefrontHostname: string | undefined,
+): Response | undefined {
+  if (!databaseUrl) {
+    logger.error("DATABASE_URL is required but was not configured");
+    return new Response("Configuration Error: DATABASE_URL is missing", {
+      status: 500,
+    });
   }
-  return Promise.resolve(secret as string | undefined);
+
+  if (!upstashRedisUrl) {
+    logger.error("UPSTASH_REDIS_URL is required but was not configured");
+    return new Response("Configuration Error: UPSTASH_REDIS_URL is missing", {
+      status: 500,
+    });
+  }
+
+  if (nodeEnv === "production" && !adminApiKey) {
+    logger.error(
+      "ADMIN_API_KEY is required in production but was not configured",
+    );
+    return new Response("Configuration Error: ADMIN_API_KEY is missing", {
+      status: 500,
+    });
+  }
+
+  if (nodeEnv === "production") {
+    const missingKeys = [];
+    if (!neonApiKey) missingKeys.push("NEON_API_KEY");
+    if (!neonProjectId) missingKeys.push("NEON_PROJECT_ID");
+    if (!gcpProjectId) missingKeys.push("GCP_PROJECT_ID");
+    if (!gcpRegion) missingKeys.push("GCP_REGION");
+    if (!tenantImageTag) missingKeys.push("TENANT_IMAGE_TAG");
+    if (!googleApplicationCredentials) {
+      missingKeys.push("GOOGLE_APPLICATION_CREDENTIALS");
+    }
+    if (!geminiApiKey) missingKeys.push("GEMINI_API_KEY");
+    if (!cloudflareApiToken) missingKeys.push("CLOUDFLARE_API_TOKEN");
+    if (!cloudflareZoneId) missingKeys.push("CLOUDFLARE_ZONE_ID");
+
+    if (missingKeys.length > 0) {
+      logger.error({ missingVariables: missingKeys }, "Critical infrastructure keys are missing in production");
+      return new Response(
+        `Configuration Error: Critical keys missing (${missingKeys.join(", ")})`,
+        { status: 500 },
+      );
+    }
+  }
+
+  return undefined;
 }
 
-export async function resolveEnvironmentSecrets(environment: Environment) {
+export async function resolveEnvironmentSecrets(env: Environment) {
   const [
     databaseUrl,
     neonApiKey,
@@ -49,42 +97,37 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     adminApiKey,
     postHogApiKey,
     upstashRedisUrl,
-    googleAppCredsFull,
-    googleAppCredsP1,
-    googleAppCredsP2,
-    googleAppCredsP3,
-    cloudRunServiceAccount,
+    googleApplicationCredentialsFull,
+    googleApplicationCredentialsPart1,
+    googleApplicationCredentialsPart2,
+    googleApplicationCredentialsPart3,
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
   ] = await Promise.all([
-    resolveSecret(environment.DATABASE_URL),
-    resolveSecret(environment.NEON_API_KEY),
-    resolveSecret(environment.NEON_PROJECT_ID),
-    resolveSecret(environment.ADMIN_API_KEY),
-    resolveSecret(environment.POSTHOG_API_KEY),
-    resolveSecret(environment.UPSTASH_REDIS_URL),
-    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS),
-    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_1),
-    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_2),
-    resolveSecret(environment.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
-    resolveSecret(environment.CLOUD_RUN_SERVICE_ACCOUNT),
-    resolveSecret(environment.GEMINI_API_KEY),
-    resolveSecret(environment.CLOUDFLARE_API_TOKEN),
-    resolveSecret(environment.CLOUDFLARE_ZONE_ID),
+    resolveSecret(env.DATABASE_URL),
+    resolveSecret(env.NEON_API_KEY),
+    resolveSecret(env.NEON_PROJECT_ID),
+    resolveSecret(env.ADMIN_API_KEY),
+    resolveSecret(env.POSTHOG_API_KEY),
+    resolveSecret(env.UPSTASH_REDIS_URL),
+    resolveSecret(env.GOOGLE_APPLICATION_CREDENTIALS),
+    resolveSecret(env.GOOGLE_APPLICATION_CREDENTIALS_PART_1),
+    resolveSecret(env.GOOGLE_APPLICATION_CREDENTIALS_PART_2),
+    resolveSecret(env.GOOGLE_APPLICATION_CREDENTIALS_PART_3),
+    resolveSecret(env.GEMINI_API_KEY),
+    resolveSecret(env.CLOUDFLARE_API_TOKEN),
+    resolveSecret(env.CLOUDFLARE_ZONE_ID),
   ]);
 
-  let googleApplicationCredentials = googleAppCredsFull;
-
-  // If full credential is missing, try to assemble from parts
+  let googleApplicationCredentials = googleApplicationCredentialsFull;
   if (
     !googleApplicationCredentials &&
-    googleAppCredsP1 &&
-    googleAppCredsP2 &&
-    googleAppCredsP3
+    googleApplicationCredentialsPart1 &&
+    googleApplicationCredentialsPart2 &&
+    googleApplicationCredentialsPart3
   ) {
-    googleApplicationCredentials =
-      googleAppCredsP1 + googleAppCredsP2 + googleAppCredsP3;
+    googleApplicationCredentials = `${googleApplicationCredentialsPart1}${googleApplicationCredentialsPart2}${googleApplicationCredentialsPart3}`;
   }
 
   return {
@@ -95,138 +138,11 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     postHogApiKey,
     upstashRedisUrl,
     googleApplicationCredentials,
-    cloudRunServiceAccount,
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
-    tenantBaseDomain: environment.TENANT_BASE_DOMAIN,
-    storefrontHostname: environment.STOREFRONT_HOSTNAME,
+    cloudRunServiceAccount: env.CLOUDRUN_SERVICE_ACCOUNT,
+    tenantBaseDomain: env.TENANT_BASE_DOMAIN,
+    storefrontHostname: env.STOREFRONT_HOSTNAME,
   };
-}
-
-function createErrorResponse(
-  message: string,
-  error = "Configuration Error",
-): Response {
-  return new Response(
-    JSON.stringify({
-      error,
-      message,
-    }),
-    {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    },
-  );
-}
-
-// Helper to validate production-specific configuration to reduce complexity
-function validateProductionConfig(
-  logger: Logger,
-  adminApiKey: string | undefined,
-  neonApiKey?: string,
-  neonProjectId?: string,
-  gcpProjectId?: string,
-  gcpRegion?: string,
-  tenantImageTag?: string,
-  googleApplicationCredentials?: string,
-  cloudRunServiceAccount?: string,
-  geminiApiKey?: string,
-  cloudflareApiToken?: string,
-  cloudflareZoneId?: string,
-): Response | undefined {
-  if (!adminApiKey) {
-    logger.error(
-      "ADMIN_API_KEY is required in production but was not configured",
-    );
-    return createErrorResponse("Service is not properly configured");
-  }
-
-  const requiredVariables = {
-    NEON_API_KEY: neonApiKey,
-    NEON_PROJECT_ID: neonProjectId,
-    GCP_PROJECT_ID: gcpProjectId,
-    GCP_REGION: gcpRegion,
-    TENANT_IMAGE_TAG: tenantImageTag,
-    GOOGLE_APPLICATION_CREDENTIALS: googleApplicationCredentials,
-    CLOUD_RUN_SERVICE_ACCOUNT: cloudRunServiceAccount,
-    GEMINI_API_KEY: geminiApiKey,
-    CLOUDFLARE_API_TOKEN: cloudflareApiToken,
-    CLOUDFLARE_ZONE_ID: cloudflareZoneId,
-  };
-
-  const missingVariables = Object.entries(requiredVariables)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key);
-
-  if (missingVariables.length > 0) {
-    logger.error(
-      { missingVariables },
-      "Critical infrastructure keys are missing in production",
-    );
-    return createErrorResponse(
-      `Missing infrastructure configuration: ${missingVariables.join(", ")}`,
-    );
-  }
-
-  return undefined;
-}
-
-export function validateConfiguration(
-  logger: Logger,
-  databaseUrl: string | undefined,
-  adminApiKey: string | undefined,
-  nodeEnvironment: string,
-  upstashRedisUrl?: string,
-  neonApiKey?: string,
-  neonProjectId?: string,
-  gcpProjectId?: string,
-  gcpRegion?: string,
-  tenantImageTag?: string,
-  googleApplicationCredentials?: string,
-  cloudRunServiceAccount?: string,
-  geminiApiKey?: string,
-  cloudflareApiToken?: string,
-  cloudflareZoneId?: string,
-  tenantBaseDomain?: string,
-  storefrontHostname?: string,
-): Response | undefined {
-  if (!databaseUrl) {
-    logger.error("DATABASE_URL is required but was not configured");
-    return createErrorResponse("Database configuration is missing");
-  }
-
-  if (!upstashRedisUrl) {
-    logger.error("UPSTASH_REDIS_URL is required but was not configured");
-    return createErrorResponse("Redis configuration is missing");
-  }
-
-  if (!tenantBaseDomain) {
-    logger.error("TENANT_BASE_DOMAIN is required but was not configured");
-    return createErrorResponse("Base domain configuration is missing");
-  }
-
-  if (!storefrontHostname) {
-    logger.error("STOREFRONT_HOSTNAME is required but was not configured");
-    return createErrorResponse("Storefront hostname configuration is missing");
-  }
-
-  if (nodeEnvironment === "production") {
-    return validateProductionConfig(
-      logger,
-      adminApiKey,
-      neonApiKey,
-      neonProjectId,
-      gcpProjectId,
-      gcpRegion,
-      tenantImageTag,
-      googleApplicationCredentials,
-      cloudRunServiceAccount,
-      geminiApiKey,
-      cloudflareApiToken,
-      cloudflareZoneId,
-    );
-  }
-
-  return undefined;
 }

@@ -1,132 +1,118 @@
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger";
 import { cache as reactCache } from "react";
 
-import type { Tenant, TenantApiResponse } from "../types/tenant";
+const logger = createCloudflareLogger({
+  logLevel: "info",
+  nodeEnv: process.env.NODE_ENV || "development",
+  service: "storefront-tenant-resolution",
+});
 
-const TENANT_CACHE_TTL = 60; // 60 seconds
-
-const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
-
-/**
- * Maps the API response to the Storefront Tenant type.
- */
-function mapTenantData(
-  tenantData: TenantApiResponse,
-  hostname: string,
-): Tenant {
-  const metadata = tenantData.metadata;
-
-  return {
-    id: tenantData.id,
-    name: tenantData.name,
-    subdomain: tenantData.subdomain || hostname,
-    backendUrl: tenantData.apiUrl || "",
-    theme: metadata?.theme || {
-      primaryColor: "#000000",
-      fontFamily: "Inter",
-      logoUrl: "",
-    },
-    acmeChallenge:
-      metadata?.acmeChallenge &&
-      typeof (metadata.acmeChallenge as Record<string, unknown>).token ===
-        "string" &&
-      typeof (metadata.acmeChallenge as Record<string, unknown>).response ===
-        "string"
-        ? (metadata.acmeChallenge as { token: string; response: string })
-        : undefined,
-  };
+export interface TenantMetadata {
+  id: string;
+  name: string;
+  subdomain: string;
+  status: string;
+  databaseUrl: string;
+  apiUrl: string;
+  metadata?: Record<string, unknown>;
 }
 
-export const resolveTenant = reactCache(async function (
-  hostname: string,
-): Promise<Tenant | null> {
-  // Local development mock based on environment variable
-  if (process.env.NODE_ENV === "development" && process.env.LOCAL_TENANT_ID) {
-    return {
-      id: process.env.LOCAL_TENANT_ID,
-      name: "Local Test Tenant",
-      subdomain: "localhost",
-      backendUrl: "http://localhost:3000",
-      theme: {
-        primaryColor: "#7c3aed",
-        fontFamily: "Inter",
-        logoUrl: "",
-      },
-    };
+/**
+ * Resolves the host from the request headers
+ */
+export function resolveHost(headers: Headers): string {
+  const host = headers.get("host") || headers.get("x-forwarded-host") || "";
+  // For local development with wrangler, sometimes host includes port
+  return host.split(":")[0]?.toLowerCase() || "";
+}
+
+/**
+ * Fetches tenant metadata from the control plane API.
+ * This should be cached to avoid excessive API calls.
+ */
+export const resolveTenant = reactCache(async (host: string) => {
+  if (!host) return null;
+
+  // Cache key based on host
+  const cacheKey = `tenant:${host}`;
+
+  // Try to get from distributed cache first
+  try {
+    const cachedTenant = await cache.get<TenantMetadata>(cacheKey);
+    if (cachedTenant) {
+      return cachedTenant;
+    }
+  } catch (err) {
+    logger.warn({ host, err }, "Failed to get tenant from cache");
   }
 
-  const cacheKey = `tenant-resolution:${hostname}`;
-
-  // 1. Cache Lookup
-  const cachedTenant = await cache.get<Tenant>(cacheKey);
-  if (cachedTenant) {
-    return cachedTenant;
-  }
-
-  // 2. Source Fetch
+  // Resolve admin API key ensuring it handles Cloudflare SecretBinding
   const controlPlaneUrl = process.env.CONTROL_PLANE_API_URL;
-
   if (!controlPlaneUrl) {
-    logger.error(
-      { error: "missing_env", var: "CONTROL_PLANE_API_URL" },
-      "Environment variable CONTROL_PLANE_API_URL is missing",
-    );
+    logger.error("CONTROL_PLANE_API_URL is not configured");
     return null;
   }
 
-  const adminApiKey = process.env.ADMIN_API_KEY;
+  const rawAdminApiKey = process.env.ADMIN_API_KEY;
+  const adminApiKey = await resolveSecret(rawAdminApiKey as BoundSecret | undefined);
+
   if (!adminApiKey) {
     logger.error(
-      { error: "missing_env", var: "ADMIN_API_KEY" },
-      "Environment variable ADMIN_API_KEY is missing",
+      { 
+        rawType: typeof rawAdminApiKey,
+        hasRaw: !!rawAdminApiKey,
+        isObject: typeof rawAdminApiKey === 'object' && rawAdminApiKey !== null
+      },
+      "Environment variable ADMIN_API_KEY is missing or could not be resolved"
     );
+    // In production, this is critical.
+    if (process.env.NODE_ENV === "production") {
+      return null;
+    }
   }
 
   try {
     const response = await fetch(
-      `${controlPlaneUrl}/api/tenants?subdomain=${encodeURIComponent(hostname)}`,
+      `${controlPlaneUrl}/api/tenants/resolve?subdomain=${host}`,
       {
-        method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.ADMIN_API_KEY}`,
+          Authorization: adminApiKey ? `Bearer ${adminApiKey}` : "",
         },
-        next: { revalidate: 0 },
+        // Low timeout for tenant resolution to avoid blocking
+        // @ts-expect-error signal is not in the type definition for fetch in some environments
+        signal: AbortSignal.timeout(5000),
       },
     );
 
     if (!response.ok) {
-      if (response.status === 404) return null;
       logger.error(
-        {
-          status: response.status,
-          statusText: response.statusText,
+        { 
+          host, 
+          status: response.status, 
           url: response.url,
-          hasAuthHeader: !!process.env.ADMIN_API_KEY,
-        },
-        "Failed to fetch tenant from control plane",
+          adminApiKeyType: typeof adminApiKey,
+          hasAdminApiKey: !!adminApiKey
+        }, 
+        "Failed to resolve tenant from control plane"
       );
       return null;
     }
 
-    const tenants: TenantApiResponse | TenantApiResponse[] =
-      await response.json();
-    const tenantData: TenantApiResponse | null = Array.isArray(tenants)
-      ? tenants[0]
-      : tenants;
+    const tenant = (await response.json()) as TenantMetadata;
 
-    if (!tenantData) return null;
-
-    // Map to Storefront Tenant
-    const tenant = mapTenantData(tenantData, hostname);
-
-    // 3. Cache Update
-    await cache.set(cacheKey, tenant, { ttlSeconds: TENANT_CACHE_TTL });
+    // Cache the resolved tenant metadata for 5 minutes
+    try {
+      await cache.set(cacheKey, tenant, { ttl: 300 });
+    } catch (err) {
+      logger.warn({ host, err }, "Failed to set tenant in cache");
+    }
 
     return tenant;
-  } catch (error) {
-    logger.error({ error, hostname }, "Error resolving tenant");
+  } catch (err) {
+    logger.error({ host, err }, "Error resolving tenant");
     return null;
   }
 });
