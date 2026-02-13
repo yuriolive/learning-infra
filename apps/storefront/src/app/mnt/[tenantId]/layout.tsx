@@ -29,15 +29,32 @@ export default async function TenantLayout({
     notFound();
   }
 
+  interface CustomCSSProperties extends React.CSSProperties {
+    [key: string]: string | number | undefined;
+  }
+
   return (
     <div
       className="tenant-layout min-h-screen flex flex-col"
-      style={{
-        // Apply primary color as a CSS variable for components to use
-        "--primary-color": tenant.theme.primaryColor,
-        "--heroui-primary": tenant.theme.primaryColor,
-        "--heroui-primary-500": tenant.theme.primaryColor,
-      }}
+      style={
+        {
+          // Apply primary color as a CSS variable for components to use
+          "--primary-color": tenant.theme.primaryColor,
+          "--heroui-primary": tenant.theme.primaryColor,
+          "--heroui-primary-50": `${tenant.theme.primaryColor}10`,
+          "--heroui-primary-100": `${tenant.theme.primaryColor}20`,
+          "--heroui-primary-200": `${tenant.theme.primaryColor}40`,
+          "--heroui-primary-300": `${tenant.theme.primaryColor}60`,
+          "--heroui-primary-400": `${tenant.theme.primaryColor}80`,
+          "--heroui-primary-500": tenant.theme.primaryColor,
+          "--heroui-primary-600": tenant.theme.primaryColor,
+          "--heroui-primary-700": tenant.theme.primaryColor,
+          "--heroui-primary-800": tenant.theme.primaryColor,
+          "--heroui-primary-900": tenant.theme.primaryColor,
+          "--heroui-primary-foreground": "#ffffff",
+          "--heroui-focus": tenant.theme.primaryColor,
+        } as CustomCSSProperties
+      }
     >
       <StorefrontNavbar tenant={tenant} />
       <main className="flex-grow">{children}</main>
