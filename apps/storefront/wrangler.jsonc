@@ -31,6 +31,21 @@
           "binding": "ADMIN_API_KEY",
           "store_id": "STORE_ID_PLACEHOLDER",
           "secret_name": "control-plane-admin-api-key"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_1",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-1"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_2",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-2"
+        },
+        {
+          "binding": "GOOGLE_APPLICATION_CREDENTIALS_PART_3",
+          "store_id": "STORE_ID_PLACEHOLDER",
+          "secret_name": "google-application-credentials-part-3"
         }
       ],
       "vars": {
