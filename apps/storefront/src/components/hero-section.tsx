@@ -17,6 +17,10 @@ interface HeroSectionProperties {
 export function HeroSection({
   title,
   subtitle,
+  ctaText = "Explore Collection",
+  ctaHref = "/collections/jewelry",
+  secondaryCtaText = "Our Story",
+  secondaryCtaHref = "/about",
   backgroundImage = "https://images.unsplash.com/photo-1494708001911-679f5d15a946?q=80&w=1200&h=600&auto=format&fit=crop",
 }: HeroSectionProperties) {
   return (
@@ -45,22 +49,22 @@ export function HeroSection({
         <div className="flex flex-col sm:flex-row gap-6 pt-4">
           <Button
             as={Link}
-            href="/collections/jewelry"
+            href={ctaHref}
             color="primary"
             size="lg"
             variant="shadow"
             className="font-bold text-lg px-10 py-6 h-auto"
           >
-            Explore Collection
+            {ctaText}
           </Button>
           <Button
             as={Link}
-            href="/about"
+            href={secondaryCtaHref}
             variant="bordered"
             size="lg"
             className="font-bold text-lg px-10 py-6 h-auto border-2 text-white border-white hover:bg-white/10"
           >
-            Our Story
+            {secondaryCtaText}
           </Button>
         </div>
       </div>
