@@ -27,6 +27,14 @@ function mapTenantData(
       fontFamily: "Inter",
       logoUrl: "",
     },
+    acmeChallenge:
+      metadata?.acmeChallenge &&
+      typeof (metadata.acmeChallenge as Record<string, unknown>).token ===
+        "string" &&
+      typeof (metadata.acmeChallenge as Record<string, unknown>).response ===
+        "string"
+        ? (metadata.acmeChallenge as { token: string; response: string })
+        : undefined,
   };
 }
 
@@ -71,6 +79,7 @@ export const resolveTenant = reactCache(async function (
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.ADMIN_API_KEY}`,
         },
         next: { revalidate: 0 },
       },

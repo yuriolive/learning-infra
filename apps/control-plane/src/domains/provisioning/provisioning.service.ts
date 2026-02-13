@@ -8,6 +8,8 @@ import { NeonProvider } from "../../providers/neon/neon.client";
 import { type Logger } from "../../utils/logger";
 import { type TenantRepository } from "../tenants/tenant.repository";
 
+import { DomainProvisioningService } from "./domain-provisioning.service";
+
 export interface ProvisioningServiceConfig {
   neonApiKey?: string | undefined;
   neonProjectId?: string | undefined;
@@ -21,6 +23,7 @@ export interface ProvisioningServiceConfig {
   cloudflareApiToken?: string | undefined;
   cloudflareZoneId?: string | undefined;
   tenantBaseDomain?: string | undefined;
+  storefrontHostname?: string | undefined;
   logger: Logger;
 }
 
@@ -29,8 +32,9 @@ export class ProvisioningService {
   private cloudRunProvider: CloudRunProvider | null = null;
   private executionsClient: GcpWorkflowsClient | null = null;
   private cloudflareProvider: CloudflareProvider | null = null;
+  private domainProvisioningService: DomainProvisioningService | null = null;
   private upstashRedisUrl: string | undefined;
-  private tenantBaseDomain: string;
+  public readonly tenantBaseDomain: string;
   private logger: Logger;
 
   constructor(
@@ -39,7 +43,7 @@ export class ProvisioningService {
   ) {
     this.logger = config.logger;
     this.upstashRedisUrl = config.upstashRedisUrl;
-    this.tenantBaseDomain = config.tenantBaseDomain || "vendin.store";
+    this.tenantBaseDomain = config.tenantBaseDomain as string;
 
     this.initializeProviders(config);
   }
@@ -49,6 +53,16 @@ export class ProvisioningService {
     this.initializeCloudRunProvider(config);
     this.initializeWorkflowsClient(config);
     this.initializeCloudflareProvider(config);
+
+    if (this.cloudflareProvider) {
+      this.domainProvisioningService = new DomainProvisioningService({
+        tenantRepository: this.tenantRepository,
+        cloudflareProvider: this.cloudflareProvider,
+        logger: this.logger,
+        tenantBaseDomain: this.tenantBaseDomain,
+        storefrontHostname: config.storefrontHostname as string,
+      });
+    }
   }
 
   private initializeNeonProvider(config: ProvisioningServiceConfig): void {
@@ -255,25 +269,15 @@ export class ProvisioningService {
   }
 
   async configureDomain(tenantId: string): Promise<void> {
-    const tenant = await this.tenantRepository.findById(tenantId);
-    if (!tenant || !tenant.subdomain) throw new Error("Subdomain missing");
-
-    if (!this.cloudflareProvider) {
+    if (!this.domainProvisioningService) {
       this.logger.warn(
         { tenantId },
-        "Cloudflare provider not initialized, skipping domain configuration",
+        "Domain provisioning service not initialized, skipping domain configuration",
       );
       return;
     }
 
-    const hostname = `${tenant.subdomain}.${this.tenantBaseDomain}`;
-
-    this.logger.info(
-      { tenantId, subdomain: tenant.subdomain, hostname },
-      "Configuring Cloudflare domain",
-    );
-
-    await this.cloudflareProvider.createCustomHostname(tenantId, hostname);
+    await this.domainProvisioningService.configureDomain(tenantId);
   }
 
   async triggerProvisioningWorkflow(

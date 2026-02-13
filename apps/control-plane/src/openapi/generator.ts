@@ -163,6 +163,13 @@ registry.registerPath({
       bearerAuth: [],
     },
   ],
+  request: {
+    query: z.object({
+      subdomain: z.string().optional().openapi({
+        description: "Filter tenants by subdomain or custom domain",
+      }),
+    }),
+  },
   responses: {
     200: {
       description: "List of tenants",
@@ -365,10 +372,10 @@ registry.registerComponent("securitySchemes", "bearerAuth", {
     "Admin API Key for Control Plane authentication. Use `Bearer {your-api-key}` format.",
 });
 
-const generator = new OpenApiGeneratorV3(registry.definitions);
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const generateOpenAPISpec = (serverUrl: string): any => {
+export const generateOpenAPISpec = (
+  serverUrl: string,
+): ReturnType<OpenApiGeneratorV3["generateDocument"]> => {
+  const generator = new OpenApiGeneratorV3(registry.definitions);
   return generator.generateDocument({
     openapi: "3.1.0",
     info: {

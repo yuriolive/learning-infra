@@ -24,4 +24,8 @@ export interface Tenant {
   customDomain?: string;
   backendUrl: string; // Private Cloud Run URL
   theme: TenantTheme;
+  acmeChallenge?: {
+    token: string;
+    response: string;
+  };
 }
