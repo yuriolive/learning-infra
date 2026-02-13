@@ -132,9 +132,9 @@ describe("DomainProvisioningService", () => {
       mockTenantRepository.findById.mockResolvedValue(tenant);
 
       // Simulate error
-      mockCloudflareProvider.createDnsRecord.mockRejectedValue(
-        new Error("Record already exists"),
-      );
+      const error: unknown = new Error("Record already exists");
+      (error as Record<string, unknown>).code = 81_053;
+      mockCloudflareProvider.createDnsRecord.mockRejectedValue(error);
 
       await service.configureDomain(tenantId);
 

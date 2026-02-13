@@ -87,13 +87,25 @@ export class DomainProvisioningService {
         { tenantId, hostname, target: this.storefrontHostname },
         "Created proxied CNAME record for default domain",
       );
-    } catch (error) {
-      // Ignore if record already exists (error code 81053 or similar message)
-      // For now, we'll just log warning and proceed, or we could check specific error code
-      this.logger.warn(
-        { error, tenantId, hostname },
-        "Failed to create CNAME record (might already exist)",
-      );
+    } catch (error: unknown) {
+      // Check for duplicate record errors:
+      // 81053: A, AAAA, or CNAME record with that host already exists
+      // 81057: Record already exists
+      const cfError = error as {
+        code?: number;
+        response?: { body?: { errors?: Array<{ code?: number }> } };
+      };
+      const errorCode =
+        cfError.code || cfError.response?.body?.errors?.[0]?.code || 0;
+
+      if (errorCode === 81_053 || errorCode === 81_057) {
+        this.logger.warn(
+          { error, tenantId, hostname },
+          "Failed to create CNAME record (might already exist)",
+        );
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -146,8 +158,9 @@ export class DomainProvisioningService {
         );
 
         // Extract token from URL: http://hostname/.well-known/acme-challenge/<token>
-        // eslint-disable-next-line unicorn/prefer-array-find
-        const token = httpValidation.http_url.split("/").filter(Boolean).pop();
+        const token = new URL(httpValidation.http_url).pathname
+          .split("/")
+          .pop();
         const response = httpValidation.http_body;
 
         await this.tenantRepository.update(tenantId, {
