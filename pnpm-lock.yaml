@@ -23,6 +23,8 @@ overrides:
   drizzle-orm: ^0.45.1
   undici: 6.23.0
   fast-xml-parser: 5.3.4
+  qs: 6.14.2
+  '@isaacs/brace-expansion': 5.0.1
 
 importers:
 
@@ -2871,8 +2873,8 @@ packages:
     resolution: {integrity: sha512-yzMTt9lEb8Gv7zRioUilSglI0c0smZ9k5D65677DLWLtWJaXIS3CqcGyUFByYKlnUj6TkjLVs54fBl6+TiGQDQ==}
     engines: {node: 20 || >=22}
 
-  '@isaacs/brace-expansion@5.0.0':
-    resolution: {integrity: sha512-ZT55BDLV0yv0RBm2czMiZ+SqCGO7AvmOM3G/w2xhVPH+te0aKgFjmBvGlL1dH+ql2tgGO3MVrbb3jCKyvpgnxA==}
+  '@isaacs/brace-expansion@5.0.1':
+    resolution: {integrity: sha512-WMz71T1JS624nWj2n2fnYAuPovhv7EUhk69R6i9dsVyzxt5eM3bjwvgk9L+APE1TRscGysAVMANkB0jh0LQZrQ==}
     engines: {node: 20 || >=22}
 
   '@isaacs/cliui@8.0.2':
@@ -11004,8 +11006,8 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  qs@6.14.1:
-    resolution: {integrity: sha512-4EK3+xJl8Ts67nLYNwqw/dsFVnCf+qR7RgXSK9jEEm9unao3njwMDdmsdvoKBKHzxd7tCYz5e5M+SnMjdtXGQQ==}
+  qs@6.14.2:
+    resolution: {integrity: sha512-V/yCWTTF7VJ9hIh18Ugr2zhJMP01MY7c5kh4J870L7imm6/DIzBsNLTXzMwUA3yZ5b/KBqLx8Kp3uRvd7xSe3Q==}
     engines: {node: '>=0.6'}
 
   query-selector-shadow-dom@1.0.1:
@@ -11444,6 +11446,11 @@ packages:
 
   semver@7.7.3:
     resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  semver@7.7.4:
+    resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -16135,7 +16142,7 @@ snapshots:
 
   '@isaacs/balanced-match@4.0.1': {}
 
-  '@isaacs/brace-expansion@5.0.0':
+  '@isaacs/brace-expansion@5.0.1':
     dependencies:
       '@isaacs/balanced-match': 4.0.1
 
@@ -16813,7 +16820,7 @@ snapshots:
       lodash.isequal: 4.5.0
       match-sorter: 6.3.4
       motion: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      qs: 6.14.1
+      qs: 6.14.2
       radix-ui: 1.1.2(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-country-flag: 3.1.0(react@18.3.1)
@@ -17296,7 +17303,7 @@ snapshots:
   '@medusajs/js-sdk@2.13.1':
     dependencies:
       fetch-event-stream: 0.1.6
-      qs: 6.14.1
+      qs: 6.14.2
 
   '@medusajs/link-modules@2.13.1(@medusajs/framework@2.13.1(@aws-sdk/client-dynamodb@3.978.0)(@medusajs/cli@2.13.1(@types/node@20.19.30)(better-sqlite3@12.6.2))(@types/node@20.19.30)(better-sqlite3@12.6.2)(ioredis@5.9.2)(vite@6.4.1(@types/node@20.19.30)(jiti@1.21.7)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2))(zod@3.25.76))':
     dependencies:
@@ -17420,7 +17427,7 @@ snapshots:
       jsonwebtoken: 9.0.3
       multer: 2.0.2
       node-schedule: 2.1.1
-      qs: 6.14.1
+      qs: 6.14.2
       request-ip: 3.3.0
       slugify: 1.6.6
       uuid: 9.0.1
@@ -17524,7 +17531,7 @@ snapshots:
       jsonwebtoken: 9.0.3
       multer: 2.0.2
       node-schedule: 2.1.1
-      qs: 6.14.1
+      qs: 6.14.2
       request-ip: 3.3.0
       slugify: 1.6.6
       uuid: 9.0.1
@@ -17628,7 +17635,7 @@ snapshots:
       jsonwebtoken: 9.0.3
       multer: 2.0.2
       node-schedule: 2.1.1
-      qs: 6.14.1
+      qs: 6.14.2
       request-ip: 3.3.0
       slugify: 1.6.6
       uuid: 9.0.1
@@ -23423,7 +23430,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.4.24
       on-finished: 2.4.1
-      qs: 6.14.1
+      qs: 6.14.2
       raw-body: 2.5.3
       type-is: 1.6.18
       unpipe: 1.0.0
@@ -24878,7 +24885,7 @@ snapshots:
       parseurl: 1.3.3
       path-to-regexp: 0.1.12
       proxy-addr: 2.0.7
-      qs: 6.14.1
+      qs: 6.14.2
       range-parser: 1.2.1
       safe-buffer: 5.2.1
       send: 0.19.2
@@ -25147,7 +25154,7 @@ snapshots:
       '@petamoriken/float16': 3.9.3
       debug: 4.4.3(supports-color@8.1.1)
       env-paths: 3.0.0
-      semver: 7.7.3
+      semver: 7.7.4
       shell-quote: 1.8.3
       which: 4.0.0
     transitivePeerDependencies:
@@ -25320,7 +25327,7 @@ snapshots:
       extend: 3.0.2
       gaxios: 7.1.3
       google-auth-library: 10.5.0
-      qs: 6.14.1
+      qs: 6.14.2
       url-template: 2.0.8
     transitivePeerDependencies:
       - supports-color
@@ -26778,7 +26785,7 @@ snapshots:
 
   minimatch@10.1.1:
     dependencies:
-      '@isaacs/brace-expansion': 5.0.0
+      '@isaacs/brace-expansion': 5.0.1
 
   minimatch@3.1.2:
     dependencies:
@@ -27611,7 +27618,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  qs@6.14.1:
+  qs@6.14.2:
     dependencies:
       side-channel: 1.1.0
 
@@ -28252,6 +28259,9 @@ snapshots:
 
   semver@7.7.3: {}
 
+  semver@7.7.4:
+    optional: true
+
   send@0.19.2:
     dependencies:
       debug: 2.6.9
@@ -28637,17 +28647,17 @@ snapshots:
   stripe@15.12.0:
     dependencies:
       '@types/node': 20.19.30
-      qs: 6.14.1
+      qs: 6.14.2
 
   stripe@19.1.0(@types/node@20.19.30):
     dependencies:
-      qs: 6.14.1
+      qs: 6.14.2
     optionalDependencies:
       '@types/node': 20.19.30
 
   stripe@19.1.0(@types/node@24.10.9):
     dependencies:
-      qs: 6.14.1
+      qs: 6.14.2
     optionalDependencies:
       '@types/node': 24.10.9
 
