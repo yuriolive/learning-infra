@@ -42,11 +42,27 @@ const formatLog = (
   object: object | unknown,
   message?: string,
 ) => {
+  let logObject = object as Record<string, unknown>;
+
+  // Handle Error objects explicitly to ensure non-enumerable properties are included
+  if (object instanceof Error) {
+    const { name, message, stack, cause, ...rest } = object as Error & {
+      cause?: unknown;
+    };
+    logObject = {
+      name,
+      message,
+      stack,
+      cause,
+      ...rest,
+    };
+  }
+
   return JSON.stringify(
     {
       level,
       message,
-      ...(object as object),
+      ...logObject,
     },
     getCircularReplacer(),
   );

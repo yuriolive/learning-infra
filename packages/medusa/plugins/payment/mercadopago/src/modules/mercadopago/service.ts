@@ -242,7 +242,7 @@ export default class MercadoPagoPaymentProviderService extends AbstractPaymentPr
     input: GetPaymentStatusInput,
   ): Promise<GetPaymentStatusOutput> {
     const externalId = input.data?.externalId as string;
-    if (!externalId) return { status: "pending", data: input.data || {} };
+    if (!externalId) return { status: "error", data: input.data || {} };
 
     try {
       const response = await this.paymentClient_.get({ id: externalId });

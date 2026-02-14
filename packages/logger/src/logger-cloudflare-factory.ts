@@ -10,26 +10,6 @@ const LOG_LEVELS = {
 
 type LogLevel = keyof typeof LOG_LEVELS;
 
-const getLevelPriority = (level: string): number => {
-  switch (level) {
-    case "debug": {
-      return 0;
-    }
-    case "info": {
-      return 1;
-    }
-    case "warn": {
-      return 2;
-    }
-    case "error": {
-      return 3;
-    }
-    default: {
-      return 1;
-    }
-  }
-};
-
 /**
  * Creates a logger for Cloudflare Workers environments.
  * Uses structured JSON logging compatible with Cloudflare's logging infrastructure.
@@ -41,16 +21,17 @@ export const createCloudflareLogger = (options: LoggerOptions = {}): Logger => {
   const defaultLevel: LogLevel =
     nodeEnvironment === "production" ? "info" : "debug";
 
-  const minLevelPriority = getLevelPriority(
+  // Validate log level or fallback
+  const level: LogLevel =
     options.logLevel &&
-      Object.prototype.hasOwnProperty.call(LOG_LEVELS, options.logLevel)
-      ? options.logLevel
-      : defaultLevel,
-  );
+    Object.prototype.hasOwnProperty.call(LOG_LEVELS, options.logLevel)
+      ? (options.logLevel as LogLevel)
+      : defaultLevel;
 
-  const shouldLog = (level: LogLevel) => {
-    // eslint-disable-next-line security/detect-object-injection -- level is strictly typed as LogLevel
-    return LOG_LEVELS[level] >= minLevelPriority;
+  const minLevelPriority = LOG_LEVELS[level];
+
+  const shouldLog = (targetLevel: LogLevel) => {
+    return LOG_LEVELS[targetLevel] >= minLevelPriority;
   };
 
   return {
@@ -70,5 +51,4 @@ export const createCloudflareLogger = (options: LoggerOptions = {}): Logger => {
 };
 
 // Re-export consoleLogger for testing
-
 export { consoleLogger } from "./cloudflare-logger";
