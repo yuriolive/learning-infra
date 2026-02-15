@@ -92,7 +92,7 @@ Shared configuration at `packages/dev-config/local-services.ts`.
 
 ---
 
-## 5. Development Workflow
+## 4. Development Workflow
 
 ### Prerequisites
 
@@ -110,20 +110,13 @@ pnpm install
 # 2. Start infrastructure services
 pnpm dev:infra
 
-# 3. Setup Control Plane database
-cd apps/control-plane
+# 3. Setup databases (generate, migrate, seed)
 pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
 
-# 4. Setup Marketing database
-cd ../marketing
-pnpm db:generate
-pnpm db:migrate
-pnpm db:seed
-
-# 5. Setup Storefront
-cd ../storefront
+# 4. Setup Storefront
+cd apps/storefront
 cp .dev.vars.example .dev.vars # if needed
 ```
 
@@ -140,7 +133,7 @@ pnpm --filter marketing dev
 pnpm --filter storefront dev
 ```
 
-## 7. Troubleshooting Guide
+## 5. Troubleshooting Guide
 
 ### Common Issues
 

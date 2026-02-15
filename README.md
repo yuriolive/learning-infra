@@ -36,31 +36,6 @@ For a detailed guide on setting up the local development environment, see [docs/
 3.  **Seed**: `pnpm db:seed` (Seeds all databases)
 4.  **Dev**: `pnpm dev` (Starts all apps)
 
-## Quick Start
-
-```bash
-# Install dependencies
-pnpm install
-
-# Run all apps in development mode
-pnpm run dev
-
-# Build all apps and packages
-pnpm run build
-
-# Run all tests
-pnpm run test
-
-# Type check all apps and packages
-pnpm run typecheck
-
-# Lint all apps and packages
-pnpm run lint
-
-# Auto-fix linting issues
-pnpm run lint:fix
-```
-
 ## Commands
 
 | Command              | Description                        |
@@ -73,8 +48,6 @@ pnpm run lint:fix
 | `pnpm run typecheck` | Type check all apps and packages   |
 
 ## Applications
-
-### Control Plane (`apps/control-plane/`)
 
 ### Control Plane (`apps/control-plane/`)
 
