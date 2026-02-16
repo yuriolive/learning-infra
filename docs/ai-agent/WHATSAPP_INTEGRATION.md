@@ -1,6 +1,6 @@
 # WhatsApp Integration
 
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-15
 
 ## Overview
 
@@ -211,18 +211,29 @@ app.post("/facebook", async (c) => {
   const routing = await routeWhatsAppMessage(payload);
 
   // 4. Proxy to tenant instance
-  const response = await proxyToTenant(routing.tenantId, "/webhooks/whatsapp", {
-    method: "POST",
-    body: JSON.stringify({
-      from: payload.from,
-      message: payload.message,
-      role: routing.role,
-      threadId: routing.threadId,
-    }),
-  });
+  let responseText;
+  try {
+    const response = await proxyToTenant(
+      routing.tenantId,
+      "/webhooks/whatsapp",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          from: payload.from,
+          message: payload.message,
+          role: routing.role,
+          threadId: routing.threadId,
+        }),
+      },
+    );
+    responseText = response.text;
+  } catch (error) {
+    console.error("Failed to proxy message to tenant:", error);
+    responseText = "Sorry, I'm currently unavailable. Please try again later.";
+  }
 
   // 5. Send reply
-  await sendWhatsAppReply(payload.from, response.text, routing.tenantId);
+  await sendWhatsAppReply(payload.from, responseText, routing.tenantId);
 
   return c.json({ success: true });
 });
@@ -481,7 +492,7 @@ function verifyFacebookSignature(body: string, signature: string): boolean {
 
 // Twilio
 function verifyTwilioSignature(
-  url: string,
+  url: string, // The full webhook URL (e.g., https://api.vendin.com/webhooks/whatsapp/twilio)
   params: Record<string, string>,
   signature: string,
 ): boolean {

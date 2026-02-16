@@ -1,6 +1,6 @@
 # API Reference
 
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-02-15
 
 ## Overview
 
@@ -187,7 +187,7 @@ Proxy endpoint for dashboard chat.
 ```http
 POST /api/admin/agent/chat
 Content-Type: application/json
-Cookie: session={better_auth_session}
+Cookie: better-auth.session_token={session_token}
 
 {
   "message": "Show me today's sales"
@@ -236,7 +236,7 @@ Register admin phone for WhatsApp.
 ```http
 POST /api/admin/phone/register
 Content-Type: application/json
-Cookie: session={better_auth_session}
+Cookie: better-auth.session_token={session_token}
 
 {
   "phone": "+551199991111"
@@ -274,7 +274,7 @@ Verify OTP and complete registration.
 ```http
 PUT /api/admin/phone/verify
 Content-Type: application/json
-Cookie: session={better_auth_session}
+Cookie: better-auth.session_token={session_token}
 
 {
   "phone": "+551199991111",
@@ -312,7 +312,7 @@ Check phone registration status.
 
 ```http
 GET /api/admin/phone/status
-Cookie: session={better_auth_session}
+Cookie: better-auth.session_token={session_token}
 ```
 
 #### Response
@@ -335,7 +335,7 @@ Remove registered phone.
 
 ```http
 DELETE /api/admin/phone
-Cookie: session={better_auth_session}
+Cookie: better-auth.session_token={session_token}
 ```
 
 #### Response
@@ -365,7 +365,7 @@ Content-Type: application/json
 
 {
   "message": "I'm looking for running shoes",
-  "sessionId": "sess_abc123"  // Optional
+  "sessionId": "sess_abc123"  // Required for session persistence
 }
 ```
 
@@ -424,7 +424,7 @@ All endpoints return consistent error responses:
 ```typescript
 interface CustomerChatRequest {
   message: string; // Required, max 2000 chars
-  sessionId?: string; // Optional, for session persistence
+  sessionId: string; // Required, for session persistence
   customerId?: string; // Optional, for logged-in users
 }
 ```
@@ -507,6 +507,6 @@ All APIs are versioned via URL path:
 /api/v1/admin/agent/chat
 ```
 
-Current version: `v1` (implicit, not in URL yet)
+Current version: `v1` (implicit, not in URL yet). Explicit versioning (e.g., `/api/v1/...`) will be introduced when breaking changes are necessary.
 
 Breaking changes will introduce explicit versioning.
