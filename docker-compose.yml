@@ -1,4 +1,6 @@
+# docker-compose.yml
 services:
+  # PostgreSQL for Control Plane
   postgres:
     image: postgres:17
     command: postgres -c max_connections=500 -c shared_buffers=256MB
@@ -16,6 +18,29 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mailhog for email testing - optional
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    profiles:
+      - full
+
+  # Tenant Instance - MedusaJS
   tenant-instance:
     build:
       context: .
@@ -43,19 +68,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    profiles:
+      - tenant
 
 volumes:
   db_data:
   redis_data:
+
+networks:
+  default:
+    name: vendin-dev
