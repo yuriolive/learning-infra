@@ -8,6 +8,7 @@
       "@vendin/utils": ["../../packages/utils/src/index.ts"],
       "@vendin/utils/*": ["../../packages/utils/src/*.ts"],
       "@vendin/analytics": ["../../packages/analytics/src/index.ts"],
+      "@vendin/dev-config": ["../../packages/dev-config/local-services.ts"],
       "protobufjs": ["../../node_modules/protobufjs/dist/light/protobuf.js"]
     }
   },
