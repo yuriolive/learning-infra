@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 
-// @ts-expect-error - better-sqlite3 is a devDependency and types might be missing in production build context
 import Database from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -15,9 +14,9 @@ import * as schema from "./schema.js";
 const DB_PATH = process.env.LOCAL_D1_PATH
   ? path.resolve(process.env.LOCAL_D1_PATH)
   : path.resolve(
-      process.cwd(),
-      ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/marketing-db.sqlite",
-    );
+    process.cwd(),
+    ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/marketing-db.sqlite",
+  );
 
 // Ensure the directory exists
 const databaseDirectory = path.dirname(DB_PATH);
