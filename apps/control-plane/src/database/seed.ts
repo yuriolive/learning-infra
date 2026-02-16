@@ -1,8 +1,7 @@
 /* eslint-disable no-console */
-/* eslint-disable unicorn/no-process-exit */
-import "dotenv/config";
 
 import { localServices } from "@vendin/dev-config";
+import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -28,9 +27,7 @@ async function seed() {
   let tenantId: string;
 
   if (existingTenants.length > 0 && existingTenants[0]) {
-    console.log(
-      'Test tenant "test-store" already exists. Skipping creation.',
-    );
+    console.log('Test tenant "test-store" already exists. Skipping creation.');
     tenantId = existingTenants[0].id;
   } else {
     // Create test tenant
@@ -43,8 +40,9 @@ async function seed() {
         status: "active",
         plan: "professional",
         databaseUrl:
+          process.env.DATABASE_URL ||
           "postgres://postgres:postgres@localhost:5432/tenant_test_store",
-        apiUrl: "http://localhost:9000",
+        apiUrl: process.env.API_URL || "http://localhost:9000",
         jwtSecret: nanoid(32),
         cookieSecret: nanoid(32),
         metadata: {
@@ -76,16 +74,16 @@ async function seed() {
   if (existingEvents.length === 0) {
     await database.insert(tenantProvisioningEvents).values([
       {
-        tenantId: tenantId,
+        tenantId,
         step: "database_creation",
         status: "completed",
         details: { databaseName: "tenant_test_store" },
       },
       {
-        tenantId: tenantId,
+        tenantId,
         step: "compute_provisioning",
         status: "completed",
-        details: { serviceUrl: "http://localhost:9000" },
+        details: { serviceUrl: process.env.API_URL || "http://localhost:9000" },
       },
     ]);
     console.log("Created provisioning events.");
@@ -97,7 +95,4 @@ async function seed() {
   // Let Node exit naturally
 }
 
-seed().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+await seed();

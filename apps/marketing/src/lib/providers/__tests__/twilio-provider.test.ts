@@ -14,7 +14,7 @@ const mockLogger = {
 
 // Mock fetch
 const mockFetch = vi.fn();
-globalThis.fetch = mockFetch;
+globalThis.fetch = mockFetch as unknown as typeof fetch;
 
 describe("TwilioWhatsAppProvider", () => {
   beforeEach(() => {
