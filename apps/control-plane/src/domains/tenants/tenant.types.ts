@@ -17,9 +17,11 @@ export interface Tenant {
   cookieSecret: string;
   whatsappPhoneNumber: string | null;
   whatsappPhoneId: string | null;
-  whatsappProvider: string | null;
+  whatsappProvider: WhatsAppProvider | null;
   whatsappVerifiedAt: Date | null;
 }
+
+export type WhatsAppProvider = "facebook";
 
 export type TenantStatus =
   | "provisioning"
@@ -52,7 +54,7 @@ export interface UpdateTenantInput {
   cookieSecret?: string | undefined;
   whatsappPhoneNumber?: string | null;
   whatsappPhoneId?: string | null;
-  whatsappProvider?: string | null;
+  whatsappProvider?: WhatsAppProvider | null;
   whatsappVerifiedAt?: Date | null;
 }
 

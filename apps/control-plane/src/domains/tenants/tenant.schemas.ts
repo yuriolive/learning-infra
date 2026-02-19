@@ -27,6 +27,10 @@ export const updateTenantSchema = z.object({
   redisHash: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   failureReason: z.string().optional(),
+  whatsappPhoneNumber: z.string().nullable().optional(),
+  whatsappPhoneId: z.string().nullable().optional(),
+  whatsappProvider: z.enum(["facebook"]).nullable().optional(),
+  whatsappVerifiedAt: z.coerce.date().nullable().optional(),
 });
 
 export const tenantIdSchema = z.object({

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type { consoleLogger } from "@vendin/logger";
 
 export interface WhatsAppTenant {
@@ -9,6 +11,30 @@ export interface TenantLookup {
   findByWhatsAppNumber(phone: string): Promise<WhatsAppTenant | null>;
 }
 
+const whatsappPayloadSchema = z.object({
+  entry: z
+    .array(
+      z.object({
+        changes: z
+          .array(
+            z.object({
+              value: z
+                .object({
+                  metadata: z
+                    .object({
+                      display_phone_number: z.string(),
+                    })
+                    .optional(),
+                })
+                .optional(),
+            }),
+          )
+          .optional(),
+      }),
+    )
+    .optional(),
+});
+
 export class WhatsappWebhookService {
   constructor(
     private tenantLookup: TenantLookup,
@@ -16,19 +42,15 @@ export class WhatsappWebhookService {
   ) {}
   async handleIncomingWebhook(payload: unknown): Promise<void> {
     try {
-      // Assuming payload follows Meta's WhatsApp Cloud API format:
-      // payload.entry[0].changes[0].value.metadata.display_phone_number or similar
-      const typedPayload = payload as {
-        entry?: Array<{
-          changes?: Array<{
-            value?: {
-              metadata?: {
-                display_phone_number?: string;
-              };
-            };
-          }>;
-        }>;
-      };
+      const parseResult = whatsappPayloadSchema.safeParse(payload);
+      if (!parseResult.success) {
+        this.logger.warn(
+          { error: parseResult.error },
+          "Invalid WhatsApp webhook payload",
+        );
+        return;
+      }
+      const typedPayload = parseResult.data;
 
       const entries = typedPayload.entry || [];
 
@@ -80,6 +102,15 @@ export class WhatsappWebhookService {
       return;
     }
 
+    // SSRF Protection: Validate that apiUrl is not pointing to private/internal IPs
+    if (isPrivateUrl(tenant.apiUrl)) {
+      this.logger.error(
+        { tenantId: tenant.id, apiUrl: tenant.apiUrl },
+        "Blocked forwarding to private/internal URL (SSRF Protection)",
+      );
+      return;
+    }
+
     // Forward payload to tenant instance
     const tenantWebhookUrl = new URL(
       "/webhooks/whatsapp",
@@ -110,5 +141,34 @@ export class WhatsappWebhookService {
         "Failed to forward WhatsApp webhook to tenant",
       );
     }
+  }
+}
+
+/**
+ * Basic SSRF protection - check if URL points to private/internal network
+ */
+function isPrivateUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    const hostname = url.hostname;
+
+    // Check for common private ranges
+    // 127.0.0.1, localhost
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1"
+    ) {
+      return true;
+    }
+
+    // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+    const privateIpRegex =
+      /^(10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
+    if (privateIpRegex.test(hostname)) return true;
+
+    return false;
+  } catch {
+    return true; // Invalid URL is considered unsafe
   }
 }

@@ -179,6 +179,8 @@ async function initializeApplication(
     cloudflareZoneId,
     tenantBaseDomain,
     storefrontHostname,
+    whatsappAppSecret,
+    whatsappVerifyToken,
   } = await resolveEnvironmentSecrets(environment);
 
   initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -236,30 +238,17 @@ async function initializeApplication(
     storefrontHostname,
   );
 
-  const tenantRoutes = createTenantRoutes({
-    logger,
-    tenantService,
-    ...(context?.waitUntil
-      ? { waitUntil: context.waitUntil.bind(context) }
-      : {}),
-  });
-
-  const internalRoutes = createInternalRoutes({
-    logger,
-    tenantService,
-    provisioningService,
-    db: database,
-  });
-
-  const webhookRoutes =
-    environment.WHATSAPP_APP_SECRET && environment.WHATSAPP_VERIFY_TOKEN
-      ? createWebhookRoutes({
-          logger,
-          whatsappWebhookService,
-          appSecret: environment.WHATSAPP_APP_SECRET as string,
-          verifyToken: environment.WHATSAPP_VERIFY_TOKEN as string,
-        })
-      : undefined;
+  const { tenantRoutes, internalRoutes, webhookRoutes } =
+    createApplicationRoutes({
+      logger,
+      tenantService,
+      provisioningService,
+      database,
+      whatsappWebhookService,
+      whatsappAppSecret,
+      whatsappVerifyToken,
+      waitUntil: context?.waitUntil?.bind(context),
+    });
 
   return {
     logger,
@@ -272,6 +261,54 @@ async function initializeApplication(
     },
     routes: { tenantRoutes, internalRoutes, webhookRoutes },
   };
+}
+
+function createApplicationRoutes(context: {
+  logger: ReturnType<typeof createCloudflareLogger>;
+  tenantService: TenantService;
+  provisioningService: ProvisioningService;
+  database: ReturnType<typeof createDatabase>;
+  whatsappWebhookService: WhatsappWebhookService;
+  whatsappAppSecret: string | undefined;
+  whatsappVerifyToken: string | undefined;
+  waitUntil: ((promise: Promise<unknown>) => void) | undefined;
+}) {
+  const {
+    logger,
+    tenantService,
+    provisioningService,
+    database,
+    whatsappWebhookService,
+    whatsappAppSecret,
+    whatsappVerifyToken,
+    waitUntil,
+  } = context;
+
+  const tenantRoutes = createTenantRoutes({
+    logger,
+    tenantService,
+    ...(waitUntil ? { waitUntil } : {}),
+  });
+
+  const internalRoutes = createInternalRoutes({
+    logger,
+    tenantService,
+    provisioningService,
+    db: database,
+  });
+
+  const webhookRoutes =
+    whatsappAppSecret && whatsappVerifyToken
+      ? createWebhookRoutes({
+          logger,
+          whatsappWebhookService,
+          appSecret: whatsappAppSecret,
+          verifyToken: whatsappVerifyToken,
+          ...(waitUntil ? { waitUntil } : {}),
+        })
+      : undefined;
+
+  return { tenantRoutes, internalRoutes, webhookRoutes };
 }
 
 function createServices(

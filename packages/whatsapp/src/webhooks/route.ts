@@ -1,3 +1,5 @@
+import { getPathParts } from "@vendin/utils";
+
 import { verifyWhatsAppSignature } from "./signature";
 
 import type { WhatsappWebhookService } from "./service";
@@ -8,15 +10,17 @@ export interface WebhookRouteContext {
   whatsappWebhookService: WhatsappWebhookService;
   appSecret: string;
   verifyToken: string;
+  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
 export function createWebhookRoutes(context: WebhookRouteContext) {
-  const { logger, whatsappWebhookService, appSecret, verifyToken } = context;
+  const { logger, whatsappWebhookService, appSecret, verifyToken, waitUntil } =
+    context;
 
   return {
     handleRequest(request: Request): Promise<Response> | Response {
       const url = new URL(request.url);
-      const pathParts = url.pathname.split("/").filter(Boolean);
+      const pathParts = getPathParts(url);
 
       const isWebhookPath =
         pathParts.length === 2 &&
@@ -37,6 +41,7 @@ export function createWebhookRoutes(context: WebhookRouteContext) {
           appSecret,
           whatsappWebhookService,
           logger,
+          waitUntil,
         );
       }
 
@@ -68,6 +73,7 @@ async function handlePostRequest(
   appSecret: string,
   whatsappWebhookService: WhatsappWebhookService,
   logger: typeof consoleLogger,
+  waitUntil?: (promise: Promise<unknown>) => void,
 ): Promise<Response> {
   try {
     const signature = request.headers.get("X-Hub-Signature-256");
@@ -79,7 +85,15 @@ async function handlePostRequest(
     }
 
     const payload = await request.json();
-    await whatsappWebhookService.handleIncomingWebhook(payload);
+
+    const processingPromise =
+      whatsappWebhookService.handleIncomingWebhook(payload);
+
+    if (waitUntil) {
+      waitUntil(processingPromise);
+    } else {
+      await processingPromise;
+    }
 
     return new Response("OK", { status: 200 });
   } catch (error) {

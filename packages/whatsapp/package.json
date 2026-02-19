@@ -20,7 +20,8 @@
     "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@vendin/logger": "workspace:*"
+    "@vendin/logger": "workspace:*",
+    "@vendin/utils": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20",

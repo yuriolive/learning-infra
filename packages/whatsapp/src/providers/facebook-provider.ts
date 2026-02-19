@@ -6,6 +6,8 @@ import {
 
 import type { consoleLogger } from "@vendin/logger";
 
+const FACEBOOK_GRAPH_API_VERSION = "v21.0";
+
 /**
  * Facebook WhatsApp Business API provider implementation
  */
@@ -18,7 +20,7 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
   constructor(config: FacebookWhatsAppConfig, logger: typeof consoleLogger) {
     this.accessToken = config.accessToken;
     this.phoneNumberId = config.phoneNumberId;
-    this.apiVersion = config.apiVersion || "v21.0";
+    this.apiVersion = config.apiVersion || FACEBOOK_GRAPH_API_VERSION;
     this.logger = logger;
   }
 

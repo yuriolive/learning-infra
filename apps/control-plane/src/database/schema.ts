@@ -23,6 +23,13 @@ export const tenantPlanEnum = pgEnum("tenant_plan", [
   "enterprise",
 ]);
 
+export const whatsappProviderEnum = pgEnum("whatsapp_provider", ["facebook"]);
+
+export const tenantAdminRoleEnum = pgEnum("tenant_admin_role", [
+  "owner",
+  "admin",
+]);
+
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -42,7 +49,8 @@ export const tenants = pgTable("tenants", {
   cookieSecret: text("cookie_secret").notNull(),
   whatsappPhoneNumber: text("whatsapp_phone_number").unique(),
   whatsappPhoneId: text("whatsapp_phone_id"),
-  whatsappProvider: text("whatsapp_provider").default("facebook"),
+  whatsappProvider:
+    whatsappProviderEnum("whatsapp_provider").default("facebook"),
   whatsappVerifiedAt: timestamp("whatsapp_verified_at"),
 });
 
@@ -53,7 +61,7 @@ export const tenantAdmins = pgTable("tenant_admins", {
     .references(() => tenants.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull(),
   phone: text("phone").notNull().unique(),
-  role: text("role").default("owner"),
+  role: tenantAdminRoleEnum("role").default("owner"),
   phoneVerifiedAt: timestamp("phone_verified_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
