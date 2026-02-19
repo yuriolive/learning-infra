@@ -102,6 +102,7 @@ const config = defineConfig({
     },
   },
   admin: {
+    // @ts-expect-error Medusa's type for vite config is broken when using Record<string, unknown>
     vite: (config: Record<string, unknown> = {}) => {
       return {
         ...config,

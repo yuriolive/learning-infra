@@ -31,6 +31,10 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     failureReason: databaseTenant.failureReason ?? null,
     jwtSecret: databaseTenant.jwtSecret!,
     cookieSecret: databaseTenant.cookieSecret!,
+    whatsappPhoneNumber: databaseTenant.whatsappPhoneNumber ?? null,
+    whatsappPhoneId: databaseTenant.whatsappPhoneId ?? null,
+    whatsappProvider: databaseTenant.whatsappProvider ?? null,
+    whatsappVerifiedAt: databaseTenant.whatsappVerifiedAt ?? null,
   };
 }
 
@@ -109,6 +113,18 @@ export class TenantRepository {
         ...(input.cookieSecret !== undefined && {
           cookieSecret: input.cookieSecret,
         }),
+        ...(input.whatsappPhoneNumber !== undefined && {
+          whatsappPhoneNumber: input.whatsappPhoneNumber,
+        }),
+        ...(input.whatsappPhoneId !== undefined && {
+          whatsappPhoneId: input.whatsappPhoneId,
+        }),
+        ...(input.whatsappProvider !== undefined && {
+          whatsappProvider: input.whatsappProvider,
+        }),
+        ...(input.whatsappVerifiedAt !== undefined && {
+          whatsappVerifiedAt: input.whatsappVerifiedAt,
+        }),
         updatedAt: new Date(),
       })
       .where(and(eq(tenants.id, id), ne(tenants.status, "deleted")))
@@ -137,6 +153,20 @@ export class TenantRepository {
       .from(tenants)
       .where(
         and(eq(tenants.subdomain, subdomain), ne(tenants.status, "deleted")),
+      );
+
+    return tenant ? mapToTenant(tenant) : null;
+  }
+
+  async findByWhatsAppNumber(phoneNumber: string): Promise<Tenant | null> {
+    const [tenant] = await this.db
+      .select()
+      .from(tenants)
+      .where(
+        and(
+          eq(tenants.whatsappPhoneNumber, phoneNumber),
+          ne(tenants.status, "deleted"),
+        ),
       );
 
     return tenant ? mapToTenant(tenant) : null;

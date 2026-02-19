@@ -15,6 +15,10 @@ export interface Tenant {
   failureReason: string | null;
   jwtSecret: string;
   cookieSecret: string;
+  whatsappPhoneNumber: string | null;
+  whatsappPhoneId: string | null;
+  whatsappProvider: string | null;
+  whatsappVerifiedAt: Date | null;
 }
 
 export type TenantStatus =
@@ -46,6 +50,10 @@ export interface UpdateTenantInput {
   failureReason?: string | undefined;
   jwtSecret?: string | undefined;
   cookieSecret?: string | undefined;
+  whatsappPhoneNumber?: string | null;
+  whatsappPhoneId?: string | null;
+  whatsappProvider?: string | null;
+  whatsappVerifiedAt?: Date | null;
 }
 
 export interface ListTenantsFilters {

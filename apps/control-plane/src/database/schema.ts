@@ -40,6 +40,22 @@ export const tenants = pgTable("tenants", {
   failureReason: text("failure_reason"),
   jwtSecret: text("jwt_secret").notNull(),
   cookieSecret: text("cookie_secret").notNull(),
+  whatsappPhoneNumber: text("whatsapp_phone_number").unique(),
+  whatsappPhoneId: text("whatsapp_phone_id"),
+  whatsappProvider: text("whatsapp_provider").default("facebook"),
+  whatsappVerifiedAt: timestamp("whatsapp_verified_at"),
+});
+
+export const tenantAdmins = pgTable("tenant_admins", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => tenants.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  phone: text("phone").notNull().unique(),
+  role: text("role").default("owner"),
+  phoneVerifiedAt: timestamp("phone_verified_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const tenantProvisioningEvents = pgTable("tenant_provisioning_events", {
@@ -55,6 +71,14 @@ export const tenantProvisioningEvents = pgTable("tenant_provisioning_events", {
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   provisioningEvents: many(tenantProvisioningEvents),
+  admins: many(tenantAdmins),
+}));
+
+export const tenantAdminsRelations = relations(tenantAdmins, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [tenantAdmins.tenantId],
+    references: [tenants.id],
+  }),
 }));
 
 export const tenantProvisioningEventsRelations = relations(
