@@ -1,6 +1,7 @@
 import { captureError, initAnalytics } from "@vendin/analytics";
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger/cloudflare";
+import { createWebhookRoutes, WhatsappWebhookService } from "@vendin/whatsapp";
 
 import {
   resolveEnvironmentSecrets,
@@ -13,8 +14,6 @@ import { ProvisioningService } from "./domains/provisioning/provisioning.service
 import { TenantRepository } from "./domains/tenants/tenant.repository";
 import { createTenantRoutes } from "./domains/tenants/tenant.routes";
 import { TenantService } from "./domains/tenants/tenant.service";
-import { createWebhookRoutes } from "./domains/webhooks/whatsapp.route";
-import { WhatsappWebhookService } from "./domains/webhooks/whatsapp.service";
 import { createAuthMiddleware, wrapResponse } from "./middleware";
 import { generateOpenAPISpec } from "./openapi/generator";
 
