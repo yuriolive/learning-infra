@@ -1,5 +1,5 @@
 {
-  "id": "44cb3c99-5cb3-4121-bf2e-4e0c684185df",
+  "id": "7232ca59-d8c7-4d55-bc2b-bf81a11d2da2",
   "prevId": "e1207a7d-b9d9-414f-afd8-ff25467353f6",
   "version": "7",
   "dialect": "postgresql",
@@ -35,7 +35,8 @@
         },
         "role": {
           "name": "role",
-          "type": "text",
+          "type": "tenant_admin_role",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
           "default": "'owner'"
@@ -260,7 +261,8 @@
         },
         "whatsapp_provider": {
           "name": "whatsapp_provider",
-          "type": "text",
+          "type": "whatsapp_provider",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false,
           "default": "'facebook'"
@@ -293,6 +295,11 @@
     }
   },
   "enums": {
+    "public.tenant_admin_role": {
+      "name": "tenant_admin_role",
+      "schema": "public",
+      "values": ["owner", "admin"]
+    },
     "public.tenant_plan": {
       "name": "tenant_plan",
       "schema": "public",
@@ -308,6 +315,11 @@
         "deleted",
         "provisioning_failed"
       ]
+    },
+    "public.whatsapp_provider": {
+      "name": "whatsapp_provider",
+      "schema": "public",
+      "values": ["facebook"]
     }
   },
   "schemas": {},
