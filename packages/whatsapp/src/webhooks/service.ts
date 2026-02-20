@@ -1,4 +1,4 @@
-import { validateSsrfProtection } from "@vendin/utils";
+import { validatePublicUrl } from "@vendin/utils";
 import { z } from "zod";
 
 import type { consoleLogger } from "@vendin/logger";
@@ -207,7 +207,7 @@ export class WhatsappWebhookService {
   ): Promise<void> {
     try {
       const url = new URL(apiUrl);
-      await validateSsrfProtection(url, url.hostname, this.logger);
+      await validatePublicUrl(url, this.logger);
     } catch (error) {
       if (error instanceof Error) {
         this.logger.error(

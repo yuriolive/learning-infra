@@ -73,6 +73,17 @@ export async function validateSsrfProtection(
     throw new Error("Potential SSRF attack blocked: invalid hostname");
   }
 
+  await validatePublicUrl(url, logger);
+}
+
+/**
+ * Validates a user-provided URL against SSRF attacks by checking resolved IPs.
+ * Ensures the URL doesn't resolve to private or internal IP ranges.
+ */
+export async function validatePublicUrl(
+  url: URL,
+  logger: SsrfLogger,
+): Promise<void> {
   const ips = await resolveIps(url.hostname);
 
   if (ips.length === 0 || ips.some((ip) => isPrivateIp(ip))) {

@@ -5,9 +5,10 @@ import { type TenantLookup, WhatsappWebhookService } from "../service";
 import type { consoleLogger } from "@vendin/logger";
 vi.mock("@vendin/utils", () => ({
   validateSsrfProtection: vi.fn(),
+  validatePublicUrl: vi.fn(),
 }));
 
-import { validateSsrfProtection } from "@vendin/utils";
+import { validatePublicUrl } from "@vendin/utils";
 
 describe("WhatsappWebhookService SSRF Protection", () => {
   let service: WhatsappWebhookService;
@@ -39,7 +40,7 @@ describe("WhatsappWebhookService SSRF Protection", () => {
       id: "tenant-1",
       apiUrl,
     });
-    vi.mocked(validateSsrfProtection).mockRejectedValue(
+    vi.mocked(validatePublicUrl).mockRejectedValue(
       new Error("Blocked forwarding to private/internal URL"),
     );
 
@@ -63,7 +64,7 @@ describe("WhatsappWebhookService SSRF Protection", () => {
       id: "tenant-1",
       apiUrl,
     });
-    vi.mocked(validateSsrfProtection).mockResolvedValue();
+    vi.mocked(validatePublicUrl).mockResolvedValue();
 
     // Mock fetch to avoid actual network call
     const globalFetch = globalThis.fetch;
@@ -88,7 +89,7 @@ describe("WhatsappWebhookService SSRF Protection", () => {
       id: "tenant-1",
       apiUrl,
     });
-    vi.mocked(validateSsrfProtection).mockRejectedValue(
+    vi.mocked(validatePublicUrl).mockRejectedValue(
       new Error("DNS resolution failed"),
     );
 
@@ -109,7 +110,7 @@ describe("WhatsappWebhookService SSRF Protection", () => {
       id: "tenant-2",
       apiUrl,
     });
-    vi.mocked(validateSsrfProtection).mockResolvedValue();
+    vi.mocked(validatePublicUrl).mockResolvedValue();
 
     const change = {
       value: { metadata: { display_phone_number: "5511999999999" } },
@@ -139,7 +140,7 @@ describe("WhatsappWebhookService SSRF Protection", () => {
       id: "tenant-3",
       apiUrl,
     });
-    vi.mocked(validateSsrfProtection).mockResolvedValue();
+    vi.mocked(validatePublicUrl).mockResolvedValue();
 
     const change = {
       value: {
