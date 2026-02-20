@@ -1,3 +1,4 @@
+import { isPrivateIp, resolveIps } from "@vendin/utils";
 import { z } from "zod";
 
 import type { consoleLogger } from "@vendin/logger";
@@ -54,12 +55,21 @@ export class WhatsappWebhookService {
 
       const entries = typedPayload.entry || [];
 
+      const promises: Array<Promise<void>> = [];
       for (const entry of entries) {
         const changes = entry.changes || [];
         for (const change of changes) {
-          await this.processChange(change, payload);
+          promises.push(
+            this.processChange(change, payload).catch((error) => {
+              this.logger.error(
+                { error },
+                "Failed to process WhatsApp webhook change",
+              );
+            }),
+          );
         }
       }
+      await Promise.all(promises);
     } catch (error) {
       this.logger.error({ error }, "Error processing WhatsApp webhook");
       throw error; // Re-throw to return 500 to caller
@@ -102,12 +112,8 @@ export class WhatsappWebhookService {
       return;
     }
 
-    // SSRF Protection: Validate that apiUrl is not pointing to private/internal IPs
-    if (isPrivateUrl(tenant.apiUrl)) {
-      this.logger.error(
-        { tenantId: tenant.id, apiUrl: tenant.apiUrl },
-        "Blocked forwarding to private/internal URL (SSRF Protection)",
-      );
+    // SSRF Protection: Resolve hostname and validate IPs
+    if (!(await this.validateApiUrl(tenant.apiUrl, tenant.id))) {
       return;
     }
 
@@ -143,34 +149,29 @@ export class WhatsappWebhookService {
       );
     }
   }
-}
 
-/**
- * Basic SSRF protection - check if URL points to private/internal network
- */
-export function isPrivateUrl(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-    const hostname = url.hostname;
+  private async validateApiUrl(
+    apiUrl: string,
+    tenantId: string,
+  ): Promise<boolean> {
+    try {
+      const url = new URL(apiUrl);
+      const ips = await resolveIps(url.hostname);
 
-    // Check for common private ranges
-    // 127.0.0.1, localhost, ::1
-    if (
-      hostname === "localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname === "::1" ||
-      hostname === "[::1]"
-    ) {
+      if (ips.length === 0 || ips.some((ip: string) => isPrivateIp(ip))) {
+        this.logger.error(
+          { tenantId, apiUrl, resolvedIps: ips },
+          "Blocked forwarding to private/internal URL (SSRF Protection)",
+        );
+        return false;
+      }
       return true;
+    } catch (error) {
+      this.logger.error(
+        { tenantId, apiUrl, error },
+        "Blocked forwarding due to invalid URL or resolution error (SSRF Protection)",
+      );
+      return false;
     }
-
-    // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16
-    const privateIpRegex =
-      /^(10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+)$/;
-    if (privateIpRegex.test(hostname)) return true;
-
-    return false;
-  } catch {
-    return true; // Invalid URL is considered unsafe
   }
 }

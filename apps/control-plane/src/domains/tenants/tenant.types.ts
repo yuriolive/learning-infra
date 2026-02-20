@@ -21,7 +21,7 @@ export interface Tenant {
   whatsappVerifiedAt: Date | null;
 }
 
-export type WhatsAppProvider = "facebook";
+export type WhatsAppProvider = "facebook" | "twilio";
 
 export type TenantStatus =
   | "provisioning"

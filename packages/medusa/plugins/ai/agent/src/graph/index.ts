@@ -10,18 +10,18 @@ import { AgentState } from "./state.js";
 import type { MedusaContainer } from "@medusajs/medusa";
 
 // Singleton implementation for Redis Checkpointer
-let checkpointer: RedisSaver | undefined;
+let checkpointerPromise: Promise<RedisSaver> | undefined;
 
-async function getCheckpointer() {
-  if (checkpointer) {
-    return checkpointer;
+function getCheckpointer() {
+  if (checkpointerPromise) {
+    return checkpointerPromise;
   }
 
   const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
   // RedisSaver.fromUrl handles client creation and connection using 'redis' package
-  checkpointer = await RedisSaver.fromUrl(redisUrl);
-  return checkpointer;
+  checkpointerPromise = RedisSaver.fromUrl(redisUrl);
+  return checkpointerPromise;
 }
 
 export async function createAgentGraph(

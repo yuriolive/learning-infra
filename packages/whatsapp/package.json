@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "@vendin/logger": "workspace:*",
-    "@vendin/utils": "workspace:*"
+    "@vendin/utils": "workspace:*",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^20",

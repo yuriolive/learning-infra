@@ -902,6 +902,9 @@ importers:
       '@vendin/utils':
         specifier: workspace:*
         version: link:../utils
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^20

@@ -23,7 +23,10 @@ export const tenantPlanEnum = pgEnum("tenant_plan", [
   "enterprise",
 ]);
 
-export const whatsappProviderEnum = pgEnum("whatsapp_provider", ["facebook"]);
+export const whatsappProviderEnum = pgEnum("whatsapp_provider", [
+  "facebook",
+  "twilio",
+]);
 
 export const tenantAdminRoleEnum = pgEnum("tenant_admin_role", [
   "owner",
