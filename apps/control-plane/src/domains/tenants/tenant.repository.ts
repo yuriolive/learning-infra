@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 
 import { type Database } from "../../database/database";
 import { tenants, tenantProvisioningEvents } from "../../database/schema";
@@ -158,13 +158,32 @@ export class TenantRepository {
     return tenant ? mapToTenant(tenant) : null;
   }
 
-  async findByWhatsAppNumber(phoneNumber: string): Promise<Tenant | null> {
+  async findByWhatsAppPhoneId(phoneId: string): Promise<Tenant | null> {
     const [tenant] = await this.db
       .select()
       .from(tenants)
       .where(
         and(
-          eq(tenants.whatsappPhoneNumber, phoneNumber),
+          eq(tenants.whatsappPhoneId, phoneId),
+          ne(tenants.status, "deleted"),
+        ),
+      );
+
+    return tenant ? mapToTenant(tenant) : null;
+  }
+
+  async findByWhatsAppNumber(phoneNumber: string): Promise<Tenant | null> {
+    const digitsOnly = phoneNumber.replaceAll(/\D/g, "");
+
+    const [tenant] = await this.db
+      .select()
+      .from(tenants)
+      .where(
+        and(
+          or(
+            eq(tenants.whatsappPhoneNumber, digitsOnly),
+            eq(tenants.whatsappPhoneNumber, `+${digitsOnly}`),
+          ),
           ne(tenants.status, "deleted"),
         ),
       );

@@ -44,23 +44,25 @@ describe("FacebookWhatsAppProvider", () => {
 
     await provider.sendMessage("+1234567890", "Test message");
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      "https://graph.facebook.com/v21.0/123456789/messages",
-      {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer test-token",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: "1234567890", // Without leading +
-          type: "text",
-          text: {
-            body: "Test message",
-          },
-        }),
+    expect(mockFetch).toHaveBeenCalledWith(expect.any(URL), {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-token",
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: "1234567890", // Without leading +
+        type: "text",
+        text: {
+          body: "Test message",
+        },
+      }),
+    });
+
+    const fetchCall = mockFetch.mock.calls[0];
+    expect(fetchCall[0].toString()).toBe(
+      "https://graph.facebook.com/v21.0/123456789/messages",
     );
 
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -85,10 +87,8 @@ describe("FacebookWhatsAppProvider", () => {
 
     await provider.sendMessage("+1234567890", "Test");
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("v21.0"),
-      expect.any(Object),
-    );
+    const fetchCall = mockFetch.mock.calls[0];
+    expect(fetchCall[0].toString()).toContain("v21.0");
   });
 
   it("should handle API errors", async () => {

@@ -249,4 +249,37 @@ describe("TenantRepository", () => {
       expect(found).toBeNull();
     });
   });
+
+  describe("findByWhatsAppPhoneId", () => {
+    it("should return tenant when phone ID matches exactly", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneId: "1234567890",
+      });
+
+      const found = await repository.findByWhatsAppPhoneId("1234567890");
+
+      expect(found).not.toBeNull();
+      expect(found?.id).toBe(created.id);
+    });
+
+    it("should return null for deleted tenants", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneId: "1234567890",
+      });
+
+      await repository.softDelete(created.id);
+
+      const found = await repository.findByWhatsAppPhoneId("1234567890");
+
+      expect(found).toBeNull();
+    });
+  });
 });

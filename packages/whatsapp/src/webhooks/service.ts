@@ -9,6 +9,7 @@ export interface WhatsAppTenant {
 }
 
 export interface TenantLookup {
+  findByWhatsAppPhoneId(phoneId: string): Promise<WhatsAppTenant | null>;
   findByWhatsAppNumber(phone: string): Promise<WhatsAppTenant | null>;
 }
 
@@ -23,7 +24,8 @@ const whatsappPayloadSchema = z.object({
                 .object({
                   metadata: z
                     .object({
-                      display_phone_number: z.string(),
+                      display_phone_number: z.string().optional(),
+                      phone_number_id: z.string().optional(),
                     })
                     .optional(),
                 })
@@ -81,25 +83,35 @@ export class WhatsappWebhookService {
     const value = change.value;
     if (!value) return;
 
-    // Extract recipient phone number (the tenant's phone number)
+    // Extract recipient phone number ID (the tenant's WhatsApp phone ID)
+    const recipientPhoneId = value.metadata?.phone_number_id;
     const recipientPhone = value.metadata?.display_phone_number;
-    if (!recipientPhone || typeof recipientPhone !== "string") {
+
+    if (
+      (!recipientPhoneId || typeof recipientPhoneId !== "string") &&
+      (!recipientPhone || typeof recipientPhone !== "string")
+    ) {
       this.logger.warn(
-        "Received WhatsApp webhook without recipient phone number",
+        "Received WhatsApp webhook without phone_number_id and display_phone_number",
       );
       return;
     }
 
-    // Format phone number to match database stored format if needed
-    const formattedPhone = recipientPhone.replaceAll(/\D/g, "");
-
     // Lookup tenant
-    const tenant = await this.tenantLookup.findByWhatsAppNumber(formattedPhone);
+    let tenant: WhatsAppTenant | null = null;
+    if (recipientPhoneId && typeof recipientPhoneId === "string") {
+      tenant = await this.tenantLookup.findByWhatsAppPhoneId(recipientPhoneId);
+    }
+
+    if (!tenant && recipientPhone && typeof recipientPhone === "string") {
+      const formattedPhone = recipientPhone.replaceAll(/\D/g, "");
+      tenant = await this.tenantLookup.findByWhatsAppNumber(formattedPhone);
+    }
 
     if (!tenant) {
       this.logger.warn(
-        { phone: formattedPhone },
-        "Tenant not found for WhatsApp number",
+        { phoneId: recipientPhoneId, phone: recipientPhone },
+        "Tenant not found for WhatsApp phone ID or display number",
       );
       return;
     }

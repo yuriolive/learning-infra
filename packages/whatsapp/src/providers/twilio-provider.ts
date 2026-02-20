@@ -1,3 +1,5 @@
+import { isPrivateIp, resolveIps } from "@vendin/utils";
+
 import {
   type TwilioWhatsAppConfig,
   type WhatsAppProvider,
@@ -28,7 +30,28 @@ export class TwilioWhatsAppProvider implements WhatsAppProvider {
       const fromWhatsApp = `whatsapp:${this.fromNumber}`;
       const toWhatsApp = `whatsapp:${phoneNumber}`;
 
-      const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
+      const url = new URL(
+        `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`,
+      );
+
+      // SSRF Protection: Resolve hostname and validate IPs
+      if (url.hostname !== "api.twilio.com") {
+        this.logger.error(
+          { hostname: url.hostname },
+          "Blocked request to invalid hostname (SSRF Protection)",
+        );
+        throw new Error("Potential SSRF attack blocked: invalid hostname");
+      }
+
+      const ips = await resolveIps(url.hostname);
+
+      if (ips.length === 0 || ips.some((ip: string) => isPrivateIp(ip))) {
+        this.logger.error(
+          { url: url.toString(), resolvedIps: ips },
+          "Blocked request to private/internal URL (SSRF Protection)",
+        );
+        throw new Error("Potential SSRF attack blocked: private IP detected");
+      }
 
       // Twilio uses Basic Auth with AccountSID:AuthToken
       const authHeader = btoa(`${this.accountSid}:${this.authToken}`);
