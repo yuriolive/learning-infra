@@ -78,43 +78,15 @@ export class WhatsappWebhookService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async processChange(change: any, payload: unknown): Promise<void> {
-    const value = change.value;
+  private async processChange(
+    change: Record<string, unknown>,
+    payload: unknown,
+  ): Promise<void> {
+    const value = change.value as Record<string, unknown>;
     if (!value) return;
 
-    // Extract recipient phone number ID (the tenant's WhatsApp phone ID)
-    const recipientPhoneId = value.metadata?.phone_number_id;
-    const recipientPhone = value.metadata?.display_phone_number;
-
-    if (
-      (!recipientPhoneId || typeof recipientPhoneId !== "string") &&
-      (!recipientPhone || typeof recipientPhone !== "string")
-    ) {
-      this.logger.warn(
-        "Received WhatsApp webhook without phone_number_id and display_phone_number",
-      );
-      return;
-    }
-
-    // Lookup tenant
-    let tenant: WhatsAppTenant | null = null;
-    if (recipientPhoneId && typeof recipientPhoneId === "string") {
-      tenant = await this.tenantLookup.findByWhatsAppPhoneId(recipientPhoneId);
-    }
-
-    if (!tenant && recipientPhone && typeof recipientPhone === "string") {
-      const formattedPhone = recipientPhone.replaceAll(/\D/g, "");
-      tenant = await this.tenantLookup.findByWhatsAppNumber(formattedPhone);
-    }
-
-    if (!tenant) {
-      this.logger.warn(
-        { phoneId: recipientPhoneId, phone: recipientPhone },
-        "Tenant not found for WhatsApp phone ID or display number",
-      );
-      return;
-    }
+    const tenant = await this.findTenant(value);
+    if (!tenant) return;
 
     if (!tenant.apiUrl) {
       this.logger.warn(
@@ -127,19 +99,75 @@ export class WhatsappWebhookService {
     // SSRF Protection: Validate hostname and resolved IPs
     try {
       await this.validateWebhookUrlSafely(tenant.apiUrl, tenant.id);
-    } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error(
-          { tenantId: tenant.id, error: error.message },
-          "Webhook validation failed for tenant",
-        );
-      }
+    } catch {
+      // Error already logged by validateWebhookUrlSafely
       return;
     }
 
-    // Forward payload to tenant instance using the original hostname
-    // validateSsrfProtection ensures that the hostname resolves to a safe, public IP
-    const originalUrl = new URL(tenant.apiUrl);
+    await this.forwardToTenant(tenant, payload);
+  }
+
+  private async findTenant(
+    value: Record<string, unknown>,
+  ): Promise<WhatsAppTenant | null> {
+    const { phoneId, phone } = this.extractContactInfo(value);
+
+    if (!phoneId && !phone) {
+      this.logger.warn(
+        "Received WhatsApp webhook without phone_number_id and display_phone_number",
+      );
+      return null;
+    }
+
+    const tenant = await this.lookupTenantByContact(phoneId, phone);
+
+    if (!tenant) {
+      this.logger.warn(
+        { phoneId, phone },
+        "Tenant not found for WhatsApp phone ID or display number",
+      );
+    }
+
+    return tenant;
+  }
+
+  private extractContactInfo(value: Record<string, unknown>): {
+    phoneId: string | null;
+    phone: string | null;
+  } {
+    const metadata = value.metadata as Record<string, unknown> | undefined;
+    const phoneId = metadata?.phone_number_id;
+    const phone = metadata?.display_phone_number;
+
+    return {
+      phoneId: typeof phoneId === "string" ? phoneId : null,
+      phone: typeof phone === "string" ? phone : null,
+    };
+  }
+
+  private async lookupTenantByContact(
+    phoneId: string | null,
+    phone: string | null,
+  ): Promise<WhatsAppTenant | null> {
+    if (phoneId) {
+      const tenant = await this.tenantLookup.findByWhatsAppPhoneId(phoneId);
+      if (tenant) return tenant;
+    }
+
+    if (phone) {
+      const formattedPhone = phone.replaceAll(/\D/g, "");
+      return this.tenantLookup.findByWhatsAppNumber(formattedPhone);
+    }
+
+    return null;
+  }
+
+  private async forwardToTenant(
+    tenant: WhatsAppTenant,
+    payload: unknown,
+  ): Promise<void> {
+    const apiUrl = tenant.apiUrl!;
+    const originalUrl = new URL(apiUrl);
     const tenantWebhookUrl = new URL(
       "/webhooks/whatsapp",
       originalUrl.toString(),
@@ -156,11 +184,7 @@ export class WhatsappWebhookService {
 
     const response = await fetch(tenantWebhookUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Host header is automatically set by fetch based on the URL, no need to manually override
-        // Pass along some headers if necessary to authenticate with tenant instance
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),
     });
