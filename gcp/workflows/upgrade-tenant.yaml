@@ -1,0 +1,199 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - baseUrl: ${sys.get_env("CONTROL_PLANE_URL")}
+          - tenantId: ${args.tenantId}
+          - targetImageTag: ${args.targetImageTag}
+          - executionId: ${args.executionId}
+          - snapshotName: ${"backup-" + executionId}
+
+    - report_start:
+        call: http.post
+        args:
+          url: ${baseUrl + "/internal/campaigns/executions/" + executionId + "/status"}
+          body: { status: "snapshotting" }
+
+    - create_db_snapshot:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/snapshot"}
+            body:
+              tenantId: ${tenantId}
+              snapshotName: ${snapshotName}
+        except:
+            as: e
+            next: fail_execution
+
+    - report_migrating:
+        call: http.post
+        args:
+          url: ${baseUrl + "/internal/campaigns/executions/" + executionId + "/status"}
+          body: { status: "migrating" }
+
+    - run_migrations:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/migrations"}
+            body:
+              tenantId: ${tenantId}
+              imageTag: ${targetImageTag}
+        except:
+            as: e
+            next: rollback_db
+
+    - report_deploying:
+        call: http.post
+        args:
+          url: ${baseUrl + "/internal/campaigns/executions/" + executionId + "/status"}
+          body: { status: "deploying" }
+
+    - deploy_service:
+        try:
+          call: http.post
+          args:
+            url: ${baseUrl + "/internal/provisioning/service"}
+            body:
+              tenantId: ${tenantId}
+              imageTag: ${targetImageTag}
+          result: deploy_result
+        except:
+            as: e
+            next: rollback_all
+
+    - wait_for_deploy_op:
+        try:
+            steps:
+                - check_op:
+                    call: http.get
+                    args:
+                        url: ${baseUrl + "/internal/provisioning/operations?name=" + deploy_result.body.operationName}
+                    result: op_status
+                - check_status:
+                    switch:
+                        - condition: ${not op_status.body.done}
+                          steps:
+                            - sleep:
+                                call: sys.sleep
+                                args:
+                                    seconds: 10
+                            - next: check_op
+                        - condition: ${"error" in op_status.body}
+                          raise: ${op_status.body.error}
+        except:
+            as: e
+            next: rollback_all
+
+    - report_verifying:
+        call: http.post
+        args:
+          url: ${baseUrl + "/internal/campaigns/executions/" + executionId + "/status"}
+          body: { status: "verifying" }
+
+    - init_verify:
+        assign:
+            - attempt: 0
+            - max_attempts: 12
+
+    - verify_health:
+        steps:
+            - inc_attempt:
+                assign:
+                    - attempt: ${attempt + 1}
+            - get_url:
+                try:
+                    call: http.post
+                    args:
+                        url: ${baseUrl + "/internal/provisioning/finalize"}
+                        body: { tenantId: ${tenantId} }
+                    result: finalize_res
+                except:
+                    as: e
+                    next: retry_verify
+
+            - health_probe:
+                try:
+                    call: http.get
+                    args:
+                        url: ${finalize_res.body.apiUrl + "/health"}
+                    result: health_res
+                except:
+                    as: e
+                    next: retry_verify
+
+            - check_200:
+                switch:
+                    - condition: ${health_res.code == 200}
+                      next: report_success
+                    - default:
+                      next: retry_verify
+
+    - retry_verify:
+        switch:
+            - condition: ${attempt < max_attempts}
+              steps:
+                - sleep_verify:
+                    call: sys.sleep
+                    args:
+                        seconds: 10
+                - next: verify_health
+            - default:
+              next: rollback_all
+
+    - report_success:
+        call: http.post
+        args:
+          url: ${baseUrl + "/internal/campaigns/executions/" + executionId + "/status"}
+          body: { status: "completed" }
+        return: "success"
+
+    - rollback_all:
+        try:
+            call: http.post
+            args:
+                url: ${baseUrl + "/internal/provisioning/restore"}
+                body:
+                    tenantId: ${tenantId}
+                    snapshotName: ${snapshotName}
+        except:
+            as: e
+            next: fail_execution
+
+        switch:
+            - condition: ${"currentImageTag" in args and args.currentImageTag != null}
+              try:
+                  call: http.post
+                  args:
+                      url: ${baseUrl + "/internal/provisioning/service"}
+                      body:
+                          tenantId: ${tenantId}
+                          imageTag: ${args.currentImageTag}
+                  result: rollback_deploy_res
+              except:
+                  as: e
+                  next: fail_execution
+
+        next: fail_execution
+
+    - rollback_db:
+        try:
+            call: http.post
+            args:
+                url: ${baseUrl + "/internal/provisioning/restore"}
+                body:
+                    tenantId: ${tenantId}
+                    snapshotName: ${snapshotName}
+        except:
+            as: e
+            next: fail_execution
+        next: fail_execution
+
+    - fail_execution:
+        call: http.post
+        args:
+          url: ${baseUrl + "/internal/campaigns/executions/" + executionId + "/status"}
+          body: { status: "failed", error: "Workflow failed" }
+        return: "failed"

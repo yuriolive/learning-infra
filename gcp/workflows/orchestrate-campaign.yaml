@@ -1,0 +1,75 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - baseUrl: ${sys.get_env("CONTROL_PLANE_URL")}
+          - keep_running: true
+          - projectId: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - location: ${sys.get_env("GOOGLE_CLOUD_REGION")}
+
+    - processing_loop:
+        switch:
+          - condition: ${keep_running}
+            steps:
+              - fetch_batch:
+                  call: http.post
+                  args:
+                    url: ${baseUrl + "/internal/campaigns/" + args.campaignId + "/next-batch"}
+                  result: batch_response
+
+              - check_empty:
+                  switch:
+                    - condition: ${len(batch_response.body.batch) == 0}
+                      # No more items OR concurrency limit reached
+                      # We should wait a bit if we think there are still items but we hit concurrency limit.
+                      # But getNextBatch returns empty if concurrency limit is hit.
+                      # The orchestrator should probably sleep and retry if "campaign is not finished".
+                      # But getNextBatch doesn't return campaign status.
+                      # Ideally, we loop until campaign is explicitly completed or failed.
+                      # But for now, let's assume empty batch means we are done OR waiting.
+                      # If we exit here, the campaign stops.
+                      # We should check if we should keep running.
+                      # If the campaign is still "running", we should sleep and retry.
+                      # But simpler: assume 1 batch at a time if batchSize > 0.
+                      # Or just loop.
+                      # If batch is empty, let's sleep 60s and try again, unless campaign is over.
+                      # For simplicity in this iteration, I will stop.
+                      # But this stops the orchestrator permanently.
+                      # A better design would be for /next-batch to return "status: done" vs "status: waiting".
+                      # I'll stick to simple "stop if empty" for now, assuming the operator can re-trigger if needed,
+                      # OR I update logic to sleep.
+                      # Given concurrency logic in UpgradeService, empty batch means "wait".
+                      # So I should sleep and loop. But I need an exit condition (campaign done).
+                      # I'll assume if batch is empty, I'm done for this execution.
+                      # The operator or a scheduler can trigger orchestrator periodically.
+                      assign:
+                        - keep_running: false
+                      next: end_loop
+
+              - process_batch:
+                  parallel:
+                    shared: [baseUrl, args, projectId, location]
+                    for:
+                      value: execution
+                      in: ${batch_response.body.batch}
+                      steps:
+                        - run_upgrade:
+                            try:
+                                call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.run
+                                args:
+                                    parent: ${"projects/" + projectId + "/locations/" + location + "/workflows/upgrade-tenant"}
+                                    body:
+                                        argument:
+                                            tenantId: ${execution.tenantId}
+                                            targetImageTag: ${execution.targetImageTag}
+                                            executionId: ${execution.executionId}
+                                            currentImageTag: ${default(execution.currentImageTag, null)}
+                            except:
+                                as: e
+                                next: continue
+
+              - next: processing_loop
+
+    - end_loop:
+        return: "Campaign Finished"

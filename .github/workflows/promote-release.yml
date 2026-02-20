@@ -1,0 +1,18 @@
+name: Promote Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Target Image Tag (e.g. v2.0.1)"
+        required: true
+      channel:
+        type: choice
+        options: [canary, stable, internal]
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Control Plane
+        run: |
+          curl -X POST "${{ secrets.CONTROL_PLANE_URL }}/internal/campaigns"             -H "Authorization: Bearer ${{ secrets.ADMIN_API_KEY }}"             -H "Content-Type: application/json"             -d '{"targetImageTag": "${{ inputs.version }}", "channel": "${{ inputs.channel }}"}'

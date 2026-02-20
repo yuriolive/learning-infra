@@ -15,6 +15,13 @@
       "when": 1771538312509,
       "tag": "0001_familiar_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771605124998,
+      "tag": "0002_windy_zodiak",
+      "breakpoints": true
     }
   ]
 }
