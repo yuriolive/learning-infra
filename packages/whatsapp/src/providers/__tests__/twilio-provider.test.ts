@@ -1,3 +1,4 @@
+import { validateSsrfProtection } from "@vendin/utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { TwilioWhatsAppProvider } from "../twilio-provider";
@@ -5,8 +6,7 @@ import { TwilioWhatsAppProvider } from "../twilio-provider";
 import type { consoleLogger } from "@vendin/logger";
 
 vi.mock("@vendin/utils", () => ({
-  isPrivateIp: vi.fn().mockReturnValue(false),
-  resolveIps: vi.fn().mockResolvedValue(["8.8.8.8"]),
+  validateSsrfProtection: vi.fn().mockImplementation(() => Promise.resolve()),
 }));
 
 // Mock logger
@@ -189,5 +189,45 @@ describe("TwilioWhatsAppProvider", () => {
 
     // URLSearchParams will encode special characters
     expect(body).toContain("Body=Hello+%26+Welcome%21");
+  });
+
+  describe("SSRF Protection", () => {
+    it("should block request if hostname resolves to a private IP", async () => {
+      vi.mocked(validateSsrfProtection).mockRejectedValueOnce(
+        new Error("Potential SSRF attack blocked: private IP detected"),
+      );
+
+      const provider = new TwilioWhatsAppProvider(
+        {
+          accountSid: "AC123",
+          authToken: "token456",
+          fromNumber: "+14155238886",
+        },
+        mockLogger,
+      );
+
+      await expect(provider.sendMessage("+1234567890", "Test")).rejects.toThrow(
+        "Potential SSRF attack blocked",
+      );
+    });
+
+    it("should block request if hostname cannot be resolved", async () => {
+      vi.mocked(validateSsrfProtection).mockRejectedValueOnce(
+        new Error("Potential SSRF attack blocked: invalid hostname"),
+      );
+
+      const provider = new TwilioWhatsAppProvider(
+        {
+          accountSid: "AC123",
+          authToken: "token456",
+          fromNumber: "+14155238886",
+        },
+        mockLogger,
+      );
+
+      await expect(provider.sendMessage("+1234567890", "Test")).rejects.toThrow(
+        "Potential SSRF attack blocked",
+      );
+    });
   });
 });

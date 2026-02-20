@@ -71,7 +71,7 @@ describe("WhatsappWebhookService SSRF Protection", () => {
     await service["processChange"](change, {});
 
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("https://api.tenant.com/webhooks/whatsapp"),
+      expect.stringContaining("https://8.8.8.8/webhooks/whatsapp"),
       expect.any(Object),
     );
 

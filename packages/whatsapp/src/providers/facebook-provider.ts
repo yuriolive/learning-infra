@@ -1,4 +1,4 @@
-import { isPrivateIp, resolveIps } from "@vendin/utils";
+import { validateSsrfProtection } from "@vendin/utils";
 
 import {
   type FacebookWhatsAppConfig,
@@ -36,24 +36,7 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
       );
 
       // SSRF Protection: Resolve hostname and validate IPs
-      // We also strictly validate the hostname to prevent any manipulation
-      if (url.hostname !== "graph.facebook.com") {
-        this.logger.error(
-          { hostname: url.hostname },
-          "Blocked request to invalid hostname (SSRF Protection)",
-        );
-        throw new Error("Potential SSRF attack blocked: invalid hostname");
-      }
-
-      const ips = await resolveIps(url.hostname);
-
-      if (ips.length === 0 || ips.some((ip: string) => isPrivateIp(ip))) {
-        this.logger.error(
-          { url: url.toString(), resolvedIps: ips },
-          "Blocked request to private/internal URL (SSRF Protection)",
-        );
-        throw new Error("Potential SSRF attack blocked: private IP detected");
-      }
+      await validateSsrfProtection(url, "graph.facebook.com", this.logger);
 
       const response = await fetch(url, {
         method: "POST",

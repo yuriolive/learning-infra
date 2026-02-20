@@ -125,18 +125,24 @@ export class WhatsappWebhookService {
     }
 
     // SSRF Protection: Resolve hostname and validate IPs
-    if (!(await this.validateApiUrl(tenant.apiUrl, tenant.id))) {
+    const resolvedIp = await this.validateApiUrl(tenant.apiUrl, tenant.id);
+    if (!resolvedIp) {
       return;
     }
 
     // Forward payload to tenant instance
+    const originalUrl = new URL(tenant.apiUrl);
     const tenantWebhookUrl = new URL(
       "/webhooks/whatsapp",
-      tenant.apiUrl,
+      `https://${resolvedIp}${originalUrl.port ? `:${originalUrl.port}` : ""}`,
     ).toString();
 
     this.logger.info(
-      { tenantId: tenant.id, url: tenantWebhookUrl },
+      {
+        tenantId: tenant.id,
+        url: tenantWebhookUrl,
+        originalHost: originalUrl.hostname,
+      },
       "Forwarding WhatsApp webhook to tenant",
     );
 
@@ -144,6 +150,7 @@ export class WhatsappWebhookService {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Host: originalUrl.hostname,
         // Pass along some headers if necessary to authenticate with tenant instance
       },
       body: JSON.stringify(payload),
@@ -165,7 +172,7 @@ export class WhatsappWebhookService {
   private async validateApiUrl(
     apiUrl: string,
     tenantId: string,
-  ): Promise<boolean> {
+  ): Promise<string | null> {
     try {
       const url = new URL(apiUrl);
       const ips = await resolveIps(url.hostname);
@@ -175,15 +182,15 @@ export class WhatsappWebhookService {
           { tenantId, apiUrl, resolvedIps: ips },
           "Blocked forwarding to private/internal URL (SSRF Protection)",
         );
-        return false;
+        return null;
       }
-      return true;
+      return ips[0] ?? null;
     } catch (error) {
       this.logger.error(
         { tenantId, apiUrl, error },
         "Blocked forwarding due to invalid URL or resolution error (SSRF Protection)",
       );
-      return false;
+      return null;
     }
   }
 }
