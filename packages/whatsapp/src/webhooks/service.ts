@@ -147,24 +147,25 @@ export class WhatsappWebhookService {
 /**
  * Basic SSRF protection - check if URL points to private/internal network
  */
-function isPrivateUrl(urlString: string): boolean {
+export function isPrivateUrl(urlString: string): boolean {
   try {
     const url = new URL(urlString);
     const hostname = url.hostname;
 
     // Check for common private ranges
-    // 127.0.0.1, localhost
+    // 127.0.0.1, localhost, ::1
     if (
       hostname === "localhost" ||
       hostname === "127.0.0.1" ||
-      hostname === "::1"
+      hostname === "::1" ||
+      hostname === "[::1]"
     ) {
       return true;
     }
 
-    // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+    // 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16
     const privateIpRegex =
-      /^(10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+)$/;
+      /^(10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+)$/;
     if (privateIpRegex.test(hostname)) return true;
 
     return false;

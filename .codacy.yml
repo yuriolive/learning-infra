@@ -1,4 +1,13 @@
 ---
 engines:
   tsqllint:
-    enabled: false
+    enabled: true
+ignore:
+  - tsqllint:
+      - "TSQLLint_data-compression"
+      - "TSQLLint_set-quoted-identifier"
+  - semgrep:
+      - "Semgrep_rules_lgpl_javascript_ssrf_rule-node-ssrf"
+exclude_paths:
+  - "apps/control-plane/drizzle/**"
+  - "apps/marketing/migrations/**"
