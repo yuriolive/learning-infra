@@ -1,8 +1,14 @@
+import { isPrivateIp, resolveIps } from "@vendin/utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { FacebookWhatsAppProvider } from "../facebook-provider";
 
 import type { consoleLogger } from "@vendin/logger";
+
+vi.mock("@vendin/utils", () => ({
+  isPrivateIp: vi.fn().mockReturnValue(false),
+  resolveIps: vi.fn().mockResolvedValue(["8.8.8.8"]),
+}));
 
 // Mock logger
 const mockLogger = {
@@ -97,7 +103,7 @@ describe("FacebookWhatsAppProvider", () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 400,
-      text: async () => "Invalid phone number",
+      text: () => Promise.resolve("Invalid phone number"),
     });
 
     await expect(provider.sendMessage("+invalid", "Test")).rejects.toThrow(
@@ -152,5 +158,50 @@ describe("FacebookWhatsAppProvider", () => {
     const body = JSON.parse(fetchCall[1].body as string);
 
     expect(body.to).toBe("551199999999");
+  });
+
+  describe("SSRF Protection", () => {
+    beforeEach(() => {
+      vi.resetModules();
+    });
+
+    it("should block request if hostname resolves to a private IP", async () => {
+      vi.mocked(resolveIps).mockResolvedValueOnce(["192.168.1.1"]);
+      vi.mocked(isPrivateIp).mockReturnValue(true);
+
+      const provider = new FacebookWhatsAppProvider(
+        {
+          accessToken: "test-token",
+          phoneNumberId: "123456789",
+        },
+        mockLogger,
+      );
+
+      await expect(provider.sendMessage("+1234567890", "Test")).rejects.toThrow(
+        "Potential SSRF attack blocked",
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.objectContaining({ resolvedIps: ["192.168.1.1"] }),
+        "Blocked request to private/internal URL (SSRF Protection)",
+      );
+    });
+
+    it("should block request if hostname cannot be resolved", async () => {
+      vi.mocked(resolveIps).mockResolvedValueOnce([]);
+      vi.mocked(isPrivateIp).mockReturnValue(false);
+
+      const provider = new FacebookWhatsAppProvider(
+        {
+          accessToken: "test-token",
+          phoneNumberId: "123456789",
+        },
+        mockLogger,
+      );
+
+      await expect(provider.sendMessage("+1234567890", "Test")).rejects.toThrow(
+        "Potential SSRF attack blocked",
+      );
+    });
   });
 });

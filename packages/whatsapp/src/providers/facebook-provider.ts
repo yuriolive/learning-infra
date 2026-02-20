@@ -1,3 +1,5 @@
+import { isPrivateIp, resolveIps } from "@vendin/utils";
+
 import {
   type FacebookWhatsAppConfig,
   type WhatsAppProvider,
@@ -29,9 +31,21 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
     const recipientPhone = phoneNumber.replace(/^\+/, "");
 
     try {
-      const url = `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/messages`;
+      const urlString = `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/messages`;
+      const url = new URL(urlString);
 
-      const response = await fetch(url, {
+      // SSRF Protection: Resolve hostname and validate IPs
+      const ips = await resolveIps(url.hostname);
+
+      if (ips.length === 0 || ips.some((ip: string) => isPrivateIp(ip))) {
+        this.logger.error(
+          { url: urlString, resolvedIps: ips },
+          "Blocked request to private/internal URL (SSRF Protection)",
+        );
+        throw new Error("Potential SSRF attack blocked");
+      }
+
+      const response = await fetch(urlString, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.accessToken}`,

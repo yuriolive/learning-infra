@@ -20,7 +20,11 @@ function getCheckpointer() {
   const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
   // RedisSaver.fromUrl handles client creation and connection using 'redis' package
-  checkpointerPromise = RedisSaver.fromUrl(redisUrl);
+  checkpointerPromise = RedisSaver.fromUrl(redisUrl).catch((error) => {
+    checkpointerPromise = undefined;
+    throw error;
+  });
+
   return checkpointerPromise;
 }
 
