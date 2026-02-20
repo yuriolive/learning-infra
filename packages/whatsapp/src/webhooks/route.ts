@@ -77,14 +77,14 @@ async function handlePostRequest(
 ): Promise<Response> {
   try {
     const signature = request.headers.get("X-Hub-Signature-256");
-    const rawBody = await request.clone().text();
+    const rawBody = await request.text();
 
     if (!signature || !verifyWhatsAppSignature(rawBody, signature, appSecret)) {
       logger.warn("Invalid WhatsApp webhook signature");
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const payload = await request.json();
+    const payload = JSON.parse(rawBody);
 
     const processingPromise =
       whatsappWebhookService.handleIncomingWebhook(payload);

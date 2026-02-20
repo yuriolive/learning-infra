@@ -129,6 +129,7 @@ export class WhatsappWebhookService {
         // Pass along some headers if necessary to authenticate with tenant instance
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!response.ok) {
