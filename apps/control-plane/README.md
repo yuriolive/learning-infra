@@ -80,13 +80,15 @@ DELETE /api/tenants/{tenantId}
 - `ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins in production.
   - In development, any origin is allowed by default.
 
-### Local Database
+### Local Development
 
-The project uses Docker Compose to run a local PostgreSQL instance.
+For a comprehensive guide, see [docs/local-development.md](../../docs/local-development.md).
 
-1. Run `docker-compose up -d` at the root.
-2. Ensure `DATABASE_URL` is set in `.env`.
-3. Push schema: `pnpm run db:push`.
+#### Quick Start
+
+1. Start infrastructure: `pnpm dev:infra` (at the root)
+2. Ensure `DATABASE_URL` is set in `apps/control-plane/.env`.
+3. Set up the database: `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed` (at the root)
 
 ### Running the Server
 
@@ -94,7 +96,7 @@ The project uses Docker Compose to run a local PostgreSQL instance.
 pnpm run dev
 ```
 
-The server will start on `http://localhost:3000` (or the port specified in `PORT` environment variable).
+The server will start on `http://localhost:8787` (Cloudflare Workers dev server).
 
 ### Database Operations
 

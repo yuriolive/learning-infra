@@ -6,8 +6,8 @@ import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "../db/schema";
 
-import type { WhatsAppConfig } from "./providers/whatsapp-provider";
 import type { D1Database } from "@cloudflare/workers-types";
+import type { WhatsAppConfig } from "@vendin/whatsapp";
 
 export const auth = betterAuth({
   database: drizzleAdapter(
@@ -27,8 +27,7 @@ export const auth = betterAuth({
           | "twilio";
 
         // Lazy import to avoid circular dependencies
-        const { createWhatsAppProvider } =
-          await import("./providers/whatsapp-provider");
+        const { createWhatsAppProvider } = await import("@vendin/whatsapp");
 
         let config: WhatsAppConfig;
 

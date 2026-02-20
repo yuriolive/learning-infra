@@ -1,6 +1,7 @@
 import { captureError, initAnalytics } from "@vendin/analytics";
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger/cloudflare";
+import { createWebhookRoutes, WhatsappWebhookService } from "@vendin/whatsapp";
 
 import {
   resolveEnvironmentSecrets,
@@ -73,6 +74,7 @@ async function handleApiRequest(
   origin: string,
   tenantRoutes: ReturnType<typeof createTenantRoutes>,
   internalRoutes: ReturnType<typeof createInternalRoutes>,
+  webhookRoutes?: ReturnType<typeof createWebhookRoutes>,
 ): Promise<Response> {
   if (url.pathname === "/health" || url.pathname === "/") {
     return new Response(
@@ -112,6 +114,10 @@ async function handleApiRequest(
         "Content-Type": "text/html",
       },
     });
+  }
+
+  if (url.pathname.startsWith("/webhooks/") && webhookRoutes) {
+    return webhookRoutes.handleRequest(request);
   }
 
   if (url.pathname.startsWith("/internal/")) {
@@ -173,6 +179,8 @@ async function initializeApplication(
     cloudflareZoneId,
     tenantBaseDomain,
     storefrontHostname,
+    whatsappAppSecret,
+    whatsappVerifyToken,
   } = await resolveEnvironmentSecrets(environment);
 
   initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
@@ -208,7 +216,12 @@ async function initializeApplication(
     return { logger, middlewareOptions, errorResponse: configError };
   }
 
-  const { tenantService, provisioningService, database } = createServices(
+  const {
+    tenantService,
+    provisioningService,
+    database,
+    whatsappWebhookService,
+  } = createServices(
     logger,
     databaseUrl as string,
     nodeEnvironment,
@@ -225,12 +238,56 @@ async function initializeApplication(
     storefrontHostname,
   );
 
+  const { tenantRoutes, internalRoutes, webhookRoutes } =
+    createApplicationRoutes({
+      logger,
+      tenantService,
+      provisioningService,
+      database,
+      whatsappWebhookService,
+      whatsappAppSecret,
+      whatsappVerifyToken,
+      waitUntil: context?.waitUntil?.bind(context),
+    });
+
+  return {
+    logger,
+    middlewareOptions,
+    services: {
+      tenantService,
+      provisioningService,
+      database,
+      whatsappWebhookService,
+    },
+    routes: { tenantRoutes, internalRoutes, webhookRoutes },
+  };
+}
+
+function createApplicationRoutes(context: {
+  logger: ReturnType<typeof createCloudflareLogger>;
+  tenantService: TenantService;
+  provisioningService: ProvisioningService;
+  database: ReturnType<typeof createDatabase>;
+  whatsappWebhookService: WhatsappWebhookService;
+  whatsappAppSecret: string | undefined;
+  whatsappVerifyToken: string | undefined;
+  waitUntil: ((promise: Promise<unknown>) => void) | undefined;
+}) {
+  const {
+    logger,
+    tenantService,
+    provisioningService,
+    database,
+    whatsappWebhookService,
+    whatsappAppSecret,
+    whatsappVerifyToken,
+    waitUntil,
+  } = context;
+
   const tenantRoutes = createTenantRoutes({
     logger,
     tenantService,
-    ...(context?.waitUntil
-      ? { waitUntil: context.waitUntil.bind(context) }
-      : {}),
+    ...(waitUntil ? { waitUntil } : {}),
   });
 
   const internalRoutes = createInternalRoutes({
@@ -240,12 +297,18 @@ async function initializeApplication(
     db: database,
   });
 
-  return {
-    logger,
-    middlewareOptions,
-    services: { tenantService, provisioningService, database },
-    routes: { tenantRoutes, internalRoutes },
-  };
+  const webhookRoutes =
+    whatsappAppSecret && whatsappVerifyToken
+      ? createWebhookRoutes({
+          logger,
+          whatsappWebhookService,
+          appSecret: whatsappAppSecret,
+          verifyToken: whatsappVerifyToken,
+          ...(waitUntil ? { waitUntil } : {}),
+        })
+      : undefined;
+
+  return { tenantRoutes, internalRoutes, webhookRoutes };
 }
 
 function createServices(
@@ -295,7 +358,17 @@ function createServices(
     },
   );
 
-  return { tenantService, provisioningService, database };
+  const whatsappWebhookService = new WhatsappWebhookService(
+    tenantRepository,
+    logger,
+  );
+
+  return {
+    tenantService,
+    provisioningService,
+    database,
+    whatsappWebhookService,
+  };
 }
 
 export default {
@@ -309,7 +382,7 @@ export default {
 
     if (errorResponse) return errorResponse;
 
-    const { tenantRoutes, internalRoutes } = routes;
+    const { tenantRoutes, internalRoutes, webhookRoutes } = routes;
 
     const url = new URL(request.url);
     const origin = `${url.protocol}//${url.host}`;
@@ -336,6 +409,7 @@ export default {
         origin,
         tenantRoutes,
         internalRoutes,
+        webhookRoutes,
       );
       return wrapResponse(response, request, middlewareOptions);
     } catch (error: unknown) {

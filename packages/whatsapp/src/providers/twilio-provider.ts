@@ -1,3 +1,5 @@
+import { validateSsrfProtection } from "@vendin/utils";
+
 import {
   type TwilioWhatsAppConfig,
   type WhatsAppProvider,
@@ -28,7 +30,12 @@ export class TwilioWhatsAppProvider implements WhatsAppProvider {
       const fromWhatsApp = `whatsapp:${this.fromNumber}`;
       const toWhatsApp = `whatsapp:${phoneNumber}`;
 
-      const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
+      const url = new URL(
+        `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`,
+      );
+
+      // SSRF Protection: Resolve hostname and validate IPs
+      await validateSsrfProtection(url, "api.twilio.com", this.logger);
 
       // Twilio uses Basic Auth with AccountSID:AuthToken
       const authHeader = btoa(`${this.accountSid}:${this.authToken}`);

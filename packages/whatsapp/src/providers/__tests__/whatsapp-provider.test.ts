@@ -14,15 +14,19 @@ const mockLogger = {
 
 // Mock the provider classes
 vi.mock("../facebook-provider", () => ({
-  FacebookWhatsAppProvider: vi.fn().mockImplementation(() => ({
-    sendMessage: vi.fn().mockResolvedValue(undefined as unknown as void),
-  })),
+  FacebookWhatsAppProvider: vi.fn().mockImplementation(function () {
+    return {
+      sendMessage: vi.fn().mockResolvedValue(undefined as unknown as void),
+    };
+  }),
 }));
 
 vi.mock("../twilio-provider", () => ({
-  TwilioWhatsAppProvider: vi.fn().mockImplementation(() => ({
-    sendMessage: vi.fn().mockResolvedValue(undefined as unknown as void),
-  })),
+  TwilioWhatsAppProvider: vi.fn().mockImplementation(function () {
+    return {
+      sendMessage: vi.fn().mockResolvedValue(undefined as unknown as void),
+    };
+  }),
 }));
 
 describe("createWhatsAppProvider", () => {
