@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { mapOptional } from "@vendin/utils";
-import { and, eq, ne, or } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { type Database } from "../../database/database";
 import { tenants, tenantProvisioningEvents } from "../../database/schema";
@@ -215,7 +215,7 @@ export class TenantRepository {
 
   /**
    * Finds a tenant by their WhatsApp phone number.
-   * Evaluates exact numbers and numbers prefixed with a plus sign (+).
+   * Evaluates exact digits only since phone numbers are stored without formatting.
    * Excludes tenants that have been soft-deleted.
    *
    * @param phoneNumber - The WhatsApp phone number
@@ -229,10 +229,7 @@ export class TenantRepository {
       .from(tenants)
       .where(
         and(
-          or(
-            eq(tenants.whatsappPhoneNumber, digitsOnly),
-            eq(tenants.whatsappPhoneNumber, `+${digitsOnly}`),
-          ),
+          eq(tenants.whatsappPhoneNumber, digitsOnly),
           ne(tenants.status, "deleted"),
         ),
       );

@@ -1,5 +1,5 @@
 CREATE TYPE "public"."tenant_admin_role" AS ENUM('owner', 'admin');--> statement-breakpoint
-CREATE TYPE "public"."whatsapp_provider" AS ENUM('facebook');--> statement-breakpoint
+CREATE TYPE "public"."whatsapp_provider" AS ENUM('facebook', 'twilio');--> statement-breakpoint
 CREATE TABLE "tenant_admins" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
