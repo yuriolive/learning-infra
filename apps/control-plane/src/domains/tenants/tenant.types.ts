@@ -38,6 +38,8 @@ export interface CreateTenantInput {
   subdomain?: string | undefined;
   plan?: TenantPlan | undefined;
   metadata?: Record<string, unknown> | undefined;
+  whatsappPhoneNumber?: string | null;
+  whatsappPhoneId?: string | null;
 }
 
 export interface UpdateTenantInput {

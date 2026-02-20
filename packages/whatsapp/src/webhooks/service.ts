@@ -1,4 +1,4 @@
-import { isPrivateIp, resolveIps } from "@vendin/utils";
+import { validateSsrfProtection } from "@vendin/utils";
 import { z } from "zod";
 
 import type { consoleLogger } from "@vendin/logger";
@@ -124,17 +124,25 @@ export class WhatsappWebhookService {
       return;
     }
 
-    // SSRF Protection: Resolve hostname and validate IPs
-    const resolvedIp = await this.validateApiUrl(tenant.apiUrl, tenant.id);
-    if (!resolvedIp) {
+    // SSRF Protection: Validate hostname and resolved IPs
+    try {
+      await this.validateWebhookUrlSafely(tenant.apiUrl, tenant.id);
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(
+          { tenantId: tenant.id, error: error.message },
+          "Webhook validation failed for tenant",
+        );
+      }
       return;
     }
 
-    // Forward payload to tenant instance
+    // Forward payload to tenant instance using the original hostname
+    // validateSsrfProtection ensures that the hostname resolves to a safe, public IP
     const originalUrl = new URL(tenant.apiUrl);
     const tenantWebhookUrl = new URL(
       "/webhooks/whatsapp",
-      `https://${resolvedIp}${originalUrl.port ? `:${originalUrl.port}` : ""}`,
+      originalUrl.toString(),
     ).toString();
 
     this.logger.info(
@@ -150,7 +158,7 @@ export class WhatsappWebhookService {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Host: originalUrl.hostname,
+        // Host header is automatically set by fetch based on the URL, no need to manually override
         // Pass along some headers if necessary to authenticate with tenant instance
       },
       body: JSON.stringify(payload),
@@ -169,28 +177,25 @@ export class WhatsappWebhookService {
     }
   }
 
-  private async validateApiUrl(
+  private async validateWebhookUrlSafely(
     apiUrl: string,
     tenantId: string,
-  ): Promise<string | null> {
+  ): Promise<void> {
     try {
       const url = new URL(apiUrl);
-      const ips = await resolveIps(url.hostname);
-
-      if (ips.length === 0 || ips.some((ip: string) => isPrivateIp(ip))) {
-        this.logger.error(
-          { tenantId, apiUrl, resolvedIps: ips },
-          "Blocked forwarding to private/internal URL (SSRF Protection)",
-        );
-        return null;
-      }
-      return ips[0] ?? null;
+      await validateSsrfProtection(url, url.hostname, this.logger);
     } catch (error) {
-      this.logger.error(
-        { tenantId, apiUrl, error },
-        "Blocked forwarding due to invalid URL or resolution error (SSRF Protection)",
-      );
-      return null;
+      if (error instanceof Error) {
+        this.logger.error(
+          {
+            apiUrl,
+            tenantId,
+            error: error.message,
+          },
+          "Failed to validate instance webhook URL",
+        );
+      }
+      throw error;
     }
   }
 }

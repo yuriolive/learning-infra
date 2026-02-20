@@ -41,6 +41,7 @@ describe("TenantRepository", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
+        whatsappPhoneNumber: "+1 (555) 123-4567",
       };
 
       const tenant = await repository.create(input);
@@ -48,6 +49,7 @@ describe("TenantRepository", () => {
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
       expect(tenant.subdomain).toBeNull();
+      expect(tenant.whatsappPhoneNumber).toBe("15551234567");
       expect(tenant.metadata).toBeNull();
       expect(tenant.status).toBe("provisioning");
     });
@@ -128,12 +130,14 @@ describe("TenantRepository", () => {
       const updated = await repository.update(created.id, {
         name: "Updated Name",
         status: "suspended",
+        whatsappPhoneNumber: "+1 (555) 123-4567",
       });
 
       expect(updated).not.toBeNull();
       expect(updated?.name).toBe("Updated Name");
       expect(updated?.status).toBe("suspended");
       expect(updated?.id).toBe(created.id);
+      expect(updated?.whatsappPhoneNumber).toBe("15551234567");
       expect(updated?.updatedAt.getTime()).toBeGreaterThanOrEqual(
         created.updatedAt.getTime(),
       );

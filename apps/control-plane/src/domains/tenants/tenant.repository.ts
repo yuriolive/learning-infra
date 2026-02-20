@@ -64,6 +64,10 @@ export class TenantRepository {
         redisHash,
         jwtSecret: randomBytes(32).toString("hex"),
         cookieSecret: randomBytes(32).toString("hex"),
+        whatsappPhoneNumber: input.whatsappPhoneNumber
+          ? input.whatsappPhoneNumber.replaceAll(/\D/g, "")
+          : null,
+        whatsappPhoneId: input.whatsappPhoneId,
       })
       .returning();
 
@@ -114,7 +118,7 @@ export class TenantRepository {
           cookieSecret: input.cookieSecret,
         }),
         ...(input.whatsappPhoneNumber !== undefined && {
-          whatsappPhoneNumber: input.whatsappPhoneNumber,
+          whatsappPhoneNumber: input.whatsappPhoneNumber?.replaceAll(/\D/g, ""),
         }),
         ...(input.whatsappPhoneId !== undefined && {
           whatsappPhoneId: input.whatsappPhoneId,

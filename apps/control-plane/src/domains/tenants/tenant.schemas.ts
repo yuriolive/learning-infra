@@ -7,6 +7,8 @@ export const createTenantSchema = z.object({
   subdomain: subdomainSchema,
   plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
   metadata: z.record(z.unknown()).optional(),
+  whatsappPhoneNumber: z.string().nullable().optional(),
+  whatsappPhoneId: z.string().nullable().optional(),
 });
 
 export const updateTenantSchema = z.object({
