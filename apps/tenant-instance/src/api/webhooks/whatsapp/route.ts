@@ -10,7 +10,7 @@ import type { Logger, MedusaContainer } from "@medusajs/framework/types";
 /**
  * Processes a single change from the WhatsApp webhook payload.
  */
-function processWhatsAppChange(
+async function processWhatsAppChange(
   change: WhatsAppChangeType,
   scope: MedusaContainer,
   logger: Logger,
@@ -39,8 +39,9 @@ function processWhatsAppChange(
 
   logger.info(`Processing WhatsApp message from ${threadId}`);
 
-  // Fire and forget via workflow
-  processMessageWorkflow(scope)
+  // Await the workflow. In Cloud Run, returning a response
+  // before background tasks finish will lead to CPU throttling and aborted tasks.
+  await processMessageWorkflow(scope)
     .run({
       input: {
         threadId,
@@ -67,7 +68,10 @@ export const GET = (request: MedusaRequest, response: MedusaResponse) => {
   response.status(403).send("Forbidden");
 };
 
-export const POST = (request: MedusaRequest, response: MedusaResponse) => {
+export const POST = async (
+  request: MedusaRequest,
+  response: MedusaResponse,
+) => {
   const logger: Logger = request.scope.resolve("logger");
 
   try {
@@ -117,11 +121,13 @@ export const POST = (request: MedusaRequest, response: MedusaResponse) => {
 
     const payload = WhatsAppPayloadSchema.parse(request.body);
 
+    const promises: Array<Promise<void>> = [];
     for (const entry of payload.entry) {
       for (const change of entry.changes) {
-        processWhatsAppChange(change, request.scope, logger);
+        promises.push(processWhatsAppChange(change, request.scope, logger));
       }
     }
+    await Promise.all(promises);
 
     response.status(200).send("OK");
   } catch (error) {
