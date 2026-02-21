@@ -1,4 +1,4 @@
-import { createLogger } from "@vendin/utils";
+import { createLogger } from "@vendin/logger";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { NeonProvider } from "../../../src/providers/neon/neon.client";

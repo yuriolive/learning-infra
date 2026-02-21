@@ -2,6 +2,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { MedusaService } from "@medusajs/framework/utils";
 
 import { createAgentGraph } from "./graph/index.js";
+import { getToolsForRole } from "./tools/index.js";
 
 import type { BaseMessage } from "@langchain/core/messages";
 import type { MedusaContainer } from "@medusajs/medusa";
@@ -15,12 +16,21 @@ class AgentModuleService extends MedusaService({}) {
     this.container = container;
   }
 
-  async processMessage(phone: string, text: string): Promise<string> {
-    const graph = await createAgentGraph(this.container);
+  async processMessage(
+    threadId: string,
+    text: string,
+    context?: { role: "admin" | "customer"; tenantId?: string },
+  ): Promise<string> {
+    const role = context?.role ?? "customer";
+    const tools = getToolsForRole(this.container, role);
+    const graph = await createAgentGraph(this.container, {
+      tools,
+      role,
+    });
 
     const config = {
       configurable: {
-        thread_id: phone,
+        thread_id: threadId,
       },
     };
 

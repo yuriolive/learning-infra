@@ -82,4 +82,29 @@ describe("createCloudflareLogger", () => {
     logger.warn({ foo: "bar" }, "should log");
     expect(consoleLogger.warn).toHaveBeenCalled();
   });
+
+  it("should handle invalid log level by falling back to default", () => {
+    // @ts-expect-error Testing invalid log level
+    const logger = createCloudflareLogger({ logLevel: "invalid" });
+    // Default in test env (dev) is debug.
+    // So debug should log.
+    logger.debug({ foo: "bar" }, "test message");
+    expect(consoleLogger.debug).toHaveBeenCalled();
+  });
+
+  it("should not log info when level is error", () => {
+    const logger = createCloudflareLogger({ logLevel: "error" });
+    logger.info({ foo: "bar" }, "should not log");
+    expect(consoleLogger.info).not.toHaveBeenCalled();
+    logger.error({ foo: "bar" }, "should log");
+    expect(consoleLogger.error).toHaveBeenCalled();
+  });
+
+  it("should not log warn when level is error", () => {
+    const logger = createCloudflareLogger({ logLevel: "error" });
+    logger.warn({ foo: "bar" }, "should not log");
+    expect(consoleLogger.warn).not.toHaveBeenCalled();
+    logger.error({ foo: "bar" }, "should log");
+    expect(consoleLogger.error).toHaveBeenCalled();
+  });
 });

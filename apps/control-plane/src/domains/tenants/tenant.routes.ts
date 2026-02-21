@@ -1,3 +1,4 @@
+import { getPathParts } from "@vendin/utils";
 import { ZodError } from "zod";
 
 import {
@@ -34,8 +35,7 @@ export function createTenantRoutes(context: RouteContext) {
 
   return {
     async handleRequest(request: Request): Promise<Response> {
-      const url = new URL(request.url);
-      const pathParts = url.pathname.split("/").filter(Boolean);
+      const pathParts = getPathParts(request);
 
       if (
         pathParts.length === 2 &&
@@ -333,17 +333,9 @@ async function handleDeleteTenant(
  */
 function handleError(error: unknown, logger: Logger): Response {
   if (error instanceof ZodError) {
-    return new Response(
-      JSON.stringify({
-        error: "Validation error",
-        details: error.errors,
-      }),
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
+    return Response.json(
+      { error: "Validation error", details: error.errors },
+      { status: 400 },
     );
   }
 

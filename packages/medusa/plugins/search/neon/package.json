@@ -10,7 +10,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -b",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch", "test": "vitest"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
@@ -22,8 +22,10 @@
     "@medusajs/types": "^2.13.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
-    "@vendin/config": "workspace:*"
+    "@vendin/config": "workspace:*",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
   }
 }

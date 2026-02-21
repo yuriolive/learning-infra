@@ -53,14 +53,11 @@ describe("CloudRunProvider", () => {
       () =>
         ({
           getClient: vi.fn(),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        }) as unknown as any,
+        }) as unknown as GoogleAuth,
     );
 
-    // Mock the Run client constructor
     const RunMock = vi.mocked(run_v2.Run);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunMock.mockImplementation(() => mockRunClient as unknown as any);
+    RunMock.mockImplementation(() => mockRunClient as unknown as run_v2.Run);
 
     provider = new CloudRunProvider({
       projectId: "test-project",

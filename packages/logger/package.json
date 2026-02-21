@@ -7,14 +7,17 @@
   "types": "src/index.ts",
   "exports": {
     ".": {
+      "types": "./src/index.ts",
       "import": "./dist/index.js",
       "default": "./src/index.ts"
     },
     "./cloudflare": {
+      "types": "./src/logger-cloudflare-factory.ts",
       "import": "./dist/logger-cloudflare-factory.js",
       "default": "./src/logger-cloudflare-factory.ts"
     },
     "./pino": {
+      "types": "./src/pino-logger.ts",
       "import": "./dist/pino-logger.js",
       "default": "./src/pino-logger.ts"
     }

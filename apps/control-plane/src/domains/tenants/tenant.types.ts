@@ -15,7 +15,13 @@ export interface Tenant {
   failureReason: string | null;
   jwtSecret: string;
   cookieSecret: string;
+  whatsappPhoneNumber: string | null;
+  whatsappPhoneId: string | null;
+  whatsappProvider: WhatsAppProvider | null;
+  whatsappVerifiedAt: Date | null;
 }
+
+export type WhatsAppProvider = "facebook" | "twilio";
 
 export type TenantStatus =
   | "provisioning"
@@ -32,6 +38,8 @@ export interface CreateTenantInput {
   subdomain?: string | undefined;
   plan?: TenantPlan | undefined;
   metadata?: Record<string, unknown> | undefined;
+  whatsappPhoneNumber?: string | null;
+  whatsappPhoneId?: string | null;
 }
 
 export interface UpdateTenantInput {
@@ -46,6 +54,10 @@ export interface UpdateTenantInput {
   failureReason?: string | undefined;
   jwtSecret?: string | undefined;
   cookieSecret?: string | undefined;
+  whatsappPhoneNumber?: string | null;
+  whatsappPhoneId?: string | null;
+  whatsappProvider?: WhatsAppProvider | null;
+  whatsappVerifiedAt?: Date | null;
 }
 
 export interface ListTenantsFilters {

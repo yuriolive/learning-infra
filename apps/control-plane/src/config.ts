@@ -1,10 +1,6 @@
+import { type BoundSecret, resolveSecret } from "@vendin/utils";
+
 import type { Logger } from "./utils/logger";
-
-interface SecretBinding {
-  get(): Promise<string>;
-}
-
-type BoundSecret = string | SecretBinding;
 
 export interface Environment {
   DATABASE_URL: BoundSecret;
@@ -29,15 +25,9 @@ export interface Environment {
   CLOUDFLARE_API_TOKEN?: BoundSecret;
   CLOUDFLARE_ZONE_ID?: BoundSecret;
   TENANT_BASE_DOMAIN?: string;
-}
-
-function resolveSecret(
-  secret: BoundSecret | undefined,
-): Promise<string | undefined> {
-  if (typeof secret === "object" && secret !== null) {
-    return secret.get();
-  }
-  return Promise.resolve(secret as string | undefined);
+  STOREFRONT_HOSTNAME?: string;
+  WHATSAPP_APP_SECRET?: BoundSecret;
+  WHATSAPP_VERIFY_TOKEN?: BoundSecret;
 }
 
 export async function resolveEnvironmentSecrets(environment: Environment) {
@@ -56,6 +46,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
+    whatsappAppSecret,
+    whatsappVerifyToken,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -71,6 +63,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GEMINI_API_KEY),
     resolveSecret(environment.CLOUDFLARE_API_TOKEN),
     resolveSecret(environment.CLOUDFLARE_ZONE_ID),
+    resolveSecret(environment.WHATSAPP_APP_SECRET),
+    resolveSecret(environment.WHATSAPP_VERIFY_TOKEN),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -98,7 +92,10 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
-    tenantBaseDomain: environment.TENANT_BASE_DOMAIN || "vendin.store",
+    whatsappAppSecret,
+    whatsappVerifyToken,
+    tenantBaseDomain: environment.TENANT_BASE_DOMAIN,
+    storefrontHostname: environment.STOREFRONT_HOSTNAME,
   };
 }
 
@@ -186,6 +183,8 @@ export function validateConfiguration(
   geminiApiKey?: string,
   cloudflareApiToken?: string,
   cloudflareZoneId?: string,
+  tenantBaseDomain?: string,
+  storefrontHostname?: string,
 ): Response | undefined {
   if (!databaseUrl) {
     logger.error("DATABASE_URL is required but was not configured");
@@ -195,6 +194,16 @@ export function validateConfiguration(
   if (!upstashRedisUrl) {
     logger.error("UPSTASH_REDIS_URL is required but was not configured");
     return createErrorResponse("Redis configuration is missing");
+  }
+
+  if (!tenantBaseDomain) {
+    logger.error("TENANT_BASE_DOMAIN is required but was not configured");
+    return createErrorResponse("Base domain configuration is missing");
+  }
+
+  if (!storefrontHostname) {
+    logger.error("STOREFRONT_HOSTNAME is required but was not configured");
+    return createErrorResponse("Storefront hostname configuration is missing");
   }
 
   if (nodeEnvironment === "production") {

@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { Link } from "@heroui/react";
+import NextLink from "next/link";
 
 import type { Tenant } from "../../types/tenant";
 
@@ -44,12 +47,14 @@ function FooterSection({
       <h3 className="text-sm font-semibold text-default-900 tracking-wider uppercase">
         {title}
       </h3>
-      <ul className="mt-4 space-y-4">
+      <ul className="mt-4 space-y-2">
         {links.map((link) => (
           <li key={link.name}>
             <Link
+              as={NextLink}
               href={link.href}
-              className="text-sm text-foreground hover:opacity-80"
+              color="foreground"
+              className="text-sm hover:opacity-80"
             >
               {link.name}
             </Link>

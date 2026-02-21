@@ -1,5 +1,7 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { cache } from "@vendin/cache";
 import { createCloudflareLogger } from "@vendin/logger";
+import { resolveEnvironment } from "@vendin/utils";
 import { cache as reactCache } from "react";
 
 import type { Tenant, TenantApiResponse } from "../types/tenant";
@@ -27,6 +29,14 @@ function mapTenantData(
       fontFamily: "Inter",
       logoUrl: "",
     },
+    acmeChallenge:
+      metadata?.acmeChallenge &&
+      typeof (metadata.acmeChallenge as Record<string, unknown>).token ===
+        "string" &&
+      typeof (metadata.acmeChallenge as Record<string, unknown>).response ===
+        "string"
+        ? (metadata.acmeChallenge as { token: string; response: string })
+        : undefined,
   };
 }
 
@@ -57,11 +67,38 @@ export const resolveTenant = reactCache(async function (
   }
 
   // 2. Source Fetch
-  const controlPlaneUrl = process.env.CONTROL_PLANE_API_URL;
+  let environment: Record<string, unknown> | undefined;
+  try {
+    const context = await getCloudflareContext({ async: true });
+    environment = context.env as unknown as Record<string, unknown>;
+  } catch {
+    // Ignore error if not running on Cloudflare
+  }
+
+  const controlPlaneUrl = await resolveEnvironment(
+    "CONTROL_PLANE_API_URL",
+    environment,
+  );
 
   if (!controlPlaneUrl) {
-    logger.error("CONTROL_PLANE_API_URL not defined");
+    logger.error(
+      { error: "missing_env", var: "CONTROL_PLANE_API_URL" },
+      "Environment variable CONTROL_PLANE_API_URL is missing",
+    );
     return null;
+  }
+
+  const adminApiKey = await resolveEnvironment("ADMIN_API_KEY", environment);
+
+  if (!adminApiKey) {
+    logger.error(
+      {
+        error: "missing_env",
+        var: "ADMIN_API_KEY",
+        rawStatus: "missing",
+      },
+      "Environment variable ADMIN_API_KEY is missing or could not be resolved",
+    );
   }
 
   try {
@@ -71,6 +108,7 @@ export const resolveTenant = reactCache(async function (
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${adminApiKey}`,
         },
         next: { revalidate: 0 },
       },
@@ -79,8 +117,14 @@ export const resolveTenant = reactCache(async function (
     if (!response.ok) {
       if (response.status === 404) return null;
       logger.error(
-        { status: response.status, statusText: response.statusText },
-        "Failed to fetch tenant",
+        {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          hasAuthHeader: !!adminApiKey,
+          authHeaderType: typeof adminApiKey,
+        },
+        "Failed to fetch tenant from control plane",
       );
       return null;
     }

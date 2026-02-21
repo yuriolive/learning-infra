@@ -7,6 +7,8 @@ export const createTenantSchema = z.object({
   subdomain: subdomainSchema,
   plan: z.enum(["free", "starter", "professional", "enterprise"]).optional(),
   metadata: z.record(z.unknown()).optional(),
+  whatsappPhoneNumber: z.string().nullable().optional(),
+  whatsappPhoneId: z.string().nullable().optional(),
 });
 
 export const updateTenantSchema = z.object({
@@ -27,6 +29,10 @@ export const updateTenantSchema = z.object({
   redisHash: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   failureReason: z.string().optional(),
+  whatsappPhoneNumber: z.string().nullable().optional(),
+  whatsappPhoneId: z.string().nullable().optional(),
+  whatsappProvider: z.enum(["facebook", "twilio"]).nullable().optional(),
+  whatsappVerifiedAt: z.coerce.date().nullable().optional(),
 });
 
 export const tenantIdSchema = z.object({

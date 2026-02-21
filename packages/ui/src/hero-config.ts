@@ -1,5 +1,5 @@
 export const MINT_GREEN_PRIMARY = {
-  DEFAULT: "#34D399", // Mint Green
+  DEFAULT: "#34D399",
   foreground: "#000000",
   50: "#ECFDF5",
   100: "#D1FAE5",

@@ -29,11 +29,19 @@ export function createAuthMiddleware(options: MiddlewareOptions) {
   const { adminApiKey, logger } = options;
 
   return (request: Request): Response | null => {
-    // Skip auth if adminApiKey is not configured (e.g. initial setup or non-prod without key)
-    // However, for MVP and requirements, we should probably enforce it if it's there.
+    // Enforce adminApiKey presence. Fail closed if not configured to prevent accidental exposure.
     if (!adminApiKey) {
-      logger.warn("ADMIN_API_KEY not configured. Skipping authentication.");
-      return null;
+      logger.error("ADMIN_API_KEY not configured. Blocking request.");
+      return new Response(
+        JSON.stringify({
+          error: "Internal Server Error",
+          message: "Server authentication check not configured",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     const authHeader = request.headers.get("Authorization");

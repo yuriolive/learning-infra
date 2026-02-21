@@ -25,6 +25,19 @@ export interface TenantAppConfig {
   cookieSecret: string;
 }
 
+interface CloudRunResourceClient {
+  get(parameters: { name: string }): Promise<unknown>;
+  create(parameters: {
+    parent: string;
+    [key: string]: string | object;
+    requestBody: object;
+  }): Promise<{ data: { name?: string } }>;
+  patch(parameters: {
+    name: string;
+    requestBody: object;
+  }): Promise<{ data: { name?: string } }>;
+}
+
 export class CloudRunProvider {
   private runClient: run_v2.Run;
   private logger: Logger;
@@ -86,8 +99,8 @@ export class CloudRunProvider {
       JWT_SECRET: config.jwtSecret,
       HOST: "0.0.0.0",
       NODE_ENV: "production",
-      STORE_CORS: `https://${config.subdomain}.${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
-      ADMIN_CORS: `https://${config.subdomain}.${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
+      STORE_CORS: `https://${config.subdomain}${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
+      ADMIN_CORS: `https://${config.subdomain}${this.tenantBaseDomain},http://localhost:9000,https://${this.tenantBaseDomain}`,
       ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
@@ -359,8 +372,7 @@ export class CloudRunProvider {
   }
 
   private async checkResourceExists(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client: any,
+    client: CloudRunResourceClient,
     resourcePath: string,
   ): Promise<boolean> {
     try {
@@ -388,10 +400,10 @@ export class CloudRunProvider {
     resourceType: "services" | "jobs",
     tenantId: string,
   ): Promise<string | undefined> {
-    const client =
-      resourceType === "services"
-        ? this.runClient.projects.locations.services
-        : this.runClient.projects.locations.jobs;
+    const client = (resourceType === "services"
+      ? this.runClient.projects.locations.services
+      : this.runClient.projects.locations
+          .jobs) as unknown as CloudRunResourceClient;
     const idField = resourceType === "services" ? "serviceId" : "jobId";
     const displayName = resourceType === "services" ? "service" : "job";
 
@@ -402,8 +414,7 @@ export class CloudRunProvider {
         { tenantId },
         `Updating existing Cloud Run ${displayName}`,
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (client as any).patch({
+      const response = await client.patch({
         name: resourcePath,
         requestBody,
       });
@@ -411,8 +422,7 @@ export class CloudRunProvider {
     }
 
     this.logger.info({ tenantId }, `Creating new Cloud Run ${displayName}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (client as any).create({
+    const response = await client.create({
       parent,
       [idField]: resourceId,
       requestBody,

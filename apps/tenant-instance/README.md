@@ -8,21 +8,17 @@ This application is the MedusaJS backend for the tenant instance.
 - [pnpm](https://pnpm.io/)
 - [Medusa CLI](https://docs.medusajs.com/development/backend/install) (optional: `npm install -g @medusajs/medusa-cli`)
 
-### 1. Start the Application
+### Local Development
 
-Everything is configured to run via Docker. From the **root** directory:
+For a comprehensive guide, see [docs/local-development.md](../../docs/local-development.md).
 
-```bash
-docker compose up tenant-instance
-```
+#### Quick Start
 
-This will automatically:
+Everything should be run from the repository root:
 
-- Start PostgreSQL and Redis.
-- Install dependencies via `pnpm`.
-- Run database migrations.
-- Attempt to seed the database.
-- Start the Medusa development server.
+1. **Start infrastructure**: `pnpm dev:infra`
+2. **Setup Databases**: `pnpm db:generate`, `pnpm db:migrate`, and `pnpm db:seed`
+3. **Start the application**: `pnpm dev`
 
 ### 2. Verify if it's running
 
@@ -36,28 +32,18 @@ Once the logs show `Medusa server started`, you can access:
 If you need to create an admin user manually:
 
 ```bash
-docker compose exec -w /server/apps/tenant-instance tenant-instance pnpm medusa user -e admin@vendin.store -p supersecret
+pnpm --filter @vendin/tenant-instance medusa user -e admin@vendin.store -p supersecret
 ```
 
 ## Testing
 
 We use [Vitest](https://vitest.dev/) for testing.
 
-### Run tests inside Docker (Recommended)
-
-To ensure the test environment matches the runtime:
-
-```bash
-docker compose exec tenant-instance pnpm run test
-```
-
-### Run tests locally
-
 ```bash
 pnpm run test
 ```
 
-## Docker Compose
+## Infrastructure
 
 The root `docker-compose.yml` includes:
 

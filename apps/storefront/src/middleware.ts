@@ -13,10 +13,14 @@ export const config = {
     "/((?!_next|favicon.ico|public|.*\\..*).*)",
     // Explicitly ensure our proxy is caught if the above regex is too aggressive
     "/api/medusa/:path*",
+    "/.well-known/acme-challenge/:path*",
   ],
 };
 
-export async function proxy(request: NextRequest) {
+// OpenNext Cloudflare Middleware requires Experimental Edge Runtime
+export const runtime = "experimental-edge";
+
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
   // Security check: Block direct access to /mnt routes
@@ -39,6 +43,20 @@ export async function proxy(request: NextRequest) {
     const marketingUrl =
       process.env.MARKETING_APP_URL || "https://vendin.store";
     return NextResponse.redirect(marketingUrl);
+  }
+
+  // Handle Cloudflare ACME Challenge
+  if (
+    tenant.acmeChallenge &&
+    tenant.acmeChallenge.token &&
+    url.pathname.startsWith("/.well-known/acme-challenge/")
+  ) {
+    const token = url.pathname.split("/").findLast(Boolean);
+    if (token === tenant.acmeChallenge.token) {
+      return new NextResponse(tenant.acmeChallenge.response, {
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
   }
 
   // Target: /mnt/:tenantId/:path

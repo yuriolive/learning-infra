@@ -6,6 +6,11 @@ import type {
   CapturePaymentInput,
   GetPaymentStatusInput,
   RefundPaymentInput,
+  CancelPaymentInput,
+  DeletePaymentInput,
+  InitiatePaymentInput,
+  RetrievePaymentInput,
+  UpdatePaymentInput,
 } from "@medusajs/types";
 
 // Mock @medusajs/framework/utils BEFORE importing service
@@ -30,6 +35,15 @@ vi.mock("mercadopago", () => {
     MercadoPagoConfig: vi.fn(),
     Payment: vi.fn(),
     PaymentRefund: vi.fn(),
+  };
+});
+
+// Mock crypto randomUUID
+vi.mock("node:crypto", async () => {
+  const actual = await vi.importActual("node:crypto");
+  return {
+    ...actual,
+    randomUUID: () => "uuid_123",
   };
 });
 
@@ -69,17 +83,73 @@ describe("MercadoPagoPaymentProviderService", () => {
     service = new MercadoPagoPaymentProviderService(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { logger: loggerMock as any } as any,
-      { accessToken: "test_token", webhookSecret: "test_secret" },
+      { accessToken: "test_token", webhookSecret: "test_secret", webhookUrl: "https://webhook.url" },
     );
   });
 
   it("should instantiate correctly", () => {
     expect(service).toBeDefined();
+    //  accessing static
     expect(MercadoPagoPaymentProviderService.identifier).toBe("mercadopago");
   });
 
+  describe("initiatePayment", () => {
+    it("should initiate payment correctly", async () => {
+      const input = {
+        amount: 1000,
+        currency_code: "BRL",
+        data: { some: "data" },
+      };
+
+      const result = await service.initiatePayment(input as unknown as InitiatePaymentInput);
+
+      expect(result.id).toBe("mp_sess_uuid_123");
+      expect(result.status).toBe("pending");
+      expect(result.data).toEqual({
+        some: "data",
+        sessionId: "mp_sess_uuid_123",
+        amount: 1000,
+        currency_code: "BRL",
+      });
+    });
+  });
+
+  describe("retrievePayment", () => {
+    it("should retrieve payment data", async () => {
+      const input = { data: { foo: "bar" } };
+      const result = await service.retrievePayment(input as unknown as RetrievePaymentInput);
+      expect(result.data).toEqual({ foo: "bar" });
+    });
+  });
+
+  describe("updatePayment", () => {
+    it("should update payment data", async () => {
+      const input = {
+        data: { foo: "bar" },
+        amount: 2000,
+        currency_code: "USD"
+      };
+      const result = await service.updatePayment(input as unknown as UpdatePaymentInput);
+
+      expect(result.status).toBe("pending");
+      expect(result.data).toEqual({
+        foo: "bar",
+        amount: 2000,
+        currency_code: "USD",
+      });
+    });
+  });
+
+  describe("deletePayment", () => {
+    it("should return input data", async () => {
+      const input = { data: { id: "123" } };
+      const result = await service.deletePayment(input as unknown as DeletePaymentInput);
+      expect(result.data).toEqual({ id: "123" });
+    });
+  });
+
   describe("authorizePayment", () => {
-    it("should authorize payment successfully", async () => {
+    it("should authorize payment successfully with all options", async () => {
       const input = {
         data: {
           sessionId: "sess_123",
@@ -87,6 +157,11 @@ describe("MercadoPagoPaymentProviderService", () => {
           paymentMethodId: "visa",
           installments: 1,
           token: "card_token",
+          issuerId: "1234",
+          identification: {
+            type: "CPF",
+            number: "12345678909",
+          }
         },
         context: {
           customer: { email: "test@test.com" },
@@ -98,7 +173,13 @@ describe("MercadoPagoPaymentProviderService", () => {
       (paymentClientMock as any).create.mockResolvedValue({
         id: "mp_123",
         status: "approved",
-        point_of_interaction: {},
+        point_of_interaction: {
+          transaction_data: {
+            qr_code: "qr_code_data",
+            qr_code_base64: "base64",
+            ticket_url: "url",
+          }
+        },
       });
 
       const result = await service.authorizePayment(
@@ -112,7 +193,16 @@ describe("MercadoPagoPaymentProviderService", () => {
             transaction_amount: 10,
             description: "Order idem_123",
             external_reference: "sess_123",
-            payer: { email: "test@test.com" },
+            payer: expect.objectContaining({
+              email: "test@test.com",
+              identification: {
+                type: "CPF",
+                number: "12345678909",
+              }
+            }),
+            token: "card_token",
+            issuer_id: 1234,
+            notification_url: "https://webhook.url",
           }),
         }),
       );
@@ -122,8 +212,75 @@ describe("MercadoPagoPaymentProviderService", () => {
         expect.objectContaining({
           externalId: "mp_123",
           status: "approved",
+          qr_code: "qr_code_data",
         }),
       );
+    });
+
+    it("should authorize payment successfully without point_of_interaction", async () => {
+      const input = {
+        data: {
+          sessionId: "sess_123",
+          amount: 1000,
+        },
+        context: {
+          customer: { email: "test@test.com" },
+        },
+      };
+
+      (paymentClientMock as any).create.mockResolvedValue({
+        id: "mp_123",
+        status: "approved",
+        // No point_of_interaction
+      });
+
+      const result = await service.authorizePayment(
+        input as unknown as AuthorizePaymentInput,
+      );
+
+      expect(result.status).toBe("authorized");
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          externalId: "mp_123",
+          status: "approved",
+        }),
+      );
+      // Ensure no qr_code data
+      expect(result.data).not.toHaveProperty("qr_code");
+    });
+
+    it("should authorize payment successfully with point_of_interaction but no transaction_data", async () => {
+      const input = {
+        data: {
+          sessionId: "sess_123",
+          amount: 1000,
+        },
+        context: {
+          customer: { email: "test@test.com" },
+        },
+      };
+
+      (paymentClientMock as any).create.mockResolvedValue({
+        id: "mp_123",
+        status: "approved",
+        point_of_interaction: {},
+      });
+
+      const result = await service.authorizePayment(
+        input as unknown as AuthorizePaymentInput,
+      );
+
+      expect(result.status).toBe("authorized");
+      expect(result.data).not.toHaveProperty("qr_code");
+    });
+
+    it("should throw error if sessionId missing", async () => {
+      const input = {
+        data: { amount: 1000 },
+        context: {},
+      };
+
+      await expect(service.authorizePayment(input as any)).rejects.toThrow("Session ID missing");
     });
 
     it("should handle pending payment status", async () => {
@@ -144,7 +301,7 @@ describe("MercadoPagoPaymentProviderService", () => {
       expect(result.status).toBe("pending");
     });
 
-    it("should throw error during authorization failure", async () => {
+    it("should throw error during authorization failure (insufficient amount)", async () => {
       const input = {
         data: { sessionId: "sess_123", amount: 1000 },
         context: {},
@@ -161,6 +318,22 @@ describe("MercadoPagoPaymentProviderService", () => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((loggerMock as any).error).toHaveBeenCalled();
+    });
+
+    it("should throw error during authorization failure (bad request)", async () => {
+      const input = {
+        data: { sessionId: "sess_123", amount: 1000 },
+        context: {},
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (paymentClientMock as any).create.mockRejectedValue(
+        new Error("bad_request"),
+      );
+
+      await expect(
+        service.authorizePayment(input as unknown as AuthorizePaymentInput),
+      ).rejects.toThrow("Payment declined: Invalid payment data");
     });
   });
 
@@ -188,6 +361,13 @@ describe("MercadoPagoPaymentProviderService", () => {
       );
     });
 
+    it("should return data if externalId missing", async () => {
+      const input = { data: { foo: "bar" } };
+      const result = await service.capturePayment(input as any);
+      expect(result.data).toEqual({ foo: "bar" });
+      expect((paymentClientMock as any).capture).not.toHaveBeenCalled();
+    });
+
     it("should throw error on capture failure", async () => {
       const input = {
         data: { externalId: "mp_123" },
@@ -199,6 +379,42 @@ describe("MercadoPagoPaymentProviderService", () => {
       await expect(
         service.capturePayment(input as unknown as CapturePaymentInput),
       ).rejects.toThrow("Failed to capture payment: Fail");
+    });
+  });
+
+  describe("cancelPayment", () => {
+    it("should cancel payment successfully", async () => {
+      const input = {
+        data: { externalId: "mp_123" },
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (paymentClientMock as any).cancel.mockResolvedValue({});
+
+      const result = await service.cancelPayment(input as unknown as CancelPaymentInput);
+
+      expect((paymentClientMock as any).cancel).toHaveBeenCalledWith({ id: "mp_123" });
+      expect(result.data).toEqual(expect.objectContaining({ status: "canceled" }));
+    });
+
+    it("should return data if externalId missing", async () => {
+      const input = { data: { foo: "bar" } };
+      const result = await service.cancelPayment(input as any);
+      expect(result.data).toEqual({ foo: "bar" });
+      expect((paymentClientMock as any).cancel).not.toHaveBeenCalled();
+    });
+
+    it("should throw error on cancel failure", async () => {
+       const input = {
+        data: { externalId: "mp_123" },
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (paymentClientMock as any).cancel.mockRejectedValue(new Error("Fail"));
+
+      await expect(
+        service.cancelPayment(input as unknown as CancelPaymentInput),
+      ).rejects.toThrow("Failed to cancel payment: Fail");
     });
   });
 
@@ -225,6 +441,20 @@ describe("MercadoPagoPaymentProviderService", () => {
         expect.objectContaining({ refundId: "ref_123" }),
       );
     });
+
+     it("should throw error on refund failure", async () => {
+      const input = {
+        data: { externalId: "mp_123" },
+        amount: 500,
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (refundClientMock as any).create.mockRejectedValue(new Error("Fail"));
+
+      await expect(
+        service.refundPayment(input as unknown as RefundPaymentInput),
+      ).rejects.toThrow("Failed to refund payment: Fail");
+    });
   });
 
   describe("getPaymentStatus", () => {
@@ -249,6 +479,24 @@ describe("MercadoPagoPaymentProviderService", () => {
       const result = await service.getPaymentStatus(input as any);
 
       expect(result.status).toBe("canceled");
+    });
+
+    it("should return error if externalId missing", async () => {
+      const input = { data: { foo: "bar" } };
+      const result = await service.getPaymentStatus(input as any);
+      expect(result.status).toBe("error");
+    });
+
+    it("should return error status on failure", async () => {
+       const input = { data: { externalId: "mp_123" } };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (paymentClientMock as any).get.mockRejectedValue(new Error("Fail"));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await service.getPaymentStatus(input as any);
+
+      expect(result.status).toBe("error");
+      expect((loggerMock as any).error).toHaveBeenCalled();
     });
   });
 
@@ -313,6 +561,72 @@ describe("MercadoPagoPaymentProviderService", () => {
       expect((loggerMock as any).error).toHaveBeenCalledWith(
         expect.stringContaining("signature verification failed"),
       );
+    });
+
+    it("should return not_supported if paymentId missing", async () => {
+       const payload = {
+        data: { },
+        headers: {},
+        query: {},
+      };
+
+      // Override options to remove secret check for this test or mock verification
+      service = new MercadoPagoPaymentProviderService(
+        { logger: loggerMock as any } as any,
+        { accessToken: "token" } // no secret
+      );
+
+      const result = await service.getWebhookActionAndData(payload as any);
+      expect(result).toEqual({ action: "not_supported" });
+    });
+
+    it("should return failed action for rejected payment", async () => {
+       service = new MercadoPagoPaymentProviderService(
+        { logger: loggerMock as any } as any,
+        { accessToken: "token" }
+      );
+
+      const payload = { data: { id: "mp_123" }, headers: {}, query: {} };
+
+      (paymentClientMock as any).get.mockResolvedValue({
+        id: "mp_123",
+        status: "rejected",
+      });
+
+      const result = await service.getWebhookActionAndData(payload as any);
+      expect(result).toEqual({ action: "failed" });
+    });
+
+    it("should return not_supported action for other payment statuses", async () => {
+       service = new MercadoPagoPaymentProviderService(
+        { logger: loggerMock as any } as any,
+        { accessToken: "token" }
+      );
+
+      const payload = { data: { id: "mp_123" }, headers: {}, query: {} };
+
+      (paymentClientMock as any).get.mockResolvedValue({
+        id: "mp_123",
+        status: "pending",
+      });
+
+      const result = await service.getWebhookActionAndData(payload as any);
+      expect(result).toEqual({ action: "not_supported" });
+    });
+
+    it("should return failed action on error", async () => {
+       service = new MercadoPagoPaymentProviderService(
+        { logger: loggerMock as any } as any,
+        { accessToken: "token" }
+      );
+
+      const payload = { data: { id: "mp_123" }, headers: {}, query: {} };
+
+      (paymentClientMock as any).get.mockRejectedValue(new Error("Fail"));
+
+      const result = await service.getWebhookActionAndData(payload as any);
+      expect(result).toEqual({ action: "failed" });
+      expect((loggerMock as any).error).toHaveBeenCalled();
     });
   });
 });

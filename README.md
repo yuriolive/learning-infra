@@ -27,51 +27,14 @@ This project uses a **monorepo architecture** with Turborepo and PNPM workspaces
 
 ## Local Development
 
-This project uses Docker Compose to run a local PostgreSQL instance for the Control Plane.
+For a detailed guide on setting up the local development environment, see [docs/local-development.md](docs/local-development.md).
 
-```bash
-# Start local infrastructure
-docker-compose up -d
+### Quick Start
 
-# Stop local infrastructure
-docker-compose down
-```
-
-### Database Setup (Control Plane)
-
-1. Copy `.env.example` to `.env` in `apps/control-plane`:
-   ```bash
-   cp apps/control-plane/.env.example apps/control-plane/.env
-   ```
-2. Apply migrations:
-   ```bash
-   pnpm run db:push --filter=@vendin/control-plane
-   ```
-
-## Quick Start
-
-```bash
-# Install dependencies
-pnpm install
-
-# Run all apps in development mode
-pnpm run dev
-
-# Build all apps and packages
-pnpm run build
-
-# Run all tests
-pnpm run test
-
-# Type check all apps and packages
-pnpm run typecheck
-
-# Lint all apps and packages
-pnpm run lint
-
-# Auto-fix linting issues
-pnpm run lint:fix
-```
+1.  **Infrastructure**: `pnpm dev:infra` (Starts Postgres & Redis)
+2.  **Install**: `pnpm install`
+3.  **Database Setup**: `pnpm db:generate` && `pnpm db:migrate` && `pnpm db:seed`
+4.  **Dev**: `pnpm dev` (Starts all apps)
 
 ## Commands
 
@@ -85,8 +48,6 @@ pnpm run lint:fix
 | `pnpm run typecheck` | Type check all apps and packages   |
 
 ## Applications
-
-### Control Plane (`apps/control-plane/`)
 
 ### Control Plane (`apps/control-plane/`)
 
@@ -159,5 +120,6 @@ Shared configuration for all apps and packages:
 
 - **Architecture**: See [docs/architecture/README.md](docs/architecture/README.md)
 - **Agent Guidelines**: See [AGENTS.md](AGENTS.md)
+- **Local Development**: See [docs/local-development.md](docs/local-development.md)
 - **Requirements**: See [PRD.md](PRD.md)
 - **Roadmap**: See [ROADMAP.md](ROADMAP.md)
