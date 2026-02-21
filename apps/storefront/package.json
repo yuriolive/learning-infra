@@ -10,6 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "pages:build": "opennextjs-cloudflare build",
     "pages:preview": "opennextjs-cloudflare dev",
     "pages:deploy": "opennextjs-cloudflare deploy"
@@ -43,6 +44,8 @@
     "eslint-config-next": "16.1.5",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite-tsconfig-paths": "^6.0.5",
+    "vitest": "^4.0.18",
     "wrangler": "^4.60.0"
   },
   "ignoreScripts": [
