@@ -368,11 +368,10 @@ export class BlingOrderMapper {
     const subtotalValue = this.safeNumber(item.subtotal);
 
     // Medusa 2.0 amounts are integers (cents), Bling V3 expects floats.
-    const unitPrice = quantity > 0 ? Math.round(subtotalValue / quantity) : 0;
-
-    // Medusa stores amounts in the smallest currency unit (cents for BRL).
-    // Bling V3 API expects float values (e.g., 10.50).
-    const finalUnitPrice = unitPrice / 100;
+    // We calculate the unit price with higher precision (4 decimal places for the float)
+    // to avoid rounding cumulative errors when multiplied by quantity in the ERP.
+    const unitPrice = quantity > 0 ? subtotalValue / quantity / 100 : 0;
+    const finalUnitPrice = Number(unitPrice.toFixed(4));
 
     const discount = Math.round(this.safeNumber(item.discount_total)) / 100;
 
