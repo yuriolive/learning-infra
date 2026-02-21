@@ -86,13 +86,12 @@ describe("BlingOrderMapper", () => {
       warnings,
     );
 
-    // Currently, these are expected to FAIL if my analysis is correct (except items)
-    // because they are not yet divided by 100 in the code.
+    // Verify that the total, discount, and freight values are correctly divided by 100
     expect(result.total).toBe(150.5);
     expect(result.vlr_desconto).toBe(10);
     expect(result.vlr_frete).toBe(15);
 
-    // Items ARE already divided by 100 in the current code (as verified by the TODO)
+    // Verify that the item values are correctly divided by 100
     expect(result.itens[0]!.valor).toBe(50); // (10000 / 2) / 100
     expect(result.itens[0]!.desconto).toBe(5); // 500 / 100
   });
