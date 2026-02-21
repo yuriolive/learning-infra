@@ -172,6 +172,10 @@ interface AppInitializationError {
 let initializationPromise: Promise<AppState | AppInitializationError> | null =
   null;
 
+export function resetInitialization() {
+  initializationPromise = null;
+}
+
 async function initializeApplication(
   environment: Environment,
   context?: {
