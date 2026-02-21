@@ -21,25 +21,40 @@ export const sendReplyStep = createStep(
     const providerString = providerType || "facebook";
 
     try {
-      const provider =
-        providerString === "facebook"
-          ? await createWhatsAppProvider({
-              provider: "facebook",
-              facebook: {
-                accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
-                phoneNumberId: process.env.WHATSAPP_PHONE_ID || "",
-              },
-              logger: logger as unknown as VendinLogger,
-            })
-          : await createWhatsAppProvider({
-              provider: "twilio",
-              twilio: {
-                accountSid: process.env.TWILIO_ACCOUNT_SID || "",
-                authToken: process.env.TWILIO_AUTH_TOKEN || "",
-                fromNumber: process.env.TWILIO_WHATSAPP_FROM || "",
-              },
-              logger: logger as unknown as VendinLogger,
-            });
+      let provider: Awaited<ReturnType<typeof createWhatsAppProvider>>;
+
+      if (providerString === "facebook") {
+        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_ID;
+
+        if (!accessToken || !phoneNumberId) {
+          throw new Error(
+            "Missing required Facebook WhatsApp configuration (WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_ID)",
+          );
+        }
+
+        provider = await createWhatsAppProvider({
+          provider: "facebook",
+          facebook: { accessToken, phoneNumberId },
+          logger: logger as unknown as VendinLogger,
+        });
+      } else {
+        const accountSid = process.env.TWILIO_ACCOUNT_SID;
+        const authToken = process.env.TWILIO_AUTH_TOKEN;
+        const fromNumber = process.env.TWILIO_WHATSAPP_FROM;
+
+        if (!accountSid || !authToken || !fromNumber) {
+          throw new Error(
+            "Missing required Twilio WhatsApp configuration (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_WHATSAPP_FROM)",
+          );
+        }
+
+        provider = await createWhatsAppProvider({
+          provider: "twilio",
+          twilio: { accountSid, authToken, fromNumber },
+          logger: logger as unknown as VendinLogger,
+        });
+      }
 
       await provider.sendMessage(input.threadId, input.text);
       logger.info(`Successfully sent WhatsApp reply to ${input.threadId}`);

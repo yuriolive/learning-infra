@@ -43,16 +43,12 @@ async function processWhatsAppChange(
 
     // Await the workflow. In Cloud Run, returning a response
     // before background tasks finish will lead to CPU throttling and aborted tasks.
-    await processMessageWorkflow(scope)
-      .run({
-        input: {
-          threadId,
-          text,
-        },
-      })
-      .catch((error) => {
-        logger.error(`Error executing WhatsApp message workflow: ${error}`);
-      });
+    await processMessageWorkflow(scope).run({
+      input: {
+        threadId,
+        text,
+      },
+    });
   }
 }
 
