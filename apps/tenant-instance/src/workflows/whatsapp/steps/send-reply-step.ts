@@ -1,8 +1,8 @@
 import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk";
+import { toVendinLogger } from "@vendin/logger";
 import { createWhatsAppProvider } from "@vendin/whatsapp";
 
 import type { Logger } from "@medusajs/framework/types";
-import type { Logger as VendinLogger } from "@vendin/logger";
 
 export interface SendReplyStepInput {
   threadId: string;
@@ -13,6 +13,7 @@ export const sendReplyStep = createStep(
   "send-whatsapp-reply",
   async (input: SendReplyStepInput, { container }) => {
     const logger = container.resolve<Logger>("logger");
+    const vendinLogger = toVendinLogger(logger);
 
     const providerType = process.env.WHATSAPP_PROVIDER as
       | "facebook"
@@ -36,7 +37,7 @@ export const sendReplyStep = createStep(
         provider = await createWhatsAppProvider({
           provider: "facebook",
           facebook: { accessToken, phoneNumberId },
-          logger: logger as unknown as VendinLogger,
+          logger: vendinLogger,
         });
       } else {
         const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -52,7 +53,7 @@ export const sendReplyStep = createStep(
         provider = await createWhatsAppProvider({
           provider: "twilio",
           twilio: { accountSid, authToken, fromNumber },
-          logger: logger as unknown as VendinLogger,
+          logger: vendinLogger,
         });
       }
 
