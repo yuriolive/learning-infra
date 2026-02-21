@@ -12,7 +12,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc -b && cp dist/medusa-config.js medusa-config.js && medusa build",
+    "build": "tsc && node -e \"require('fs').copyFileSync('dist/medusa-config.js','medusa-config.js')\" && medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "eslint .",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@vendin/medusa-ai-agent": "workspace:*",
+    "@vendin/whatsapp": "workspace:*",
     "@medusajs/admin-sdk": "^2.13.0",
     "@medusajs/admin-shared": "^2.13.1",
     "@medusajs/cli": "^2.13.0",

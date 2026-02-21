@@ -1,5 +1,5 @@
-import { consoleLogger, type Logger } from "./cloudflare-logger";
-import { type LoggerOptions } from "./pino-logger";
+import { consoleLogger, type Logger } from "./cloudflare-logger.js";
+import { type LoggerOptions } from "./pino-logger.js";
 
 const LOG_LEVELS = {
   debug: 0,
@@ -51,4 +51,4 @@ export const createCloudflareLogger = (options: LoggerOptions = {}): Logger => {
 };
 
 // Re-export consoleLogger for testing
-export { consoleLogger } from "./cloudflare-logger";
+export { consoleLogger } from "./cloudflare-logger.js";
