@@ -100,7 +100,16 @@ export const POST = (request: MedusaRequest, response: MedusaResponse) => {
       .update(request.rawBody)
       .digest("hex");
 
-    if (signature !== `sha256=${expectedHash}`) {
+    const expectedHashBuffer = Buffer.from(expectedHash, "hex");
+    const signatureHash = signature.startsWith("sha256=")
+      ? signature.slice(7)
+      : signature;
+    const signatureBuffer = Buffer.from(signatureHash, "hex");
+
+    if (
+      signatureHash.length !== expectedHash.length ||
+      !crypto.timingSafeEqual(signatureBuffer, expectedHashBuffer)
+    ) {
       logger.warn("Invalid WhatsApp webhook signature");
       response.status(401).send("Unauthorized");
       return;
