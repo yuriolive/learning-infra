@@ -1,7 +1,7 @@
 import { validatePublicUrl } from "@vendin/utils";
 import { z } from "zod";
 
-import type { consoleLogger } from "@vendin/logger";
+import type { Logger } from "@vendin/logger";
 
 export interface WhatsAppTenant {
   id: string;
@@ -41,7 +41,7 @@ const whatsappPayloadSchema = z.object({
 export class WhatsappWebhookService {
   constructor(
     private tenantLookup: TenantLookup,
-    private logger: typeof consoleLogger,
+    private logger: Logger,
   ) {}
   async handleIncomingWebhook(payload: unknown): Promise<void> {
     try {
