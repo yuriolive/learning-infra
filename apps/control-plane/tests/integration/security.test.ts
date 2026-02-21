@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 import { type Environment } from "../../src/config";
-import server from "../../src/index";
+import server, { resetInitialization } from "../../src/index";
 
 const MOCK_ENV = {
   DATABASE_URL: "postgres://mock:mock@localhost:5432/mock",
@@ -15,6 +15,10 @@ const MOCK_ENV = {
 
 describe("Security Integration Tests", () => {
   const origin = "http://localhost:8787";
+
+  beforeEach(() => {
+    resetInitialization();
+  });
 
   it("GET /health should be publicly accessible without auth", async () => {
     const request = new Request(`${origin}/health`);
