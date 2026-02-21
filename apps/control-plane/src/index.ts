@@ -149,20 +149,27 @@ function createMiddlewareOptions(
   };
 }
 
-type AppState = {
+interface AppState {
   logger: ReturnType<typeof createCloudflareLogger>;
   middlewareOptions: ReturnType<typeof createMiddlewareOptions>;
   services: ReturnType<typeof createServices>;
   internalRoutes: ReturnType<typeof createInternalRoutes>;
-};
+}
 
-let initializationPromise: Promise<
-  AppState | { logger: any; middlewareOptions: any; errorResponse: Response }
-> | null = null;
+interface AppInitializationError {
+  logger: ReturnType<typeof createCloudflareLogger>;
+  middlewareOptions: ReturnType<typeof createMiddlewareOptions>;
+  errorResponse: Response;
+}
+
+let initializationPromise: Promise<AppState | AppInitializationError> | null =
+  null;
 
 async function initializeApplication(
   environment: Environment,
-  context?: { waitUntil: (promise: Promise<unknown>) => void },
+  context?: {
+    waitUntil: (promise: Promise<unknown>) => void;
+  },
 ) {
   if (!initializationPromise) {
     initializationPromise = (async () => {
@@ -337,11 +344,11 @@ export default {
     environment: Environment,
     context?: { waitUntil: (promise: Promise<unknown>) => void },
   ): Promise<Response> {
-    const { logger, middlewareOptions, routes, errorResponse } =
-      await initializeApplication(environment, context);
+    const initResult = await initializeApplication(environment, context);
 
-    if (errorResponse) return errorResponse;
+    if ("errorResponse" in initResult) return initResult.errorResponse;
 
+    const { logger, middlewareOptions, routes } = initResult;
     const { tenantRoutes, internalRoutes } = routes;
 
     const url = new URL(request.url);
