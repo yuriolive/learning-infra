@@ -172,67 +172,119 @@ describe("BlingOrderMapper", () => {
     expect(result.vlr_desconto).toBe(1);
   });
 
-  it("should extract house number from regex", () => {
+  it("should handle rounding for unit prices with recurring decimals", () => {
     const order: MockOrder = {
-      id: "ord_123",
+      id: "ord_rounding",
       created_at: new Date(),
       shipping_address: {
-        address_1: "Main Street 456 Apt 2",
+        address_1: "Main St",
         metadata: { cpf: "12345678909" },
       },
       items: [
         {
-          id: "i1",
-          quantity: 1,
-          subtotal: 100,
-          metadata: { external_id: "e1" },
+          id: "item_1",
+          quantity: 3,
+          subtotal: 1000, // 10.00 total for 3 items => 3.3333... unit
+          metadata: { external_id: "ext_1" },
         },
       ],
-      total: 100,
+      total: 1000,
     };
+
     const result = BlingOrderMapper.mapToBlingPayload(
       order as OrderDTO,
       preferences,
       options,
       [],
     );
-    expect(result.cliente.numero).toBe("456");
+
+    // 1000 / 3 = 333.333 -> round(333.333) = 333 -> /100 = 3.33
+    expect(result.itens[0]!.valor).toBe(3.33);
   });
 
-  it("should extract house number from address_2", () => {
+  it("should handle full order details and currency conversion", () => {
     const order: MockOrder = {
-      id: "ord_123",
-      created_at: new Date(),
+      id: "order_full",
+      display_id: 123,
+      created_at: new Date("2024-02-21T10:00:00Z"),
+      email: "test@example.com",
+      currency_code: "brl",
+      total: 15_050, // 150.50
+      discount_total: 1000, // 10.00
+      shipping_total: 1500, // 15.00
       shipping_address: {
-        address_1: "Main Street",
-        address_2: "789",
-        metadata: { cpf: "12345678909" },
+        first_name: "John",
+        last_name: "Doe",
+        address_1: "Rua Teste, 100",
+        address_2: "Apt 2",
+        city: "São Paulo",
+        province: "SP",
+        postal_code: "01234-567",
+        country_code: "br",
+        phone: "11987654321",
+        metadata: {
+          cpf: "123.456.789-09",
+        },
       },
       items: [
         {
-          id: "i1",
-          quantity: 1,
-          subtotal: 100,
-          metadata: { external_id: "e1" },
+          id: "item_1",
+          title: "Product 1",
+          variant_sku: "SKU001",
+          quantity: 2,
+          subtotal: 10_000, // 100.00 total => 50.00 unit
+          discount_total: 500, // 5.00
+          metadata: {
+            bling_external_id: "BLING_001",
+          },
         },
       ],
-      total: 100,
+      shipping_methods: [
+        {
+          name: "Standard Shipping",
+          amount: 1500,
+          metadata: {
+            service_code: "12345",
+            shipping_type: "SEDEX",
+          },
+        },
+      ],
+      metadata: {
+        observacoes: "Test note",
+        observacoes_internas: "Internal note",
+        natureza_operacao: "Venda",
+      },
     };
+
+    const warnings: string[] = [];
     const result = BlingOrderMapper.mapToBlingPayload(
       order as OrderDTO,
       preferences,
       options,
-      [],
+      warnings,
     );
-    expect(result.cliente.numero).toBe("789");
+
+    expect(result.total).toBe(150.5);
+    expect(result.vlr_desconto).toBe(10);
+    expect(result.vlr_frete).toBe(15);
+    expect(result.itens[0]!.valor).toBe(50);
+    expect(result.itens[0]!.desconto).toBe(5);
+    expect(result.cliente.fone).toBe("11987654321");
+    expect(result.cliente.cep).toBe("01234567");
+    expect(result.observacoes).toBe("Test note");
+    expect(result.observacoesInternas).toBe("Internal note");
+    expect(result.natureza_operacao).toBe("Venda");
+    expect(result.transporte?.transportadora).toBe("Standard Shipping");
+    expect(result.transporte?.servico_correios).toBe("12345");
+    expect(result.transporte?.tipo_frete).toBe("SEDEX");
   });
 
-  it("should use default house number S/N if extraction fails", () => {
+  it("should generate NFe and Labels when requested", () => {
     const order: MockOrder = {
-      id: "ord_123",
+      id: "ord_nfe",
       created_at: new Date(),
       shipping_address: {
-        address_1: "Main Street No Number",
+        address_1: "Main St",
         metadata: { cpf: "12345678909" },
       },
       items: [
@@ -245,12 +297,20 @@ describe("BlingOrderMapper", () => {
       ],
       total: 100,
     };
+
+    const nfeOptions = {
+      generateNfe: true,
+      generateShippingLabel: true,
+    };
+
     const result = BlingOrderMapper.mapToBlingPayload(
       order as OrderDTO,
       preferences,
-      options,
+      nfeOptions,
       [],
     );
-    expect(result.cliente.numero).toBe("S/N");
+
+    expect(result.gerar_nfe).toBe("S");
+    expect(result.gerar_etiqueta).toBe("S");
   });
 });

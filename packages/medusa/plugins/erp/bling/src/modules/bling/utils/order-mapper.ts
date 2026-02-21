@@ -138,8 +138,9 @@ export class BlingOrderMapper {
       : undefined;
 
     // Medusa amounts are integers (cents), Bling expects floats
-    const totalAmount = this.safeNumber(order.total) / 100;
-    const discountTotal = this.safeNumber(order.discount_total) / 100;
+    const totalAmount = Math.round(this.safeNumber(order.total)) / 100;
+    const discountTotal =
+      Math.round(this.safeNumber(order.discount_total)) / 100;
 
     const cliente: BlingOrderPayload["cliente"] = {
       nome: nomeCliente,
@@ -193,7 +194,9 @@ export class BlingOrderMapper {
     const shippingMethod = (order.shipping_methods ?? [])[0];
     // Medusa amounts are integers (cents), Bling expects floats
     const freightValue =
-      this.safeNumber(order.shipping_total ?? shippingMethod?.amount) / 100;
+      Math.round(
+        this.safeNumber(order.shipping_total ?? shippingMethod?.amount),
+      ) / 100;
     const shippingMetadata =
       (shippingMethod?.metadata as Record<string, unknown> | null) || {};
 
@@ -365,13 +368,13 @@ export class BlingOrderMapper {
     const subtotalValue = this.safeNumber(item.subtotal);
 
     // Medusa 2.0 amounts are integers (cents), Bling V3 expects floats.
-    const unitPrice = quantity > 0 ? subtotalValue / quantity : 0;
+    const unitPrice = quantity > 0 ? Math.round(subtotalValue / quantity) : 0;
 
     // Medusa stores amounts in the smallest currency unit (cents for BRL).
     // Bling V3 API expects float values (e.g., 10.50).
     const finalUnitPrice = unitPrice / 100;
 
-    const discount = this.safeNumber(item.discount_total) / 100;
+    const discount = Math.round(this.safeNumber(item.discount_total)) / 100;
 
     const payload: BlingOrderPayload["itens"][0] = {
       codigo: externalId,
