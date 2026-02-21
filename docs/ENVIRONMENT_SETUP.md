@@ -222,10 +222,7 @@ TENANT_BASE_DOMAIN="vendin.store"
 
 ### 5.2 Run Locally
 
-```bash
-cd apps/control-plane
-pnpm run dev
-```
+For comprehensive local development instructions (including Postgres, Redis, and multi-app setup), please see the [Local Development Guide](local-development.md).
 
 ---
 

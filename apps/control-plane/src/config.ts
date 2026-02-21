@@ -26,6 +26,8 @@ export interface Environment {
   CLOUDFLARE_ZONE_ID?: BoundSecret;
   TENANT_BASE_DOMAIN?: string;
   STOREFRONT_HOSTNAME?: string;
+  WHATSAPP_APP_SECRET?: BoundSecret;
+  WHATSAPP_VERIFY_TOKEN?: BoundSecret;
 }
 
 export async function resolveEnvironmentSecrets(environment: Environment) {
@@ -44,6 +46,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
+    whatsappAppSecret,
+    whatsappVerifyToken,
   ] = await Promise.all([
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
@@ -59,6 +63,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.GEMINI_API_KEY),
     resolveSecret(environment.CLOUDFLARE_API_TOKEN),
     resolveSecret(environment.CLOUDFLARE_ZONE_ID),
+    resolveSecret(environment.WHATSAPP_APP_SECRET),
+    resolveSecret(environment.WHATSAPP_VERIFY_TOKEN),
   ]);
 
   let googleApplicationCredentials = googleAppCredsFull;
@@ -86,6 +92,8 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     geminiApiKey,
     cloudflareApiToken,
     cloudflareZoneId,
+    whatsappAppSecret,
+    whatsappVerifyToken,
     tenantBaseDomain: environment.TENANT_BASE_DOMAIN,
     storefrontHostname: environment.STOREFRONT_HOSTNAME,
   };

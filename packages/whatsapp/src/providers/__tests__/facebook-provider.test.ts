@@ -1,8 +1,13 @@
+import { validateSsrfProtection } from "@vendin/utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { FacebookWhatsAppProvider } from "../facebook-provider";
 
 import type { consoleLogger } from "@vendin/logger";
+
+vi.mock("@vendin/utils", () => ({
+  validateSsrfProtection: vi.fn().mockImplementation(() => Promise.resolve()),
+}));
 
 // Mock logger
 const mockLogger = {
@@ -38,23 +43,25 @@ describe("FacebookWhatsAppProvider", () => {
 
     await provider.sendMessage("+1234567890", "Test message");
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      "https://graph.facebook.com/v21.0/123456789/messages",
-      {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer test-token",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: "1234567890", // Without leading +
-          type: "text",
-          text: {
-            body: "Test message",
-          },
-        }),
+    expect(mockFetch).toHaveBeenCalledWith(expect.any(URL), {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer test-token",
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: "1234567890", // Without leading +
+        type: "text",
+        text: {
+          body: "Test message",
+        },
+      }),
+    });
+
+    const fetchCall = mockFetch.mock.calls[0];
+    expect(fetchCall[0].toString()).toBe(
+      "https://graph.facebook.com/v21.0/123456789/messages",
     );
 
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -79,10 +86,8 @@ describe("FacebookWhatsAppProvider", () => {
 
     await provider.sendMessage("+1234567890", "Test");
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("v21.0"),
-      expect.any(Object),
-    );
+    const fetchCall = mockFetch.mock.calls[0];
+    expect(fetchCall[0].toString()).toContain("v21.0");
   });
 
   it("should handle API errors", async () => {
@@ -97,7 +102,7 @@ describe("FacebookWhatsAppProvider", () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 400,
-      text: async () => "Invalid phone number",
+      text: () => Promise.resolve("Invalid phone number"),
     });
 
     await expect(provider.sendMessage("+invalid", "Test")).rejects.toThrow(
@@ -152,5 +157,47 @@ describe("FacebookWhatsAppProvider", () => {
     const body = JSON.parse(fetchCall[1].body as string);
 
     expect(body.to).toBe("551199999999");
+  });
+
+  describe("SSRF Protection", () => {
+    beforeEach(() => {
+      vi.resetModules();
+    });
+
+    it("should block request if hostname resolves to a private IP", async () => {
+      vi.mocked(validateSsrfProtection).mockRejectedValueOnce(
+        new Error("Potential SSRF attack blocked: private IP detected"),
+      );
+
+      const provider = new FacebookWhatsAppProvider(
+        {
+          accessToken: "test-token",
+          phoneNumberId: "123456789",
+        },
+        mockLogger,
+      );
+
+      await expect(provider.sendMessage("+1234567890", "Test")).rejects.toThrow(
+        "Potential SSRF attack blocked",
+      );
+    });
+
+    it("should block request if hostname cannot be resolved", async () => {
+      vi.mocked(validateSsrfProtection).mockRejectedValueOnce(
+        new Error("Potential SSRF attack blocked: invalid hostname"),
+      );
+
+      const provider = new FacebookWhatsAppProvider(
+        {
+          accessToken: "test-token",
+          phoneNumberId: "123456789",
+        },
+        mockLogger,
+      );
+
+      await expect(provider.sendMessage("+1234567890", "Test")).rejects.toThrow(
+        "Potential SSRF attack blocked",
+      );
+    });
   });
 });

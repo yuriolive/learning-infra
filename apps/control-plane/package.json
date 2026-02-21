@@ -31,6 +31,7 @@
     "@vendin/cache": "workspace:*",
     "@vendin/logger": "workspace:*",
     "@vendin/utils": "workspace:*",
+    "@vendin/whatsapp": "workspace:*",
     "axios": "^1.13.2",
     "cloudflare": "^5.2.0",
     "drizzle-orm": "^0.45.1",

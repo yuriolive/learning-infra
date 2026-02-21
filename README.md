@@ -33,7 +33,7 @@ For a detailed guide on setting up the local development environment, see [docs/
 
 1.  **Infrastructure**: `pnpm dev:infra` (Starts Postgres & Redis)
 2.  **Install**: `pnpm install`
-3.  **Seed**: `pnpm db:seed` (Seeds all databases)
+3.  **Database Setup**: `pnpm db:generate` && `pnpm db:migrate` && `pnpm db:seed`
 4.  **Dev**: `pnpm dev` (Starts all apps)
 
 ## Commands
@@ -120,5 +120,6 @@ Shared configuration for all apps and packages:
 
 - **Architecture**: See [docs/architecture/README.md](docs/architecture/README.md)
 - **Agent Guidelines**: See [AGENTS.md](AGENTS.md)
+- **Local Development**: See [docs/local-development.md](docs/local-development.md)
 - **Requirements**: See [PRD.md](PRD.md)
 - **Roadmap**: See [ROADMAP.md](ROADMAP.md)

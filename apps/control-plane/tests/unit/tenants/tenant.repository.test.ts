@@ -41,6 +41,7 @@ describe("TenantRepository", () => {
       const input: CreateTenantInput = {
         name: "Test Store",
         merchantEmail: "test@example.com",
+        whatsappPhoneNumber: "+1 (555) 123-4567",
       };
 
       const tenant = await repository.create(input);
@@ -48,6 +49,7 @@ describe("TenantRepository", () => {
       expect(tenant.id).toBeDefined();
       expect(tenant.name).toBe("Test Store");
       expect(tenant.subdomain).toBeNull();
+      expect(tenant.whatsappPhoneNumber).toBe("15551234567");
       expect(tenant.metadata).toBeNull();
       expect(tenant.status).toBe("provisioning");
     });
@@ -128,12 +130,14 @@ describe("TenantRepository", () => {
       const updated = await repository.update(created.id, {
         name: "Updated Name",
         status: "suspended",
+        whatsappPhoneNumber: "+1 (555) 123-4567",
       });
 
       expect(updated).not.toBeNull();
       expect(updated?.name).toBe("Updated Name");
       expect(updated?.status).toBe("suspended");
       expect(updated?.id).toBe(created.id);
+      expect(updated?.whatsappPhoneNumber).toBe("15551234567");
       expect(updated?.updatedAt.getTime()).toBeGreaterThanOrEqual(
         created.updatedAt.getTime(),
       );
@@ -246,6 +250,113 @@ describe("TenantRepository", () => {
 
       const found = await repository.findBySubdomain("teststore");
 
+      expect(found).toBeNull();
+    });
+  });
+
+  describe("findByWhatsAppPhoneId", () => {
+    it("should return tenant when phone ID matches exactly", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneId: "1234567890",
+      });
+
+      const found = await repository.findByWhatsAppPhoneId("1234567890");
+
+      expect(found).not.toBeNull();
+      expect(found?.id).toBe(created.id);
+    });
+
+    it("should return null for deleted tenants", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneId: "1234567890",
+      });
+
+      await repository.softDelete(created.id);
+
+      const found = await repository.findByWhatsAppPhoneId("1234567890");
+
+      expect(found).toBeNull();
+    });
+  });
+
+  describe("findByWhatsAppNumber", () => {
+    it("should return tenant when phone number matches exactly", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneNumber: "5511999999999",
+      });
+
+      const found = await repository.findByWhatsAppNumber("5511999999999");
+      expect(found).not.toBeNull();
+      expect(found?.id).toBe(created.id);
+    });
+
+    it("should return tenant when looking up with plus prefix", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneNumber: "5511999999999",
+      });
+
+      const found = await repository.findByWhatsAppNumber("+5511999999999");
+      expect(found).not.toBeNull();
+      expect(found?.id).toBe(created.id);
+    });
+
+    it("should return tenant when database has plus prefix", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneNumber: "+5511999999999",
+      });
+
+      const found = await repository.findByWhatsAppNumber("5511999999999");
+      expect(found).not.toBeNull();
+      expect(found?.id).toBe(created.id);
+    });
+
+    it("should return tenant when looking up with formatting characters", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneNumber: "5511999999999",
+      });
+
+      const found = await repository.findByWhatsAppNumber(
+        "+55 (11) 99999-9999",
+      );
+      expect(found).not.toBeNull();
+      expect(found?.id).toBe(created.id);
+    });
+
+    it("should return null for deleted tenants", async () => {
+      const created = await repository.create({
+        name: "Test Store",
+        merchantEmail: "test@example.com",
+      });
+      await repository.update(created.id, {
+        whatsappPhoneNumber: "5511999999999",
+      });
+      await repository.softDelete(created.id);
+
+      const found = await repository.findByWhatsAppNumber("5511999999999");
       expect(found).toBeNull();
     });
   });

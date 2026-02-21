@@ -1,3 +1,5 @@
+import { validateSsrfProtection } from "@vendin/utils";
+
 import {
   type FacebookWhatsAppConfig,
   type WhatsAppProvider,
@@ -5,6 +7,8 @@ import {
 } from "./whatsapp-provider";
 
 import type { consoleLogger } from "@vendin/logger";
+
+const FACEBOOK_GRAPH_API_VERSION = "v21.0";
 
 /**
  * Facebook WhatsApp Business API provider implementation
@@ -18,7 +22,7 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
   constructor(config: FacebookWhatsAppConfig, logger: typeof consoleLogger) {
     this.accessToken = config.accessToken;
     this.phoneNumberId = config.phoneNumberId;
-    this.apiVersion = config.apiVersion || "v21.0";
+    this.apiVersion = config.apiVersion || FACEBOOK_GRAPH_API_VERSION;
     this.logger = logger;
   }
 
@@ -27,7 +31,12 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
     const recipientPhone = phoneNumber.replace(/^\+/, "");
 
     try {
-      const url = `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/messages`;
+      const url = new URL(
+        `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/messages`,
+      );
+
+      // SSRF Protection: Resolve hostname and validate IPs
+      await validateSsrfProtection(url, "graph.facebook.com", this.logger);
 
       const response = await fetch(url, {
         method: "POST",
