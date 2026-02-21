@@ -149,101 +149,134 @@ function createMiddlewareOptions(
   };
 }
 
+type AppState = {
+  logger: ReturnType<typeof createCloudflareLogger>;
+  middlewareOptions: ReturnType<typeof createMiddlewareOptions>;
+  services: ReturnType<typeof createServices>;
+  internalRoutes: ReturnType<typeof createInternalRoutes>;
+};
+
+let initializationPromise: Promise<
+  AppState | { logger: any; middlewareOptions: any; errorResponse: Response }
+> | null = null;
+
 async function initializeApplication(
   environment: Environment,
   context?: { waitUntil: (promise: Promise<unknown>) => void },
 ) {
-  const nodeEnvironment = environment.NODE_ENV ?? "development";
-  const logger = createCloudflareLogger({
-    logLevel: environment.LOG_LEVEL,
-    nodeEnv: nodeEnvironment,
-  });
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      const nodeEnvironment = environment.NODE_ENV ?? "development";
+      const logger = createCloudflareLogger({
+        logLevel: environment.LOG_LEVEL,
+        nodeEnv: nodeEnvironment,
+      });
 
-  const {
-    databaseUrl,
-    neonApiKey,
-    neonProjectId,
-    adminApiKey,
-    postHogApiKey,
-    upstashRedisUrl,
-    googleApplicationCredentials,
-    cloudRunServiceAccount,
-    geminiApiKey,
-    cloudflareApiToken,
-    cloudflareZoneId,
-    tenantBaseDomain,
-    storefrontHostname,
-  } = await resolveEnvironmentSecrets(environment);
+      const {
+        databaseUrl,
+        neonApiKey,
+        neonProjectId,
+        adminApiKey,
+        postHogApiKey,
+        upstashRedisUrl,
+        googleApplicationCredentials,
+        cloudRunServiceAccount,
+        geminiApiKey,
+        cloudflareApiToken,
+        cloudflareZoneId,
+        tenantBaseDomain,
+        storefrontHostname,
+      } = await resolveEnvironmentSecrets(environment);
 
-  initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
+      const middlewareOptions = createMiddlewareOptions(
+        logger,
+        adminApiKey,
+        nodeEnvironment,
+        environment.ALLOWED_ORIGINS,
+      );
 
-  const middlewareOptions = createMiddlewareOptions(
-    logger,
-    adminApiKey,
-    nodeEnvironment,
-    environment.ALLOWED_ORIGINS,
-  );
+      const configError = validateConfiguration(
+        logger,
+        databaseUrl,
+        adminApiKey,
+        nodeEnvironment,
+        upstashRedisUrl,
+        neonApiKey,
+        neonProjectId,
+        environment.GCP_PROJECT_ID,
+        environment.GCP_REGION,
+        environment.TENANT_IMAGE_TAG,
+        googleApplicationCredentials,
+        cloudRunServiceAccount,
+        geminiApiKey,
+        cloudflareApiToken,
+        cloudflareZoneId,
+        tenantBaseDomain,
+        storefrontHostname,
+      );
 
-  const configError = validateConfiguration(
-    logger,
-    databaseUrl,
-    adminApiKey,
-    nodeEnvironment,
-    upstashRedisUrl,
-    neonApiKey,
-    neonProjectId,
-    environment.GCP_PROJECT_ID,
-    environment.GCP_REGION,
-    environment.TENANT_IMAGE_TAG,
-    googleApplicationCredentials,
-    cloudRunServiceAccount,
-    geminiApiKey,
-    cloudflareApiToken,
-    cloudflareZoneId,
-    tenantBaseDomain,
-    storefrontHostname,
-  );
+      if (configError) {
+        return { logger, middlewareOptions, errorResponse: configError };
+      }
 
-  if (configError) {
-    return { logger, middlewareOptions, errorResponse: configError };
+      initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
+
+      const services = createServices(
+        logger,
+        databaseUrl as string,
+        nodeEnvironment,
+        environment,
+        neonApiKey,
+        neonProjectId,
+        googleApplicationCredentials,
+        upstashRedisUrl,
+        cloudRunServiceAccount,
+        geminiApiKey,
+        cloudflareApiToken,
+        cloudflareZoneId,
+        tenantBaseDomain,
+        storefrontHostname,
+      );
+
+      const internalRoutes = createInternalRoutes({
+        logger,
+        tenantService: services.tenantService,
+        provisioningService: services.provisioningService,
+        db: services.database,
+      });
+
+      return {
+        logger,
+        middlewareOptions,
+        services,
+        internalRoutes,
+      };
+    })().catch((error) => {
+      initializationPromise = null;
+      throw error;
+    });
   }
 
-  const { tenantService, provisioningService, database } = createServices(
-    logger,
-    databaseUrl as string,
-    nodeEnvironment,
-    environment,
-    neonApiKey,
-    neonProjectId,
-    googleApplicationCredentials,
-    upstashRedisUrl,
-    cloudRunServiceAccount,
-    geminiApiKey,
-    cloudflareApiToken,
-    cloudflareZoneId,
-    tenantBaseDomain,
-    storefrontHostname,
-  );
+  const result = await initializationPromise;
+
+  if ("errorResponse" in result) {
+    return result;
+  }
+
+  const { logger, middlewareOptions, services, internalRoutes } = result;
 
   const tenantRoutes = createTenantRoutes({
     logger,
-    tenantService,
+    tenantService: services.tenantService,
     ...(context?.waitUntil
       ? { waitUntil: context.waitUntil.bind(context) }
       : {}),
   });
 
-  const internalRoutes = createInternalRoutes({
-    logger,
-    tenantService,
-    provisioningService,
-    db: database,
-  });
-
   return {
     logger,
     middlewareOptions,
-    services: { tenantService, provisioningService, database },
+    services,
     routes: { tenantRoutes, internalRoutes },
   };
 }
