@@ -1,18 +1,18 @@
 import crypto from "node:crypto";
 
-import { AGENT_MODULE, type AgentModuleService } from "@vendin/medusa-ai-agent";
+import { processMessageWorkflow } from "../../../workflows/whatsapp/process-message-workflow";
 
 import { WhatsAppPayloadSchema, type WhatsAppChangeType } from "./validators";
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import type { Logger } from "@medusajs/framework/types";
+import type { Logger, MedusaContainer } from "@medusajs/framework/types";
 
 /**
  * Processes a single change from the WhatsApp webhook payload.
  */
-async function processWhatsAppChange(
+function processWhatsAppChange(
   change: WhatsAppChangeType,
-  agentService: AgentModuleService,
+  scope: MedusaContainer,
   logger: Logger,
 ) {
   if (!change.value.messages?.[0]) return;
@@ -39,13 +39,17 @@ async function processWhatsAppChange(
 
   logger.info(`Processing WhatsApp message from ${threadId}`);
 
-  try {
-    await agentService.processMessage(threadId, text, {
-      role: "customer",
+  // Fire and forget via workflow
+  processMessageWorkflow(scope)
+    .run({
+      input: {
+        threadId,
+        text,
+      },
+    })
+    .catch((error) => {
+      logger.error(`Error executing WhatsApp message workflow: ${error}`);
     });
-  } catch (processError) {
-    logger.error(`Error processing message from ${threadId}: ${processError}`);
-  }
 }
 
 export const GET = (request: MedusaRequest, response: MedusaResponse) => {
@@ -65,17 +69,6 @@ export const GET = (request: MedusaRequest, response: MedusaResponse) => {
 
 export const POST = (request: MedusaRequest, response: MedusaResponse) => {
   const logger: Logger = request.scope.resolve("logger");
-  let agentService: AgentModuleService;
-
-  try {
-    agentService = request.scope.resolve(AGENT_MODULE);
-  } catch {
-    logger.error(
-      "AgentModuleService not found. Ensure @vendin/medusa-ai-agent is enabled in medusa-config.ts",
-    );
-    response.status(500).json({ message: "Agent service unavailable" });
-    return;
-  }
 
   try {
     const secret = process.env.WHATSAPP_APP_SECRET;
@@ -117,11 +110,7 @@ export const POST = (request: MedusaRequest, response: MedusaResponse) => {
 
     for (const entry of payload.entry) {
       for (const change of entry.changes) {
-        processWhatsAppChange(change, agentService, logger).catch((error) => {
-          logger.error(
-            `Unhandled error in background WhatsApp processing: ${error}`,
-          );
-        });
+        processWhatsAppChange(change, request.scope, logger);
       }
     }
 
