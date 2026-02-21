@@ -15,42 +15,45 @@ async function processWhatsAppChange(
   scope: MedusaContainer,
   logger: Logger,
 ) {
-  if (!change.value.messages?.[0]) return;
+  if (!change.value.messages || change.value.messages.length === 0) return;
 
-  const message = change.value.messages[0];
-  const contact = change.value.contacts?.[0];
-
-  if (!contact || !contact.wa_id) {
-    logger.warn(
-      "Received WhatsApp message without sender contact info (wa_id).",
+  for (const message of change.value.messages) {
+    const contact = change.value.contacts?.find(
+      (c) => c.wa_id === message.from,
     );
-    return;
+
+    if (!contact || !contact.wa_id) {
+      logger.warn(
+        `Received WhatsApp message without matching sender contact info (from: ${message.from}).`,
+      );
+      continue;
+    }
+
+    if (!message.text || !message.text.body) {
+      logger.warn(
+        `Received non-text WhatsApp message of type: ${message.type}. Agent currently only handles text.`,
+      );
+      continue;
+    }
+
+    const threadId = contact.wa_id;
+    const text = message.text.body;
+
+    logger.info(`Processing WhatsApp message from ${threadId}`);
+
+    // Await the workflow. In Cloud Run, returning a response
+    // before background tasks finish will lead to CPU throttling and aborted tasks.
+    await processMessageWorkflow(scope)
+      .run({
+        input: {
+          threadId,
+          text,
+        },
+      })
+      .catch((error) => {
+        logger.error(`Error executing WhatsApp message workflow: ${error}`);
+      });
   }
-
-  if (!message.text || !message.text.body) {
-    logger.warn(
-      `Received non-text WhatsApp message of type: ${message.type}. Agent currently only handles text.`,
-    );
-    return;
-  }
-
-  const threadId = contact.wa_id;
-  const text = message.text.body;
-
-  logger.info(`Processing WhatsApp message from ${threadId}`);
-
-  // Await the workflow. In Cloud Run, returning a response
-  // before background tasks finish will lead to CPU throttling and aborted tasks.
-  await processMessageWorkflow(scope)
-    .run({
-      input: {
-        threadId,
-        text,
-      },
-    })
-    .catch((error) => {
-      logger.error(`Error executing WhatsApp message workflow: ${error}`);
-    });
 }
 
 export const GET = (request: MedusaRequest, response: MedusaResponse) => {

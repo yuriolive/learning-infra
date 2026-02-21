@@ -1,4 +1,4 @@
-import type { consoleLogger } from "@vendin/logger";
+import type { Logger } from "@vendin/logger";
 
 /**
  * WhatsApp provider interface for sending messages
@@ -53,7 +53,7 @@ export interface WhatsAppConfig {
   /** Twilio configuration (required if provider is 'twilio') */
   twilio?: TwilioWhatsAppConfig;
   /** Logger instance for error and debug logging */
-  logger: typeof consoleLogger;
+  logger: Logger;
 }
 
 /**
@@ -87,7 +87,8 @@ export async function createWhatsAppProvider(
         );
       }
       // Dynamic import to avoid loading unused provider code
-      const { FacebookWhatsAppProvider } = await import("./facebook-provider");
+      const { FacebookWhatsAppProvider } =
+        await import("./facebook-provider.js");
       return new FacebookWhatsAppProvider(config.facebook, config.logger);
     }
 
@@ -98,7 +99,7 @@ export async function createWhatsAppProvider(
         );
       }
       // Dynamic import to avoid loading unused provider code
-      const { TwilioWhatsAppProvider } = await import("./twilio-provider");
+      const { TwilioWhatsAppProvider } = await import("./twilio-provider.js");
       return new TwilioWhatsAppProvider(config.twilio, config.logger);
     }
 

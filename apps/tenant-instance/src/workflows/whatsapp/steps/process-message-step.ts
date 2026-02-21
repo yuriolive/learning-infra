@@ -11,10 +11,14 @@ export const processMessageStep = createStep(
   async (input: ProcessMessageStepInput, { container }) => {
     const agentService = container.resolve<AgentModuleService>(AGENT_MODULE);
 
-    await agentService.processMessage(input.threadId, input.text, {
-      role: "customer",
-    });
+    const response = await agentService.processMessage(
+      input.threadId,
+      input.text,
+      {
+        role: "customer",
+      },
+    );
 
-    return new StepResponse(undefined);
+    return new StepResponse(response);
   },
 );

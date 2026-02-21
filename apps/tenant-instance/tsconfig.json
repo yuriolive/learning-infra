@@ -12,7 +12,10 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@vendin/whatsapp": ["../../packages/whatsapp/src/index.ts"],
+      "@vendin/whatsapp/*": ["../../packages/whatsapp/src/*.ts"]
+    }
   },
   "include": ["src", "medusa-config.ts"],
   "exclude": ["node_modules", "dist", ".medusa"]

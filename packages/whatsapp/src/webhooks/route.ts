@@ -1,12 +1,12 @@
 import { getPathParts } from "@vendin/utils";
 
-import { verifyWhatsAppSignature } from "./signature";
+import { verifyWhatsAppSignature } from "./signature.js";
 
-import type { WhatsappWebhookService } from "./service";
-import type { consoleLogger } from "@vendin/logger";
+import type { WhatsappWebhookService } from "./service.js";
+import type { Logger } from "@vendin/logger";
 
 export interface WebhookRouteContext {
-  logger: typeof consoleLogger;
+  logger: Logger;
   whatsappWebhookService: WhatsappWebhookService;
   appSecret: string;
   verifyToken: string;
@@ -53,7 +53,7 @@ export function createWebhookRoutes(context: WebhookRouteContext) {
 function handleGetRequest(
   url: URL,
   verifyToken: string,
-  logger: typeof consoleLogger,
+  logger: Logger,
 ): Response {
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
@@ -72,7 +72,7 @@ async function handlePostRequest(
   request: Request,
   appSecret: string,
   whatsappWebhookService: WhatsappWebhookService,
-  logger: typeof consoleLogger,
+  logger: Logger,
   waitUntil?: (promise: Promise<unknown>) => void,
 ): Promise<Response> {
   try {

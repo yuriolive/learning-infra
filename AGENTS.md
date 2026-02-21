@@ -147,6 +147,43 @@ This document describes the agent architecture and guidelines for AI assistants 
 - **DO NOT** use PascalCase (e.g., `StepCard.tsx`) or camelCase.
 - This rule applies to all files, including React components, utilities, and configuration files.
 
+### Monorepo Build Gotchas
+
+These issues have caused build/typecheck failures before — keep them in mind when modifying packages or CI:
+
+1. **NodeNext requires explicit `.js` extensions** in all relative imports and re-exports within `src/` files (even though the source is `.ts`). Missing extensions cause `TS2307` errors at build time.
+
+   ```ts
+   // ✅ correct
+   export * from "./pino-logger.js";
+   // ❌ wrong — fails under NodeNext
+   export * from "./pino-logger";
+   ```
+
+2. **Internal packages need a `types` condition in `exports`** (`package.json`) for strict NodeNext to resolve types without building first:
+
+   ```json
+   "exports": { ".": { "types": "./src/index.ts", "import": "./dist/index.js" } }
+   ```
+
+   Setting only a top-level `"types"` field is not sufficient — the `exports` map takes precedence.
+
+3. **Avoid `rootDir: "./src"` in packages that import other workspace packages.** If any resolved file lives outside `src/` (e.g., type resolution climbing into a sibling package), TypeScript will emit `TS6059`. Omit `rootDir` and let `outDir` alone control output.
+
+4. **`turbo prune` syntax changed in v2.** Use positional arguments, not `--scope`:
+
+   ```sh
+   # ✅ Turbo v2
+   turbo prune @vendin/tenant-instance --docker
+   # ❌ removed in v2
+   turbo prune --scope=@vendin/tenant-instance --docker
+   ```
+
+5. **Avoid shell-specific commands (`cp`, `rm`) in `package.json` scripts** — they fail on Windows. Use Node.js one-liners instead:
+   ```json
+   "node -e \"require('fs').copyFileSync('src','dst')\""
+   ```
+
 ### API Design
 
 ### API Design
