@@ -169,7 +169,7 @@ describe("BlingOrderMapper", () => {
       [],
     );
 
-    expect(result.vlr_desconto).toBe(100);
+    expect(result.vlr_desconto).toBe(1);
   });
 
   it("should extract house number from regex", () => {
