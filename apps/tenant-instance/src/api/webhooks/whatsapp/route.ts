@@ -48,7 +48,7 @@ async function processWhatsAppChange(
   }
 }
 
-export const GET = async (request: MedusaRequest, response: MedusaResponse) => {
+export const GET = (request: MedusaRequest, response: MedusaResponse) => {
   const mode = request.query["hub.mode"];
   const token = request.query["hub.verify_token"];
   const challenge = request.query["hub.challenge"];
@@ -63,10 +63,7 @@ export const GET = async (request: MedusaRequest, response: MedusaResponse) => {
   response.status(403).send("Forbidden");
 };
 
-export const POST = async (
-  request: MedusaRequest,
-  response: MedusaResponse,
-) => {
+export const POST = (request: MedusaRequest, response: MedusaResponse) => {
   const logger: Logger = request.scope.resolve("logger");
   let agentService: AgentModuleService;
 
@@ -81,24 +78,37 @@ export const POST = async (
   }
 
   try {
+    const secret = process.env.WHATSAPP_APP_SECRET;
+
+    if (!secret) {
+      logger.error("WHATSAPP_APP_SECRET is not configured");
+      response.status(500).json({ message: "Server configuration error" });
+      return;
+    }
+
     const signature = request.headers["x-hub-signature-256"] as
       | string
       | undefined;
-    const secret = process.env.WHATSAPP_APP_SECRET;
 
-    if (secret && signature) {
-      const expectedHash = crypto
-        .createHmac("sha256", secret)
-        .update(JSON.stringify(request.body))
-        .digest("hex");
-
-      if (signature !== `sha256=${expectedHash}`) {
-        logger.warn("Invalid WhatsApp webhook signature");
-        response.status(401).send("Unauthorized");
-        return;
-      }
-    } else if (secret && !signature) {
+    if (!signature) {
       logger.warn("Missing WhatsApp webhook signature");
+      response.status(401).send("Unauthorized");
+      return;
+    }
+
+    if (!request.rawBody) {
+      logger.error("Raw request body is missing, cannot verify signature");
+      response.status(500).json({ message: "Server configuration error" });
+      return;
+    }
+
+    const expectedHash = crypto
+      .createHmac("sha256", secret)
+      .update(request.rawBody)
+      .digest("hex");
+
+    if (signature !== `sha256=${expectedHash}`) {
+      logger.warn("Invalid WhatsApp webhook signature");
       response.status(401).send("Unauthorized");
       return;
     }
