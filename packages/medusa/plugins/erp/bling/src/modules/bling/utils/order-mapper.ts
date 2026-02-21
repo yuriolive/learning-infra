@@ -137,8 +137,9 @@ export class BlingOrderMapper {
       ? sanitizeDocument(shippingAddress.postal_code)
       : undefined;
 
-    const totalAmount = this.safeNumber(order.total);
-    const discountTotal = this.safeNumber(order.discount_total);
+    // Medusa amounts are integers (cents), Bling expects floats
+    const totalAmount = this.safeNumber(order.total) / 100;
+    const discountTotal = this.safeNumber(order.discount_total) / 100;
 
     const cliente: BlingOrderPayload["cliente"] = {
       nome: nomeCliente,
@@ -190,9 +191,9 @@ export class BlingOrderMapper {
     }
 
     const shippingMethod = (order.shipping_methods ?? [])[0];
-    const freightValue = this.safeNumber(
-      order.shipping_total ?? shippingMethod?.amount,
-    );
+    // Medusa amounts are integers (cents), Bling expects floats
+    const freightValue =
+      this.safeNumber(order.shipping_total ?? shippingMethod?.amount) / 100;
     const shippingMetadata =
       (shippingMethod?.metadata as Record<string, unknown> | null) || {};
 
@@ -362,34 +363,12 @@ export class BlingOrderMapper {
 
     const quantity = item.quantity ?? 0;
     const subtotalValue = this.safeNumber(item.subtotal);
-    // Medusa stores amounts in smallest unit (cents), Bling expects float?
-    // WARNING: Previous implementation divided subtotal by quantity. Medusa 2.0 amounts are typically integers (cents).
-    // If Bling V3 expects BRL (e.g. 10.50), we need to check currency.
-    // Assuming BRL and standard Medusa (cents), we might need to divide by 100.
-    // However, the previous implementation used `safeNumber` which handled comma/dot replacement, implying string inputs or raw numbers.
-    // Let's assume Medusa 2.0 DTO values are numbers (cents).
-    // BLING V3 API usually expects standard decimal for BRL (e.g. 10.50).
-    // We will assume input is cents and divide by 100 IF currency is BRL, but here we don't have currency context easily in Item?
-    // Actually item has unit_price usually.
-    // Let's stick to the previous logic structure but be careful about units.
-    // The previous logic: unitPrice = quantity > 0 ? subtotalValue / quantity : 0;
-    // If subtotal is cents, unitPrice is cents.
-    // If Bling expects "10.50", we need to divide by 100.
-    // I will divide by 100 as a safe default for BRL integrations in Medusa, assuming standard usage.
 
-    // WAIT: `safeNumber` in the original code handled string parsing.
-    // I'll stick to 1:1 logic where possible, but add /100 if we are sure it's cents.
-    // I will assume for now that `item.subtotal` comes in as a number from Medusa 2.0 (cents).
-
-    // NOTE: In Medusa 2.0, prices are stored as BigNumber or number (cents).
-    // I will implement a safe unit conversion.
-
+    // Medusa 2.0 amounts are integers (cents), Bling V3 expects floats.
     const unitPrice = quantity > 0 ? subtotalValue / quantity : 0;
 
-    // TODO: Verify if we need to divide by 100. Usually Medusa = cents. Bling = float.
-    // I will divide by 100 here to be safe for a standard BRL setup.
-    // In a real scenario we should check currency_code (BRL usually 2 decimals).
-
+    // Medusa stores amounts in the smallest currency unit (cents for BRL).
+    // Bling V3 API expects float values (e.g., 10.50).
     const finalUnitPrice = unitPrice / 100;
 
     const discount = this.safeNumber(item.discount_total) / 100;
