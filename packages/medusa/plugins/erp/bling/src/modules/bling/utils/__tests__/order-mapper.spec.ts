@@ -23,6 +23,31 @@ function mock<T>(p: DeepPartial<T>): T {
   return p as unknown as T;
 }
 
+/**
+ * Factory to create a valid MockOrder with sensible defaults.
+ * Override any field by passing a partial object.
+ */
+function createMockOrder(overrides: DeepPartial<OrderDTO> = {}): MockOrder {
+  return {
+    id: "ord_default",
+    created_at: new Date(),
+    shipping_address: mock<OrderDTO["shipping_address"]>({
+      address_1: "Main St",
+      metadata: { cpf: "12345678909" },
+    }),
+    items: [
+      mock<NonNullable<OrderDTO["items"]>[number]>({
+        id: "item_default",
+        quantity: 1,
+        subtotal: 1000,
+        metadata: { external_id: "ext_default" },
+      }),
+    ],
+    total: 1000,
+    ...overrides,
+  };
+}
+
 describe("BlingOrderMapper", () => {
   const preferences: BlingSyncPreferences = {
     products: {
@@ -48,12 +73,12 @@ describe("BlingOrderMapper", () => {
   };
 
   it("should map order correctly", () => {
-    const order: MockOrder = {
+    const order = createMockOrder({
       id: "ord_123",
       display_id: 1001,
       created_at: new Date("2023-01-01T10:00:00Z"),
       email: "test@example.com",
-      shipping_address: {
+      shipping_address: mock<OrderDTO["shipping_address"]>({
         first_name: "John",
         last_name: "Doe",
         address_1: "Main St 123",
@@ -61,26 +86,26 @@ describe("BlingOrderMapper", () => {
         city: "City",
         province: "SP",
         metadata: { cpf: "12345678909" },
-      } as unknown as MockOrder["shipping_address"],
-      billing_address: {
+      }),
+      billing_address: mock<OrderDTO["billing_address"]>({
         first_name: "John",
         last_name: "Doe",
-      } as unknown as MockOrder["billing_address"],
+      }),
       items: [
-        {
+        mock<NonNullable<OrderDTO["items"]>[number]>({
           id: "item_1",
           title: "Product 1",
           quantity: 2,
           subtotal: 2000, // 20.00 total -> 10.00 unit
           discount_total: 0,
           metadata: { external_id: "ext_1" },
-        } as unknown as NonNullable<MockOrder["items"]>[number],
+        }),
       ],
       total: 2000,
       shipping_total: 0,
       discount_total: 0,
       metadata: {},
-    };
+    });
 
     const result = BlingOrderMapper.mapToBlingPayload(
       order as OrderDTO,
@@ -105,10 +130,7 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should throw if address is missing", () => {
-    const order: MockOrder = {
-      id: "ord_123",
-      items: [],
-    };
+    const order = createMockOrder({ shipping_address: undefined });
     expect(() =>
       BlingOrderMapper.mapToBlingPayload(
         order as OrderDTO,
@@ -120,14 +142,12 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should throw if document is missing", () => {
-    const order: MockOrder = {
-      id: "ord_123",
+    const order = createMockOrder({
       shipping_address: mock<OrderDTO["shipping_address"]>({
         address_1: "Main St",
         metadata: {},
       }),
-      items: [] as unknown as MockOrder["items"],
-    };
+    });
     expect(() =>
       BlingOrderMapper.mapToBlingPayload(
         order as OrderDTO,
@@ -139,14 +159,12 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should throw if document is invalid", () => {
-    const order: MockOrder = {
-      id: "ord_123",
+    const order = createMockOrder({
       shipping_address: mock<OrderDTO["shipping_address"]>({
         address_1: "Main St",
         metadata: { cpf: "11111111111" },
       }),
-      items: [] as unknown as MockOrder["items"],
-    };
+    });
     expect(() =>
       BlingOrderMapper.mapToBlingPayload(
         order as OrderDTO,
@@ -158,25 +176,20 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should handle discount", () => {
-    const order: MockOrder = {
-      id: "ord_123",
-      created_at: new Date(),
-      shipping_address: {
-        address_1: "Main St",
-        metadata: { cpf: "12345678909" },
-      },
+    const order = createMockOrder({
+      id: "ord_discount",
       items: [
-        {
+        mock<NonNullable<OrderDTO["items"]>[number]>({
           id: "item_1",
           quantity: 1,
           subtotal: 1000,
           discount_total: 100, // 1.00 discount
           metadata: { external_id: "ext_1" },
-        } as unknown as NonNullable<MockOrder["items"]>[number],
-      ] as unknown as MockOrder["items"],
+        }),
+      ],
       total: 900,
       discount_total: 100,
-    };
+    });
 
     const result = BlingOrderMapper.mapToBlingPayload(
       order as OrderDTO,
@@ -189,23 +202,18 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should handle rounding for unit prices with recurring decimals", () => {
-    const order: MockOrder = {
+    const order = createMockOrder({
       id: "ord_rounding",
-      created_at: new Date(),
-      shipping_address: {
-        address_1: "Main St",
-        metadata: { cpf: "12345678909" },
-      },
       items: [
-        {
+        mock<NonNullable<OrderDTO["items"]>[number]>({
           id: "item_1",
           quantity: 3,
           subtotal: 1000, // 10.00 total for 3 items => 3.3333... unit
           metadata: { external_id: "ext_1" },
-        } as unknown as NonNullable<MockOrder["items"]>[number],
-      ] as unknown as MockOrder["items"],
+        }),
+      ],
       total: 1000,
-    };
+    });
 
     const result = BlingOrderMapper.mapToBlingPayload(
       order as OrderDTO,
@@ -218,11 +226,10 @@ describe("BlingOrderMapper", () => {
     expect(result.itens[0]!.valor).toBe(3.3333);
   });
 
-  // Mock a Medusa order for house number tests
-  const mockMedusaOrder: MockOrder = {
+  // Shared base order for house number tests
+  const baseHouseNumberOrder = createMockOrder({
     id: "ord_house_number",
-    created_at: new Date(),
-    shipping_address: {
+    shipping_address: mock<OrderDTO["shipping_address"]>({
       first_name: "John",
       last_name: "Doe",
       address_1: "Rua Teste",
@@ -230,32 +237,33 @@ describe("BlingOrderMapper", () => {
       city: "City",
       province: "SP",
       metadata: { cpf: "12345678909" },
-    },
+    }),
     items: [
-      {
+      mock<NonNullable<OrderDTO["items"]>[number]>({
         id: "item_1",
         title: "Product 1",
         quantity: 1,
         subtotal: 10_000,
         metadata: { external_id: "ext_1" },
-      } as unknown as NonNullable<MockOrder["items"]>[number],
+      }),
     ],
     total: 10_000,
-  };
+  });
 
   it("should extract house number from address_1 using regex", () => {
+    const order = createMockOrder({
+      ...baseHouseNumberOrder,
+      shipping_address: mock<OrderDTO["shipping_address"]>({
+        ...(baseHouseNumberOrder.shipping_address as DeepPartial<
+          NonNullable<OrderDTO["shipping_address"]>
+        >),
+        address_1: "Rua Teste 123",
+        address_2: "",
+      }),
+    });
+
     const result = BlingOrderMapper.mapToBlingPayload(
-      {
-        ...mockMedusaOrder,
-        shipping_address: {
-          ...(mockMedusaOrder.shipping_address as unknown as Record<
-            string,
-            unknown
-          >),
-          address_1: "Rua Teste 123",
-          address_2: "",
-        } as unknown as MockOrder["shipping_address"],
-      } as unknown as OrderDTO,
+      order as OrderDTO,
       preferences,
       options,
       [],
@@ -265,18 +273,19 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should fallback to address_2 for house number", () => {
+    const order = createMockOrder({
+      ...baseHouseNumberOrder,
+      shipping_address: mock<OrderDTO["shipping_address"]>({
+        ...(baseHouseNumberOrder.shipping_address as DeepPartial<
+          NonNullable<OrderDTO["shipping_address"]>
+        >),
+        address_1: "Rua Teste",
+        address_2: "456",
+      }),
+    });
+
     const result = BlingOrderMapper.mapToBlingPayload(
-      {
-        ...mockMedusaOrder,
-        shipping_address: {
-          ...(mockMedusaOrder.shipping_address as unknown as Record<
-            string,
-            unknown
-          >),
-          address_1: "Rua Teste",
-          address_2: "456",
-        } as unknown as MockOrder["shipping_address"],
-      } as unknown as OrderDTO,
+      order as OrderDTO,
       preferences,
       options,
       [],
@@ -286,18 +295,19 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should use 'S/N' when no house number is found", () => {
+    const order = createMockOrder({
+      ...baseHouseNumberOrder,
+      shipping_address: mock<OrderDTO["shipping_address"]>({
+        ...(baseHouseNumberOrder.shipping_address as DeepPartial<
+          NonNullable<OrderDTO["shipping_address"]>
+        >),
+        address_1: "Rua Teste",
+        address_2: "",
+      }),
+    });
+
     const result = BlingOrderMapper.mapToBlingPayload(
-      {
-        ...mockMedusaOrder,
-        shipping_address: {
-          ...(mockMedusaOrder.shipping_address as unknown as Record<
-            string,
-            unknown
-          >),
-          address_1: "Rua Teste",
-          address_2: "",
-        } as unknown as MockOrder["shipping_address"],
-      } as unknown as OrderDTO,
+      order as OrderDTO,
       preferences,
       options,
       [],
@@ -307,20 +317,20 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should handle fractional cents with 4-decimal precision for unit price", () => {
+    const order = createMockOrder({
+      ...baseHouseNumberOrder,
+      items: [
+        mock<NonNullable<OrderDTO["items"]>[number]>({
+          id: "item_1",
+          quantity: 3,
+          subtotal: 1000, // 10.00 / 3 = 3.3333...
+          metadata: { external_id: "ext_1" },
+        }),
+      ],
+    });
+
     const result = BlingOrderMapper.mapToBlingPayload(
-      {
-        ...mockMedusaOrder,
-        items: [
-          {
-            ...(mockMedusaOrder.items![0] as unknown as Record<
-              string,
-              unknown
-            >),
-            quantity: 3,
-            subtotal: 1000, // 10.00 / 3 = 3.3333...
-          } as unknown as NonNullable<MockOrder["items"]>[number],
-        ],
-      } as unknown as OrderDTO,
+      order as OrderDTO,
       preferences,
       options,
       [],
@@ -330,7 +340,7 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should handle full order details and currency conversion", () => {
-    const order: MockOrder = {
+    const order = createMockOrder({
       id: "order_full",
       display_id: 123,
       created_at: new Date("2024-02-21T10:00:00Z"),
@@ -339,7 +349,7 @@ describe("BlingOrderMapper", () => {
       total: 15_050, // 150.50
       discount_total: 1000, // 10.00
       shipping_total: 1500, // 15.00
-      shipping_address: {
+      shipping_address: mock<OrderDTO["shipping_address"]>({
         first_name: "John",
         last_name: "Doe",
         address_1: "Rua Teste, 100",
@@ -352,9 +362,9 @@ describe("BlingOrderMapper", () => {
         metadata: {
           cpf: "123.456.789-09",
         },
-      } as unknown as MockOrder["shipping_address"],
+      }),
       items: [
-        {
+        mock<NonNullable<OrderDTO["items"]>[number]>({
           id: "item_1",
           title: "Product 1",
           variant_sku: "SKU001",
@@ -364,24 +374,24 @@ describe("BlingOrderMapper", () => {
           metadata: {
             bling_external_id: "BLING_001",
           },
-        } as unknown as NonNullable<MockOrder["items"]>[number],
+        }),
       ],
       shipping_methods: [
-        {
+        mock<NonNullable<OrderDTO["shipping_methods"]>[number]>({
           name: "Standard Shipping",
           amount: 1500,
           metadata: {
             service_code: "12345",
             shipping_type: "SEDEX",
           },
-        } as unknown as NonNullable<MockOrder["shipping_methods"]>[number],
+        }),
       ],
       metadata: {
         observacoes: "Test note",
         observacoes_internas: "Internal note",
         natureza_operacao: "Venda",
       },
-    };
+    });
 
     const warnings: string[] = [];
     const result = BlingOrderMapper.mapToBlingPayload(
@@ -408,23 +418,18 @@ describe("BlingOrderMapper", () => {
   });
 
   it("should generate NFe and Labels when requested", () => {
-    const order: MockOrder = {
+    const order = createMockOrder({
       id: "ord_nfe",
-      created_at: new Date(),
-      shipping_address: {
-        address_1: "Main St",
-        metadata: { cpf: "12345678909" },
-      },
       items: [
-        {
+        mock<NonNullable<OrderDTO["items"]>[number]>({
           id: "i1",
           quantity: 1,
           subtotal: 100,
           metadata: { external_id: "e1" },
-        } as unknown as NonNullable<MockOrder["items"]>[number],
+        }),
       ],
       total: 100,
-    };
+    });
 
     const nfeOptions = {
       generateNfe: true,
