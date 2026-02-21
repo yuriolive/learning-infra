@@ -67,7 +67,7 @@ const modules = isMigrating
       {
         resolve: "@vendin/medusa-ai-agent",
         options: {
-          modelName: "gemini-3.0-flash",
+          modelName: process.env.AGENT_MODEL_NAME || "gemini-3.0-flash",
         },
       },
       // {

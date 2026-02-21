@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 import { AGENT_MODULE, type AgentModuleService } from "@vendin/medusa-ai-agent";
 
 import { WhatsAppPayloadSchema, type WhatsAppChangeType } from "./validators";
@@ -46,14 +48,31 @@ async function processWhatsAppChange(
   }
 }
 
+export const GET = async (request: MedusaRequest, response: MedusaResponse) => {
+  const mode = request.query["hub.mode"];
+  const token = request.query["hub.verify_token"];
+  const challenge = request.query["hub.challenge"];
+
+  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+
+  if (mode === "subscribe" && token === verifyToken) {
+    response.status(200).send(challenge);
+    return;
+  }
+
+  response.status(403).send("Forbidden");
+};
+
 export const POST = async (
   request: MedusaRequest,
   response: MedusaResponse,
 ) => {
-  const agentService: AgentModuleService = request.scope.resolve(AGENT_MODULE);
   const logger: Logger = request.scope.resolve("logger");
+  let agentService: AgentModuleService;
 
-  if (!agentService) {
+  try {
+    agentService = request.scope.resolve(AGENT_MODULE);
+  } catch {
     logger.error(
       "AgentModuleService not found. Ensure @vendin/medusa-ai-agent is enabled in medusa-config.ts",
     );
@@ -62,11 +81,37 @@ export const POST = async (
   }
 
   try {
+    const signature = request.headers["x-hub-signature-256"] as
+      | string
+      | undefined;
+    const secret = process.env.WHATSAPP_APP_SECRET;
+
+    if (secret && signature) {
+      const expectedHash = crypto
+        .createHmac("sha256", secret)
+        .update(JSON.stringify(request.body))
+        .digest("hex");
+
+      if (signature !== `sha256=${expectedHash}`) {
+        logger.warn("Invalid WhatsApp webhook signature");
+        response.status(401).send("Unauthorized");
+        return;
+      }
+    } else if (secret && !signature) {
+      logger.warn("Missing WhatsApp webhook signature");
+      response.status(401).send("Unauthorized");
+      return;
+    }
+
     const payload = WhatsAppPayloadSchema.parse(request.body);
 
     for (const entry of payload.entry) {
       for (const change of entry.changes) {
-        await processWhatsAppChange(change, agentService, logger);
+        processWhatsAppChange(change, agentService, logger).catch((error) => {
+          logger.error(
+            `Unhandled error in background WhatsApp processing: ${error}`,
+          );
+        });
       }
     }
 
