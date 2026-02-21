@@ -10,12 +10,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "baseUrl": ".",
-    "paths": {
-      "@vendin/whatsapp": ["../../packages/whatsapp/src/index.ts"],
-      "@vendin/whatsapp/*": ["../../packages/whatsapp/src/*.ts"]
-    }
+    "strictNullChecks": true
   },
   "include": ["src", "medusa-config.ts"],
   "exclude": ["node_modules", "dist", ".medusa"]
