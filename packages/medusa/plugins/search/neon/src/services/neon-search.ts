@@ -67,8 +67,85 @@ export default class NeonSearchService implements ISearchService {
   }
 
   async addDocuments(indexName: string, documents: unknown[]): Promise<void> {
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < documents.length; i += CHUNK_SIZE) {
+      const chunk = documents.slice(i, i + CHUNK_SIZE);
+      await this.addDocumentsBatch(indexName, chunk);
+    }
+  }
+
+  protected async addDocumentsBatch(
+    indexName: string,
+    documents: unknown[],
+  ): Promise<void> {
+    const validDocs: { id: string; doc: any; text: string }[] = [];
+
     for (const documentData of documents) {
-      await this.addDocument(indexName, documentData);
+      const document = documentData as Record<string, unknown>;
+      const title = typeof document.title === "string" ? document.title : "";
+      const description =
+        typeof document.description === "string" ? document.description : "";
+      const text = (title || "") + " " + (description || "");
+
+      if (text.trim() && document.id) {
+        validDocs.push({ id: document.id as string, doc: document, text });
+      }
+    }
+
+    if (validDocs.length === 0) {
+      return;
+    }
+
+    try {
+      const results = await Promise.allSettled(
+        validDocs.map((d) => this.getEmbedding(d.text)),
+      );
+
+      const itemsToInsert: { id: string; doc: any; vectorString: string }[] = [];
+
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        const docInfo = validDocs[i];
+        if (result.status === "fulfilled") {
+          itemsToInsert.push({
+            id: docInfo.id,
+            doc: docInfo.doc,
+            vectorString: `[${result.value.join(",")}]`,
+          });
+        } else {
+          this.logger_.error(
+            `Failed to get embedding for document ${docInfo.id} in index ${indexName}: ${result.reason}`,
+          );
+        }
+      }
+
+      if (itemsToInsert.length === 0) {
+        return;
+      }
+
+      const valuePlaceholders = itemsToInsert
+        .map(() => `(?, ?, ?::vector)`)
+        .join(", ");
+      const sql = `
+        INSERT INTO search_index_${indexName} (id, doc, embedding)
+        VALUES ${valuePlaceholders}
+        ON CONFLICT (id) DO UPDATE SET
+          doc = EXCLUDED.doc,
+          embedding = EXCLUDED.embedding
+      `;
+
+      const params: unknown[] = [];
+      for (const item of itemsToInsert) {
+        params.push(item.id, item.doc, item.vectorString);
+      }
+
+      await this.manager_.execute(sql, params);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger_.error(
+        `Failed to add documents batch to index ${indexName}: ${errorMessage}`,
+      );
     }
   }
 
@@ -76,34 +153,7 @@ export default class NeonSearchService implements ISearchService {
     indexName: string,
     documentData: unknown,
   ): Promise<void> {
-    const document = documentData as Record<string, unknown>;
-    const title = typeof document.title === "string" ? document.title : "";
-    const description =
-      typeof document.description === "string" ? document.description : "";
-    const text = (title || "") + " " + (description || "");
-    if (!text.trim()) {
-      return;
-    }
-
-    try {
-      const embeddingValues = await this.getEmbedding(text);
-      const vectorString = `[${embeddingValues.join(",")}]`;
-
-      await this.manager_.execute(
-        `INSERT INTO search_index_${indexName} (id, doc, embedding)
-           VALUES (?, ?, ?::vector)
-           ON CONFLICT (id) DO UPDATE SET
-             doc = EXCLUDED.doc,
-             embedding = EXCLUDED.embedding`,
-        [document.id, document, vectorString],
-      );
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger_.error(
-        `Failed to add document ${document.id} to index ${indexName}: ${errorMessage}`,
-      );
-    }
+    await this.addDocuments(indexName, [documentData]);
   }
 
   protected async getEmbedding(text: string): Promise<number[]> {
