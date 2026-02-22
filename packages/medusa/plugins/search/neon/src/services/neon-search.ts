@@ -78,7 +78,8 @@ export default class NeonSearchService implements ISearchService {
     indexName: string,
     documents: unknown[],
   ): Promise<void> {
-    const validDocs: { id: string; doc: any; text: string }[] = [];
+    const validDocs: { id: string; doc: Record<string, unknown>; text: string }[] =
+      [];
 
     for (const documentData of documents) {
       const document = documentData as Record<string, unknown>;
@@ -101,7 +102,8 @@ export default class NeonSearchService implements ISearchService {
         validDocs.map((d) => this.getEmbedding(d.text)),
       );
 
-      const itemsToInsert: { id: string; doc: any; vectorString: string }[] = [];
+      const itemsToInsert: { id: string; doc: Record<string, unknown>; vectorString: string }[] =
+        [];
 
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
