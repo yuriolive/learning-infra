@@ -374,7 +374,7 @@ function createServices(
   const provisioningService = new ProvisioningService(tenantRepository, {
     logger,
     neonApiKey,
-    neonProjectId,
+    neonOrgId: neonProjectId,
     gcpCredentialsJson: googleApplicationCredentials,
     gcpProjectId: environment.GCP_PROJECT_ID,
     gcpRegion: environment.GCP_REGION,

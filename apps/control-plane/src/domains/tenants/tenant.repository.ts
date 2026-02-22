@@ -30,6 +30,10 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
     whatsappPhoneId: mapOptional(databaseTenant.whatsappPhoneId),
     whatsappProvider: mapOptional(databaseTenant.whatsappProvider),
     whatsappVerifiedAt: mapOptional(databaseTenant.whatsappVerifiedAt),
+    neonProjectId: mapOptional(databaseTenant.neonProjectId),
+    releaseChannelId: mapOptional(databaseTenant.releaseChannelId),
+    currentImageTag: mapOptional(databaseTenant.currentImageTag),
+    lockedUntil: mapOptional(databaseTenant.lockedUntil),
   };
 }
 
@@ -69,6 +73,7 @@ export class TenantRepository {
           ? input.whatsappPhoneNumber.replaceAll(/\D/g, "")
           : null,
         whatsappPhoneId: input.whatsappPhoneId,
+        releaseChannelId: input.releaseChannelId || "stable",
       })
       .returning();
 

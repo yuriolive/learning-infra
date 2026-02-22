@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { createDatabase } from "./database";
-import { tenantProvisioningEvents, tenants } from "./schema";
+import { releaseChannels, tenantProvisioningEvents, tenants } from "./schema";
 
 // Determine DATABASE_URL from process.env or use shared default
 const databaseUrl =
@@ -16,6 +16,22 @@ const database = createDatabase(databaseUrl, "development");
 
 async function seed() {
   console.log("Seeding Control Plane database...");
+
+  // Seed Release Channels
+  const channels = [
+    { id: "canary", autoPromote: false },
+    { id: "internal", autoPromote: true },
+    { id: "stable", autoPromote: false },
+  ];
+
+  for (const channel of channels) {
+    await database
+      .insert(releaseChannels)
+      .values(channel)
+      .onConflictDoNothing()
+      .returning();
+  }
+  console.log("Seeded release channels.");
 
   // Check if tenant already exists
   const existingTenants = await database
@@ -52,6 +68,7 @@ async function seed() {
             logoUrl: "",
           },
         },
+        releaseChannelId: "stable",
       })
       .returning();
 
