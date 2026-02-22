@@ -155,111 +155,152 @@ function createMiddlewareOptions(
   };
 }
 
+interface AppState {
+  logger: ReturnType<typeof createCloudflareLogger>;
+  middlewareOptions: ReturnType<typeof createMiddlewareOptions>;
+  services: ReturnType<typeof createServices>;
+  whatsappAppSecret: string | undefined;
+  whatsappVerifyToken: string | undefined;
+}
+
+interface AppInitializationError {
+  logger: ReturnType<typeof createCloudflareLogger>;
+  middlewareOptions: ReturnType<typeof createMiddlewareOptions>;
+  errorResponse: Response;
+}
+
+let initializationPromise: Promise<AppState | AppInitializationError> | null =
+  null;
+
+export function resetInitialization() {
+  initializationPromise = null;
+}
+
 async function initializeApplication(
   environment: Environment,
-  context?: { waitUntil: (promise: Promise<unknown>) => void },
+  context?: {
+    waitUntil: (promise: Promise<unknown>) => void;
+  },
 ) {
-  const nodeEnvironment = environment.NODE_ENV ?? "development";
-  const logger = createCloudflareLogger({
-    logLevel: environment.LOG_LEVEL,
-    nodeEnv: nodeEnvironment,
-  });
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      const nodeEnvironment = environment.NODE_ENV ?? "development";
+      const logger = createCloudflareLogger({
+        logLevel: environment.LOG_LEVEL,
+        nodeEnv: nodeEnvironment,
+      });
 
-  const {
-    databaseUrl,
-    neonApiKey,
-    neonProjectId,
-    adminApiKey,
-    postHogApiKey,
-    upstashRedisUrl,
-    googleApplicationCredentials,
-    cloudRunServiceAccount,
-    geminiApiKey,
-    cloudflareApiToken,
-    cloudflareZoneId,
-    tenantBaseDomain,
-    storefrontHostname,
-    whatsappAppSecret,
-    whatsappVerifyToken,
-  } = await resolveEnvironmentSecrets(environment);
+      const {
+        databaseUrl,
+        neonApiKey,
+        neonProjectId,
+        adminApiKey,
+        postHogApiKey,
+        upstashRedisUrl,
+        googleApplicationCredentials,
+        cloudRunServiceAccount,
+        geminiApiKey,
+        cloudflareApiToken,
+        cloudflareZoneId,
+        tenantBaseDomain,
+        storefrontHostname,
+        whatsappAppSecret,
+        whatsappVerifyToken,
+      } = await resolveEnvironmentSecrets(environment);
 
-  initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
+      const middlewareOptions = createMiddlewareOptions(
+        logger,
+        adminApiKey,
+        nodeEnvironment,
+        environment.ALLOWED_ORIGINS,
+      );
 
-  const middlewareOptions = createMiddlewareOptions(
-    logger,
-    adminApiKey,
-    nodeEnvironment,
-    environment.ALLOWED_ORIGINS,
-  );
+      const configError = validateConfiguration(
+        logger,
+        databaseUrl,
+        adminApiKey,
+        nodeEnvironment,
+        upstashRedisUrl,
+        neonApiKey,
+        neonProjectId,
+        environment.GCP_PROJECT_ID,
+        environment.GCP_REGION,
+        environment.TENANT_IMAGE_TAG,
+        googleApplicationCredentials,
+        cloudRunServiceAccount,
+        geminiApiKey,
+        cloudflareApiToken,
+        cloudflareZoneId,
+        tenantBaseDomain,
+        storefrontHostname,
+      );
 
-  const configError = validateConfiguration(
-    logger,
-    databaseUrl,
-    adminApiKey,
-    nodeEnvironment,
-    upstashRedisUrl,
-    neonApiKey,
-    neonProjectId,
-    environment.GCP_PROJECT_ID,
-    environment.GCP_REGION,
-    environment.TENANT_IMAGE_TAG,
-    googleApplicationCredentials,
-    cloudRunServiceAccount,
-    geminiApiKey,
-    cloudflareApiToken,
-    cloudflareZoneId,
-    tenantBaseDomain,
-    storefrontHostname,
-  );
+      if (configError) {
+        return { logger, middlewareOptions, errorResponse: configError };
+      }
 
-  if (configError) {
-    return { logger, middlewareOptions, errorResponse: configError };
+      initApplicationAnalytics(postHogApiKey, environment.POSTHOG_HOST);
+
+      const services = createServices(
+        logger,
+        databaseUrl as string,
+        nodeEnvironment,
+        environment,
+        neonApiKey,
+        neonProjectId,
+        googleApplicationCredentials,
+        upstashRedisUrl,
+        cloudRunServiceAccount,
+        geminiApiKey,
+        cloudflareApiToken,
+        cloudflareZoneId,
+        tenantBaseDomain,
+        storefrontHostname,
+      );
+
+      return {
+        logger,
+        middlewareOptions,
+        services,
+        whatsappAppSecret,
+        whatsappVerifyToken,
+      };
+    })().catch((error) => {
+      initializationPromise = null;
+      throw error;
+    });
+  }
+
+  const result = await initializationPromise;
+
+  if ("errorResponse" in result) {
+    return result;
   }
 
   const {
-    tenantService,
-    provisioningService,
-    database,
-    whatsappWebhookService,
-  } = createServices(
     logger,
-    databaseUrl as string,
-    nodeEnvironment,
-    environment,
-    neonApiKey,
-    neonProjectId,
-    googleApplicationCredentials,
-    upstashRedisUrl,
-    cloudRunServiceAccount,
-    geminiApiKey,
-    cloudflareApiToken,
-    cloudflareZoneId,
-    tenantBaseDomain,
-    storefrontHostname,
-  );
+    middlewareOptions,
+    services,
+    whatsappAppSecret,
+    whatsappVerifyToken,
+  } = result;
 
-  const { tenantRoutes, internalRoutes, webhookRoutes } =
-    createApplicationRoutes({
-      logger,
-      tenantService,
-      provisioningService,
-      database,
-      whatsappWebhookService,
-      whatsappAppSecret,
-      whatsappVerifyToken,
-      waitUntil: context?.waitUntil?.bind(context),
-    });
+  const routes = createApplicationRoutes({
+    logger,
+    tenantService: services.tenantService,
+    provisioningService: services.provisioningService,
+    database: services.database,
+    whatsappWebhookService: services.whatsappWebhookService,
+    whatsappAppSecret,
+    whatsappVerifyToken,
+    waitUntil: context?.waitUntil?.bind(context),
+  });
 
   return {
     logger,
     middlewareOptions,
-    services: {
-      tenantService,
-      provisioningService,
-      database,
-      whatsappWebhookService,
-    },
-    routes: { tenantRoutes, internalRoutes, webhookRoutes },
+    services,
+    routes,
   };
 }
 
@@ -377,11 +418,11 @@ export default {
     environment: Environment,
     context?: { waitUntil: (promise: Promise<unknown>) => void },
   ): Promise<Response> {
-    const { logger, middlewareOptions, routes, errorResponse } =
-      await initializeApplication(environment, context);
+    const initResult = await initializeApplication(environment, context);
 
-    if (errorResponse) return errorResponse;
+    if ("errorResponse" in initResult) return initResult.errorResponse;
 
+    const { logger, middlewareOptions, routes } = initResult;
     const { tenantRoutes, internalRoutes, webhookRoutes } = routes;
 
     const url = new URL(request.url);
