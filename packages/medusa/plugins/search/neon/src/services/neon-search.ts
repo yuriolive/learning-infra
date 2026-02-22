@@ -88,8 +88,8 @@ export default class NeonSearchService implements ISearchService {
         typeof document.description === "string" ? document.description : "";
       const text = (title || "") + " " + (description || "");
 
-      if (text.trim() && document.id) {
-        validDocs.push({ id: document.id as string, doc: document, text });
+      if (text.trim() && document.id != null) {
+        validDocs.push({ id: String(document.id), doc: document, text });
       }
     }
 
@@ -105,9 +105,10 @@ export default class NeonSearchService implements ISearchService {
       const itemsToInsert: { id: string; doc: Record<string, unknown>; vectorString: string }[] =
         [];
 
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
+      for (const [i, result] of results.entries()) {
         const docInfo = validDocs[i];
+        if (!docInfo) continue;
+
         if (result.status === "fulfilled") {
           itemsToInsert.push({
             id: docInfo.id,
@@ -115,8 +116,10 @@ export default class NeonSearchService implements ISearchService {
             vectorString: `[${result.value.join(",")}]`,
           });
         } else {
+          const reasonMessage =
+            result.reason instanceof Error ? result.reason.message : String(result.reason);
           this.logger_.error(
-            `Failed to get embedding for document ${docInfo.id} in index ${indexName}: ${result.reason}`,
+            `Failed to get embedding for document ${docInfo.id} in index ${indexName}: ${reasonMessage}`,
           );
         }
       }
