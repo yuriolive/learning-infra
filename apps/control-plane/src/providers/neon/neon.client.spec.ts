@@ -1,7 +1,9 @@
-import { cache } from "@vendin/cache";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import { mockLogger } from "../../../tests/utils/test-utilities";
+
 import { NeonProvider } from "./neon.client";
+
 import type { Logger } from "../../utils/logger";
 
 // Mock dependencies
@@ -48,7 +50,7 @@ describe("NeonProvider", () => {
       mockCreateProject.mockResolvedValue({
         data: {
           project: { id: "project-123" },
-          connection_uris: [{ connection_uri: "postgres://..." }]
+          connection_uris: [{ connection_uri: "postgres://..." }],
         },
       });
 
@@ -67,20 +69,20 @@ describe("NeonProvider", () => {
     });
 
     it("should throw if no project ID returned", async () => {
-        const tenantId = "tenant-123";
-        mockCreateProject.mockResolvedValue({
-            data: { project: {}, connection_uris: [] }
-        });
-        await expect(provider.createTenantProject(tenantId)).rejects.toThrow();
+      const tenantId = "tenant-123";
+      mockCreateProject.mockResolvedValue({
+        data: { project: {}, connection_uris: [] },
+      });
+      await expect(provider.createTenantProject(tenantId)).rejects.toThrow();
     });
   });
 
   describe("deleteTenantProject", () => {
-      it("should delete project", async () => {
-          const projectId = "p-123";
-          mockDeleteProject.mockResolvedValue({});
-          await provider.deleteTenantProject(projectId);
-          expect(mockDeleteProject).toHaveBeenCalledWith(projectId);
-      });
+    it("should delete project", async () => {
+      const projectId = "p-123";
+      mockDeleteProject.mockResolvedValue({});
+      await provider.deleteTenantProject(projectId);
+      expect(mockDeleteProject).toHaveBeenCalledWith(projectId);
+    });
   });
 });

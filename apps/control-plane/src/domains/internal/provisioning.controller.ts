@@ -34,7 +34,14 @@ export class ProvisioningController {
       const body = await request.json();
       const { tenantId, snapshotName, imageTag } = requestSchema.parse(body);
 
-      return await this.dispatchAction(action, tenantId, request, body, snapshotName, imageTag);
+      return await this.dispatchAction(
+        action,
+        tenantId,
+        request,
+        body,
+        snapshotName,
+        imageTag,
+      );
     } catch (error) {
       if (error instanceof z.ZodError) {
         return new Response(JSON.stringify({ error: error.errors }), {
@@ -58,7 +65,7 @@ export class ProvisioningController {
     request: Request,
     body: unknown,
     snapshotName?: string,
-    imageTag?: string
+    imageTag?: string,
   ): Promise<Response> {
     switch (action) {
       case "database": {
@@ -70,13 +77,17 @@ export class ProvisioningController {
         // Default snapshot name if not provided
         const name = snapshotName || `backup-${Date.now()}`;
         return this.handleStep(tenantId, "create_db_snapshot", () =>
-          this.provisioningService.createDatabaseSnapshot(tenantId, name)
+          this.provisioningService.createDatabaseSnapshot(tenantId, name),
         );
       }
       case "restore": {
-        if (!snapshotName) throw new Error("Snapshot name required for restore");
+        if (!snapshotName)
+          throw new Error("Snapshot name required for restore");
         return this.handleStep(tenantId, "restore_db_snapshot", () =>
-           this.provisioningService.restoreDatabaseSnapshot(tenantId, snapshotName)
+          this.provisioningService.restoreDatabaseSnapshot(
+            tenantId,
+            snapshotName,
+          ),
         );
       }
       case "migrations": {
@@ -85,7 +96,7 @@ export class ProvisioningController {
 
         if (subAction === "ensure") {
           return this.handleStep(tenantId, "ensure_migration_job", () =>
-            this.provisioningService.ensureMigrationJob(tenantId),
+            this.provisioningService.ensureMigrationJob(tenantId, imageTag),
           );
         }
 
@@ -97,7 +108,7 @@ export class ProvisioningController {
 
         // Default to trigger, or explicit trigger
         return this.handleStep(tenantId, "trigger_migration_job", () =>
-          this.provisioningService.triggerMigrationJob(tenantId, imageTag),
+          this.provisioningService.triggerMigrationJob(tenantId),
         );
       }
       case "service": {

@@ -82,7 +82,7 @@ describe("ProvisioningController", () => {
     await controller.handleRequest(request);
     expect(mockProvisioningService.triggerMigrationJob).toHaveBeenCalledWith(
       tenantId,
-      undefined
+      undefined,
     );
   });
 
@@ -93,7 +93,7 @@ describe("ProvisioningController", () => {
     await controller.handleRequest(request);
     expect(mockProvisioningService.startDeployService).toHaveBeenCalledWith(
       tenantId,
-      undefined
+      undefined,
     );
   });
 
@@ -228,31 +228,36 @@ describe("ProvisioningController", () => {
 
   // Add test for snapshot
   it("should handle /snapshot", async () => {
-      const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
-      const request = new Request(
-          "http://localhost/internal/provisioning/snapshot",
-          {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ tenantId, snapshotName: "snap-1" })
-          }
-      );
-      await controller.handleRequest(request);
-      expect(mockProvisioningService.createDatabaseSnapshot).toHaveBeenCalledWith(tenantId, "snap-1");
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = new Request(
+      "http://localhost/internal/provisioning/snapshot",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId, snapshotName: "snap-1" }),
+      },
+    );
+    await controller.handleRequest(request);
+    expect(mockProvisioningService.createDatabaseSnapshot).toHaveBeenCalledWith(
+      tenantId,
+      "snap-1",
+    );
   });
 
   // Add test for restore
   it("should handle /restore", async () => {
-      const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
-      const request = new Request(
-          "http://localhost/internal/provisioning/restore",
-          {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ tenantId, snapshotName: "snap-1" })
-          }
-      );
-      await controller.handleRequest(request);
-      expect(mockProvisioningService.restoreDatabaseSnapshot).toHaveBeenCalledWith(tenantId, "snap-1");
+    const tenantId = "b0e41783-6236-47a6-a36c-8c345330a111";
+    const request = new Request(
+      "http://localhost/internal/provisioning/restore",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId, snapshotName: "snap-1" }),
+      },
+    );
+    await controller.handleRequest(request);
+    expect(
+      mockProvisioningService.restoreDatabaseSnapshot,
+    ).toHaveBeenCalledWith(tenantId, "snap-1");
   });
 });

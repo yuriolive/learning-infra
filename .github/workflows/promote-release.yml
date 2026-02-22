@@ -14,5 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call Control Plane
+        env:
+          TARGET_VERSION: ${{ inputs.version }}
+          TARGET_CHANNEL: ${{ inputs.channel }}
         run: |
-          curl -X POST "${{ secrets.CONTROL_PLANE_URL }}/internal/campaigns"             -H "Authorization: Bearer ${{ secrets.ADMIN_API_KEY }}"             -H "Content-Type: application/json"             -d '{"targetImageTag": "${{ inputs.version }}", "channel": "${{ inputs.channel }}"}'
+          jq -n \
+            --arg targetImageTag "$TARGET_VERSION" \
+            --arg channel "$TARGET_CHANNEL" \
+            '{targetImageTag: $targetImageTag, channel: $channel}' > payload.json
+            
+          curl -X POST "${{ secrets.CONTROL_PLANE_URL }}/internal/campaigns" \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d @payload.json

@@ -19,11 +19,14 @@ export async function createMockDatabase() {
   await migrate(database, { migrationsFolder });
 
   // Seed release channels for tests
-  await database.insert(schema.releaseChannels).values([
-    { id: "canary", autoPromote: false },
-    { id: "stable", autoPromote: false },
-    { id: "internal", autoPromote: true },
-  ]).onConflictDoNothing();
+  await database
+    .insert(schema.releaseChannels)
+    .values([
+      { id: "canary", autoPromote: false },
+      { id: "stable", autoPromote: false },
+      { id: "internal", autoPromote: true },
+    ])
+    .onConflictDoNothing();
 
   return database;
 }

@@ -115,7 +115,7 @@ export const tenantUpgradeExecutions = pgTable("tenant_upgrade_executions", {
     .notNull()
     .references(() => tenants.id),
   status: upgradeExecutionStatusEnum("status").notNull().default("queued"),
-  logs: jsonb("logs").$type<any>(),
+  logs: jsonb("logs").$type<unknown>(),
   startedAt: timestamp("started_at").defaultNow(),
   finishedAt: timestamp("finished_at"),
 });
@@ -170,21 +170,27 @@ export const tenantProvisioningEventsRelations = relations(
   }),
 );
 
-export const upgradeCampaignsRelations = relations(upgradeCampaigns, ({ one, many }) => ({
-  channel: one(releaseChannels, {
-    fields: [upgradeCampaigns.channelId],
-    references: [releaseChannels.id],
+export const upgradeCampaignsRelations = relations(
+  upgradeCampaigns,
+  ({ one, many }) => ({
+    channel: one(releaseChannels, {
+      fields: [upgradeCampaigns.channelId],
+      references: [releaseChannels.id],
+    }),
+    executions: many(tenantUpgradeExecutions),
   }),
-  executions: many(tenantUpgradeExecutions),
-}));
+);
 
-export const tenantUpgradeExecutionsRelations = relations(tenantUpgradeExecutions, ({ one }) => ({
-  campaign: one(upgradeCampaigns, {
-    fields: [tenantUpgradeExecutions.campaignId],
-    references: [upgradeCampaigns.id],
+export const tenantUpgradeExecutionsRelations = relations(
+  tenantUpgradeExecutions,
+  ({ one }) => ({
+    campaign: one(upgradeCampaigns, {
+      fields: [tenantUpgradeExecutions.campaignId],
+      references: [upgradeCampaigns.id],
+    }),
+    tenant: one(tenants, {
+      fields: [tenantUpgradeExecutions.tenantId],
+      references: [tenants.id],
+    }),
   }),
-  tenant: one(tenants, {
-    fields: [tenantUpgradeExecutions.tenantId],
-    references: [tenants.id],
-  }),
-}));
+);

@@ -1,11 +1,11 @@
 import { type Database } from "../../database/database";
 import { type Logger } from "../../utils/logger";
 import { type ProvisioningService } from "../provisioning/provisioning.service";
+import { UpgradeService } from "../provisioning/upgrade.service";
 import { type TenantService } from "../tenants/tenant.service";
 
-import { ProvisioningController } from "./provisioning.controller";
 import { CampaignController } from "./campaign.controller";
-import { UpgradeService } from "../provisioning/upgrade.service";
+import { ProvisioningController } from "./provisioning.controller";
 
 export interface InternalRouteContext {
   logger: Logger;
@@ -23,7 +23,10 @@ export function createInternalRoutes(context: InternalRouteContext) {
   );
 
   const upgradeService = new UpgradeService(context.db, context.logger);
-  const campaignController = new CampaignController(upgradeService, context.logger);
+  const campaignController = new CampaignController(
+    upgradeService,
+    context.logger,
+  );
 
   return {
     handleRequest(request: Request): Promise<Response> {

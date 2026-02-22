@@ -90,7 +90,10 @@ export class CloudRunProvider {
     const parent = `projects/${this.projectId}/locations/${this.region}`;
     const servicePath = `${parent}/services/${serviceName}`;
 
-    this.logger.info({ tenantId, imageTag }, "Starting Cloud Run deployment (Async)");
+    this.logger.info(
+      { tenantId, imageTag },
+      "Starting Cloud Run deployment (Async)",
+    );
 
     const environmentVariables = {
       DATABASE_URL: config.databaseUrl,
@@ -105,7 +108,10 @@ export class CloudRunProvider {
       ...(this.geminiApiKey ? { GEMINI_API_KEY: this.geminiApiKey } : {}),
     };
 
-    const serviceRequest = this.prepareServiceRequest(environmentVariables, imageTag);
+    const serviceRequest = this.prepareServiceRequest(
+      environmentVariables,
+      imageTag,
+    );
 
     const operationName = await this.getOrCreateService(
       serviceName,
@@ -154,14 +160,17 @@ export class CloudRunProvider {
 
     this.logger.info({ tenantId, imageTag }, "Ensuring migration job exists");
 
-    const jobRequest = this.prepareJobRequest({
-      DATABASE_URL: config.databaseUrl,
-      REDIS_URL: config.redisUrl,
-      REDIS_PREFIX: config.redisPrefix,
-      NODE_ENV: "production",
-      JWT_SECRET: config.jwtSecret,
-      COOKIE_SECRET: config.cookieSecret,
-    }, imageTag);
+    const jobRequest = this.prepareJobRequest(
+      {
+        DATABASE_URL: config.databaseUrl,
+        REDIS_URL: config.redisUrl,
+        REDIS_PREFIX: config.redisPrefix,
+        NODE_ENV: "production",
+        JWT_SECRET: config.jwtSecret,
+        COOKIE_SECRET: config.cookieSecret,
+      },
+      imageTag,
+    );
 
     // Returns operation name (LRO)
     const result = await this.getOrCreateJob(
@@ -250,7 +259,7 @@ export class CloudRunProvider {
   // New method for polling
   async getJobExecutionStatus(
     executionName: string,
-  ): Promise<{ status: MigrationStatus; error?: string }> {
+  ): Promise<{ status: "success" | "failed" | "running"; error?: string }> {
     try {
       const response =
         await this.runClient.projects.locations.jobs.executions.get({
@@ -277,16 +286,20 @@ export class CloudRunProvider {
   }
 
   private mapExecutionToStatus(
-    execution: any,
-  ): { status: MigrationStatus; error?: string } {
+    execution: run_v2.Schema$GoogleCloudRunV2Execution,
+  ): { status: "success" | "failed" | "running"; error?: string } {
     if (execution.succeededCount && execution.succeededCount > 0) {
       return { status: "success" };
     }
 
     if (execution.failedCount && execution.failedCount > 0) {
       const condition = execution.conditions?.find(
-        (c: any) => c.state === "CONDITION_FAILED",
-      );
+        (c: unknown) =>
+          typeof c === "object" &&
+          c !== null &&
+          "state" in c &&
+          (c as { state: string }).state === "CONDITION_FAILED",
+      ) as { message?: string } | undefined;
       const message = condition?.message;
       return { status: "failed", ...(message ? { error: message } : {}) };
     }
@@ -343,7 +356,7 @@ export class CloudRunProvider {
     serviceId: string,
     servicePath: string,
     parent: string,
-    serviceRequest: any,
+    serviceRequest: object,
     tenantId: string,
   ): Promise<string | undefined> {
     return this.getOrCreateResource(
@@ -360,7 +373,7 @@ export class CloudRunProvider {
     jobId: string,
     jobPath: string,
     parent: string,
-    jobRequest: any,
+    jobRequest: object,
     tenantId: string,
   ): Promise<string | undefined> {
     return this.getOrCreateResource(
@@ -451,7 +464,7 @@ export class CloudRunProvider {
   private prepareJobRequest(
     environmentVariables: Record<string, string>,
     imageTag?: string,
-  ): any {
+  ): object {
     return {
       template: {
         template: {
@@ -482,7 +495,7 @@ export class CloudRunProvider {
   private prepareServiceRequest(
     environmentVariables: Record<string, string>,
     imageTag?: string,
-  ): any {
+  ): object {
     const container = {
       image: imageTag || this.tenantImageTag,
       env: Object.entries(environmentVariables).map(([name, value]) => ({
