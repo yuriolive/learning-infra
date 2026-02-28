@@ -1,4 +1,4 @@
-import { validateSsrfProtection } from "@vendin/utils";
+import { validateSsrfProtection } from "@vendin/utils/network";
 
 import {
   type TwilioWhatsAppConfig,

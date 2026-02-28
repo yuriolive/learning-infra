@@ -9,6 +9,10 @@
     ".": {
       "import": "./dist/index.js",
       "default": "./src/index.ts"
+    },
+    "./network": {
+      "import": "./dist/network.js",
+      "default": "./src/network.ts"
     }
   },
   "scripts": {

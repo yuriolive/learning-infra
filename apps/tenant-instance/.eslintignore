@@ -1,0 +1,4 @@
+medusa-config.js
+dist/
+coverage/
+node_modules/

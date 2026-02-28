@@ -1,4 +1,4 @@
-import { validatePublicUrl } from "@vendin/utils";
+import { validatePublicUrl } from "@vendin/utils/network";
 import { z } from "zod";
 
 import type { consoleLogger } from "@vendin/logger";

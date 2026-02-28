@@ -1,4 +1,4 @@
-import { validateSsrfProtection } from "@vendin/utils";
+import { validateSsrfProtection } from "@vendin/utils/network";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { FacebookWhatsAppProvider } from "../facebook-provider";

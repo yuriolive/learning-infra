@@ -8,7 +8,7 @@ vi.mock("@vendin/utils", () => ({
   validatePublicUrl: vi.fn(),
 }));
 
-import { validatePublicUrl } from "@vendin/utils";
+import { validatePublicUrl } from "@vendin/utils/network";
 
 describe("WhatsappWebhookService SSRF Protection", () => {
   let service: WhatsappWebhookService;

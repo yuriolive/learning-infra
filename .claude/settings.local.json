@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__github__pull_request_read",
+      "Bash(git add gcp/workflows/orchestrate-campaign.yaml)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "mcp__github__add_reply_to_pull_request_comment",
+      "Bash(pnpm run test -- --reporter=verbose tests/unit/provisioning.controller.test.ts tests/unit/provisioning/provisioning.service.test.ts)",
+      "Bash(git add apps/control-plane/tests/unit/provisioning.controller.test.ts apps/control-plane/tests/unit/provisioning/provisioning.service.test.ts)",
+      "Bash(pnpm run test)",
+      "Bash(pnpm run test -- tests/unit/campaign/)",
+      "Bash(git add -A)",
+      "Bash(git add apps/control-plane/src/providers/neon/neon.client.ts apps/control-plane/tests/unit/campaign/upgrade.service.test.ts)",
+      "Bash(npx vitest run --coverage)",
+      "Bash(git add apps/control-plane/tests/unit/provisioning/domain-provisioning.service.test.ts apps/control-plane/tests/unit/providers/neon/neon.client.test.ts apps/control-plane/tests/unit/providers/cloudflare/cloudflare.client.test.ts)",
+      "Bash(git add apps/control-plane/tests/unit/providers/neon/neon.client.test.ts)"
+    ]
+  }
+}
