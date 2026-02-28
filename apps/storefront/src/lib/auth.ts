@@ -1,6 +1,8 @@
 import { createCloudflareLogger } from "@vendin/logger";
 import { resolveGoogleCredentials } from "@vendin/utils";
-import { GoogleAuth, IdTokenClient } from "google-auth-library";
+import { GoogleAuth } from "google-auth-library";
+
+import type { IdTokenClient } from "google-auth-library";
 
 const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
@@ -13,13 +15,15 @@ const clientCache = new Map<string, Promise<IdTokenClient>>();
  * This checks for GOOGLE_APPLICATION_CREDENTIALS env var.
  */
 export async function getTenantAuthToken(targetUrl: string): Promise<string> {
-  // Check if we have a pending or resolved client for this targetUrl
-  if (!clientCache.has(targetUrl)) {
-    // Create a promise that resolves the client and store it in the cache
-    // This ensures that concurrent requests for the same URL share the same initialization logic (thundering herd protection)
-    const clientPromise = (async () => {
+  // Retrieve or create the cached client promise for this targetUrl.
+  // Storing the promise immediately (before any async work) provides thundering herd protection:
+  // concurrent requests for the same URL will await the same initialization promise.
+  let clientPromise = clientCache.get(targetUrl);
+
+  if (!clientPromise) {
+    clientPromise = (async () => {
       try {
-        // Support for environment variable containing the service account JSON key
+        // Support for environment variable containing the service account JSON key.
         // This is required for environments like Cloudflare Workers or Edge where file system access is restricted.
         const serviceAccountJson = await resolveGoogleCredentials();
 
@@ -36,14 +40,12 @@ export async function getTenantAuthToken(targetUrl: string): Promise<string> {
           throw new Error("Invalid Google credentials configuration");
         }
 
-        const auth = new GoogleAuth({
-          credentials,
-        });
+        const auth = new GoogleAuth({ credentials });
 
         // idTokenClient requires the target audience (URL) to sign the token for.
         return await auth.getIdTokenClient(targetUrl);
       } catch (error) {
-        // If client creation fails, remove the promise from the cache so future attempts can retry
+        // If client creation fails, remove the promise from the cache so future attempts can retry.
         clientCache.delete(targetUrl);
         throw error;
       }
@@ -52,26 +54,17 @@ export async function getTenantAuthToken(targetUrl: string): Promise<string> {
     clientCache.set(targetUrl, clientPromise);
   }
 
-  try {
-    const client = await clientCache.get(targetUrl)!;
-    const headers = await client.getRequestHeaders();
+  const client = await clientPromise;
+  const headers = await client.getRequestHeaders();
 
-    // Format: "Bearer <token>"
-    const authHeader = headers.get("Authorization");
+  // getRequestHeaders() returns a Web API Headers object in google-auth-library v10+.
+  const authHeader = headers.get("Authorization");
 
-    if (!authHeader) {
-      throw new Error(
-        "Failed to generate Authorization header from Google credentials",
-      );
-    }
-
-    // Return just the token part if needed, or keeping full header is fine depending on usage.
-    // Using full header is safer for immediate forwarding.
-    return authHeader;
-  } catch (error) {
-    // If fetching headers fails (e.g. token refresh error), we allow the error to propagate.
-    // The client instance is kept in cache as it might be a transient network issue.
-    // If it's a permanent auth error, the process/container might need restart or we could implement smarter invalidation.
-    throw error;
+  if (!authHeader) {
+    throw new Error(
+      "Failed to generate Authorization header from Google credentials",
+    );
   }
+
+  return authHeader;
 }
