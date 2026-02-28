@@ -227,21 +227,4 @@ export class NeonProvider {
       throw error;
     }
   }
-
-  /**
-   * Deletes the tenant's database and role.
-   * Used for rollback in case of provisioning failures.
-   * @param tenantId - The unique identifier of the tenant
-   */
-  async deleteTenantDatabase(tenantId: string): Promise<void> {
-    // Legacy method kept for interface compatibility if needed,
-    // but implementation should ideally forward to deleteTenantProject if we have the ID.
-    // However, we pass tenantId here, not projectId.
-    // If we don't have projectId easily available here, we might skip or log warning.
-    // For now, let's assume the caller will call deleteTenantProject with the stored projectId.
-    this.logger.warn(
-      { tenantId },
-      "deleteTenantDatabase called but using Project-per-Tenant strategy. Use deleteTenantProject instead.",
-    );
-  }
 }

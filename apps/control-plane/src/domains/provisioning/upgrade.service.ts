@@ -72,7 +72,6 @@ export class UpgradeService {
 
   async getNextBatch(
     campaignId: string,
-    batchSize = 10,
   ): Promise<{ batch: unknown[]; campaignStatus: string }> {
     // Check if campaign is paused or failed
     const [campaign] = await this.database
@@ -119,8 +118,6 @@ export class UpgradeService {
       return { batch: [], campaignStatus: campaign.status };
     }
 
-    const fetchSize = Math.min(batchSize, availableSlots);
-
     // Fetch queued executions
     const batch = await this.database.transaction(async (tx) => {
       const selected = await tx
@@ -142,7 +139,7 @@ export class UpgradeService {
             eq(tenantUpgradeExecutions.status, "queued"),
           ),
         )
-        .limit(fetchSize)
+        .limit(availableSlots)
         .for("update", { skipLocked: true });
 
       if (selected.length > 0) {

@@ -26,6 +26,7 @@ CREATE TABLE "upgrade_campaigns" (
 	"completed_at" timestamp
 );
 --> statement-breakpoint
+INSERT INTO "release_channels" ("id", "auto_promote") VALUES ('canary', false), ('internal', false), ('stable', false);--> statement-breakpoint
 ALTER TABLE "tenants" ADD COLUMN "release_channel_id" text DEFAULT 'stable';--> statement-breakpoint
 ALTER TABLE "tenants" ADD COLUMN "current_image_tag" text;--> statement-breakpoint
 ALTER TABLE "tenants" ADD COLUMN "locked_until" timestamp;--> statement-breakpoint

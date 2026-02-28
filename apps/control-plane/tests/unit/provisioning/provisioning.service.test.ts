@@ -134,6 +134,16 @@ describe("ProvisioningService Granular Steps", () => {
     });
   });
 
+  describe("restoreDatabaseSnapshot", () => {
+    it("should restore from snapshot", async () => {
+      await service.restoreDatabaseSnapshot("tenant-1", "snap-1");
+      expect(mockNeonProvider.restoreFromSnapshot).toHaveBeenCalledWith(
+        "proj-1",
+        "snap-1",
+      );
+    });
+  });
+
   describe("rollbackResources", () => {
     it("should delete database and service and mark tenant as failed", async () => {
       await service.rollbackResources("tenant-1");

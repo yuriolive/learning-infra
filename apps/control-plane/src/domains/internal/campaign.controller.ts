@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { upgradeExecutionStatusEnum } from "../../database/schema";
 import { type Logger } from "../../utils/logger";
 import { type UpgradeService } from "../provisioning/upgrade.service";
 
@@ -78,16 +79,7 @@ export class CampaignController {
     request: Request,
   ): Promise<Response> {
     const schema = z.object({
-      status: z.enum([
-        "queued",
-        "snapshotting",
-        "migrating",
-        "deploying",
-        "verifying",
-        "completed",
-        "failed",
-        "rolled_back",
-      ]),
+      status: z.enum(upgradeExecutionStatusEnum.enumValues),
       logs: z.any().optional(),
       error: z.string().optional(),
     });
