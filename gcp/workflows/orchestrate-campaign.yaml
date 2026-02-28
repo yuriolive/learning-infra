@@ -30,7 +30,7 @@ main:
                             call: sys.sleep
                             args:
                               seconds: 30
-                        - next: processing_loop
+                            next: processing_loop
 
               - process_batch:
                   parallel:
