@@ -10,7 +10,8 @@
       "Bash(git add apps/control-plane/tests/unit/provisioning.controller.test.ts apps/control-plane/tests/unit/provisioning/provisioning.service.test.ts)",
       "Bash(pnpm run test)",
       "Bash(pnpm run test -- tests/unit/campaign/)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(git add apps/control-plane/src/providers/neon/neon.client.ts apps/control-plane/tests/unit/campaign/upgrade.service.test.ts)"
     ]
   }
 }
