@@ -36,6 +36,14 @@ Creates Playwright E2E tests covering merchant signup, merchant dashboard, store
 
 **Use when**: Adding Playwright tests, writing end-to-end tests, testing the merchant or customer flows. (Task T5 in `docs/test/IMPLEMENTATION.md`)
 
+### shared/implement-agent-tests
+
+**Location**: `.agent/skills/shared/implement-agent-tests/`
+
+Implements three tiers of AI agent tests: graph routing tests with `FakeChatModel` (fast, no real LLM), multi-turn conversation flow tests against staging with real Gemini, tenant isolation verification, WhatsApp routing tests, and LangSmith production tracing setup.
+
+**Use when**: Adding agent tests, testing LangGraph routing, testing AI conversation flows, verifying tenant isolation in the agent, or setting up LangSmith tracing. (Tasks T9, T10, T11 in `docs/test/IMPLEMENTATION.md`)
+
 ### shared/implement-provisioning-tests
 
 **Location**: `.agent/skills/shared/implement-provisioning-tests/`

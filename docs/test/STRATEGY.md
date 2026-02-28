@@ -94,6 +94,93 @@ The `storefront ↔ control-plane ↔ tenant-instance` boundary is the most like
 
 ---
 
+## AI Agent Testing
+
+Vendin is an **agentic e-commerce platform** — the AI agent is a first-class product feature, not a side experiment. This means agent correctness, conversation quality, and multi-tenant isolation need the same rigour as the infrastructure tests above.
+
+The agent stack: **LangGraph + Gemini + Redis conversation memory + MedusaJS tool integrations** (product search, cart, orders, inventory).
+
+### Agent Test Layers
+
+#### A — Graph Routing Tests (fast, no real LLM)
+
+Use `FakeChatModel` from `@langchain/core/utils/testing` to inject a mock LLM into the graph. This lets you verify the graph's routing logic — does `toolsCondition` call the tools node when the model returns a tool call? Does it end correctly when there are no tool calls? — without hitting Gemini or costing tokens.
+
+**What to cover**:
+
+- Graph routes to `tools` node when model returns a tool call
+- Graph ends at `__end__` when model returns a plain message
+- Customer role only gets customer tools bound
+- Admin role gets all tools bound
+- Conversation history accumulates correctly across turns (state merging)
+
+**Can start immediately — no staging needed.**
+**Target**: < 100ms per test, runs in CI on every PR.
+
+#### B — Tool Integration Tests (expand existing)
+
+The tools tests already exist and mock the MedusaJS container. Expand coverage to include:
+
+- `search_products` with multiple currencies and empty results
+- `add_item_to_cart` when variant has no price in the region (should return error message, not throw)
+- Multi-tool sequences: search → get cart → add item (agent calls tools in order)
+- Admin tools (Phase 2): product CRUD, inventory update, order fulfillment
+
+**Can start immediately.**
+**Target**: < 500ms per test.
+
+#### C — Conversation Flow Tests (staging, real Gemini)
+
+Multi-turn conversation tests run against the demo store in staging using the real Gemini model. These verify that the agent actually understands intent and calls the right tools — something a mock LLM cannot validate.
+
+**Flows to cover**:
+
+1. **Customer shopping flow**: "Show me running shoes under $100" → "Add the first one in size M" → "What's in my cart?"
+2. **Admin inventory flow** (Phase 2): "Check stock for SKU-RED-M" → "Update it to 50 units"
+3. **WhatsApp customer flow**: Webhook arrives with customer phone → agent responds via WhatsApp provider
+4. **WhatsApp admin flow**: Webhook arrives on Vendin's admin number → admin tools available
+5. **Ambiguous input handling**: Agent asks for clarification rather than guessing wrong tool
+
+**Runs after staging deploy, same wave as Playwright E2E.**
+**Target**: < 5 min for full conversation suite.
+
+#### D — Tenant Isolation Tests (critical)
+
+The Redis conversation memory is keyed by `{tenantId}:{role}:{threadId}`. A bug in key construction could leak one merchant's conversation state into another's — a serious data isolation failure.
+
+**What to cover**:
+
+- Two concurrent conversations on different tenants with the same thread ID → zero state bleed
+- Customer role cannot invoke admin tools even if the Redis state is manipulated
+- Tool calls operate on the correct tenant's Neon DB (product search returns only that tenant's catalogue)
+
+**Runs nightly alongside provisioning tests.**
+
+#### E — LangSmith Production Tracing (observability, not a gate)
+
+Enable LangSmith tracing in production with a single environment variable. This provides:
+
+- Full trace of every LLM call, tool invocation, and token usage
+- Latency breakdown per graph node
+- A dashboard to inspect and debug production agent failures without code changes
+
+**Setup**: `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` in production secrets. No code changes needed — LangGraph auto-instruments when the env var is set.
+
+**Not a CI gate** — purely operational. Set up when the agent goes to production.
+
+### Tool Choice Rationale
+
+| Need                             | Tool                                           | Why                                              |
+| -------------------------------- | ---------------------------------------------- | ------------------------------------------------ |
+| Graph routing tests              | `FakeChatModel` (already in `@langchain/core`) | Zero cost, deterministic, no API key needed      |
+| Tool unit tests                  | Vitest + `vi.fn()` mocks                       | Already established pattern                      |
+| Conversation quality in staging  | Real Gemini (`GEMINI_API_KEY`)                 | Can't validate intent understanding with mocks   |
+| Production observability         | LangSmith                                      | Official LangGraph integration, minimal setup    |
+| Prompt A/B testing               | PromptFoo (future)                             | Only relevant once you're optimising prompts     |
+| Model comparison across versions | Braintrust (future)                            | Worth revisiting when you have 5+ agent variants |
+
+---
+
 ## Demo Store
 
 Two stores serve different purposes in the strategy:
@@ -193,10 +280,13 @@ For tenant-instance deploys: route 10% of traffic to the new revision, check err
 1. **Staging environment** — all other layers depend on it
 2. **Persistent demo store in staging** — needed for smoke tests and E2E
 3. **Testcontainers for integration tests** — expands coverage beyond PGLite limits
-4. **Playwright E2E for critical flows** — highest confidence signal
-5. **Post-deploy smoke tests** — fast production safety net
-6. **Ephemeral provisioning tests** (nightly) — validates full tenant lifecycle
-7. **Contract tests** — prevents slow interface drift between services
+4. **Agent graph routing tests** — fast, no staging dependency, high value
+5. **Playwright E2E for critical flows** — highest confidence signal
+6. **Agent conversation flow tests in staging** — validates real LLM behaviour
+7. **Post-deploy smoke tests** — fast production safety net
+8. **Ephemeral provisioning tests + tenant isolation tests** (nightly) — validates full lifecycle
+9. **LangSmith tracing** — enable when agent goes to production
+10. **Contract tests** — prevents slow interface drift between services
 
 ---
 

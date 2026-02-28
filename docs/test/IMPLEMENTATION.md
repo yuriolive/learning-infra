@@ -10,18 +10,24 @@
 graph TD
     T3[T3: Testcontainers integration tests] --> DONE
     T8[T8: Contract tests] --> DONE
+    T9[T9: Agent graph routing tests] --> DONE
 
     T1[T1: Staging environment] --> T2
     T2[T2: Persistent demo store] --> T4
+    T2 --> T10
     T4[T4: Smoke tests] --> T5
     T4 --> T6
     T5[T5: Playwright E2E] --> T7
     T4 --> T7
-    T6[T6: Nightly provisioning tests] --> DONE
+    T6[T6: Nightly provisioning + isolation tests] --> DONE
     T7[T7: CI staging gate] --> DONE
+    T10[T10: Agent conversation flow tests] --> DONE
+    T11[T11: LangSmith production tracing] --> DONE
 
     style T3 fill:#c8f7c5
     style T8 fill:#c8f7c5
+    style T9 fill:#c8f7c5
+    style T11 fill:#c8f7c5
     style T1 fill:#fef3c7
 ```
 
@@ -33,14 +39,14 @@ graph TD
 
 Work is batched into waves. All tasks within a wave can be executed concurrently.
 
-| Wave   | Tasks        | Prerequisite             |
-| ------ | ------------ | ------------------------ |
-| Wave 1 | T3, T8       | None — start immediately |
-| Wave 2 | T1           | Infra decision confirmed |
-| Wave 3 | T2           | T1 complete              |
-| Wave 4 | T4, T5-setup | T2 complete              |
-| Wave 5 | T5-tests, T6 | T4 complete              |
-| Wave 6 | T7           | T5 + T4 complete         |
+| Wave   | Tasks             | Prerequisite             |
+| ------ | ----------------- | ------------------------ |
+| Wave 1 | T3, T8, T9, T11   | None — start immediately |
+| Wave 2 | T1                | Infra decision confirmed |
+| Wave 3 | T2                | T1 complete              |
+| Wave 4 | T4, T5-setup, T10 | T2 complete              |
+| Wave 5 | T5-tests, T6      | T4 complete              |
+| Wave 6 | T7                | T5 + T4 complete         |
 
 ---
 
@@ -399,16 +405,170 @@ Acceptance criteria:
 
 ---
 
+### T9 — Agent Graph Routing Tests
+
+**Can start immediately. No staging dependency.**
+
+**Prompt**:
+
+```
+You are expanding the test suite for an AI agent built with LangGraph and Google Gemini.
+
+Read these files first:
+- packages/medusa/plugins/ai/agent/src/graph/index.ts
+- packages/medusa/plugins/ai/agent/src/graph/state.ts
+- packages/medusa/plugins/ai/agent/src/service.ts
+- packages/medusa/plugins/ai/agent/src/tools/index.ts
+- packages/medusa/plugins/ai/agent/src/__tests__/service.spec.ts
+- packages/medusa/plugins/ai/agent/src/tools/__tests__/products.spec.ts
+- docs/test/STRATEGY.md (AI Agent Testing section, Layer A)
+
+Goal: Add graph routing tests that verify the LangGraph graph structure behaves correctly without hitting the real Gemini API. Use FakeChatModel from @langchain/core/utils/testing to inject a mock LLM.
+
+Specific tasks:
+1. Create packages/medusa/plugins/ai/agent/src/graph/__tests__/routing.spec.ts:
+   a. Test: when FakeChatModel returns a tool call message → graph routes to tools node
+   b. Test: when FakeChatModel returns a plain text message → graph ends at __end__
+   c. Test: customer role graph has only customer tools bound (search_products, get_or_create_cart, add_item_to_cart)
+   d. Test: conversation state accumulates messages correctly across two turns
+   e. Test: thread_id in config produces isolated state (two different thread IDs do not share messages)
+
+2. Create packages/medusa/plugins/ai/agent/src/graph/__tests__/prompts.spec.ts:
+   a. Test: customer system prompt does not contain any admin-only instructions
+   b. Test: admin system prompt contains all customer instructions plus admin capabilities
+
+3. Refactor createAgentGraph in graph/index.ts to accept an optional model parameter for injection:
+   createAgentGraph(container, options?: { model?: BaseChatModel })
+   This allows tests to inject FakeChatModel without changing production code paths.
+
+Constraints:
+- FakeChatModel is already available via @langchain/core which is already installed — no new dependencies
+- Tests must not make any real HTTP calls (no Gemini API, no Redis, no Medusa)
+- Use MemorySaver instead of RedisSaver for in-memory checkpointing in tests
+- Follow existing test patterns: describe/it/beforeEach from vitest globals
+
+Acceptance criteria:
+- pnpm --filter @vendin/ai-agent test passes with all new tests
+- No real LLM calls made during test run (verify by running with GEMINI_API_KEY unset)
+- Each test completes in under 100ms
+```
+
+---
+
+### T10 — Agent Conversation Flow Tests (staging)
+
+**Prerequisite**: T2 complete (demo store running with real products seeded).
+
+**Prompt**:
+
+```
+You are adding end-to-end conversation tests for an agentic e-commerce AI built with LangGraph and Gemini.
+
+Read these files first:
+- packages/medusa/plugins/ai/agent/src/service.ts
+- packages/medusa/plugins/ai/agent/src/tools/products.ts
+- packages/medusa/plugins/ai/agent/src/tools/cart.ts
+- packages/medusa/plugins/ai/agent/src/graph/prompts/ (all files)
+- docs/test/DEMO_STORE.md (demo store products and credentials)
+- docs/test/STRATEGY.md (AI Agent Testing section, Layer C and D)
+
+Goal: Write multi-turn conversation tests that use the real Gemini model against the demo store in staging. These verify the agent correctly understands intent and calls the right tools — something a mock LLM cannot validate.
+
+Specific tasks:
+1. Create tests/agent/conversation-flows.test.ts at the monorepo root:
+   a. Customer flow: "Show me products" → agent calls search_products → "Add the first one to my cart" → agent calls get_or_create_cart + add_item_to_cart
+   b. Clarification flow: ambiguous message "I want the blue one" with no prior context → agent asks for clarification
+   c. Error handling: request a product that doesn't exist → agent gives a helpful "not found" response, does not hallucinate products
+   d. Admin flow (skip if Phase 2 not yet implemented): "Check stock for [SKU]" → agent calls inventory tool
+
+2. Create tests/agent/tenant-isolation.test.ts:
+   a. Spin up two concurrent agent conversations with different tenantIds but the same threadId
+   b. Verify that messages from tenant A do not appear in tenant B's conversation state
+   c. Verify that product search for tenant A only returns tenant A's products
+
+3. Create tests/agent/whatsapp-routing.test.ts (control-plane):
+   a. POST a mock WhatsApp webhook with to = demo store's phone number → verify it routes to demo tenant with role=customer
+   b. POST a mock WhatsApp webhook with to = Vendin's admin number, from = registered admin phone → verify role=admin
+
+Environment variables required: GEMINI_API_KEY, STAGING_AGENT_URL, DEMO_STORE_TENANT_ID
+
+Constraints:
+- These tests hit the real Gemini API — they are slow (5-30s per conversation turn)
+- Run in a separate vitest project config with a 60-second timeout per test
+- Add "test:agent" script to root package.json that runs only these tests
+- Tests must clean up any carts or state they create
+- Tenant isolation test must use a MemorySaver override so it doesn't need real Redis
+
+Acceptance criteria:
+- pnpm test:agent passes against staging environment with GEMINI_API_KEY set
+- Customer flow test confirms both search_products and add_item_to_cart were called (check returned messages)
+- Tenant isolation test confirms zero message bleed between tenants
+- WhatsApp routing test covers both customer and admin routing paths
+```
+
+---
+
+### T11 — LangSmith Production Tracing
+
+**Can start immediately. Pure configuration — no code changes.**
+
+**Prompt**:
+
+```
+You are enabling production observability for an AI agent built with LangGraph.
+
+Read these files first:
+- packages/medusa/plugins/ai/agent/src/service.ts
+- packages/medusa/plugins/ai/agent/src/graph/index.ts
+- apps/tenant-instance/ (find the environment variable configuration)
+- .github/workflows/deploy-tenant-instance.yml
+- docs/ai-agent/ARCHITECTURE.md
+
+Goal: Enable LangSmith tracing for the AI agent in production with minimal code changes. LangGraph auto-instruments when the environment variables are set — no SDK wrapping required.
+
+Specific tasks:
+1. Add the following secrets to GitHub Actions (document them, do not hardcode values):
+   - LANGSMITH_API_KEY
+   - LANGSMITH_PROJECT (value: "vendin-production")
+
+2. Update deploy-tenant-instance.yml to pass LANGSMITH_TRACING=true and LANGSMITH_API_KEY to the Cloud Run service environment
+
+3. Update apps/tenant-instance/ environment configuration to accept LANGSMITH_TRACING and LANGSMITH_API_KEY
+
+4. Create docs/ai-agent/LANGSMITH.md documenting:
+   - How to access the LangSmith dashboard
+   - What each trace contains (graph nodes, tool calls, token usage, latency)
+   - How to use traces to debug production agent failures
+   - How to create evaluation datasets from production traces
+
+5. Add LANGSMITH_TRACING=false to the local .env.example so developers opt-in explicitly
+
+Constraints:
+- Do not install the langsmith package — LangGraph auto-traces when env vars are set
+- LANGSMITH_API_KEY must come from GCP Secret Manager or GitHub secrets, never hardcoded
+- Tracing must be disabled by default in development and test environments
+- LangSmith project name must clearly identify environment (vendin-production vs vendin-staging)
+
+Acceptance criteria:
+- Deploying to production with LANGSMITH_API_KEY set produces traces in LangSmith dashboard
+- Each agent invocation shows full graph trace: start → model → tools → end
+- LANGSMITH.md explains how to use traces for debugging
+- Local development does not send traces unless LANGSMITH_TRACING=true is explicitly set
+```
+
+---
+
 ## Skills Reference
 
 The following Claude skills implement this strategy. Use them by asking Claude to perform the specific task:
 
-| Skill                          | Trigger phrase                                                             | Tasks |
-| ------------------------------ | -------------------------------------------------------------------------- | ----- |
-| `implement-integration-tests`  | "add Testcontainers integration tests", "expand integration test coverage" | T3    |
-| `setup-demo-store`             | "provision demo store", "set up staging demo store"                        | T2    |
-| `implement-e2e-tests`          | "add Playwright E2E tests", "write end-to-end tests"                       | T5    |
-| `implement-smoke-tests`        | "add smoke tests", "add post-deploy verification"                          | T4    |
-| `implement-provisioning-tests` | "add provisioning tests", "test tenant lifecycle"                          | T6    |
+| Skill                          | Trigger phrase                                                                             | Tasks        |
+| ------------------------------ | ------------------------------------------------------------------------------------------ | ------------ |
+| `implement-integration-tests`  | "add Testcontainers integration tests", "expand integration test coverage"                 | T3           |
+| `setup-demo-store`             | "provision demo store", "set up staging demo store"                                        | T2           |
+| `implement-e2e-tests`          | "add Playwright E2E tests", "write end-to-end tests"                                       | T5           |
+| `implement-smoke-tests`        | "add smoke tests", "add post-deploy verification"                                          | T4           |
+| `implement-provisioning-tests` | "add provisioning tests", "test tenant lifecycle"                                          | T6           |
+| `implement-agent-tests`        | "add agent tests", "test LangGraph routing", "test AI conversation flows", "add LangSmith" | T9, T10, T11 |
 
 See `.agent/skills/shared/` for the full skill definitions.
