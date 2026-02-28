@@ -5,7 +5,7 @@ import { FacebookWhatsAppProvider } from "../facebook-provider";
 
 import type { consoleLogger } from "@vendin/logger";
 
-vi.mock("@vendin/utils", () => ({
+vi.mock("@vendin/utils/network", () => ({
   validateSsrfProtection: vi.fn().mockImplementation(() => Promise.resolve()),
 }));
 

@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { type TenantLookup, WhatsappWebhookService } from "../service";
 
 import type { consoleLogger } from "@vendin/logger";
-vi.mock("@vendin/utils", () => ({
+vi.mock("@vendin/utils/network", () => ({
   validateSsrfProtection: vi.fn(),
   validatePublicUrl: vi.fn(),
 }));
