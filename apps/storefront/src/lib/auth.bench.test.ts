@@ -34,8 +34,7 @@ describe("getTenantAuthToken Performance Benchmark", () => {
     type: "service_account",
     project_id: "test-project",
     private_key_id: "123",
-    private_key:
-      "-----BEGIN PRIVATE KEY-----\nABC\n-----END PRIVATE KEY-----\n",
+    private_key: "DUMMY_PRIVATE_KEY_FOR_TESTING",
     client_email: "test@example.com",
     client_id: "123",
     auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -125,5 +124,34 @@ describe("getTenantAuthToken Performance Benchmark", () => {
 
     // Verify thundering herd protection: only 1 instantiation despite 100 concurrent calls
     expect(instantiationCount).toBe(1);
+  });
+
+  it("Error recovery: retries initialization after a transient failure", async () => {
+    // Use a distinct URL so the cache starts empty for this test.
+    const targetUrl = "https://error-recovery.example.com";
+    const utilities = await import("@vendin/utils");
+
+    // First call fails, second call succeeds.
+    let callCount = 0;
+    vi.mocked(utilities.resolveGoogleCredentials).mockImplementation(
+      async () => {
+        callCount++;
+        if (callCount === 1) throw new Error("Transient network error");
+        return dummyCredentials;
+      },
+    );
+
+    // First attempt should reject and clear the cache entry.
+    await expect(getTenantAuthToken(targetUrl)).rejects.toThrow(
+      "Transient network error",
+    );
+
+    // Second attempt should succeed because the cache was cleared on failure.
+    const token = await getTenantAuthToken(targetUrl);
+    expect(token).toBe("Bearer mock-token");
+
+    const { GoogleAuth } = await import("google-auth-library");
+    // Only the successful retry should have instantiated GoogleAuth.
+    expect(vi.mocked(GoogleAuth).mock.calls.length).toBe(1);
   });
 });

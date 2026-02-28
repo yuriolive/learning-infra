@@ -6,8 +6,10 @@ import type { IdTokenClient } from "google-auth-library";
 
 const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
-// Cache for IdTokenClient instances to avoid repeated credential parsing and initialization
-// Key: targetUrl, Value: Promise resolving to the auth client
+// Cache for IdTokenClient instances to avoid repeated credential parsing and initialization.
+// Key: targetUrl, Value: Promise resolving to the auth client.
+// Bounded to prevent unbounded memory growth when many unique URLs are encountered.
+const MAX_CLIENT_CACHE_SIZE = 50;
 const clientCache = new Map<string, Promise<IdTokenClient>>();
 
 /**
@@ -51,6 +53,13 @@ export async function getTenantAuthToken(targetUrl: string): Promise<string> {
       }
     })();
 
+    // Evict the oldest entry if the cache is at capacity (FIFO).
+    if (clientCache.size >= MAX_CLIENT_CACHE_SIZE) {
+      const oldestKey = clientCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        clientCache.delete(oldestKey);
+      }
+    }
     clientCache.set(targetUrl, clientPromise);
   }
 
