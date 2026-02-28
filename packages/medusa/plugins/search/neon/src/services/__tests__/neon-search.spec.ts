@@ -210,8 +210,8 @@ describe("NeonSearchService", () => {
       await service.addDocuments("products", documents);
 
       expect(spy).toHaveBeenCalledTimes(2);
-      expect(spy.mock.calls[0][1]).toHaveLength(50);
-      expect(spy.mock.calls[1][1]).toHaveLength(25);
+      expect(spy.mock.calls[0]![1]).toHaveLength(50);
+      expect(spy.mock.calls[1]![1]).toHaveLength(25);
     });
   });
 
