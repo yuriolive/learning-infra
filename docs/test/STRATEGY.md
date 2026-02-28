@@ -214,7 +214,7 @@ Created fresh during the nightly provisioning test to exercise the full provisio
 | ---------------------- | --------------- | --------- |
 | Storefront routing     | ✅              | ✅        |
 | Merchant dashboard     | ✅              | ✅        |
-| Product / order APIs   | ✅              | —         |
+| Product / order APIs   | ✅              | ✅        |
 | Full provisioning flow | —               | ✅        |
 | Rollback on failure    | —               | ✅        |
 | Resource cleanup       | —               | ✅        |
