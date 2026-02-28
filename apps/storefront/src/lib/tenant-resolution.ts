@@ -6,7 +6,7 @@ import { cache as reactCache } from "react";
 
 import type { Tenant, TenantApiResponse } from "../types/tenant";
 
-const TENANT_CACHE_TTL = 3600; // 3600 seconds (1 hour)
+const TENANT_CACHE_TTL = parseInt(process.env.TENANT_CACHE_TTL || '3600', 10); // Default to 3600 seconds (1 hour)
 
 const logger = createCloudflareLogger({ nodeEnv: process.env.NODE_ENV });
 
