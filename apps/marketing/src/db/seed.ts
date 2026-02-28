@@ -22,11 +22,18 @@ function getDatabasePath(): string {
   );
   if (fs.existsSync(directoryPath)) {
     const files = fs.readdirSync(directoryPath);
-    const sqliteFile = files.find(
+    const sqliteFiles = files.filter(
       (f) => f.endsWith(".sqlite") && f !== "marketing-db.sqlite",
     );
-    if (sqliteFile) {
-      return path.join(directoryPath, sqliteFile);
+
+    if (sqliteFiles.length > 1) {
+      throw new Error(
+        `Multiple .sqlite files found in ${directoryPath}. Expected only one.`,
+      );
+    }
+
+    if (sqliteFiles.length === 1) {
+      return path.join(directoryPath, sqliteFiles[0]);
     }
   }
 
