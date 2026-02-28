@@ -4,6 +4,54 @@ This directory contains Claude Skills for the multi-tenant e-commerce platform p
 
 ## Implemented Skills
 
+### shared/implement-integration-tests
+
+**Location**: `.agent/skills/shared/implement-integration-tests/`
+
+Adds Testcontainers-based integration tests for Redis cache and hostname resolution flows that PGLite cannot cover. Keeps existing PGLite tests intact.
+
+**Use when**: Adding Testcontainers integration tests, expanding integration test coverage, testing cache behaviour, or testing storefront hostname resolution. (Task T3 in `docs/test/IMPLEMENTATION.md`)
+
+### shared/setup-demo-store
+
+**Location**: `.agent/skills/shared/setup-demo-store/`
+
+Provisions a persistent demo tenant in the staging environment and seeds it with realistic product, customer, and order data. Creates idempotent provision and seed scripts.
+
+**Use when**: Setting up the staging demo store, seeding staging data, or resetting the demo store. (Task T2 in `docs/test/IMPLEMENTATION.md`)
+
+### shared/implement-smoke-tests
+
+**Location**: `.agent/skills/shared/implement-smoke-tests/`
+
+Creates post-deploy smoke tests that verify critical endpoints after each staging or production deploy. Blocks staging deploys and triggers Cloud Run rollback on production if smoke fails.
+
+**Use when**: Adding smoke tests, post-deploy health checks, or setting up automatic rollback. (Task T4 in `docs/test/IMPLEMENTATION.md`)
+
+### shared/implement-e2e-tests
+
+**Location**: `.agent/skills/shared/implement-e2e-tests/`
+
+Creates Playwright E2E tests covering merchant signup, merchant dashboard, storefront browsing, and customer checkout. Tests run against the persistent demo store in staging.
+
+**Use when**: Adding Playwright tests, writing end-to-end tests, testing the merchant or customer flows. (Task T5 in `docs/test/IMPLEMENTATION.md`)
+
+### shared/implement-agent-tests
+
+**Location**: `.agent/skills/shared/implement-agent-tests/`
+
+Implements three tiers of AI agent tests: graph routing tests with `FakeChatModel` (fast, no real LLM), multi-turn conversation flow tests against staging with real Gemini, tenant isolation verification, WhatsApp routing tests, and LangSmith production tracing setup.
+
+**Use when**: Adding agent tests, testing LangGraph routing, testing AI conversation flows, verifying tenant isolation in the agent, or setting up LangSmith tracing. (Tasks T9, T10, T11 in `docs/test/IMPLEMENTATION.md`)
+
+### shared/implement-provisioning-tests
+
+**Location**: `.agent/skills/shared/implement-provisioning-tests/`
+
+Creates nightly tests that provision a real ephemeral tenant in staging, verify it works via smoke checks, then deprovision and confirm all cloud resources are cleaned up.
+
+**Use when**: Adding provisioning tests, testing the full GCP Workflow lifecycle, testing tenant teardown, or setting up nightly tests. (Task T6 in `docs/test/IMPLEMENTATION.md`)
+
 ### shared/create-skill
 
 **Location**: `.skills/skills/shared/create-skill/`
