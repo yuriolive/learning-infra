@@ -1,8 +1,7 @@
 import path from "node:path";
 
-import "dotenv/config";
-
 import { createLogger } from "@vendin/logger";
+import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";

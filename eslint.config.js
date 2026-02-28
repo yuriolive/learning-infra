@@ -14,6 +14,7 @@ export default [
       "**/.open-next/**",
       "docs/examples/**",
       "**/pnpm-lock.yaml",
+      "**/medusa-config.js",
     ],
   },
 ];
