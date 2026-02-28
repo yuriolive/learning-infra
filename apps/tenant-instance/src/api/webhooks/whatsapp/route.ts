@@ -17,7 +17,7 @@ async function processWhatsAppChange(
 ) {
   if (!change.value.messages || change.value.messages.length === 0) return;
 
-  for (const message of change.value.messages) {
+  const promises = change.value.messages.map(async (message) => {
     const contact = change.value.contacts?.find(
       (c) => c.wa_id === message.from,
     );
@@ -26,14 +26,14 @@ async function processWhatsAppChange(
       logger.warn(
         `Received WhatsApp message without matching sender contact info (from: ${message.from}).`,
       );
-      continue;
+      return;
     }
 
     if (!message.text || !message.text.body) {
       logger.warn(
         `Received non-text WhatsApp message of type: ${message.type}. Agent currently only handles text.`,
       );
-      continue;
+      return;
     }
 
     const threadId = contact.wa_id;
@@ -49,7 +49,9 @@ async function processWhatsAppChange(
         text,
       },
     });
-  }
+  });
+
+  await Promise.all(promises);
 }
 
 export const GET = (request: MedusaRequest, response: MedusaResponse) => {
