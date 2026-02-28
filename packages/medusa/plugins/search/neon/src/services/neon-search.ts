@@ -35,7 +35,16 @@ export default class NeonSearchService implements ISearchService {
     this.genAI = new GoogleGenAI({ apiKey: options.gemini_api_key });
   }
 
+  private validateIndexName(indexName: string): void {
+    if (!/^[a-zA-Z0-9_]+$/.test(indexName)) {
+      throw new Error(
+        `Invalid index name "${indexName}": only alphanumeric characters and underscores are allowed`,
+      );
+    }
+  }
+
   async createIndex(indexName: string, _options?: unknown): Promise<void> {
+    this.validateIndexName(indexName);
     const sql = `
       CREATE TABLE IF NOT EXISTS search_index_${indexName} (
         id VARCHAR(255) PRIMARY KEY,
@@ -67,6 +76,7 @@ export default class NeonSearchService implements ISearchService {
   }
 
   async addDocuments(indexName: string, documents: unknown[]): Promise<void> {
+    this.validateIndexName(indexName);
     const CHUNK_SIZE = 50;
     for (let i = 0; i < documents.length; i += CHUNK_SIZE) {
       const chunk = documents.slice(i, i + CHUNK_SIZE);
@@ -182,6 +192,7 @@ export default class NeonSearchService implements ISearchService {
     indexName: string,
     documents: unknown[],
   ): Promise<void> {
+    this.validateIndexName(indexName);
     await this.addDocuments(indexName, documents);
   }
 
@@ -190,6 +201,7 @@ export default class NeonSearchService implements ISearchService {
     query: string,
     options?: Record<string, unknown>,
   ): Promise<unknown> {
+    this.validateIndexName(indexName);
     const embeddingValues = await this.getEmbedding(query);
 
     const vectorString = `[${embeddingValues.join(",")}]`;
@@ -217,6 +229,7 @@ export default class NeonSearchService implements ISearchService {
   }
 
   async deleteDocument(indexName: string, document_id: string): Promise<void> {
+    this.validateIndexName(indexName);
     await this.manager_.execute(
       `DELETE FROM search_index_${indexName} WHERE id = ?`,
       [document_id],
@@ -224,6 +237,7 @@ export default class NeonSearchService implements ISearchService {
   }
 
   async deleteAllDocuments(indexName: string): Promise<void> {
+    this.validateIndexName(indexName);
     await this.manager_.execute(`DELETE FROM search_index_${indexName}`);
   }
 

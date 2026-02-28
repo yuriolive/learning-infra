@@ -61,6 +61,24 @@ describe("NeonSearchService", () => {
     }).toThrow("Gemini API key is required");
   });
 
+  describe("index name validation", () => {
+    const invalidNames = ["products; DROP TABLE users--", "products index", "../../etc", "products-v2"];
+
+    it.each(invalidNames)("should throw for invalid index name %s", async (name) => {
+      await expect(service.createIndex(name)).rejects.toThrow("Invalid index name");
+      await expect(service.addDocuments(name, [])).rejects.toThrow("Invalid index name");
+      await expect(service.search(name, "q")).rejects.toThrow("Invalid index name");
+      await expect(service.deleteDocument(name, "1")).rejects.toThrow("Invalid index name");
+      await expect(service.deleteAllDocuments(name)).rejects.toThrow("Invalid index name");
+    });
+
+    it("should accept valid index names", async () => {
+      managerMock.execute.mockResolvedValue(undefined);
+      await expect(service.createIndex("products")).resolves.not.toThrow();
+      await expect(service.createIndex("product_variants_2")).resolves.not.toThrow();
+    });
+  });
+
   describe("createIndex", () => {
     it("should create table and index", async () => {
       managerMock.execute.mockResolvedValue(undefined);
