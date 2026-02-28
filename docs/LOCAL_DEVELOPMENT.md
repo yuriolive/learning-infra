@@ -8,11 +8,11 @@ This document outlines the design for a comprehensive local development infrastr
 
 ### Application Stack
 
-| Application | Framework | Database | Local Dev Command | Port |
-|-------------|-----------|----------|-------------------|------|
-| control-plane | Cloudflare Workers (Hono) | PostgreSQL (Neon) | `wrangler dev` | 8787 |
-| marketing | Next.js 16 | D1 (SQLite) | `next dev` | 3000 |
-| storefront | Next.js 16 | None (stateless) | `next dev` | 3001 |
+| Application   | Framework                 | Database          | Local Dev Command | Port |
+| ------------- | ------------------------- | ----------------- | ----------------- | ---- |
+| control-plane | Cloudflare Workers (Hono) | PostgreSQL (Neon) | `wrangler dev`    | 8787 |
+| marketing     | Next.js 16                | D1 (SQLite)       | `next dev`        | 3000 |
+| storefront    | Next.js 16                | None (stateless)  | `next dev`        | 3001 |
 
 ### Database Technologies
 
@@ -49,6 +49,7 @@ The `docker-compose.yml` supports all three applications:
 Seed script at `apps/control-plane/src/database/seed.ts` creates a test tenant and provisioning events.
 
 Run with:
+
 ```bash
 pnpm --filter @vendin/control-plane db:seed
 ```
@@ -58,6 +59,7 @@ pnpm --filter @vendin/control-plane db:seed
 Seed script at `apps/marketing/src/db/seed.ts` creates a test user and session.
 
 Run with:
+
 ```bash
 pnpm --filter marketing db:seed
 ```
@@ -67,6 +69,7 @@ pnpm --filter marketing db:seed
 Seed script at `apps/tenant-instance/src/scripts/seed.ts` creates default store, region, sales channel, and API key.
 
 Run with:
+
 ```bash
 pnpm --filter @vendin/tenant-instance db:seed
 ```
@@ -77,14 +80,14 @@ pnpm --filter @vendin/tenant-instance db:seed
 
 ### Local Development URLs
 
-| Service | URL | Purpose |
-|---------|-----|---------|
-| Marketing | `http://localhost:3000` | Main landing, auth |
-| Storefront | `http://localhost:3001` | Tenant storefront router |
-| Control Plane | `http://localhost:8787` | Tenant management API |
-| Tenant Instance | `http://localhost:9000` | MedusaJS backend |
-| Redis | `localhost:6379` | Caching |
-| PostgreSQL | `localhost:5432` | Control plane DB |
+| Service         | URL                     | Purpose                  |
+| --------------- | ----------------------- | ------------------------ |
+| Marketing       | `http://localhost:3000` | Main landing, auth       |
+| Storefront      | `http://localhost:3001` | Tenant storefront router |
+| Control Plane   | `http://localhost:8787` | Tenant management API    |
+| Tenant Instance | `http://localhost:9000` | MedusaJS backend         |
+| Redis           | `localhost:6379`        | Caching                  |
+| PostgreSQL      | `localhost:5432`        | Control plane DB         |
 
 ### Service Discovery
 
@@ -137,13 +140,13 @@ pnpm --filter storefront dev
 
 ### Common Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Database connection refused | PostgreSQL not running | `pnpm dev:infra` |
-| D1 database not found | Migrations not applied | `wrangler d1 migrations apply marketing-db --local` |
-| Tenant resolution fails | Control Plane not running | Start control plane: `pnpm --filter @vendin/control-plane dev` |
-| Auth session not persisting | BETTER_AUTH_SECRET mismatch | Ensure same secret in marketing .env |
-| CORS errors | Wrong ALLOWED_ORIGINS | Add `http://localhost:3000` to control plane origins |
+| Issue                       | Cause                       | Solution                                                       |
+| --------------------------- | --------------------------- | -------------------------------------------------------------- |
+| Database connection refused | PostgreSQL not running      | `pnpm dev:infra`                                               |
+| D1 database not found       | Migrations not applied      | `wrangler d1 migrations apply marketing-db --local`            |
+| Tenant resolution fails     | Control Plane not running   | Start control plane: `pnpm --filter @vendin/control-plane dev` |
+| Auth session not persisting | BETTER_AUTH_SECRET mismatch | Ensure same secret in marketing .env                           |
+| CORS errors                 | Wrong ALLOWED_ORIGINS       | Add `http://localhost:3000` to control plane origins           |
 
 ### Debug Commands
 
