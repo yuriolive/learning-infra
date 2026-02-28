@@ -12,7 +12,7 @@ import { DomainProvisioningService } from "./domain-provisioning.service";
 
 export interface ProvisioningServiceConfig {
   neonApiKey?: string | undefined;
-  neonProjectId?: string | undefined;
+  neonOrgId?: string | undefined;
   gcpCredentialsJson?: string | undefined;
   gcpProjectId?: string | undefined;
   gcpRegion?: string | undefined;
@@ -66,11 +66,11 @@ export class ProvisioningService {
   }
 
   private initializeNeonProvider(config: ProvisioningServiceConfig): void {
-    if (config.neonApiKey && config.neonProjectId) {
+    if (config.neonApiKey) {
       try {
         this.neonProvider = new NeonProvider({
           apiKey: config.neonApiKey,
-          projectId: config.neonProjectId,
+          ...(config.neonOrgId ? { orgId: config.neonOrgId } : {}),
           logger: this.logger,
         });
       } catch (error) {
@@ -152,14 +152,67 @@ export class ProvisioningService {
     if (!this.neonProvider) {
       throw new Error("Neon provider not initialized");
     }
-    this.logger.info({ tenantId }, "Provisioning database");
-    const databaseUrl = await this.neonProvider.createTenantDatabase(tenantId);
-    await this.tenantRepository.update(tenantId, { databaseUrl });
-    return { databaseUrl };
+    this.logger.info(
+      { tenantId },
+      "Provisioning database (Project-per-Tenant)",
+    );
+
+    const { connectionString, projectId } =
+      await this.neonProvider.createTenantProject(tenantId);
+
+    await this.tenantRepository.update(tenantId, {
+      databaseUrl: connectionString,
+      neonProjectId: projectId,
+    });
+
+    return { databaseUrl: connectionString };
+  }
+
+  async createDatabaseSnapshot(
+    tenantId: string,
+    snapshotName: string,
+  ): Promise<{ snapshotId: string }> {
+    if (!this.neonProvider) {
+      throw new Error("Neon provider not initialized");
+    }
+
+    const tenant = await this.tenantRepository.findById(tenantId);
+    if (!tenant?.neonProjectId) {
+      throw new Error("Tenant does not have a Neon Project ID");
+    }
+
+    this.logger.info({ tenantId, snapshotName }, "Creating database snapshot");
+    const snapshotId = await this.neonProvider.createSnapshot(
+      tenant.neonProjectId,
+      snapshotName,
+    );
+
+    return { snapshotId };
+  }
+
+  async restoreDatabaseSnapshot(
+    tenantId: string,
+    snapshotName: string,
+  ): Promise<void> {
+    if (!this.neonProvider) {
+      throw new Error("Neon provider not initialized");
+    }
+
+    const tenant = await this.tenantRepository.findById(tenantId);
+    if (!tenant?.neonProjectId) {
+      throw new Error("Tenant does not have a Neon Project ID");
+    }
+
+    this.logger.info({ tenantId, snapshotName }, "Restoring database snapshot");
+    await this.neonProvider.restoreFromSnapshot(
+      tenant.neonProjectId,
+      snapshotName,
+    );
   }
 
   async ensureMigrationJob(
     tenantId: string,
+    imageTag?: string,
   ): Promise<{ operationName?: string }> {
     const { tenant, databaseUrl, upstashRedisUrl } =
       await this.validateProvisioningPrerequisites(tenantId);
@@ -169,7 +222,7 @@ export class ProvisioningService {
     const jwtSecret = tenant.jwtSecret;
     const cookieSecret = tenant.cookieSecret;
 
-    this.logger.info({ tenantId }, "Ensuring migration job exists");
+    this.logger.info({ tenantId, imageTag }, "Ensuring migration job exists");
     const operationName = await this.cloudRunProvider?.ensureMigrationJob(
       tenantId,
       {
@@ -179,10 +232,9 @@ export class ProvisioningService {
         jwtSecret,
         cookieSecret,
       },
+      imageTag,
     );
 
-    // Returns operationName if a long-running operation was initiated.
-    // Returns empty object if the job already exists or no changes were needed (synchronous completion).
     return operationName ? { operationName } : {};
   }
 
@@ -229,6 +281,7 @@ export class ProvisioningService {
 
   async startDeployService(
     tenantId: string,
+    imageTag?: string,
   ): Promise<{ operationName: string }> {
     const { tenant, databaseUrl, upstashRedisUrl } =
       await this.validateProvisioningPrerequisites(
@@ -242,15 +295,20 @@ export class ProvisioningService {
     const cookieSecret = tenant.cookieSecret;
 
     this.logger.info({ tenantId }, "Starting service deployment operation");
+
     const operationName =
-      (await this.cloudRunProvider?.startDeployTenantInstance(tenantId, {
-        databaseUrl,
-        redisUrl: upstashRedisUrl,
-        redisPrefix,
-        subdomain: tenant.subdomain!,
-        jwtSecret,
-        cookieSecret,
-      })) ?? "";
+      (await this.cloudRunProvider?.startDeployTenantInstance(
+        tenantId,
+        {
+          databaseUrl,
+          redisUrl: upstashRedisUrl,
+          redisPrefix,
+          subdomain: tenant.subdomain!,
+          jwtSecret,
+          cookieSecret,
+        },
+        imageTag,
+      )) ?? "";
 
     return { operationName };
   }
@@ -342,9 +400,24 @@ export class ProvisioningService {
     this.logger.info({ tenantId, reason }, "Rolling back resources");
     let operationName: string | undefined;
 
+    // Fetch tenant to get project ID
+    const tenant = await this.tenantRepository.findById(tenantId);
+
     if (this.neonProvider && this.cloudRunProvider) {
-      const deleteDatabasePromise =
-        this.neonProvider.deleteTenantDatabase(tenantId);
+      let deleteDatabasePromise: Promise<void> | undefined;
+
+      if (tenant?.neonProjectId) {
+        deleteDatabasePromise = this.neonProvider.deleteTenantProject(
+          tenant.neonProjectId,
+        );
+      } else {
+        this.logger.warn(
+          { tenantId },
+          "No Neon Project ID found during rollback, skipping DB deletion",
+        );
+        deleteDatabasePromise = Promise.resolve();
+      }
+
       const deleteInstancePromise =
         this.cloudRunProvider.deleteTenantInstance(tenantId);
 

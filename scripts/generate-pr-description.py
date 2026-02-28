@@ -15,12 +15,18 @@ def get_pr_diff():
     if not re.match(r"^[a-zA-Z0-9\-\_\/]+$", base_ref):
         raise ValueError(f"Invalid GITHUB_BASE_REF: {base_ref}")
 
+    print(f"Fetching base reference: {base_ref}")
     subprocess.run(["git", "fetch", "origin", "--", base_ref], check=True)
-    # Get the diff
+
+    # Use FETCH_HEAD for the diff as it's more reliable in GitHub Actions
+    # than referencing origin/{base_ref} which might not be updated.
     result = subprocess.run(
-        ["git", "diff", "--", f"origin/{base_ref}...HEAD"], capture_output=True, text=True, check=True
+        ["git", "diff", "--", "FETCH_HEAD...HEAD"], capture_output=True, text=True, check=True
     )
-    return result.stdout
+    
+    diff_output = result.stdout
+    print(f"Diff size: {len(diff_output)} characters")
+    return diff_output
 
 
 def generate_description(diff, api_key):

@@ -19,6 +19,10 @@ export interface Tenant {
   whatsappPhoneId: string | null;
   whatsappProvider: WhatsAppProvider | null;
   whatsappVerifiedAt: Date | null;
+  neonProjectId: string | null;
+  releaseChannelId: string | null;
+  currentImageTag: string | null;
+  lockedUntil: Date | null;
 }
 
 export type WhatsAppProvider = "facebook" | "twilio";
@@ -40,6 +44,7 @@ export interface CreateTenantInput {
   metadata?: Record<string, unknown> | undefined;
   whatsappPhoneNumber?: string | null;
   whatsappPhoneId?: string | null;
+  releaseChannelId?: string | undefined;
 }
 
 export interface UpdateTenantInput {
@@ -58,6 +63,10 @@ export interface UpdateTenantInput {
   whatsappPhoneId?: string | null;
   whatsappProvider?: WhatsAppProvider | null;
   whatsappVerifiedAt?: Date | null;
+  neonProjectId?: string | null;
+  releaseChannelId?: string | null;
+  currentImageTag?: string | null;
+  lockedUntil?: Date | null;
 }
 
 export interface ListTenantsFilters {

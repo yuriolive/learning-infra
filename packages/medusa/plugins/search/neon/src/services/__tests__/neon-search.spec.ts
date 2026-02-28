@@ -61,6 +61,24 @@ describe("NeonSearchService", () => {
     }).toThrow("Gemini API key is required");
   });
 
+  describe("index name validation", () => {
+    const invalidNames = ["products; DROP TABLE users--", "products index", "../../etc", "products-v2"];
+
+    it.each(invalidNames)("should throw for invalid index name %s", async (name) => {
+      await expect(service.createIndex(name)).rejects.toThrow("Invalid index name");
+      await expect(service.addDocuments(name, [])).rejects.toThrow("Invalid index name");
+      await expect(service.search(name, "q")).rejects.toThrow("Invalid index name");
+      await expect(service.deleteDocument(name, "1")).rejects.toThrow("Invalid index name");
+      await expect(service.deleteAllDocuments(name)).rejects.toThrow("Invalid index name");
+    });
+
+    it("should accept valid index names", async () => {
+      managerMock.execute.mockResolvedValue(undefined);
+      await expect(service.createIndex("products")).resolves.not.toThrow();
+      await expect(service.createIndex("product_variants_2")).resolves.not.toThrow();
+    });
+  });
+
   describe("createIndex", () => {
     it("should create table and index", async () => {
       managerMock.execute.mockResolvedValue(undefined);
@@ -130,7 +148,7 @@ describe("NeonSearchService", () => {
        await service.addDocuments("products", documents);
 
        expect(loggerMock.error).toHaveBeenCalledWith(
-         expect.stringContaining("Failed to add document 4")
+         expect.stringContaining("Failed to get embedding for document 4 in index products: API Error")
        );
     });
 
@@ -143,6 +161,57 @@ describe("NeonSearchService", () => {
        expect(loggerMock.error).toHaveBeenCalledWith(
          expect.stringContaining("No embedding returned")
        );
+    });
+
+    it("should insert only successful embeddings in a mixed batch", async () => {
+      const documents = [
+        { id: "1", title: "Doc 1", description: "Success" },
+        { id: "2", title: "Doc 2", description: "Fail" },
+        { id: "3", title: "Doc 3", description: "Success" },
+      ];
+      mockGenAI.models.embedContent
+        .mockResolvedValueOnce({ embeddings: [{ values: [0.1, 0.2, 0.3] }] })
+        .mockRejectedValueOnce(new Error("API Error"))
+        .mockResolvedValueOnce({ embeddings: [{ values: [0.4, 0.5, 0.6] }] });
+
+      await service.addDocuments("products", documents);
+
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to get embedding for document 2 in index products")
+      );
+
+      // Only 2 successful docs inserted: params = [id1, doc1, vec1, id3, doc3, vec3]
+      const insertCall = managerMock.execute.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === "string" && (call[0] as string).includes("INSERT")
+      );
+      expect(insertCall).toBeDefined();
+      expect((insertCall![1] as unknown[]).length).toBe(6); // 2 docs × 3 params each
+    });
+
+    it("should throw when database insertion fails", async () => {
+      const documents = [{ id: "1", title: "Doc 1", description: "Test" }];
+      managerMock.execute.mockRejectedValue(new Error("DB connection error"));
+
+      await expect(service.addDocuments("products", documents)).rejects.toThrow("DB connection error");
+
+      expect(loggerMock.error).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to add documents batch to index products: DB connection error")
+      );
+    });
+
+    it("should process documents in chunks of 50", async () => {
+      const documents = Array.from({ length: 75 }, (_, i) => ({
+        id: String(i + 1),
+        title: `Doc ${i + 1}`,
+        description: "Test",
+      }));
+      const spy = vi.spyOn(service as any, "addDocumentsBatch");
+
+      await service.addDocuments("products", documents);
+
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy.mock.calls[0]![1]).toHaveLength(50);
+      expect(spy.mock.calls[1]![1]).toHaveLength(25);
     });
   });
 

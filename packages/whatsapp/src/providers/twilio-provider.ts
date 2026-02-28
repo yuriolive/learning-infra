@@ -4,9 +4,9 @@ import {
   type TwilioWhatsAppConfig,
   type WhatsAppProvider,
   maskPhoneNumber,
-} from "./whatsapp-provider";
+} from "./whatsapp-provider.js";
 
-import type { consoleLogger } from "@vendin/logger";
+import type { Logger } from "@vendin/logger";
 
 /**
  * Twilio WhatsApp API provider implementation
@@ -15,9 +15,9 @@ export class TwilioWhatsAppProvider implements WhatsAppProvider {
   private readonly accountSid: string;
   private readonly authToken: string;
   private readonly fromNumber: string;
-  private readonly logger: typeof consoleLogger;
+  private readonly logger: Logger;
 
-  constructor(config: TwilioWhatsAppConfig, logger: typeof consoleLogger) {
+  constructor(config: TwilioWhatsAppConfig, logger: Logger) {
     this.accountSid = config.accountSid;
     this.authToken = config.authToken;
     this.fromNumber = config.fromNumber;

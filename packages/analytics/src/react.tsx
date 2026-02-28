@@ -35,9 +35,13 @@ export function PostHogProvider({
   apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY,
   host = process.env.NEXT_PUBLIC_POSTHOG_HOST,
 }: PostHogProviderProperties) {
+  if (!apiKey) {
+    return <>{children}</>;
+  }
+
   return (
     <PHProvider
-      {...(apiKey ? { apiKey } : {})}
+      apiKey={apiKey}
       options={{
         api_host: host || "https://app.posthog.com",
         person_profiles: "identified_only",

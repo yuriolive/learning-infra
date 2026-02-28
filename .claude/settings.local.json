@@ -15,6 +15,7 @@
       "Bash(npx vitest run --coverage)",
       "Bash(git add apps/control-plane/tests/unit/provisioning/domain-provisioning.service.test.ts apps/control-plane/tests/unit/providers/neon/neon.client.test.ts apps/control-plane/tests/unit/providers/cloudflare/cloudflare.client.test.ts)",
       "Bash(git add apps/control-plane/tests/unit/providers/neon/neon.client.test.ts)"
+      "Bash(git add apps/control-plane/src/providers/neon/neon.client.ts apps/control-plane/tests/unit/campaign/upgrade.service.test.ts)"
     ]
   }
 }

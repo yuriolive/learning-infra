@@ -4,9 +4,9 @@ import {
   type FacebookWhatsAppConfig,
   type WhatsAppProvider,
   maskPhoneNumber,
-} from "./whatsapp-provider";
+} from "./whatsapp-provider.js";
 
-import type { consoleLogger } from "@vendin/logger";
+import type { Logger } from "@vendin/logger";
 
 const FACEBOOK_GRAPH_API_VERSION = "v21.0";
 
@@ -17,9 +17,9 @@ export class FacebookWhatsAppProvider implements WhatsAppProvider {
   private readonly accessToken: string;
   private readonly phoneNumberId: string;
   private readonly apiVersion: string;
-  private readonly logger: typeof consoleLogger;
+  private readonly logger: Logger;
 
-  constructor(config: FacebookWhatsAppConfig, logger: typeof consoleLogger) {
+  constructor(config: FacebookWhatsAppConfig, logger: Logger) {
     this.accessToken = config.accessToken;
     this.phoneNumberId = config.phoneNumberId;
     this.apiVersion = config.apiVersion || FACEBOOK_GRAPH_API_VERSION;

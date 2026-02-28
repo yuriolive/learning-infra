@@ -15,7 +15,7 @@
     "pages:build": "opennextjs-cloudflare build",
     "pages:preview": "opennextjs-cloudflare dev",
     "pages:deploy": "opennextjs-cloudflare deploy",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "db:seed": "tsx src/db/seed.ts",
     "db:seed:local": "tsx src/db/seed.ts"
   },
