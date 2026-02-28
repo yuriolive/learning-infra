@@ -1,11 +1,17 @@
 import crypto from "node:crypto";
 
+import { Modules } from "@medusajs/framework/utils";
+
 import { processMessageWorkflow } from "../../../workflows/whatsapp/process-message-workflow";
 
 import { WhatsAppPayloadSchema, type WhatsAppChangeType } from "./validators";
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import type { Logger, MedusaContainer } from "@medusajs/framework/types";
+import type {
+  Logger,
+  MedusaContainer,
+  ICacheService,
+} from "@medusajs/framework/types";
 
 /**
  * Processes a single change from the WhatsApp webhook payload.
@@ -15,6 +21,7 @@ async function processWhatsAppChange(
   scope: MedusaContainer,
   logger: Logger,
 ) {
+  const cacheService: ICacheService = scope.resolve(Modules.CACHE);
   if (!change.value.messages || change.value.messages.length === 0) return;
 
   for (const message of change.value.messages) {
@@ -39,6 +46,16 @@ async function processWhatsAppChange(
     const threadId = contact.wa_id;
     const text = message.text.body;
 
+    const cacheKey = `whatsapp:msg:${message.id}`;
+    const isProcessed = await cacheService.get(cacheKey);
+
+    if (isProcessed) {
+      logger.info(
+        `WhatsApp message ${message.id} already processed. Skipping.`,
+      );
+      continue;
+    }
+
     logger.info(`Processing WhatsApp message from ${threadId}`);
 
     // Await the workflow. In Cloud Run, returning a response
@@ -49,6 +66,9 @@ async function processWhatsAppChange(
         text,
       },
     });
+
+    // Mark as processed (24 hours TTL)
+    await cacheService.set(cacheKey, true, 86_400);
   }
 }
 
