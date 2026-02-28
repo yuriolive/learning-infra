@@ -16,6 +16,7 @@ import type {
 /**
  * Processes a single change from the WhatsApp webhook payload.
  */
+// eslint-disable-next-line complexity
 async function processWhatsAppChange(
   change: WhatsAppChangeType,
   scope: MedusaContainer,
@@ -51,24 +52,36 @@ async function processWhatsAppChange(
 
     if (isProcessed) {
       logger.info(
-        `WhatsApp message ${message.id} already processed. Skipping.`,
+        `WhatsApp message ${message.id} already processed or processing. Skipping.`,
       );
       continue;
     }
 
+    // Set processing flag to prevent concurrent executions for the same message
+    // Note: cacheService.set signature is: set(key, data, ttl) where ttl is seconds.
+    // However, depending on module version, it might accept an options object instead,
+    // like set(key, value, { ttl: seconds }). To be safe with framework/types, it's (key, value, ttl?: number).
+    await cacheService.set(cacheKey, "processing", 300); // 5 minutes TTL for processing
+
     logger.info(`Processing WhatsApp message from ${threadId}`);
 
-    // Await the workflow. In Cloud Run, returning a response
-    // before background tasks finish will lead to CPU throttling and aborted tasks.
-    await processMessageWorkflow(scope).run({
-      input: {
-        threadId,
-        text,
-      },
-    });
+    try {
+      // Await the workflow. In Cloud Run, returning a response
+      // before background tasks finish will lead to CPU throttling and aborted tasks.
+      await processMessageWorkflow(scope).run({
+        input: {
+          threadId,
+          text,
+        },
+      });
 
-    // Mark as processed (24 hours TTL)
-    await cacheService.set(cacheKey, true, 86_400);
+      // Mark as processed (24 hours TTL)
+      await cacheService.set(cacheKey, "completed", 86_400);
+    } catch (error) {
+      // Clean up the processing flag if it fails so it can be retried
+      await cacheService.set(cacheKey, null, 1);
+      throw error;
+    }
   }
 }
 

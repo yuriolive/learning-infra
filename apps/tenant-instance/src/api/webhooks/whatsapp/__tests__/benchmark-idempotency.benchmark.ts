@@ -84,21 +84,25 @@ const mockResponse = {
 } as unknown as MedusaResponse;
 
 async function runBenchmark() {
+  // eslint-disable-next-line no-console
   console.log("Starting benchmark...");
+  try {
+    // First run
+    const start1 = performance.now();
+    await POST(mockRequest, mockResponse);
+    const end1 = performance.now();
+    // eslint-disable-next-line no-console
+    console.log(`Run 1 (Baseline): ${(end1 - start1).toFixed(2)}ms`);
 
-  // First run
-  const start1 = performance.now();
-  await POST(mockRequest, mockResponse);
-  const end1 = performance.now();
-  console.log(`Run 1 (Baseline): ${(end1 - start1).toFixed(2)}ms`);
-
-  // Second run
-  const start2 = performance.now();
-  await POST(mockRequest, mockResponse);
-  const end2 = performance.now();
-  console.log(`Run 2 (With same ID): ${(end2 - start2).toFixed(2)}ms`);
-
-  crypto.timingSafeEqual = originalTimingSafeEqual;
+    // Second run
+    const start2 = performance.now();
+    await POST(mockRequest, mockResponse);
+    const end2 = performance.now();
+    // eslint-disable-next-line no-console
+    console.log(`Run 2 (With same ID): ${(end2 - start2).toFixed(2)}ms`);
+  } finally {
+    crypto.timingSafeEqual = originalTimingSafeEqual;
+  }
 }
 
 // eslint-disable-next-line unicorn/prefer-top-level-await
