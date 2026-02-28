@@ -151,6 +151,7 @@ export default class NeonSearchService implements ISearchService {
       this.logger_.error(
         `Failed to add documents batch to index ${indexName}: ${errorMessage}`,
       );
+      throw error;
     }
   }
 
