@@ -146,7 +146,7 @@ describe("NeonProvider", () => {
     });
 
     it("should use cached default branch id", async () => {
-      vi.mocked(cache.get).mockResolvedValue("cached-branch-id");
+      vi.mocked(cache.get).mockResolvedValueOnce("cached-branch-id");
       mockClient.createProjectBranch.mockResolvedValue({
         data: { branch: { id: "snap-branch-2" } },
       });
