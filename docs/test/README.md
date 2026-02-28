@@ -24,6 +24,16 @@ Current test implementation, including:
 - Technology stack
 - Key achievements
 
+### [IMPLEMENTATION.md](./IMPLEMENTATION.md)
+
+LLM implementation guide for the full strategy, including:
+
+- Ready-to-use prompts for each task (T3–T8)
+- Mermaid dependency graph
+- Parallel execution waves (what can run concurrently)
+- Acceptance criteria per task
+- Reference to Claude skills that implement each task
+
 ### [PLANNED_IMPROVEMENTS.md](./PLANNED_IMPROVEMENTS.md)
 
 Phase 2 test architecture improvements, including:
