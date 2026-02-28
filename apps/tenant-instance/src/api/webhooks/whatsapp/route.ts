@@ -1,20 +1,28 @@
 import crypto from "node:crypto";
 
+import { Modules } from "@medusajs/framework/utils";
+
 import { processMessageWorkflow } from "../../../workflows/whatsapp/process-message-workflow";
 
 import { WhatsAppPayloadSchema, type WhatsAppChangeType } from "./validators";
 
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import type { Logger, MedusaContainer } from "@medusajs/framework/types";
+import type {
+  Logger,
+  MedusaContainer,
+  ICacheService,
+} from "@medusajs/framework/types";
 
 /**
  * Processes a single change from the WhatsApp webhook payload.
  */
+// eslint-disable-next-line complexity
 async function processWhatsAppChange(
   change: WhatsAppChangeType,
   scope: MedusaContainer,
   logger: Logger,
 ) {
+  const cacheService: ICacheService = scope.resolve(Modules.CACHE);
   if (!change.value.messages || change.value.messages.length === 0) return;
 
   for (const message of change.value.messages) {
@@ -39,16 +47,41 @@ async function processWhatsAppChange(
     const threadId = contact.wa_id;
     const text = message.text.body;
 
+    const cacheKey = `whatsapp:msg:${message.id}`;
+    const isProcessed = await cacheService.get(cacheKey);
+
+    if (isProcessed) {
+      logger.info(
+        `WhatsApp message ${message.id} already processed or processing. Skipping.`,
+      );
+      continue;
+    }
+
+    // Set processing flag to prevent concurrent executions for the same message
+    // Note: cacheService.set signature is: set(key, data, ttl) where ttl is seconds.
+    // However, depending on module version, it might accept an options object instead,
+    // like set(key, value, { ttl: seconds }). To be safe with framework/types, it's (key, value, ttl?: number).
+    await cacheService.set(cacheKey, "processing", 300); // 5 minutes TTL for processing
+
     logger.info(`Processing WhatsApp message from ${threadId}`);
 
-    // Await the workflow. In Cloud Run, returning a response
-    // before background tasks finish will lead to CPU throttling and aborted tasks.
-    await processMessageWorkflow(scope).run({
-      input: {
-        threadId,
-        text,
-      },
-    });
+    try {
+      // Await the workflow. In Cloud Run, returning a response
+      // before background tasks finish will lead to CPU throttling and aborted tasks.
+      await processMessageWorkflow(scope).run({
+        input: {
+          threadId,
+          text,
+        },
+      });
+
+      // Mark as processed (24 hours TTL)
+      await cacheService.set(cacheKey, "completed", 86_400);
+    } catch (error) {
+      // Clean up the processing flag if it fails so it can be retried
+      await cacheService.set(cacheKey, null, 1);
+      throw error;
+    }
   }
 }
 
