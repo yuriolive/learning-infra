@@ -7,6 +7,8 @@ import { type TenantService } from "../tenants/tenant.service";
 
 const requestSchema = z.object({
   tenantId: z.string().uuid(),
+  snapshotName: z.string().optional(),
+  imageTag: z.string().optional(), // For migration/deploy overrides
 });
 
 export class ProvisioningController {
@@ -30,9 +32,16 @@ export class ProvisioningController {
       }
 
       const body = await request.json();
-      const { tenantId } = requestSchema.parse(body);
+      const { tenantId, snapshotName, imageTag } = requestSchema.parse(body);
 
-      return await this.dispatchAction(action, tenantId, request, body);
+      return await this.dispatchAction(
+        action,
+        tenantId,
+        request,
+        body,
+        snapshotName,
+        imageTag,
+      );
     } catch (error) {
       if (error instanceof z.ZodError) {
         return new Response(JSON.stringify({ error: error.errors }), {
@@ -55,11 +64,30 @@ export class ProvisioningController {
     tenantId: string,
     request: Request,
     body: unknown,
+    snapshotName?: string,
+    imageTag?: string,
   ): Promise<Response> {
     switch (action) {
       case "database": {
         return this.handleStep(tenantId, "create_db", () =>
           this.provisioningService.provisionDatabase(tenantId),
+        );
+      }
+      case "snapshot": {
+        // Default snapshot name if not provided
+        const name = snapshotName || `backup-${Date.now()}`;
+        return this.handleStep(tenantId, "create_db_snapshot", () =>
+          this.provisioningService.createDatabaseSnapshot(tenantId, name),
+        );
+      }
+      case "restore": {
+        if (!snapshotName)
+          throw new Error("Snapshot name required for restore");
+        return this.handleStep(tenantId, "restore_db_snapshot", () =>
+          this.provisioningService.restoreDatabaseSnapshot(
+            tenantId,
+            snapshotName,
+          ),
         );
       }
       case "migrations": {
@@ -68,7 +96,7 @@ export class ProvisioningController {
 
         if (subAction === "ensure") {
           return this.handleStep(tenantId, "ensure_migration_job", () =>
-            this.provisioningService.ensureMigrationJob(tenantId),
+            this.provisioningService.ensureMigrationJob(tenantId, imageTag),
           );
         }
 
@@ -85,7 +113,7 @@ export class ProvisioningController {
       }
       case "service": {
         return this.handleStep(tenantId, "deploy_service_start", () =>
-          this.provisioningService.startDeployService(tenantId),
+          this.provisioningService.startDeployService(tenantId, imageTag),
         );
       }
       case "finalize": {
