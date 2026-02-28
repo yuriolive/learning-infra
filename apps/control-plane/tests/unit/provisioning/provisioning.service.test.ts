@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProvisioningService } from "../../../src/domains/provisioning/provisioning.service";
 import { CloudRunProvider } from "../../../src/providers/gcp/cloud-run.client";
 import { GcpWorkflowsClient } from "../../../src/providers/gcp/workflows.client";
+import { NeonProvider } from "../../../src/providers/neon/neon.client";
 
 import type { TenantRepository } from "../../../src/domains/tenants/tenant.repository";
 
@@ -80,6 +81,9 @@ describe("ProvisioningService Granular Steps", () => {
     };
     vi.mocked(CloudRunProvider).mockImplementation(
       () => mockCloudRunProvider as unknown as CloudRunProvider,
+    );
+    vi.mocked(NeonProvider).mockImplementation(
+      () => mockNeonProvider as unknown as NeonProvider,
     );
 
     mockWorkflowsClient = {

@@ -82,7 +82,6 @@ describe("ProvisioningController", () => {
     await controller.handleRequest(request);
     expect(mockProvisioningService.triggerMigrationJob).toHaveBeenCalledWith(
       tenantId,
-      undefined,
     );
   });
 
@@ -128,6 +127,7 @@ describe("ProvisioningController", () => {
     await controller.handleRequest(request);
     expect(mockProvisioningService.ensureMigrationJob).toHaveBeenCalledWith(
       tenantId,
+      undefined,
     );
   });
 
