@@ -12,7 +12,7 @@
     "typescript"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('fs').copyFileSync('dist/medusa-config.js','medusa-config.js')\" && medusa build",
+    "build": "tsc -b && node -e \"require('fs').copyFileSync('dist/medusa-config.js', 'medusa-config.js')\" && medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "eslint .",
@@ -21,9 +21,9 @@
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
-    "db:migrate": "TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
+    "db:migrate": "cross-env TS_NODE_PROJECT=tsconfig.json medusa db:migrate",
     "db:migrate:prod": "medusa db:migrate",
-    "db:seed": "TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
+    "db:seed": "cross-env TS_NODE_PROJECT=tsconfig.json medusa exec ./src/scripts/seed.ts"
   },
   "dependencies": {
     "@vendin/medusa-ai-agent": "workspace:*",
@@ -50,6 +50,7 @@
     "@vendin/config": "workspace:*",
     "@vitest/coverage-v8": "^4.0.18",
     "ajv": "^8.17.1",
+    "cross-env": "^7.0.3",
     "next": "16.1.5",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

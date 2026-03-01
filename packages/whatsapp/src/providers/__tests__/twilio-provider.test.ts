@@ -1,11 +1,11 @@
-import { validateSsrfProtection } from "@vendin/utils";
+import { validateSsrfProtection } from "@vendin/utils/network";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { TwilioWhatsAppProvider } from "../twilio-provider";
 
 import type { consoleLogger } from "@vendin/logger";
 
-vi.mock("@vendin/utils", () => ({
+vi.mock("@vendin/utils/network", () => ({
   validateSsrfProtection: vi.fn().mockImplementation(() => Promise.resolve()),
 }));
 
