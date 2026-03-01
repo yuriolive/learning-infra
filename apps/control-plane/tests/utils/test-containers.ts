@@ -8,6 +8,7 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 
 import * as schema from "../../src/database/schema";
+import { consoleLogger } from "../../src/utils/logger";
 
 import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import type { StartedRedisContainer } from "@testcontainers/redis";
@@ -66,15 +67,17 @@ export class TestEnvironment {
   async stop() {
     // It's important to close client connections before stopping the containers.
     if (this.dbClient) {
-      await this.dbClient.end().catch(() => {
-        // Suppress error to ensure container cleanup always runs.
+      await this.dbClient.end().catch((error) => {
+        // Log error for visibility but do not re-throw, to ensure container cleanup always runs.
+        consoleLogger.warn(error, "Failed to gracefully close database client");
       });
     }
 
     // Stop all started containers concurrently.
-    const containerStopPromises = [this.pgContainer, this.redisContainer]
-      .filter(Boolean)
-      .map((container) => container!.stop());
+    const containerStopPromises = [
+      this.pgContainer?.stop(),
+      this.redisContainer?.stop(),
+    ].filter(Boolean);
 
     await Promise.allSettled(containerStopPromises);
   }
