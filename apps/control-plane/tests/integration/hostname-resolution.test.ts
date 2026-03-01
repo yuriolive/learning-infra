@@ -47,7 +47,7 @@ describe("Hostname Resolution Integration", () => {
   }, 60_000); // 60s timeout for pulling postgres image
 
   afterAll(async () => {
-    await testEnvironment.stop();
+    await testEnvironment?.stop();
   });
 
   afterEach(async () => {

@@ -14,8 +14,8 @@ describe("Cache Integration (Redis Testcontainers)", () => {
   }, 60_000); // 60s timeout for pulling redis image
 
   afterAll(async () => {
-    redisClient.disconnect();
-    await testEnvironment.stop();
+    redisClient?.disconnect();
+    await testEnvironment?.stop();
   });
 
   afterEach(async () => {

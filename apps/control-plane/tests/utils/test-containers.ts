@@ -38,11 +38,14 @@ export class TestEnvironment {
     await migrate(database, { migrationsFolder });
 
     // Seed release channels required by schema
-    await this.dbClient`
-      INSERT INTO release_channels (id, auto_promote)
-      VALUES ('stable', false), ('canary', false), ('internal', true)
-      ON CONFLICT DO NOTHING;
-    `;
+    await database
+      .insert(schema.releaseChannels)
+      .values([
+        { id: "stable", autoPromote: false },
+        { id: "canary", autoPromote: false },
+        { id: "internal", autoPromote: true },
+      ])
+      .onConflictDoNothing();
 
     return {
       connectionUri,
@@ -61,19 +64,18 @@ export class TestEnvironment {
   }
 
   async stop() {
-    const clientPromises = [];
+    // It's important to close client connections before stopping the containers.
     if (this.dbClient) {
-      clientPromises.push(this.dbClient.end());
+      await this.dbClient.end().catch(() => {
+        // Suppress error to ensure container cleanup always runs.
+      });
     }
-    await Promise.allSettled(clientPromises);
 
-    const containerPromises = [];
-    if (this.pgContainer) {
-      containerPromises.push(this.pgContainer.stop());
-    }
-    if (this.redisContainer) {
-      containerPromises.push(this.redisContainer.stop());
-    }
-    await Promise.allSettled(containerPromises);
+    // Stop all started containers concurrently.
+    const containerStopPromises = [this.pgContainer, this.redisContainer]
+      .filter(Boolean)
+      .map((container) => container!.stop());
+
+    await Promise.allSettled(containerStopPromises);
   }
 }
