@@ -2,13 +2,17 @@ import fs from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 
-import { Verifier } from "@pact-foundation/pact";
+import pactCore from "@pact-foundation/pact-core";
 import { describe, it, expect } from "vitest";
 
 import type { TenantService } from "../../src/domains/tenants/tenant.service";
+import type {
+  ListTenantsFilters,
+  Tenant,
+} from "../../src/domains/tenants/tenant.types";
 import type { AddressInfo } from "node:net";
 
-describe.skip("Storefront Contract Verification", () => {
+describe("Storefront Contract Verification", () => {
   it("verifies the storefront consumer contract", async () => {
     // Import dynamically so it's only loaded when needed
     const { createTenantRoutes } =
@@ -18,8 +22,8 @@ describe.skip("Storefront Contract Verification", () => {
     const logger = createCloudflareLogger({ nodeEnv: "test" });
 
     // Create a mock tenant service that responds with the expected tenant for the contract test
-    const mockTenantService = {
-      listTenants: (filters?: { subdomain?: string }) => {
+    const mockTenantService: Pick<TenantService, "listTenants"> = {
+      listTenants: (filters?: ListTenantsFilters) => {
         if (filters?.subdomain === "test-store") {
           return Promise.resolve([
             {
@@ -34,22 +38,23 @@ describe.skip("Storefront Contract Verification", () => {
                   logoUrl: "",
                 },
               },
-            },
+            } as unknown as Tenant,
           ]);
         }
         return Promise.resolve([]);
       },
-    } as unknown as TenantService;
+    };
 
     const routes = createTenantRoutes({
       logger,
-      tenantService: mockTenantService,
+      tenantService: mockTenantService as TenantService,
     });
 
     const server = createServer((request, response_) => {
       // Create a wrapper function that returns a Promise to catch errors inside the callback
       const handle = async () => {
         try {
+          logger.info({ url: request.url }, "SERVER RECEIVED URL");
           if (!request.url) {
             response_.statusCode = 404;
             response_.end();
@@ -81,7 +86,7 @@ describe.skip("Storefront Contract Verification", () => {
           const text = await routeResponse.text();
           response_.end(text);
         } catch (error) {
-          console.error("Server error:", error);
+          logger.error({ error }, "Server error");
           response_.statusCode = 500;
           response_.end("Internal Server Error");
         }
@@ -105,7 +110,7 @@ describe.skip("Storefront Contract Verification", () => {
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!fs.existsSync(pactUrl)) {
-      console.warn(`Pact file not found at ${pactUrl}, skipping test`);
+      logger.warn({ pactUrl }, "Pact file not found, skipping test");
       return;
     }
 
@@ -126,20 +131,22 @@ describe.skip("Storefront Contract Verification", () => {
       });
     });
 
-    const verifier = new Verifier({
-      provider: "control-plane",
+    const statePort = (stateServer.address() as AddressInfo).port;
+
+    const options = {
       providerBaseUrl: `http://127.0.0.1:${port}`,
       pactUrls: [pactUrl],
-      stateHandlers: {
-        "a tenant exists with subdomain test-store": () => {
-          return Promise.resolve();
-        },
-      },
-    });
+      providerStatesSetupUrl: `http://127.0.0.1:${statePort}/_pactSetup`,
+    };
+
+    logger.info(
+      { providerBaseUrl: `http://127.0.0.1:${port}` },
+      "[TEST] pactCore verifying providerBaseUrl",
+    );
 
     let success = false;
     try {
-      await verifier.verifyProvider();
+      await pactCore.verifyPacts(options);
       success = true;
     } finally {
       if (server) {
