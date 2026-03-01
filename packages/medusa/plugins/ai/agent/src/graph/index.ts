@@ -7,6 +7,8 @@ import { getAdminSystemPrompt } from "./prompts/admin.js";
 import { getCustomerSystemPrompt } from "./prompts/customer.js";
 import { AgentState } from "./state.js";
 
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { BaseCheckpointSaver } from "@langchain/langgraph";
 import type { MedusaContainer } from "@medusajs/medusa";
 
 // Singleton implementation for Redis Checkpointer
@@ -34,16 +36,23 @@ export async function createAgentGraph(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tools: any[];
     role: "admin" | "customer";
+    /** Optional model override — inject a test double (e.g. FakeChatModel) instead of Gemini. */
+    model?: BaseChatModel;
+    /** Optional checkpointer override — inject MemorySaver in tests instead of RedisSaver. */
+    checkpointer?: BaseCheckpointSaver;
   },
 ) {
   // 1. Initialize Model
-  const model = new ChatGoogleGenerativeAI({
-    model: process.env.GEMINI_MODEL || "gemini-3.0-flash",
-    apiKey: process.env.GEMINI_API_KEY || "",
-  });
+  const model =
+    options.model ??
+    new ChatGoogleGenerativeAI({
+      model: process.env.GEMINI_MODEL || "gemini-3.0-flash",
+      apiKey: process.env.GEMINI_API_KEY || "",
+    });
 
   // 2. Bind Tools to Model
-  const modelWithTools = model.bindTools(options.tools);
+
+  const modelWithTools = model.bindTools!(options.tools);
 
   // 3. Define Nodes
 
@@ -77,7 +86,7 @@ export async function createAgentGraph(
     .addEdge("tools", "agent");
 
   // 5. Compile with Checkpointer
-  const saver = await getCheckpointer();
+  const saver = options.checkpointer ?? (await getCheckpointer());
 
   return workflow.compile({ checkpointer: saver });
 }
