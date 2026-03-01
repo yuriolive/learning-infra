@@ -19,7 +19,7 @@ export const sendReplyStep = createStep(
       | "facebook"
       | "twilio"
       | undefined;
-    const providerString = providerType || "facebook";
+    const providerString = providerType ?? "facebook";
 
     try {
       let provider: Awaited<ReturnType<typeof createWhatsAppProvider>>;

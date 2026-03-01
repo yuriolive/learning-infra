@@ -11,7 +11,9 @@
       "Bash(pnpm run test)",
       "Bash(pnpm run test -- tests/unit/campaign/)",
       "Bash(git add -A)",
-      "Bash(git add apps/control-plane/src/providers/neon/neon.client.ts apps/control-plane/tests/unit/campaign/upgrade.service.test.ts)"
+      "Bash(git add *)",
+      "Bash(npx vitest run --coverage)",
+      "Bash(test -f *)"
     ]
   }
 }

@@ -11,12 +11,39 @@ import * as schema from "./schema.js";
 // Define the path to the local D1 database file
 // This path matches the one created by 'wrangler d1 migrations apply --local'
 // It might vary based on wrangler version, but this is the standard location for v3
-const DB_PATH = process.env.LOCAL_D1_PATH
-  ? path.resolve(process.env.LOCAL_D1_PATH)
-  : path.resolve(
+function getDatabasePath(): string {
+  if (process.env.LOCAL_D1_PATH) {
+    return path.resolve(process.env.LOCAL_D1_PATH);
+  }
+
+  const directoryPath = path.resolve(
+    process.cwd(),
+    ".wrangler/state/v3/d1/miniflare-D1DatabaseObject",
+  );
+  if (fs.existsSync(directoryPath)) {
+    const files = fs.readdirSync(directoryPath);
+    const sqliteFiles = files.filter(
+      (f) => f.endsWith(".sqlite") && f !== "marketing-db.sqlite",
+    );
+
+    if (sqliteFiles.length > 1) {
+      throw new Error(
+        `Multiple .sqlite files found in ${directoryPath}. Expected only one.`,
+      );
+    }
+
+    if (sqliteFiles.length === 1) {
+      return path.join(directoryPath, sqliteFiles[0]);
+    }
+  }
+
+  return path.resolve(
     process.cwd(),
     ".wrangler/state/v3/d1/miniflare-D1DatabaseObject/marketing-db.sqlite",
   );
+}
+
+const DB_PATH = getDatabasePath();
 
 // Ensure the directory exists
 const databaseDirectory = path.dirname(DB_PATH);
