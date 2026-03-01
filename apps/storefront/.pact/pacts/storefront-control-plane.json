@@ -1,0 +1,107 @@
+{
+  "consumer": {
+    "name": "storefront"
+  },
+  "interactions": [
+    {
+      "description": "a request to resolve the tenant hostname",
+      "providerStates": [
+        {
+          "name": "a tenant exists with subdomain test-store"
+        }
+      ],
+      "request": {
+        "headers": {
+          "Authorization": "Bearer test-admin-key"
+        },
+        "method": "GET",
+        "path": "/api/tenants",
+        "query": {
+          "subdomain": [
+            "test-store"
+          ]
+        }
+      },
+      "response": {
+        "body": [
+          {
+            "apiUrl": "https://backend.example.com",
+            "id": "tenant-123",
+            "metadata": {
+              "theme": {
+                "fontFamily": "Inter",
+                "logoUrl": "",
+                "primaryColor": "#000000"
+              }
+            },
+            "name": "Test Tenant",
+            "subdomain": "test-store"
+          }
+        ],
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$[0].apiUrl": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[0].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[0].metadata": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[0].name": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$[0].subdomain": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "16.2.0"
+    },
+    "pactRust": {
+      "ffi": "0.4.28",
+      "models": "1.3.5"
+    },
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  },
+  "provider": {
+    "name": "control-plane"
+  }
+}

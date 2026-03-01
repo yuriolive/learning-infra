@@ -103,12 +103,8 @@
           "name": "tenant_admins_tenant_id_tenants_id_fk",
           "tableFrom": "tenant_admins",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -118,9 +114,7 @@
         "tenant_admins_phone_unique": {
           "name": "tenant_admins_phone_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "phone"
-          ]
+          "columns": ["phone"]
         }
       },
       "policies": {},
@@ -192,12 +186,8 @@
           "name": "tenant_provisioning_events_tenant_id_tenants_id_fk",
           "tableFrom": "tenant_provisioning_events",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -296,12 +286,8 @@
           "name": "tenant_upgrade_executions_campaign_id_upgrade_campaigns_id_fk",
           "tableFrom": "tenant_upgrade_executions",
           "tableTo": "upgrade_campaigns",
-          "columnsFrom": [
-            "campaign_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["campaign_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -309,12 +295,8 @@
           "name": "tenant_upgrade_executions_tenant_id_tenants_id_fk",
           "tableFrom": "tenant_upgrade_executions",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -506,12 +488,8 @@
           "name": "tenants_release_channel_id_release_channels_id_fk",
           "tableFrom": "tenants",
           "tableTo": "release_channels",
-          "columnsFrom": [
-            "release_channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["release_channel_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -521,16 +499,12 @@
         "tenants_subdomain_unique": {
           "name": "tenants_subdomain_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "subdomain"
-          ]
+          "columns": ["subdomain"]
         },
         "tenants_whatsapp_phone_number_unique": {
           "name": "tenants_whatsapp_phone_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "whatsapp_phone_number"
-          ]
+          "columns": ["whatsapp_phone_number"]
         }
       },
       "policies": {},
@@ -618,12 +592,8 @@
           "name": "upgrade_campaigns_channel_id_release_channels_id_fk",
           "tableFrom": "upgrade_campaigns",
           "tableTo": "release_channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["channel_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -639,20 +609,12 @@
     "public.tenant_admin_role": {
       "name": "tenant_admin_role",
       "schema": "public",
-      "values": [
-        "owner",
-        "admin"
-      ]
+      "values": ["owner", "admin"]
     },
     "public.tenant_plan": {
       "name": "tenant_plan",
       "schema": "public",
-      "values": [
-        "free",
-        "starter",
-        "professional",
-        "enterprise"
-      ]
+      "values": ["free", "starter", "professional", "enterprise"]
     },
     "public.tenant_status": {
       "name": "tenant_status",
@@ -668,13 +630,7 @@
     "public.upgrade_campaign_status": {
       "name": "upgrade_campaign_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "running",
-        "paused",
-        "completed",
-        "failed"
-      ]
+      "values": ["pending", "running", "paused", "completed", "failed"]
     },
     "public.upgrade_execution_status": {
       "name": "upgrade_execution_status",
@@ -693,10 +649,7 @@
     "public.whatsapp_provider": {
       "name": "whatsapp_provider",
       "schema": "public",
-      "values": [
-        "facebook",
-        "twilio"
-      ]
+      "values": ["facebook", "twilio"]
     }
   },
   "schemas": {},
