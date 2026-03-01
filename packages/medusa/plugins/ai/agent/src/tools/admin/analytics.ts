@@ -63,18 +63,24 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
       },
     ),
     tool(
-      async ({ limit = 5 }: { limit?: number }) => {
+      async ({
+        limit = 5,
+        orders_to_scan = 100,
+      }: {
+        limit?: number;
+        orders_to_scan?: number;
+      }) => {
         try {
           const orderModule: IOrderModuleService = container.resolve(
             Modules.ORDER,
           );
 
-          // Fetch recent orders (e.g. last 100) to aggregate top products
+          // Fetch recent orders to aggregate top products
           // Note: Production analytics should use a dedicated analytics engine or SQL query.
           const [orders] = await orderModule.listAndCountOrders(
             {},
             {
-              take: 50,
+              take: orders_to_scan,
               relations: ["items"],
             },
           );
@@ -118,6 +124,13 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
         description: "Get top selling products based on recent orders.",
         schema: z.object({
           limit: z.number().optional().default(5),
+          orders_to_scan: z
+            .number()
+            .min(10)
+            .max(1000)
+            .optional()
+            .default(100)
+            .describe("Number of recent orders to analyze."),
         }),
       },
     ),

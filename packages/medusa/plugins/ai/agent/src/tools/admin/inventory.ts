@@ -137,37 +137,49 @@ export function getAdminInventoryTools(container: MedusaContainer) {
           const inventoryService: IInventoryService = container.resolve(
             Modules.INVENTORY,
           );
-          const [items] = await inventoryService.listInventoryItems(
-            {},
-            {
-              relations: ["location_levels"],
-              take: 100,
-            },
-          );
-
-          if (!items || !Array.isArray(items)) {
-            return "[]";
-          }
-
           const lowStock: Array<{
             id: string;
             sku: string | null | undefined;
             total_stock: number;
           }> = [];
-          for (const item of items as InventoryItemWithLevels[]) {
-            const totalStock =
-              item.location_levels?.reduce(
-                (sum: number, level: InventoryLevelDTO) =>
-                  sum + level.stocked_quantity,
-                0,
-              ) ?? 0;
-            if (totalStock < threshold) {
-              lowStock.push({
-                id: item.id,
-                sku: item.sku,
-                total_stock: totalStock,
-              });
+
+          const BATCH_SIZE = 250;
+          let skip = 0;
+          let hasMore = true;
+
+          while (hasMore) {
+            const [items, count] =
+              await inventoryService.listAndCountInventoryItems(
+                {},
+                {
+                  relations: ["location_levels"],
+                  take: BATCH_SIZE,
+                  skip,
+                },
+              );
+
+            if (!items || items.length === 0) {
+              break;
             }
+
+            for (const item of items as InventoryItemWithLevels[]) {
+              const totalStock =
+                item.location_levels?.reduce(
+                  (sum: number, level: InventoryLevelDTO) =>
+                    sum + level.stocked_quantity,
+                  0,
+                ) ?? 0;
+              if (totalStock < threshold) {
+                lowStock.push({
+                  id: item.id,
+                  sku: item.sku,
+                  total_stock: totalStock,
+                });
+              }
+            }
+
+            skip += items.length;
+            hasMore = skip < count;
           }
 
           return JSON.stringify(lowStock);
