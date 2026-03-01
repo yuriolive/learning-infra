@@ -2,6 +2,7 @@ import { eq, and, sql, inArray } from "drizzle-orm";
 
 import { type Database } from "../../database/database";
 import {
+  releaseChannels,
   upgradeCampaigns,
   tenantUpgradeExecutions,
   tenants,
@@ -209,9 +210,86 @@ export class UpgradeService {
       }
     });
 
+    if (status === "completed") {
+      await this.checkCampaignCompletion(executionId);
+    }
+
     // Check campaign failure threshold
     if (status === "failed") {
       await this.checkCampaignHealth(executionId);
+    }
+  }
+
+  private async checkCampaignCompletion(executionId: string): Promise<void> {
+    const [execution] = await this.database
+      .select({
+        campaignId: tenantUpgradeExecutions.campaignId,
+        targetImageTag: upgradeCampaigns.targetImageTag,
+        channelId: upgradeCampaigns.channelId,
+      })
+      .from(tenantUpgradeExecutions)
+      .innerJoin(
+        upgradeCampaigns,
+        eq(tenantUpgradeExecutions.campaignId, upgradeCampaigns.id),
+      )
+      .where(eq(tenantUpgradeExecutions.id, executionId));
+
+    if (!execution) return;
+
+    const { campaignId, targetImageTag, channelId } = execution;
+
+    // Check whether any execution is still in flight
+    const pendingStates = [
+      "queued",
+      "snapshotting",
+      "migrating",
+      "deploying",
+      "verifying",
+    ] as const;
+    const [pendingResult] = await this.database
+      .select({ count: sql<number>`count(*)` })
+      .from(tenantUpgradeExecutions)
+      .where(
+        and(
+          eq(tenantUpgradeExecutions.campaignId, campaignId),
+          inArray(tenantUpgradeExecutions.status, [...pendingStates]),
+        ),
+      );
+
+    if (Number(pendingResult?.count ?? 0) > 0) return;
+
+    // All executions are terminal — mark campaign completed
+    await this.database
+      .update(upgradeCampaigns)
+      .set({ status: "completed", completedAt: new Date() })
+      .where(eq(upgradeCampaigns.id, campaignId));
+
+    // Set channel's currentImageTag as the single source of truth
+    await this.database
+      .update(releaseChannels)
+      .set({ currentImageTag: targetImageTag })
+      .where(eq(releaseChannels.id, channelId));
+
+    this.logger.info(
+      { campaignId, channelId, targetImageTag },
+      "Campaign completed. Channel image tag updated.",
+    );
+
+    // Auto-promote to the next channel in the chain if configured
+    const [channel] = await this.database
+      .select({
+        autoPromote: releaseChannels.autoPromote,
+        nextChannelId: releaseChannels.nextChannelId,
+      })
+      .from(releaseChannels)
+      .where(eq(releaseChannels.id, channelId));
+
+    if (channel?.autoPromote && channel.nextChannelId) {
+      this.logger.info(
+        { from: channelId, to: channel.nextChannelId, targetImageTag },
+        "Auto-promoting image to next channel.",
+      );
+      await this.createCampaign(targetImageTag, channel.nextChannelId);
     }
   }
 
