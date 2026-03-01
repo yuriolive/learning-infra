@@ -61,16 +61,19 @@ export class TestEnvironment {
   }
 
   async stop() {
-    const promises = [];
+    const clientPromises = [];
     if (this.dbClient) {
-      promises.push(this.dbClient.end());
+      clientPromises.push(this.dbClient.end());
     }
+    await Promise.allSettled(clientPromises);
+
+    const containerPromises = [];
     if (this.pgContainer) {
-      promises.push(this.pgContainer.stop());
+      containerPromises.push(this.pgContainer.stop());
     }
     if (this.redisContainer) {
-      promises.push(this.redisContainer.stop());
+      containerPromises.push(this.redisContainer.stop());
     }
-    await Promise.allSettled(promises);
+    await Promise.allSettled(containerPromises);
   }
 }
