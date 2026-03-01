@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --passWithNoTests",
+    "pact:verify": "vitest run tests/contracts/storefront-consumer.pact.test.ts",
     "test:watch": "vitest --passWithNoTests",
     "test:coverage": "vitest --coverage --passWithNoTests",
     "typecheck": "tsc --noEmit",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.15",
+    "@pact-foundation/pact": "^16.2.0",
     "@types/node": "^24.7.1",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
