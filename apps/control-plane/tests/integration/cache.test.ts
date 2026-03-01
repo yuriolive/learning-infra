@@ -19,9 +19,16 @@ function executeRedisCommand(port: number, host: string, command: string[]): Pro
     client.on('data', (chunk) => {
       data += chunk.toString();
 
-      // Basic check to see if we got the full response
-      // This is a naive RESP parser, fine for simple SET/GET tests
-      if (data.includes('\r\n')) {
+      // Check if we received the full payload before ending the client
+      if (data.startsWith('$')) {
+        const firstNewLine = data.indexOf('\r\n');
+        if (firstNewLine !== -1) {
+          const length = parseInt(data.substring(1, firstNewLine), 10);
+          if (length === -1 || data.length >= firstNewLine + 2 + length + 2) {
+            client.end();
+          }
+        }
+      } else if (data.endsWith('\r\n')) {
         client.end();
       }
     });
