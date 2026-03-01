@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import path from "node:path";
 
 import pactCore from "@pact-foundation/pact-core";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import type { TenantService } from "../../src/domains/tenants/tenant.service";
 import type {
@@ -11,6 +11,43 @@ import type {
   Tenant,
 } from "../../src/domains/tenants/tenant.types";
 import type { AddressInfo } from "node:net";
+
+/**
+ * Helper to create a complete mock tenant satisfying the Tenant interface
+ */
+const createMockTenant = (overrides: Partial<Tenant> = {}): Tenant => ({
+  id: "tenant-123",
+  name: "Test Tenant",
+  merchantEmail: "test@example.com",
+  subdomain: "test-store",
+  databaseUrl: null,
+  apiUrl: "https://backend.example.com",
+  redisHash: null,
+  status: "active",
+  plan: "free",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+  metadata: {
+    theme: {
+      primaryColor: "#000000",
+      fontFamily: "Inter",
+      logoUrl: "",
+    },
+  },
+  failureReason: null,
+  jwtSecret: "test-jwt-secret",
+  cookieSecret: "test-cookie-secret",
+  whatsappPhoneNumber: null,
+  whatsappPhoneId: null,
+  whatsappProvider: null,
+  whatsappVerifiedAt: null,
+  neonProjectId: null,
+  releaseChannelId: null,
+  currentImageTag: null,
+  lockedUntil: null,
+  ...overrides,
+});
 
 describe("Storefront Contract Verification", () => {
   it("verifies the storefront consumer contract", async () => {
@@ -22,32 +59,24 @@ describe("Storefront Contract Verification", () => {
     const logger = createCloudflareLogger({ nodeEnv: "test" });
 
     // Create a mock tenant service that responds with the expected tenant for the contract test
-    const mockTenantService: Pick<TenantService, "listTenants"> = {
-      listTenants: (filters?: ListTenantsFilters) => {
+    const mockTenantService = {
+      listTenants: vi.fn((filters?: ListTenantsFilters) => {
         if (filters?.subdomain === "test-store") {
-          return Promise.resolve([
-            {
-              id: "tenant-123",
-              name: "Test Tenant",
-              subdomain: "test-store",
-              apiUrl: "https://backend.example.com",
-              metadata: {
-                theme: {
-                  primaryColor: "#000000",
-                  fontFamily: "Inter",
-                  logoUrl: "",
-                },
-              },
-            } as unknown as Tenant,
-          ]);
+          return [createMockTenant()];
         }
-        return Promise.resolve([]);
-      },
+        return [];
+      }),
+      // Add other required methods as no-ops or mocks if needed for future-proofing
+      getTenant: vi.fn(),
+      createTenant: vi.fn(),
+      updateTenant: vi.fn(),
+      deleteTenant: vi.fn(),
+      logProvisioningEvent: vi.fn(),
     };
 
     const routes = createTenantRoutes({
       logger,
-      tenantService: mockTenantService as TenantService,
+      tenantService: mockTenantService as unknown as TenantService,
     });
 
     const server = createServer((request, response_) => {
@@ -103,14 +132,16 @@ describe("Storefront Contract Verification", () => {
 
     const port = (server.address() as AddressInfo).port;
 
-    const pactUrl = path.resolve(
-      __dirname,
-      "../../../../apps/storefront/.pact/pacts/storefront-control-plane.json",
+    // Use a more robust way to find the pact file in the monorepo
+    const rootDirectory = path.resolve(__dirname, "../../../../");
+    const pactURL = path.join(
+      rootDirectory,
+      "apps/storefront/.pact/pacts/storefront-control-plane.json",
     );
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    if (!fs.existsSync(pactUrl)) {
-      logger.warn({ pactUrl }, "Pact file not found, skipping test");
+    if (!fs.existsSync(pactURL)) {
+      logger.warn({ pactURL }, "Pact file not found, skipping test");
       return;
     }
 
@@ -135,7 +166,7 @@ describe("Storefront Contract Verification", () => {
 
     const options = {
       providerBaseUrl: `http://127.0.0.1:${port}`,
-      pactUrls: [pactUrl],
+      pactUrls: [pactURL],
       providerStatesSetupUrl: `http://127.0.0.1:${statePort}/_pactSetup`,
     };
 
