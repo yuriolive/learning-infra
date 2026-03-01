@@ -24,7 +24,7 @@ describe("Middleware", () => {
   });
 
   describe("createAuthMiddleware", () => {
-    it("should return null on successful authentication", async () => {
+    it("should return null on successful authentication", () => {
       const middleware = createAuthMiddleware(options);
       const request = new Request("http://localhost", {
         headers: { Authorization: "Bearer secret-key" },
@@ -48,7 +48,7 @@ describe("Middleware", () => {
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
-    it("should fail if Authorization header is missing", async () => {
+    it("should fail if Authorization header is missing", () => {
       const middleware = createAuthMiddleware(options);
       const request = new Request("http://localhost");
       const result = middleware(request);
@@ -57,7 +57,7 @@ describe("Middleware", () => {
       expect(result?.status).toBe(401);
     });
 
-    it("should fail if Authorization header is invalid format", async () => {
+    it("should fail if Authorization header is invalid format", () => {
       const middleware = createAuthMiddleware(options);
       const request = new Request("http://localhost", {
         headers: { Authorization: "Basic key" },
@@ -68,7 +68,7 @@ describe("Middleware", () => {
       expect(result?.status).toBe(401);
     });
 
-    it("should fail if token does not match", async () => {
+    it("should fail if token does not match", () => {
       const middleware = createAuthMiddleware(options);
       const request = new Request("http://localhost", {
         headers: { Authorization: "Bearer wrong-key" },
@@ -81,7 +81,7 @@ describe("Middleware", () => {
 
     // Testing areEqual timing attack prevention logic implicitly:
     // Ensure partial matches fail.
-    it("should fail on partial match token", async () => {
+    it("should fail on partial match token", () => {
       const middleware = createAuthMiddleware(options);
       const request = new Request("http://localhost", {
         headers: { Authorization: "Bearer secret" }, // shorter

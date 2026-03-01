@@ -33,7 +33,7 @@ describe("GcpWorkflowsClient", () => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ name: "execution-123" }),
+      json: () => Promise.resolve({ name: "execution-123" }),
     });
 
     client = new GcpWorkflowsClient(config);
@@ -129,7 +129,7 @@ describe("GcpWorkflowsClient", () => {
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
-        text: async () => "Workflow specific error",
+        text: () => Promise.resolve("Workflow specific error"),
       });
 
       await expect(

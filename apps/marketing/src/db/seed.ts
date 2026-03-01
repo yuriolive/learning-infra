@@ -55,7 +55,7 @@ const sqlite = new Database(DB_PATH);
 const database = drizzle(sqlite, { schema });
 
 async function seed() {
-  // eslint-disable-next-line no-console
+
   console.log("Seeding Marketing database...");
 
   const userId = nanoid();
@@ -72,7 +72,7 @@ async function seed() {
   let targetUserId = userId;
 
   if (existingUser.length > 0) {
-    // eslint-disable-next-line no-console
+
     console.log("Test user already exists. Skipping creation.");
     targetUserId = existingUser[0].id;
   } else {
@@ -88,7 +88,7 @@ async function seed() {
       phoneNumber: null,
       phoneNumberVerified: null,
     });
-    // eslint-disable-next-line no-console
+
     console.log("Created test user.");
   }
 
@@ -111,14 +111,14 @@ async function seed() {
       ipAddress: "127.0.0.1",
       userAgent: "seed-script",
     });
-    // eslint-disable-next-line no-console
+
     console.log("Created test session.");
   } else {
-    // eslint-disable-next-line no-console
+
     console.log("Test session already exists. Skipping.");
   }
 
-  // eslint-disable-next-line no-console
+
   console.log("Seeding complete!");
 }
 

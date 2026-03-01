@@ -28,10 +28,10 @@ export const createCloudflareLogger = (options: LoggerOptions = {}): Logger => {
       ? (options.logLevel as LogLevel)
       : defaultLevel;
 
-  const minLevelPriority = LOG_LEVELS[level];
+  const minLevelPriority = LOG_LEVELS[level]; // eslint-disable-line security/detect-object-injection
 
   const shouldLog = (targetLevel: LogLevel) => {
-    return LOG_LEVELS[targetLevel] >= minLevelPriority;
+    return LOG_LEVELS[targetLevel] >= minLevelPriority; // eslint-disable-line security/detect-object-injection
   };
 
   return {

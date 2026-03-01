@@ -176,7 +176,7 @@ export function resetInitialization() {
   initializationPromise = null;
 }
 
-async function initializeApplication(
+async function initializeApplication( // eslint-disable-line max-lines-per-function
   environment: Environment,
   context?: {
     waitUntil: (promise: Promise<unknown>) => void;

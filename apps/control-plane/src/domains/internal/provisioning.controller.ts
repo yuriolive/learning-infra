@@ -59,6 +59,7 @@ export class ProvisioningController {
     }
   }
 
+  // eslint-disable-next-line complexity
   private dispatchAction(
     action: string | undefined,
     tenantId: string,

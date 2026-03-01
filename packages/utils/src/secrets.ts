@@ -39,8 +39,9 @@ export async function resolveEnvironment(
 ): Promise<string | undefined> {
   // 1. Try context/binding first
   if (contextEnvironment && key in contextEnvironment) {
-    const value = contextEnvironment[key];
-    return resolveSecret(value as BoundSecret);
+    const value = contextEnvironment[key]; // eslint-disable-line security/detect-object-injection
+    const resolved = await resolveSecret(value as BoundSecret);
+    return resolved;
   }
 
   // 2. Fallback to process.env
@@ -48,9 +49,13 @@ export async function resolveEnvironment(
   if (
     typeof process !== "undefined" &&
     process.env &&
-    process.env[key] !== undefined
+    process.env[key] !== undefined // eslint-disable-line security/detect-object-injection
   ) {
-    return resolveSecret(process.env[key] as BoundSecret);
+    const environmentValue = process.env[key]; // eslint-disable-line security/detect-object-injection
+    const resolvedEnvironment = await resolveSecret(
+      environmentValue as BoundSecret,
+    );
+    return resolvedEnvironment;
   }
 
   return undefined;
