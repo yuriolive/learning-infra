@@ -39,11 +39,12 @@ jobs:
         env:
           STAGING_CONTROL_PLANE_URL: ${{ secrets.STAGING_CONTROL_PLANE_URL }}
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          ACTION: ${{ github.event.inputs.action }}
         run: |
-          if [ "${{ github.event.inputs.action }}" = "provision" ]; then
+          if [ "$ACTION" = "provision" ]; then
             pnpm run staging:demo:provision
-          elif [ "${{ github.event.inputs.action }}" = "seed" ]; then
+          elif [ "$ACTION" = "seed" ]; then
             pnpm run staging:demo:seed
-          elif [ "${{ github.event.inputs.action }}" = "reset" ]; then
+          elif [ "$ACTION" = "reset" ]; then
             pnpm run staging:demo:reset
           fi
