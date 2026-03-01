@@ -1,7 +1,12 @@
+import fs from "node:fs";
+import { createServer } from "node:http";
 import path from "node:path";
 
 import { Verifier } from "@pact-foundation/pact";
 import { describe, it, expect } from "vitest";
+
+import type { TenantService } from "../../src/domains/tenants/tenant.service";
+import type { AddressInfo } from "node:net";
 
 describe.skip("Storefront Contract Verification", () => {
   it("verifies the storefront consumer contract", async () => {
@@ -9,15 +14,14 @@ describe.skip("Storefront Contract Verification", () => {
     const { createTenantRoutes } =
       await import("../../src/domains/tenants/tenant.routes");
     const { createCloudflareLogger } = await import("@vendin/logger");
-    const { createServer } = await import("node:http");
 
     const logger = createCloudflareLogger({ nodeEnv: "test" });
 
     // Create a mock tenant service that responds with the expected tenant for the contract test
     const mockTenantService = {
-      listTenants: async (filters?: { subdomain?: string }) => {
+      listTenants: (filters?: { subdomain?: string }) => {
         if (filters?.subdomain === "test-store") {
-          return [
+          return Promise.resolve([
             {
               id: "tenant-123",
               name: "Test Tenant",
@@ -31,11 +35,11 @@ describe.skip("Storefront Contract Verification", () => {
                 },
               },
             },
-          ];
+          ]);
         }
-        return [];
+        return Promise.resolve([]);
       },
-    } as unknown;
+    } as unknown as TenantService;
 
     const routes = createTenantRoutes({
       logger,
@@ -63,7 +67,7 @@ describe.skip("Storefront Contract Verification", () => {
           }
 
           const standardRequest = new Request(fullUrl, {
-            method: request.method,
+            method: request.method || "GET",
             headers,
           });
 
@@ -83,10 +87,7 @@ describe.skip("Storefront Contract Verification", () => {
         }
       };
 
-      handle().catch(() => {
-        response_.statusCode = 500;
-        response_.end("Internal Server Error");
-      });
+      void handle();
     });
 
     await new Promise<void>((resolve) => {
@@ -95,14 +96,14 @@ describe.skip("Storefront Contract Verification", () => {
       });
     });
 
-    const port = (server.address() as unknown).port;
+    const port = (server.address() as AddressInfo).port;
 
     const pactUrl = path.resolve(
       __dirname,
       "../../../../apps/storefront/.pact/pacts/storefront-control-plane.json",
     );
 
-    const fs = await import("node:fs");
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     if (!fs.existsSync(pactUrl)) {
       console.warn(`Pact file not found at ${pactUrl}, skipping test`);
       return;
