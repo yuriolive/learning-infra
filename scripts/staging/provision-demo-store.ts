@@ -50,19 +50,7 @@ async function main() {
     }
   }
 
-  // 2. Fetch all tenants to find the demo store
-  const listRes = await fetch(`${STAGING_CONTROL_PLANE_URL}/api/tenants`, {
-    headers: {
-      Authorization: `Bearer ${ADMIN_API_TOKEN}`,
-    },
-  });
-
-  if (!listRes.ok) {
-    console.error("Failed to list tenants.");
-    process.exit(1);
-  }
-
-  const listData = await listRes.json();
+  // 2. Fetch the demo store tenant by subdomain
   interface Tenant {
     id: string;
     domain: string;
@@ -72,9 +60,22 @@ async function main() {
     createdAt?: string;
   }
 
-  const demoTenant = listData.data.find(
-    (t: Tenant) => t.domain === "demo-store",
+  const listRes = await fetch(
+    `${STAGING_CONTROL_PLANE_URL}/api/tenants?subdomain=demo-store`,
+    {
+      headers: {
+        Authorization: `Bearer ${ADMIN_API_TOKEN}`,
+      },
+    },
   );
+
+  if (!listRes.ok) {
+    console.error("Failed to list tenants.");
+    process.exit(1);
+  }
+
+  const listData = await listRes.json();
+  const demoTenant: Tenant = listData.data[0];
 
   if (!demoTenant) {
     console.error("Could not find demo-store tenant after creation.");

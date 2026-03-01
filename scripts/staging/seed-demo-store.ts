@@ -7,7 +7,7 @@ const DEMO_STORE_FILE = path.resolve(process.cwd(), ".staging/demo-store.json");
 async function main() {
   const isReset = process.argv.includes("--reset");
 
-  let tenantData;
+  let tenantData: { id: string; databaseUrl?: string };
   try {
     const fileContent = await fs.readFile(DEMO_STORE_FILE, "utf-8");
     tenantData = JSON.parse(fileContent);
@@ -32,7 +32,6 @@ async function main() {
     );
   }
 
-  const { execSync } = require("child_process");
   try {
     console.log("Running default seed (store, region, etc.)...");
     execSync("pnpm --filter @vendin/tenant-instance db:seed", {
