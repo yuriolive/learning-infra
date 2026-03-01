@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { TenantRepository } from "../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../src/domains/tenants/tenant.service";
@@ -40,6 +48,11 @@ describe("Hostname Resolution Integration", () => {
 
   afterAll(async () => {
     await testEnvironment.stop();
+  });
+
+  afterEach(async () => {
+    // Reset database state between tests for isolation
+    await database.execute("TRUNCATE TABLE tenants CASCADE");
   });
 
   it("should resolve a tenant by exact subdomain", async () => {
