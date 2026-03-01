@@ -2,24 +2,20 @@ import { tool } from "@langchain/core/tools";
 import { Modules } from "@medusajs/framework/utils";
 import { z } from "zod";
 import type { MedusaContainer } from "@medusajs/medusa";
-
-// Helper type wrapper if strict types aren't available for the specific service interface in the environment
-type InventoryService = any;
+import type { IInventoryService } from "@medusajs/framework/types";
 
 export function getAdminInventoryTools(container: MedusaContainer) {
   return [
     tool(
       async ({ sku_or_id }: { sku_or_id: string }) => {
         try {
-          // Resolving Inventory Module
-          const inventoryService: InventoryService = container.resolve(Modules.INVENTORY);
+          const inventoryService: IInventoryService = container.resolve(Modules.INVENTORY);
 
-          // Search for inventory items matching the SKU or ID
           const [items] = await inventoryService.listInventoryItems({
             q: sku_or_id,
           }, { relations: ["location_levels"] });
 
-          if (items.length === 0) {
+          if (!items || !Array.isArray(items) || items.length === 0) {
             return "No inventory items found matching that SKU or ID.";
           }
 
@@ -47,22 +43,23 @@ export function getAdminInventoryTools(container: MedusaContainer) {
     tool(
       async ({ inventory_item_id, location_id, quantity_change }: { inventory_item_id: string; location_id: string; quantity_change: number }) => {
         try {
-          const inventoryService: InventoryService = container.resolve(Modules.INVENTORY);
+          const inventoryService: IInventoryService = container.resolve(Modules.INVENTORY);
 
-          // Check if level exists
           const [levels] = await inventoryService.listInventoryLevels({
             inventory_item_id,
             location_id
           });
 
-          const currentLevel = levels[0];
+          const currentLevel = (levels && Array.isArray(levels) && levels.length > 0) ? levels[0] : null;
 
           if (!currentLevel) {
-            // Create level if it doesn't exist (assuming location is valid)
+            if (quantity_change < 0) {
+              return "Cannot reduce stock for an inventory item that does not exist at this location.";
+            }
             await inventoryService.createInventoryLevels([{
               inventory_item_id,
               location_id,
-              stocked_quantity: quantity_change > 0 ? quantity_change : 0
+              stocked_quantity: quantity_change
             }]);
             return `Created new inventory level with ${quantity_change} items.`;
           }
@@ -93,13 +90,15 @@ export function getAdminInventoryTools(container: MedusaContainer) {
     tool(
       async ({ threshold = 10 }: { threshold?: number }) => {
         try {
-           const inventoryService: InventoryService = container.resolve(Modules.INVENTORY);
-           // Note: Efficient filtering usually requires DB-level queries not always exposed in basic Service APIs efficiently without specific filters.
-           // We will fetch a batch and filter in memory for this "Agent" tool proof-of-concept.
+           const inventoryService: IInventoryService = container.resolve(Modules.INVENTORY);
            const [items] = await inventoryService.listInventoryItems({}, {
              relations: ["location_levels"],
              take: 100
            });
+
+           if (!items || !Array.isArray(items)) {
+              return "[]";
+           }
 
            const lowStock = items.filter((i: any) => {
              const totalStock = i.location_levels?.reduce((acc: number, l: any) => acc + l.stocked_quantity, 0) || 0;

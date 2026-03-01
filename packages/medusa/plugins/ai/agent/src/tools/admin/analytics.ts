@@ -20,7 +20,8 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
 
           const summary = orders.reduce((acc: Record<string, number>, order: any) => {
             const currency = order.currency_code?.toUpperCase() || "UNKNOWN";
-            acc[currency] = (acc[currency] || 0) + (order.total || 0);
+            const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString() || "0");
+            acc[currency] = (acc[currency] || 0) + orderTotal;
             return acc;
           }, {});
 
@@ -37,7 +38,7 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
         name: "admin_sales_summary",
         description: "Get sales summary (revenue) for the last X days.",
         schema: z.object({
-          days: z.number().optional().default(30),
+          days: z.number().min(1).max(365).optional().default(30),
         }),
       }
     ),
@@ -55,8 +56,8 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
 
            const productCounts: Record<string, { title: string, count: number }> = {};
 
-           orders.forEach((order: any) => {
-             const items = order.items as any[] | undefined;
+           orders.forEach((order: { items?: any[] }) => {
+             const items = order.items;
              if (items) {
                items.forEach((item: any) => {
                  const productId = item.product_id || "unknown";

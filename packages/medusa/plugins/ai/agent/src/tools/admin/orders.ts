@@ -10,7 +10,6 @@ export function getAdminOrderTools(container: MedusaContainer) {
       async ({ status, limit = 5 }: { status?: string; limit?: number }) => {
         try {
           const orderModule: IOrderModuleService = container.resolve(Modules.ORDER);
-          // Only pass valid filters based on the schema
           const filters: any = {};
           if (status) {
             filters.status = status;
@@ -30,7 +29,7 @@ export function getAdminOrderTools(container: MedusaContainer) {
         description: "List recent orders with optional status filter.",
         schema: z.object({
           status: z.enum(["pending", "completed", "canceled", "requires_action"]).optional(),
-          limit: z.number().optional(),
+          limit: z.number().min(1).max(100).optional().default(5),
         }),
       }
     ),
@@ -38,14 +37,6 @@ export function getAdminOrderTools(container: MedusaContainer) {
       async ({ order_id }: { order_id: string }) => {
         try {
           const orderModule: IOrderModuleService = container.resolve(Modules.ORDER);
-          // Note: In Medusa v2, fulfillment is often handled via workflows or the Fulfillment Module.
-          // This is a simplified "Change Status" simulation if we cannot trigger the full workflow.
-          // If the Order Module allows updates directly:
-          /* await orderModule.updateOrders(order_id, { status: "completed" });
-          */
-          // However, typically we return a message guiding the user to the specific fulfillment workflow
-          // or we check if we can simply retrieve the order details for the agent to "pretend" it fulfilled it
-          // if it's acting as a helper.
 
           // For now, let's return order details so the agent can see what needs fulfilling.
           const order = await orderModule.retrieveOrder(order_id, { relations: ["items"] });

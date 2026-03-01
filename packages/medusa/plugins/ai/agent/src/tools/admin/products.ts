@@ -29,7 +29,7 @@ export function getAdminProductTools(container: MedusaContainer) {
         description: "List products in the store with optional status filter.",
         schema: z.object({
           status: z.enum(["published", "draft", "proposed", "rejected"]).optional(),
-          limit: z.number().optional().describe("Max number of records to return (default 10)"),
+          limit: z.number().min(1).max(100).optional().default(10).describe("Max number of records to return (default 10)"),
         }),
       }
     ),
@@ -53,7 +53,11 @@ export function getAdminProductTools(container: MedusaContainer) {
         description: "Create a new product (defaults to draft status).",
         schema: z.object({
           title: z.string(),
-          options: z.record(z.any()).optional().describe("Additional product options like description, handle, etc."),
+          options: z.object({
+            description: z.string().optional(),
+            handle: z.string().optional(),
+            subtitle: z.string().optional(),
+          }).optional().describe("Additional product options like description, handle, etc."),
         }),
       }
     ),
@@ -61,7 +65,7 @@ export function getAdminProductTools(container: MedusaContainer) {
       async ({ id, update_data }: { id: string; update_data: Record<string, any> }) => {
         try {
           const productModule: IProductModuleService = container.resolve(Modules.PRODUCT);
-          const product = await productModule.updateProducts(id, update_data);
+          const product = await productModule.updateProducts(id, update_data as any);
           return JSON.stringify(product);
         } catch (e) {
           return `Error updating product: ${(e as Error).message}`;
@@ -72,7 +76,12 @@ export function getAdminProductTools(container: MedusaContainer) {
         description: "Update an existing product's attributes.",
         schema: z.object({
           id: z.string(),
-          update_data: z.record(z.any()).describe("Key-value pairs of attributes to update (e.g., { title: 'New Name' })"),
+          update_data: z.object({
+            title: z.string().optional(),
+            description: z.string().optional(),
+            handle: z.string().optional(),
+            status: z.enum(["published", "draft", "proposed", "rejected"]).optional(),
+          }).describe("Key-value pairs of attributes to update (e.g., { title: 'New Name' })"),
         }),
       }
     ),
