@@ -36,6 +36,7 @@
     "@cloudflare/workers-types": "^4.20260127.0",
     "@heroui/theme": "^2.4.26",
     "@opennextjs/cloudflare": "^1.15.1",
+    "@pact-foundation/pact": "^16.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^18.3.2",

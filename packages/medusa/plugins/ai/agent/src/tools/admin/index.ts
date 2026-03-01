@@ -1,8 +1,9 @@
-import type { MedusaContainer } from "@medusajs/medusa";
-import { getAdminProductTools } from "./products.js";
+import { getAdminAnalyticsTools } from "./analytics.js";
 import { getAdminInventoryTools } from "./inventory.js";
 import { getAdminOrderTools } from "./orders.js";
-import { getAdminAnalyticsTools } from "./analytics.js";
+import { getAdminProductTools } from "./products.js";
+
+import type { MedusaContainer } from "@medusajs/medusa";
 
 export function getAdminTools(container: MedusaContainer) {
   return [

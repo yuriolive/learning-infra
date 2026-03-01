@@ -8,7 +8,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    setupFiles: ["tests/contracts/setup.ts"],
     alias: {
       "@vendin/utils": path.resolve(
         __dirname,
@@ -17,6 +18,10 @@ export default defineConfig({
       "@vendin/logger": path.resolve(
         __dirname,
         "../../packages/logger/src/index.ts",
+      ),
+      "@vendin/cache": path.resolve(
+        __dirname,
+        "../../packages/cache/src/index.ts",
       ),
     },
   },
