@@ -180,12 +180,18 @@ describe("Storefront Contract Verification", () => {
       await pactCore.verifyPacts(options);
       success = true;
     } finally {
+      const closePromises: Array<Promise<void>> = [];
       if (server) {
-        server.close();
+        closePromises.push(
+          new Promise<void>((resolve) => server.close(() => resolve())),
+        );
       }
       if (stateServer) {
-        stateServer.close();
+        closePromises.push(
+          new Promise<void>((resolve) => stateServer.close(() => resolve())),
+        );
       }
+      await Promise.allSettled(closePromises);
     }
 
     expect(success).toBe(true);
