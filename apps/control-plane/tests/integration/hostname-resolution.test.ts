@@ -1,21 +1,25 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
 import { TenantRepository } from "../../src/domains/tenants/tenant.repository";
 import { TenantService } from "../../src/domains/tenants/tenant.service";
 import { TestEnvironment } from "../utils/test-containers";
-import { Database } from "../../src/database/database";
+
+import type { Database } from "../../src/database/database";
+import type { ProvisioningService } from "../../src/domains/provisioning/provisioning.service";
+import type { Logger } from "../../src/utils/logger";
 
 describe("Hostname Resolution Integration", () => {
-  let testEnv: TestEnvironment;
-  let db: Database;
+  let testEnvironment: TestEnvironment;
+  let database: Database;
   let repository: TenantRepository;
   let service: TenantService;
 
   beforeAll(async () => {
-    testEnv = new TestEnvironment();
-    const pg = await testEnv.startPostgres();
-    db = pg.db;
+    testEnvironment = new TestEnvironment();
+    const pg = await testEnvironment.startPostgres();
+    database = pg.db;
 
-    repository = new TenantRepository(db);
+    repository = new TenantRepository(database);
 
     const mockLogger = {
       info: vi.fn(),
@@ -24,18 +28,18 @@ describe("Hostname Resolution Integration", () => {
       debug: vi.fn(),
     };
 
-    const mockProvisioningService = {} as any;
+    const mockProvisioningService = {} as unknown as ProvisioningService;
 
     service = new TenantService(repository, mockProvisioningService, {
-      logger: mockLogger as any,
+      logger: mockLogger as unknown as Logger,
       gcpProjectId: "test-project",
       gcpRegion: "us-central1",
       tenantBaseDomain: ".vendin.store",
     });
-  }, 60000); // 60s timeout for pulling postgres image
+  }, 60_000); // 60s timeout for pulling postgres image
 
   afterAll(async () => {
-    await testEnv.stop();
+    await testEnvironment.stop();
   });
 
   it("should resolve a tenant by exact subdomain", async () => {
@@ -61,7 +65,9 @@ describe("Hostname Resolution Integration", () => {
 
     // When the storefront asks the control plane to resolve "my-cool-store.vendin.store",
     // the listTenants filter is expected to strip ".vendin.store" and lookup "my-cool-store"
-    const tenants = await service.listTenants({ subdomain: "my-cool-store.vendin.store" });
+    const tenants = await service.listTenants({
+      subdomain: "my-cool-store.vendin.store",
+    });
 
     expect(tenants.length).toBe(1);
     expect(tenants[0]?.subdomain).toBe("my-cool-store");

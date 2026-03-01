@@ -1,12 +1,16 @@
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import { RedisContainer } from "@testcontainers/redis";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+
 import * as schema from "../../src/database/schema";
+
+import type { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import type { StartedRedisContainer } from "@testcontainers/redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +21,9 @@ export class TestEnvironment {
   private dbClient?: postgres.Sql;
 
   async startPostgres() {
-    this.pgContainer = await new PostgreSqlContainer("public.ecr.aws/docker/library/postgres:15-alpine")
+    this.pgContainer = await new PostgreSqlContainer(
+      "public.ecr.aws/docker/library/postgres:15-alpine",
+    )
       .withDatabase("vendin_test")
       .withUsername("postgres")
       .withPassword("postgres")
@@ -25,11 +31,11 @@ export class TestEnvironment {
 
     const connectionUri = this.pgContainer.getConnectionUri();
     this.dbClient = postgres(connectionUri);
-    const db = drizzle(this.dbClient, { schema });
+    const database = drizzle(this.dbClient, { schema });
 
     // Run migrations
     const migrationsFolder = path.resolve(__dirname, "../../drizzle");
-    await migrate(db, { migrationsFolder });
+    await migrate(database, { migrationsFolder });
 
     // Seed release channels required by schema
     await this.dbClient`
@@ -40,13 +46,15 @@ export class TestEnvironment {
 
     return {
       connectionUri,
-      db,
+      db: database,
       client: this.dbClient,
     };
   }
 
   async startRedis() {
-    this.redisContainer = await new RedisContainer("public.ecr.aws/docker/library/redis:7-alpine").start();
+    this.redisContainer = await new RedisContainer(
+      "public.ecr.aws/docker/library/redis:7-alpine",
+    ).start();
     return {
       url: this.redisContainer.getConnectionUrl(),
     };
