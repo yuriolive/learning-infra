@@ -12,7 +12,8 @@
       "Bash(pnpm run test -- tests/unit/campaign/)",
       "Bash(git add -A)",
       "Bash(git add *)",
-      "Bash(npx vitest run --coverage)"
+      "Bash(npx vitest run --coverage)",
+      "Bash(test -f *)"
     ]
   }
 }
