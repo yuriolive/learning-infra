@@ -51,8 +51,12 @@ export async function createAgentGraph(
     });
 
   // 2. Bind Tools to Model
-
-  const modelWithTools = model.bindTools!(options.tools);
+  if (!model.bindTools) {
+    throw new Error(
+      "The provided model does not support tool binding. Use a model that implements bindTools (e.g. ChatGoogleGenerativeAI).",
+    );
+  }
+  const modelWithTools = model.bindTools(options.tools);
 
   // 3. Define Nodes
 

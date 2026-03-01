@@ -1,5 +1,5 @@
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph";
 import { describe, expect, it } from "vitest";
@@ -125,8 +125,8 @@ describe("Graph Routing", () => {
 
     // The graph should have routed through the tools node:
     // a ToolMessage will appear between the AIMessage tool call and the final reply.
-    const toolMessages = result.messages.filter(
-      (m: { _getType: () => string }) => m._getType() === "tool",
+    const toolMessages = result.messages.filter((m: BaseMessage) =>
+      ToolMessage.isInstance(m),
     );
     expect(toolMessages.length).toBeGreaterThan(0);
     expect(result.messages.at(-1)!.content).toBe("Here are the shoes I found.");
@@ -147,8 +147,8 @@ describe("Graph Routing", () => {
       { configurable: { thread_id: "routing-plain-text" } },
     );
 
-    const toolMessages = result.messages.filter(
-      (m: { _getType: () => string }) => m._getType() === "tool",
+    const toolMessages = result.messages.filter((m: BaseMessage) =>
+      ToolMessage.isInstance(m),
     );
     expect(toolMessages).toHaveLength(0);
     expect(result.messages.at(-1)!.content).toBe("Hello! How can I help you?");
@@ -220,9 +220,7 @@ describe("Graph Routing", () => {
     const state = await graph.getState({
       configurable: { thread_id: threadId },
     });
-    const contents = state.values.messages.map(
-      (m: { content: unknown }) => m.content,
-    );
+    const contents = state.values.messages.map((m: BaseMessage) => m.content);
 
     expect(contents).toContain("First message");
     expect(contents).toContain("Second message");
@@ -268,12 +266,8 @@ describe("Graph Routing", () => {
       configurable: { thread_id: "isolation-thread-B" },
     });
 
-    const contentsA = stateA.values.messages.map(
-      (m: { content: unknown }) => m.content,
-    );
-    const contentsB = stateB.values.messages.map(
-      (m: { content: unknown }) => m.content,
-    );
+    const contentsA = stateA.values.messages.map((m: BaseMessage) => m.content);
+    const contentsB = stateB.values.messages.map((m: BaseMessage) => m.content);
 
     expect(contentsA).not.toContain("Hello from thread B");
     expect(contentsB).not.toContain("Hello from thread A");
