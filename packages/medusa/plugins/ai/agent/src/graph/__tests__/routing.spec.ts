@@ -25,6 +25,11 @@ class FakeSequentialChatModel extends BaseChatModel {
 
   constructor(responses: AIMessage[]) {
     super({});
+    if (responses.length === 0) {
+      throw new Error(
+        "FakeSequentialChatModel requires a non-empty array of responses.",
+      );
+    }
     this._responses = responses;
   }
 

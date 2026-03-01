@@ -3,25 +3,22 @@ import { describe, expect, it } from "vitest";
 import { getAdminSystemPrompt } from "../prompts/admin.js";
 import { getCustomerSystemPrompt } from "../prompts/customer.js";
 
+const getPromptContent = (prompt: { content: string | unknown }): string =>
+  typeof prompt.content === "string"
+    ? prompt.content
+    : JSON.stringify(prompt.content);
+
 describe("System Prompts", () => {
   describe("customer prompt", () => {
     it("references customer-facing tools (search_products, cart)", () => {
-      const prompt = getCustomerSystemPrompt();
-      const content =
-        typeof prompt.content === "string"
-          ? prompt.content
-          : JSON.stringify(prompt.content);
+      const content = getPromptContent(getCustomerSystemPrompt());
 
       expect(content).toMatch(/search_products/i);
       expect(content).toMatch(/cart/i);
     });
 
     it("does not contain admin-only instructions", () => {
-      const prompt = getCustomerSystemPrompt();
-      const content =
-        typeof prompt.content === "string"
-          ? prompt.content
-          : JSON.stringify(prompt.content);
+      const content = getPromptContent(getCustomerSystemPrompt());
 
       // Admin concepts that must NOT appear in the customer prompt
       const adminKeywords = [
@@ -38,11 +35,7 @@ describe("System Prompts", () => {
 
   describe("admin prompt", () => {
     it("references admin management capabilities", () => {
-      const prompt = getAdminSystemPrompt();
-      const content =
-        typeof prompt.content === "string"
-          ? prompt.content
-          : JSON.stringify(prompt.content);
+      const content = getPromptContent(getAdminSystemPrompt());
 
       expect(content).toMatch(/administrator/i);
       expect(content).toMatch(/product|inventory|order/i);

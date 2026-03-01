@@ -8,6 +8,7 @@ import { getCustomerSystemPrompt } from "./prompts/customer.js";
 import { AgentState } from "./state.js";
 
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseCheckpointSaver } from "@langchain/langgraph";
 import type { MedusaContainer } from "@medusajs/medusa";
 
@@ -33,8 +34,7 @@ function getCheckpointer() {
 export async function createAgentGraph(
   container: MedusaContainer,
   options: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tools: any[];
+    tools: StructuredToolInterface[];
     role: "admin" | "customer";
     /** Optional model override — inject a test double (e.g. FakeChatModel) instead of Gemini. */
     model?: BaseChatModel;
