@@ -11,6 +11,7 @@ import { createAgentGraph } from "../index.js";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { BaseMessage } from "@langchain/core/messages";
 import type { ChatResult } from "@langchain/core/outputs";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { MedusaContainer } from "@medusajs/medusa";
 
 // ---------------------------------------------------------------------------
@@ -52,8 +53,7 @@ class FakeSequentialChatModel extends BaseChatModel {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  override bindTools(_tools: any[]): this {
+  override bindTools(_tools: StructuredToolInterface[]): this {
     // Return self — tools are passed as invocation config but we return
     // the predefined sequence regardless.
     return this;

@@ -42,8 +42,8 @@ describe("System Prompts", () => {
     });
 
     it("is distinct from the customer prompt", () => {
-      const customerContent = String(getCustomerSystemPrompt().content);
-      const adminContent = String(getAdminSystemPrompt().content);
+      const customerContent = getPromptContent(getCustomerSystemPrompt());
+      const adminContent = getPromptContent(getAdminSystemPrompt());
 
       expect(adminContent).not.toBe(customerContent);
     });
