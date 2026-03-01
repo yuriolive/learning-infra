@@ -22,7 +22,8 @@ export default async function seedDemoProducts({ container }: ExecArgs) {
   const channelId = channels[0]?.id;
 
   // Create products
-  const products: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const products: any[] = [];
   for (let index = 1; index <= 10; index++) {
     products.push({
       title: `Demo Product ${index}`,
@@ -49,10 +50,10 @@ export default async function seedDemoProducts({ container }: ExecArgs) {
 
   if (channelId) {
     const remoteLink = container.resolve(ContainerRegistrationKeys.REMOTE_LINK);
-    for (const production of createdProducts) {
+    for (const product of createdProducts) {
       await remoteLink.create({
         [Modules.PRODUCT]: {
-          product_id: production.id,
+          product_id: product.id,
         },
         [Modules.SALES_CHANNEL]: {
           sales_channel_id: channelId,

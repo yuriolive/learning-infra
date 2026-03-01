@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -17,7 +18,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { apiUrl, id, databaseUrl } = tenantData;
+  const { id, databaseUrl } = tenantData;
   if (!databaseUrl) {
     console.error("No databaseUrl found. We need it to run medusa seed.");
     process.exit(1);

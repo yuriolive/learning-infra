@@ -91,4 +91,5 @@ jobs:
           else
             echo "Failed to trigger upgrade campaign. HTTP Status: $HTTP_CODE"
             echo "Response: $BODY"
+            exit 1
           fi

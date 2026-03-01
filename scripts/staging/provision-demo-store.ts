@@ -63,7 +63,18 @@ async function main() {
   }
 
   const listData = await listRes.json();
-  const demoTenant = listData.data.find((t: any) => t.domain === "demo-store");
+  interface Tenant {
+    id: string;
+    domain: string;
+    status: string;
+    name: string;
+    databaseUrl?: string;
+    createdAt?: string;
+  }
+
+  const demoTenant = listData.data.find(
+    (t: Tenant) => t.domain === "demo-store",
+  );
 
   if (!demoTenant) {
     console.error("Could not find demo-store tenant after creation.");
@@ -162,4 +173,3 @@ async function main() {
 }
 
 main().catch(console.error);
-// append to the script since we know what it takes

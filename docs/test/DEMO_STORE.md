@@ -47,6 +47,9 @@ The `.staging/demo-store.json` file is generated locally during the `provision` 
 ## Credentials
 
 The demo store uses the same credentials generated during the standard Medusa seed. By default, it registers an admin email `admin@medusa-test.com` with the password `supersecret`.
+\n> [!WARNING]
+
+> The credentials mentioned above are intended exclusively for staging/demo environments. These passwords should never be used or hardcoded in production environments.
 
 ### E2E Usage
 
