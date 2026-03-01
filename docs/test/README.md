@@ -4,6 +4,16 @@ This directory contains documentation about the testing strategy for the Learnin
 
 ## Documents
 
+### [STRATEGY.md](./STRATEGY.md)
+
+High-level strategy for the full platform, including:
+
+- Target CI/CD pipeline (unit → integration → staging gate → production)
+- All test layers (unit, integration, E2E, provisioning, contract)
+- Demo store approach (persistent + ephemeral)
+- Deployment guarantees (smoke tests, traffic splitting, rollback)
+- Implementation priority order
+
 ### [CURRENT_STATE.md](./CURRENT_STATE.md)
 
 Current test implementation, including:
@@ -14,9 +24,19 @@ Current test implementation, including:
 - Technology stack
 - Key achievements
 
+### [IMPLEMENTATION.md](./IMPLEMENTATION.md)
+
+LLM implementation guide for the full strategy, including:
+
+- Ready-to-use prompts for each task (T3–T8)
+- Mermaid dependency graph
+- Parallel execution waves (what can run concurrently)
+- Acceptance criteria per task
+- Reference to Claude skills that implement each task
+
 ### [PLANNED_IMPROVEMENTS.md](./PLANNED_IMPROVEMENTS.md)
 
-Future test architecture improvements, including:
+Phase 2 test architecture improvements, including:
 
 - Test type reorganization (unit/integration/API/E2E)
 - Service test refactoring with mocks

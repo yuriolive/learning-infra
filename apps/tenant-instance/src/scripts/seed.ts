@@ -75,7 +75,7 @@ export default async function seed({ container }: ExecArgs) {
     // Link to sales channel
     await remoteLink.create({
       [Modules.API_KEY]: {
-        api_key_id: apiKey.id,
+        publishable_key_id: apiKey.id,
       },
       [Modules.SALES_CHANNEL]: {
         sales_channel_id: defaultSalesChannel.id,
