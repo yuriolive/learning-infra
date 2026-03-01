@@ -1,37 +1,57 @@
 import { tool } from "@langchain/core/tools";
 import { Modules } from "@medusajs/framework/utils";
 import { z } from "zod";
+
+import type {
+  FilterableOrderProps,
+  IOrderModuleService,
+} from "@medusajs/framework/types";
 import type { MedusaContainer } from "@medusajs/medusa";
-import type { IOrderModuleService } from "@medusajs/framework/types";
+
+interface OrderItem {
+  product_id?: string;
+  product_title?: string;
+  title?: string;
+  quantity?: number;
+}
+
+interface OrderWithItems {
+  items?: OrderItem[];
+}
 
 export function getAdminAnalyticsTools(container: MedusaContainer) {
   return [
     tool(
       async ({ days = 30 }: { days?: number }) => {
         try {
-          const orderModule: IOrderModuleService = container.resolve(Modules.ORDER);
+          const orderModule: IOrderModuleService = container.resolve(
+            Modules.ORDER,
+          );
 
           const date = new Date();
           date.setDate(date.getDate() - days);
 
-          const [orders] = await orderModule.listAndCountOrders({
-            created_at: { $gt: date.toISOString() }
-          }, { select: ["total", "currency_code", "created_at"] });
+          const [orders] = await orderModule.listAndCountOrders(
+            {
+              created_at: { $gt: date.toISOString() },
+            } as unknown as FilterableOrderProps,
+            { select: ["total", "currency_code", "created_at"] },
+          );
 
-          const summary = orders.reduce((acc: Record<string, number>, order: any) => {
-            const currency = order.currency_code?.toUpperCase() || "UNKNOWN";
-            const orderTotal = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString() || "0");
-            acc[currency] = (acc[currency] || 0) + orderTotal;
-            return acc;
-          }, {});
+          const summary: Record<string, number> = {};
+          for (const order of orders) {
+            const currency = order.currency_code?.toUpperCase() ?? "UNKNOWN";
+            const orderTotal = Number(order.total ?? 0);
+            summary[currency] = (summary[currency] ?? 0) + orderTotal;
+          }
 
           return JSON.stringify({
             period: `Last ${days} days`,
             order_count: orders.length,
-            revenue_by_currency: summary
+            revenue_by_currency: summary,
           });
-        } catch (e) {
-          return `Error calculating sales summary: ${(e as Error).message}`;
+        } catch (error) {
+          return `Error calculating sales summary: ${(error as Error).message}`;
         }
       },
       {
@@ -40,42 +60,57 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
         schema: z.object({
           days: z.number().min(1).max(365).optional().default(30),
         }),
-      }
+      },
     ),
     tool(
       async ({ limit = 5 }: { limit?: number }) => {
         try {
-           const orderModule: IOrderModuleService = container.resolve(Modules.ORDER);
+          const orderModule: IOrderModuleService = container.resolve(
+            Modules.ORDER,
+          );
 
-           // Fetch recent orders (e.g. last 100) to aggregate top products
-           // Note: Production analytics should use a dedicated analytics engine or SQL query.
-           const [orders] = await orderModule.listAndCountOrders({}, {
-             take: 50,
-             relations: ["items"]
-           });
+          // Fetch recent orders (e.g. last 100) to aggregate top products
+          // Note: Production analytics should use a dedicated analytics engine or SQL query.
+          const [orders] = await orderModule.listAndCountOrders(
+            {},
+            {
+              take: 50,
+              relations: ["items"],
+            },
+          );
 
-           const productCounts: Record<string, { title: string, count: number }> = {};
+          const productCounts: Record<
+            string,
+            { title: string; count: number }
+          > = {};
 
-           orders.forEach((order: { items?: any[] }) => {
-             const items = order.items;
-             if (items) {
-               items.forEach((item: any) => {
-                 const productId = item.product_id || "unknown";
-                 if (!productCounts[productId]) {
-                   productCounts[productId] = { title: item.product_title || item.title || "Unknown", count: 0 };
-                 }
-                 productCounts[productId].count += item.quantity || 1;
-               });
-             }
-           });
+          (orders as unknown as OrderWithItems[]).forEach((order) => {
+            const items = order.items;
+            if (items) {
+              items.forEach((item) => {
+                if (!item.product_id) {
+                  return; // Skip items without a product ID to avoid incorrect aggregation.
+                }
+                const productId = item.product_id;
+                if (!productCounts[productId]) {
+                  productCounts[productId] = {
+                    title:
+                      item.product_title ?? item.title ?? "Unknown Product",
+                    count: 0,
+                  };
+                }
+                productCounts[productId].count += item.quantity ?? 1;
+              });
+            }
+          });
 
-           const sorted = Object.values(productCounts)
-             .sort((a, b) => b.count - a.count)
-             .slice(0, limit);
+          const sorted = Object.values(productCounts)
+            .toSorted((a, b) => b.count - a.count)
+            .slice(0, limit);
 
-           return JSON.stringify(sorted);
-        } catch (e) {
-          return `Error fetching top products: ${(e as Error).message}`;
+          return JSON.stringify(sorted);
+        } catch (error) {
+          return `Error fetching top products: ${(error as Error).message}`;
         }
       },
       {
@@ -84,7 +119,7 @@ export function getAdminAnalyticsTools(container: MedusaContainer) {
         schema: z.object({
           limit: z.number().optional().default(5),
         }),
-      }
-    )
+      },
+    ),
   ];
 }
