@@ -28,7 +28,7 @@ async function main() {
 
   if (isReset) {
     console.log(
-      "Reset flag provided. Skipping actual reset since wiping the db could break current state if not carefully done.",
+      "Reset flag provided. Resetting the demo store by re-seeding the database...",
     );
   }
 

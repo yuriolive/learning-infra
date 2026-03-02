@@ -3,6 +3,7 @@ import path from "node:path";
 
 const STAGING_CONTROL_PLANE_URL = process.env.STAGING_CONTROL_PLANE_URL;
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN; // Required for the API
+const STAGING_BASE_DOMAIN = process.env.STAGING_BASE_DOMAIN;
 
 if (!STAGING_CONTROL_PLANE_URL) {
   console.error("Missing STAGING_CONTROL_PLANE_URL environment variable.");
@@ -11,6 +12,11 @@ if (!STAGING_CONTROL_PLANE_URL) {
 
 if (!ADMIN_API_TOKEN) {
   console.error("Missing ADMIN_API_TOKEN environment variable.");
+  process.exit(1);
+}
+
+if (!STAGING_BASE_DOMAIN) {
+  console.error("Missing STAGING_BASE_DOMAIN environment variable.");
   process.exit(1);
 }
 
@@ -140,9 +146,12 @@ async function main() {
   );
 
   if (!patchRes.ok) {
-    console.warn(
+    const errorText = await patchRes.text();
+    console.error(
       `Failed to patch release channel: ${patchRes.status} ${patchRes.statusText}`,
     );
+    console.error(errorText);
+    process.exit(1);
   } else {
     console.log("Successfully set release channel to 'internal'.");
   }
@@ -151,10 +160,7 @@ async function main() {
   await fs.mkdir(path.dirname(DEMO_STORE_FILE), { recursive: true });
 
   // Create API and Storefront URLs
-  const baseDomain = new URL(STAGING_CONTROL_PLANE_URL).hostname
-    .split(".")
-    .slice(1)
-    .join(".");
+  const baseDomain = STAGING_BASE_DOMAIN;
   const apiUrl = `https://api.demo-store.${baseDomain}`;
   const storefrontUrl = `https://demo-store.${baseDomain}`;
 

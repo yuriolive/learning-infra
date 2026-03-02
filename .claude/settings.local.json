@@ -2,26 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__github__pull_request_read",
-      "Bash(git add gcp/workflows/orchestrate-campaign.yaml)",
-      "Bash(git commit:*)",
-      "Bash(git push)",
       "mcp__github__add_reply_to_pull_request_comment",
-      "Bash(pnpm run test -- --reporter=verbose tests/unit/provisioning.controller.test.ts tests/unit/provisioning/provisioning.service.test.ts)",
-      "Bash(git add apps/control-plane/tests/unit/provisioning.controller.test.ts apps/control-plane/tests/unit/provisioning/provisioning.service.test.ts)",
-      "Bash(pnpm run test)",
-      "Bash(pnpm run test -- tests/unit/campaign/)",
-      "Bash(git add -A)",
-      "Bash(git add apps/control-plane/src/providers/neon/neon.client.ts apps/control-plane/tests/unit/campaign/upgrade.service.test.ts)",
-      "Bash(xargs grep:*)",
-      "Bash(ls:*)",
-      "Bash(FDIR=\"/c/Users/yuri_/IdeaProjects/learning-infra-multiple/1/learning-infra/node_modules/.pnpm/@medusajs+framework@2.13.1_@aws-sdk+client-dynamodb@3.978.0_@medusajs+cli@2.13.1_@types+node@_2vwkn5quwipbvhes7smmsrqeby/node_modules/@medusajs/framework/dist\" grep -r \"IOrderModuleService\" \"$FDIR/index.d.ts\")",
-      "Bash(find:*)",
-      "Bash(TYPESDIR=\"/c/Users/yuri_/IdeaProjects/learning-infra-multiple/1/learning-infra/node_modules/.pnpm/@medusajs+types@2.13.1_ioredis@5.9.2_vite@6.4.1_@types+node@20.19.30_jiti@2.6.1_lightningcss@_aap2f3v62a4cir2drirem3myym/node_modules/@medusajs/types/dist\"\ngrep -r \"IOrderModuleService\\\\|listAndCountOrders\" \"$TYPESDIR/order\" 2>/dev/null | grep \"interface\\\\|listAndCount\" | head -20)",
-      "Bash(find $TYPESDIR:*)",
-      "Bash(grep:*)",
-      "Bash(grep \"stocked_quantity\\\\|reserved_quantity\\\\|location_levels\" /c/Users/yuri_/IdeaProjects/learning-infra-multiple/1/learning-infra/node_modules/.pnpm/@medusajs+types@2.13.1_ioredis@5.9.2_vite@6.4.1_@types+node@20.19.30_jiti@2.6.1_lightningcss@_aap2f3v62a4cir2drirem3myym/node_modules/@medusajs/types/dist/inventory/common/inventory-item.d.ts 2>/dev/null | head -10\ngrep \"stocked_quantity\\\\|reserved_quantity\" /c/Users/yuri_/IdeaProjects/learning-infra-multiple/1/learning-infra/node_modules/.pnpm/@medusajs+types@2.13.1_ioredis@5.9.2_vite@6.4.1_@types+node@20.19.30_jiti@2.6.1_lightningcss@_aap2f3v62a4cir2drirem3myym/node_modules/@medusajs/types/dist/inventory/common/inventory-level.d.ts 2>/dev/null | head -10)",
-      "Bash(grep -A 5 \"stocked_quantity\\\\|reserved_quantity\\\\|location_levels\\\\|InventoryItemDTO\" /c/Users/yuri_/IdeaProjects/learning-infra-multiple/1/learning-infra/node_modules/.pnpm/@medusajs+types@2.13.1_ioredis@5.9.2_vite@6.4.1_@types+node@20.19.30_jiti@2.6.1_lightningcss@_aap2f3v62a4cir2drirem3myym/node_modules/@medusajs/types/dist/inventory/common/inventory-level.d.ts 2>/dev/null | head -20\ngrep \"location_levels\\\\|InventoryLevelDTO\" /c/Users/yuri_/IdeaProjects/learning-infra-multiple/1/learning-infra/node_modules/.pnpm/@medusajs+types@2.13.1_ioredis@5.9.2_vite@6.4.1_@types+node@20.19.30_jiti@2.6.1_lightningcss@_aap2f3v62a4cir2drirem3myym/node_modules/@medusajs/types/dist/inventory/common/inventory-item.d.ts 2>/dev/null | head -5)",
-      "Bash(pnpm turbo:*)"
+      "Bash(*)"
     ]
   }
 }
