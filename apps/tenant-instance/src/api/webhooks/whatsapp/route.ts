@@ -133,6 +133,11 @@ export const POST = async (
     logger.error(
       `Error handling WhatsApp webhook in Tenant Instance: ${error}`,
     );
+    if (error instanceof Error && error.stack) {
+      logger.error(error.stack);
+    } else {
+      logger.error(JSON.stringify(error, null, 2));
+    }
     response.status(400).json({ message: "Invalid payload format" });
   }
 };
