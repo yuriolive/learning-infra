@@ -48,8 +48,8 @@ export class TenantService {
    * @param input - The data needed to create the tenant.
    * @param baseUrl - The base URL of the control plane API for workflow callbacks.
    * @returns The newly created tenant record.
-   * @throws \{SubdomainInUseError\} If the subdomain is already taken.
-   * @throws \{SubdomainRequiredError\} If a subdomain is not provided.
+   * @throws {SubdomainInUseError} If the subdomain is already taken.
+   * @throws {SubdomainRequiredError} If a subdomain is not provided.
    * @throws If tenant creation or workflow triggering fails.
    */
   async createTenant(
