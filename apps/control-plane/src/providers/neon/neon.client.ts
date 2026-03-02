@@ -31,7 +31,7 @@ export class NeonProvider {
       apiKey: config.apiKey,
     });
     this.orgId = config.orgId;
-    this.regionId = config.regionId || "aws-sa-east-1"; // Default to Sao Paulo
+    this.regionId = config.regionId ?? "aws-sa-east-1"; // Default to Sao Paulo
   }
 
   /**
