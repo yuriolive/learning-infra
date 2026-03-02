@@ -28,6 +28,15 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+interface Tenant {
+  id: string;
+  domain: string;
+  status: string;
+  name: string;
+  databaseUrl?: string;
+  createdAt?: string;
+}
+
 async function main() {
   console.log(`Creating demo store at ${STAGING_CONTROL_PLANE_URL}...`);
 
@@ -59,15 +68,6 @@ async function main() {
   }
 
   // 2. Fetch the demo store tenant by subdomain
-  interface Tenant {
-    id: string;
-    domain: string;
-    status: string;
-    name: string;
-    databaseUrl?: string;
-    createdAt?: string;
-  }
-
   const listRes = await fetch(
     `${STAGING_CONTROL_PLANE_URL}/api/tenants?subdomain=demo-store`,
     {
