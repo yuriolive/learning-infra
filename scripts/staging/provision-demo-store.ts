@@ -82,8 +82,8 @@ async function main() {
     process.exit(1);
   }
 
-  const listData = await listRes.json();
-  const demoTenant: Tenant = listData.data[0];
+  const listData: { data: Tenant[] } = await listRes.json();
+  const demoTenant: Tenant | undefined = listData.data[0];
 
   if (!demoTenant) {
     console.error("Could not find demo-store tenant after creation.");
