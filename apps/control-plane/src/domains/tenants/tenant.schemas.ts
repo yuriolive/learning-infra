@@ -14,6 +14,13 @@ export const createTenantSchema = z.object({
 export const updateTenantSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   subdomain: subdomainSchema,
+  metadata: z.record(z.unknown()).optional(),
+  whatsappPhoneNumber: z.string().nullable().optional(),
+  whatsappPhoneId: z.string().nullable().optional(),
+  whatsappProvider: z.enum(["facebook", "twilio"]).nullable().optional(),
+});
+
+export const adminUpdateTenantSchema = updateTenantSchema.extend({
   status: z
     .enum([
       "provisioning",
@@ -27,12 +34,14 @@ export const updateTenantSchema = z.object({
   databaseUrl: z.string().optional(),
   apiUrl: z.string().optional(),
   redisHash: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
   failureReason: z.string().optional(),
-  whatsappPhoneNumber: z.string().nullable().optional(),
-  whatsappPhoneId: z.string().nullable().optional(),
-  whatsappProvider: z.enum(["facebook", "twilio"]).nullable().optional(),
   whatsappVerifiedAt: z.coerce.date().nullable().optional(),
+  releaseChannelId: z.string().nullable().optional(),
+  currentImageTag: z.string().nullable().optional(),
+  lockedUntil: z.coerce.date().nullable().optional(),
+  jwtSecret: z.string().optional(),
+  cookieSecret: z.string().optional(),
+  neonProjectId: z.string().nullable().optional(),
 });
 
 export const tenantIdSchema = z.object({

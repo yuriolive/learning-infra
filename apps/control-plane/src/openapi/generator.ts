@@ -9,7 +9,7 @@ extendZodWithOpenApi(z);
 
 import {
   createTenantSchema,
-  updateTenantSchema,
+  adminUpdateTenantSchema,
 } from "../domains/tenants/tenant.schemas";
 
 const registry = new OpenAPIRegistry();
@@ -262,7 +262,7 @@ registry.registerPath({
     body: {
       content: {
         "application/json": {
-          schema: updateTenantSchema,
+          schema: adminUpdateTenantSchema,
         },
       },
     },

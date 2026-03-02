@@ -50,23 +50,26 @@ export interface CreateTenantInput {
 export interface UpdateTenantInput {
   name?: string | undefined;
   subdomain?: string | undefined;
+  metadata?: Record<string, unknown> | undefined;
+  whatsappPhoneNumber?: string | null;
+  whatsappPhoneId?: string | null;
+  whatsappProvider?: WhatsAppProvider | null;
+}
+
+export interface AdminUpdateTenantInput extends UpdateTenantInput {
   status?: TenantStatus | undefined;
   plan?: TenantPlan | undefined;
   databaseUrl?: string | undefined;
   apiUrl?: string | undefined;
   redisHash?: string | undefined;
-  metadata?: Record<string, unknown> | undefined;
   failureReason?: string | undefined;
-  jwtSecret?: string | undefined;
-  cookieSecret?: string | undefined;
-  whatsappPhoneNumber?: string | null;
-  whatsappPhoneId?: string | null;
-  whatsappProvider?: WhatsAppProvider | null;
   whatsappVerifiedAt?: Date | null;
-  neonProjectId?: string | null;
   releaseChannelId?: string | null;
   currentImageTag?: string | null;
   lockedUntil?: Date | null;
+  jwtSecret?: string | undefined;
+  cookieSecret?: string | undefined;
+  neonProjectId?: string | null;
 }
 
 export interface ListTenantsFilters {

@@ -48,7 +48,7 @@ import { createMockDatabase } from "../../utils/mock-database";
 
 import type {
   CreateTenantInput,
-  UpdateTenantInput,
+  AdminUpdateTenantInput,
 } from "../../../src/domains/tenants/tenant.types";
 
 describe("TenantService", () => {
@@ -228,7 +228,7 @@ describe("TenantService", () => {
         "https://mock.base.url",
       );
 
-      const input: UpdateTenantInput = {
+      const input: AdminUpdateTenantInput = {
         name: "Updated Name",
         status: "suspended",
       };
@@ -241,7 +241,7 @@ describe("TenantService", () => {
     });
 
     it("should throw error when tenant not found", async () => {
-      const input: UpdateTenantInput = {
+      const input: AdminUpdateTenantInput = {
         name: "Updated Name",
       };
 
@@ -254,7 +254,7 @@ describe("TenantService", () => {
       await createTenantHelper(1);
       const store2 = await createTenantHelper(2);
 
-      const input: UpdateTenantInput = {
+      const input: AdminUpdateTenantInput = {
         subdomain: "store1",
       };
 
@@ -273,7 +273,7 @@ describe("TenantService", () => {
         "https://mock.base.url",
       );
 
-      const input: UpdateTenantInput = {
+      const input: AdminUpdateTenantInput = {
         name: "Updated Name",
         subdomain: "teststore", // Same domain
       };
