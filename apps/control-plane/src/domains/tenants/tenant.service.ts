@@ -126,8 +126,8 @@ export class TenantService {
    * @param id - The unique identifier of the tenant to update.
    * @param input - The data to update on the tenant.
    * @returns The updated tenant record.
-   * @throws \{TenantNotFoundError\} If the tenant is not found.
-   * @throws \{SubdomainInUseError\} If the new subdomain is already in use by another tenant.
+   * @throws {TenantNotFoundError} If the tenant is not found.
+   * @throws {SubdomainInUseError} If the new subdomain is already in use by another tenant.
    */
   async updateTenant(id: string, input: UpdateTenantInput): Promise<Tenant> {
     if (input.subdomain) {
