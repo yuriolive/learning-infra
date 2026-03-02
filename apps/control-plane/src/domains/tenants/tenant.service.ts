@@ -110,7 +110,7 @@ export class TenantService {
    *
    * @param id - The unique identifier of the tenant.
    * @returns The tenant record.
-   * @throws If the tenant is not found.
+   * @throws {TenantNotFoundError} If the tenant is not found.
    */
   async getTenant(id: string): Promise<Tenant> {
     const tenant = await this.repository.findById(id);
