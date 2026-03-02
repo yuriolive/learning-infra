@@ -37,9 +37,6 @@ function mapToTenant(databaseTenant: DatabaseTenant): Tenant {
   };
 }
 
-/**
- * Repository class for managing Tenant records in the database.
- */
 export class TenantRepository {
   private db: Database;
 
@@ -48,11 +45,10 @@ export class TenantRepository {
   }
 
   /**
-   * Creates a new tenant record in the database, generating a unique ID and secrets.
+   * Creates a new tenant in the database, generating a unique ID and secrets.
    *
-   * @param input - The data needed to create the tenant.
-   * @returns The newly created tenant record.
-   * @throws If the tenant record could not be created in the database.
+   * @param input - Data required to create a new tenant
+   * @returns The newly created tenant
    */
   async create(input: CreateTenantInput): Promise<Tenant> {
     const id = randomUUID();
@@ -89,11 +85,12 @@ export class TenantRepository {
   }
 
   /**
-   * Finds a tenant by its unique identifier.
+   * Finds a tenant by their unique identifier.
    * Excludes tenants that have been soft-deleted.
    *
    * @param id - The unique identifier of the tenant.
-   * @returns The tenant record if found, or null otherwise.
+   * @returns The tenant record if found and active, otherwise null.
+   * @throws If a database error occurs.
    */
   async findById(id: string): Promise<Tenant | null> {
     const [tenant] = await this.db
@@ -105,9 +102,10 @@ export class TenantRepository {
   }
 
   /**
-   * Retrieves all non-deleted tenant records from the database.
+   * Retrieves all tenants that have not been soft-deleted.
    *
    * @returns An array of tenant records.
+   * @throws If a database error occurs.
    */
   async findAll(): Promise<Tenant[]> {
     const results = await this.db
@@ -119,12 +117,13 @@ export class TenantRepository {
   }
 
   /**
-   * Updates an existing tenant record with the provided input.
+   * Updates an existing tenant's information.
    * Excludes tenants that have been soft-deleted.
    *
    * @param id - The unique identifier of the tenant to update.
    * @param input - The data to update on the tenant.
    * @returns The updated tenant record, or null if the tenant was not found.
+   * @throws If a database error occurs during the update.
    */
   async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
     const updateData = this.prepareUpdateData(input);
@@ -164,10 +163,11 @@ export class TenantRepository {
   }
 
   /**
-   * Soft deletes a tenant record by setting its `deletedAt` timestamp.
+   * Soft-deletes a tenant by updating their status and deletedAt timestamp.
    *
    * @param id - The unique identifier of the tenant to soft delete.
    * @returns True if the tenant was successfully soft deleted, false otherwise.
+   * @throws If a database error occurs.
    */
   async softDelete(id: string): Promise<boolean> {
     const [deleted] = await this.db
@@ -184,11 +184,12 @@ export class TenantRepository {
   }
 
   /**
-   * Finds a tenant by its associated subdomain.
+   * Finds a tenant by their unique subdomain.
    * Excludes tenants that have been soft-deleted.
    *
    * @param subdomain - The subdomain associated with the tenant.
-   * @returns The tenant record if found, or null otherwise.
+   * @returns The tenant record if found and active, otherwise null.
+   * @throws If a database error occurs.
    */
   async findBySubdomain(subdomain: string): Promise<Tenant | null> {
     const [tenant] = await this.db
@@ -202,11 +203,12 @@ export class TenantRepository {
   }
 
   /**
-   * Finds a tenant by its associated WhatsApp Phone ID.
+   * Finds a tenant by their WhatsApp Phone ID.
    * Excludes tenants that have been soft-deleted.
    *
    * @param phoneId - The WhatsApp Phone ID associated with the tenant.
-   * @returns The tenant record if found, or null otherwise.
+   * @returns The tenant record if found and active, otherwise null.
+   * @throws If a database error occurs.
    */
   async findByWhatsAppPhoneId(phoneId: string): Promise<Tenant | null> {
     const [tenant] = await this.db
@@ -223,12 +225,13 @@ export class TenantRepository {
   }
 
   /**
-   * Finds a tenant by its associated WhatsApp Phone Number.
+   * Finds a tenant by their WhatsApp phone number.
    * Evaluates exact digits only since phone numbers are stored without formatting.
    * Excludes tenants that have been soft-deleted.
    *
    * @param phoneNumber - The WhatsApp Phone Number associated with the tenant.
-   * @returns The tenant record if found, or null otherwise.
+   * @returns The tenant record if found and active, otherwise null.
+   * @throws If a database error occurs.
    */
   async findByWhatsAppNumber(phoneNumber: string): Promise<Tenant | null> {
     const digitsOnly = phoneNumber.replaceAll(/\D/g, "");
