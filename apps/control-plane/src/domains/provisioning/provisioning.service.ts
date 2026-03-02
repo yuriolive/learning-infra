@@ -393,6 +393,17 @@ export class ProvisioningService {
     await this.tenantRepository.update(tenantId, { status: "active" });
   }
 
+  /**
+   * Rolls back resources created during tenant provisioning.
+   * This includes deleting the Neon database project and Cloud Run instance.
+   * Uses Promise.allSettled to attempt cleanup of all resources regardless of individual failures.
+   * Failures during resource cleanup are logged but do not cause an exception.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param reason - An optional reason describing why the rollback was initiated.
+   * @returns An object containing the Google Cloud operation name for the instance deletion, if applicable.
+   * @throws If fetching the tenant fails or updating the tenant status fails.
+   */
   async rollbackResources(
     tenantId: string,
     reason?: string,
