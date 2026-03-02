@@ -22,6 +22,9 @@ interface TenantServiceConfig {
   tenantBaseDomain?: string | undefined;
 }
 
+/**
+ * Service class for handling tenant-related business logic, including provisioning coordination.
+ */
 export class TenantService {
   private logger: Logger;
   private gcpProjectId: string | undefined;
@@ -39,6 +42,13 @@ export class TenantService {
     this.tenantBaseDomain = config.tenantBaseDomain as string;
   }
 
+  /**
+   * Creates a new tenant and triggers the provisioning workflow.
+   *
+   * @param input - The data needed to create the tenant.
+   * @param baseUrl - The base URL of the control plane API for workflow callbacks.
+   * @returns The newly created tenant record.
+   */
   async createTenant(
     input: CreateTenantInput,
     baseUrl: string,
@@ -92,6 +102,13 @@ export class TenantService {
 
   // --- CRUD Methods ---
 
+  /**
+   * Retrieves a tenant by its unique identifier.
+   *
+   * @param id - The unique identifier of the tenant.
+   * @returns The tenant record.
+   * @throws If the tenant is not found.
+   */
   async getTenant(id: string): Promise<Tenant> {
     const tenant = await this.repository.findById(id);
     if (!tenant) {
@@ -100,6 +117,14 @@ export class TenantService {
     return tenant;
   }
 
+  /**
+   * Updates an existing tenant record with the provided input.
+   *
+   * @param id - The unique identifier of the tenant to update.
+   * @param input - The data to update on the tenant.
+   * @returns The updated tenant record.
+   * @throws If the tenant is not found.
+   */
   async updateTenant(id: string, input: UpdateTenantInput): Promise<Tenant> {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
@@ -115,6 +140,12 @@ export class TenantService {
     return updated;
   }
 
+  /**
+   * Soft deletes a tenant record.
+   *
+   * @param id - The unique identifier of the tenant to delete.
+   * @throws If the tenant is not found.
+   */
   async deleteTenant(id: string): Promise<void> {
     const deleted = await this.repository.softDelete(id);
     if (!deleted) {
@@ -132,6 +163,12 @@ export class TenantService {
     await this.repository.logProvisioningEvent(tenantId, step, status, details);
   }
 
+  /**
+   * Retrieves a list of all tenants, optionally filtered.
+   *
+   * @param filters - Optional filters to apply to the query.
+   * @returns An array of tenant records.
+   */
   async listTenants(filters?: ListTenantsFilters): Promise<Tenant[]> {
     if (filters?.subdomain) {
       let lookup = filters.subdomain;

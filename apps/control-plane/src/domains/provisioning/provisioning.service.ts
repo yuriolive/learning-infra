@@ -10,6 +10,9 @@ import { type TenantRepository } from "../tenants/tenant.repository";
 
 import { DomainProvisioningService } from "./domain-provisioning.service";
 
+/**
+ * Configuration options for the ProvisioningService.
+ */
 export interface ProvisioningServiceConfig {
   neonApiKey?: string | undefined;
   neonOrgId?: string | undefined;
@@ -27,6 +30,11 @@ export interface ProvisioningServiceConfig {
   logger: Logger;
 }
 
+/**
+ * Service responsible for orchestrating the provisioning of tenant resources.
+ * This includes database creation (Neon), service deployment (Cloud Run),
+ * and domain configuration (Cloudflare).
+ */
 export class ProvisioningService {
   private neonProvider: NeonProvider | null = null;
   private cloudRunProvider: CloudRunProvider | null = null;
@@ -148,6 +156,13 @@ export class ProvisioningService {
     }
   }
 
+  /**
+   * Provisions a dedicated database project for a tenant using Neon.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @returns An object containing the connection string for the new database.
+   * @throws If the Neon provider is not initialized.
+   */
   async provisionDatabase(tenantId: string): Promise<{ databaseUrl: string }> {
     if (!this.neonProvider) {
       throw new Error("Neon provider not initialized");
@@ -168,6 +183,14 @@ export class ProvisioningService {
     return { databaseUrl: connectionString };
   }
 
+  /**
+   * Creates a point-in-time snapshot of the tenant's database.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param snapshotName - The name to assign to the new snapshot.
+   * @returns An object containing the ID of the created snapshot.
+   * @throws If the Neon provider is not initialized or the tenant has no project ID.
+   */
   async createDatabaseSnapshot(
     tenantId: string,
     snapshotName: string,
@@ -190,6 +213,13 @@ export class ProvisioningService {
     return { snapshotId };
   }
 
+  /**
+   * Restores a tenant's database from a previously created snapshot.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param snapshotName - The name of the snapshot to restore from.
+   * @throws If the Neon provider is not initialized or the tenant has no project ID.
+   */
   async restoreDatabaseSnapshot(
     tenantId: string,
     snapshotName: string,
@@ -210,6 +240,14 @@ export class ProvisioningService {
     );
   }
 
+  /**
+   * Ensures that a Cloud Run job exists for executing database migrations for the tenant.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param imageTag - Optional override for the container image tag to use.
+   * @returns An object containing the Google Cloud operation name, if an operation was started.
+   * @throws If required provisioning prerequisites are missing.
+   */
   async ensureMigrationJob(
     tenantId: string,
     imageTag?: string,
@@ -238,6 +276,13 @@ export class ProvisioningService {
     return operationName ? { operationName } : {};
   }
 
+  /**
+   * Triggers the execution of the tenant's database migration job.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @returns An object containing the Google Cloud operation name for the job execution.
+   * @throws If required provisioning prerequisites are missing.
+   */
   async triggerMigrationJob(
     tenantId: string,
   ): Promise<{ operationName: string }> {
@@ -252,6 +297,13 @@ export class ProvisioningService {
     return { operationName };
   }
 
+  /**
+   * Retrieves the current status of a database migration job execution.
+   *
+   * @param executionName - The full resource name of the job execution.
+   * @returns A promise that resolves to the status and any associated error message.
+   * @throws If the Cloud Run provider is not initialized.
+   */
   getMigrationStatus(executionName: string): Promise<{
     status: MigrationStatus;
     error?: string;
@@ -262,6 +314,12 @@ export class ProvisioningService {
     return this.cloudRunProvider.getJobExecutionStatus(executionName);
   }
 
+  /**
+   * Deletes the Cloud Run job used for database migrations for the specified tenant.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @throws If the Cloud Run provider is not initialized.
+   */
   async deleteMigrationJob(tenantId: string): Promise<void> {
     if (!this.cloudRunProvider) {
       throw new Error("Cloud Run provider not initialized");
@@ -269,6 +327,13 @@ export class ProvisioningService {
     await this.cloudRunProvider.deleteMigrationJob(tenantId);
   }
 
+  /**
+   * Retrieves the status of a long-running Google Cloud operation.
+   *
+   * @param operationName - The full resource name of the operation.
+   * @returns An object indicating whether the operation is done, along with any error or response data.
+   * @throws If the Cloud Run provider is not initialized.
+   */
   async getOperationStatus(
     operationName: string,
   ): Promise<{ done: boolean; error?: string; response?: unknown }> {
@@ -279,6 +344,14 @@ export class ProvisioningService {
     return result;
   }
 
+  /**
+   * Initiates the deployment of the tenant's main service (Medusa instance) to Cloud Run.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param imageTag - Optional override for the container image tag to deploy.
+   * @returns An object containing the Google Cloud operation name for the deployment.
+   * @throws If required provisioning prerequisites are missing or subdomain is not set.
+   */
   async startDeployService(
     tenantId: string,
     imageTag?: string,
@@ -313,6 +386,13 @@ export class ProvisioningService {
     return { operationName };
   }
 
+  /**
+   * Finalizes the deployment process by retrieving the final service URL and updating the tenant record.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @returns An object containing the final API URL for the deployed service.
+   * @throws If required provisioning prerequisites are missing.
+   */
   async finalizeDeployment(tenantId: string): Promise<{ apiUrl: string }> {
     const { cloudRunProvider } = await this.validateProvisioningPrerequisites(
       tenantId,
@@ -326,6 +406,11 @@ export class ProvisioningService {
     return { apiUrl };
   }
 
+  /**
+   * Configures the custom or default domain routing for the tenant using Cloudflare.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   */
   async configureDomain(tenantId: string): Promise<void> {
     if (!this.domainProvisioningService) {
       this.logger.warn(
@@ -338,6 +423,13 @@ export class ProvisioningService {
     await this.domainProvisioningService.configureDomain(tenantId);
   }
 
+  /**
+   * Triggers the GCP Workflow orchestrating the end-to-end provisioning process for a tenant.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param baseUrl - The base URL of the control plane API, used by the workflow for callbacks.
+   * @throws If the GCP Workflows client is not initialized or the workflow trigger fails.
+   */
   async triggerProvisioningWorkflow(
     tenantId: string,
     baseUrl: string,
@@ -388,11 +480,24 @@ export class ProvisioningService {
     }
   }
 
+  /**
+   * Marks a tenant as active after successful provisioning.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   */
   async activateTenant(tenantId: string): Promise<void> {
     this.logger.info({ tenantId }, "Activating tenant");
     await this.tenantRepository.update(tenantId, { status: "active" });
   }
 
+  /**
+   * Attempts to clean up and roll back provisioned resources for a tenant upon failure.
+   * This includes deleting the Neon database project and the Cloud Run instance.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param reason - An optional reason describing why the rollback was initiated.
+   * @returns An object containing the Google Cloud operation name for the instance deletion, if applicable.
+   */
   async rollbackResources(
     tenantId: string,
     reason?: string,
