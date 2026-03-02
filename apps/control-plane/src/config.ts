@@ -9,6 +9,7 @@ export interface Environment {
   NEON_API_KEY?: BoundSecret;
   NEON_PROJECT_ID?: BoundSecret;
   NEON_ORG_ID?: string;
+  NEON_REGION?: string;
   ADMIN_API_KEY?: BoundSecret;
   ALLOWED_ORIGINS?: string;
   POSTHOG_API_KEY?: BoundSecret;

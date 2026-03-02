@@ -13,6 +13,7 @@ import { DomainProvisioningService } from "./domain-provisioning.service";
 export interface ProvisioningServiceConfig {
   neonApiKey?: string | undefined;
   neonOrgId?: string | undefined;
+  neonRegion?: string | undefined;
   gcpCredentialsJson?: string | undefined;
   gcpProjectId?: string | undefined;
   gcpRegion?: string | undefined;
@@ -71,6 +72,7 @@ export class ProvisioningService {
         this.neonProvider = new NeonProvider({
           apiKey: config.neonApiKey,
           ...(config.neonOrgId ? { orgId: config.neonOrgId } : {}),
+          ...(config.neonRegion ? { regionId: config.neonRegion } : {}),
           logger: this.logger,
         });
       } catch (error) {
