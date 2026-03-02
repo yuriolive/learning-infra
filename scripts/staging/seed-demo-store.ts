@@ -2,7 +2,15 @@ import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const DEMO_STORE_FILE = path.resolve(process.cwd(), ".staging/demo-store.json");
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DEMO_STORE_FILE = path.resolve(
+  __dirname,
+  "../../.staging/demo-store.json",
+);
 
 async function main() {
   const isReset = process.argv.includes("--reset");

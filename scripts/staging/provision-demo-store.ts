@@ -20,7 +20,15 @@ if (!STAGING_BASE_DOMAIN) {
   process.exit(1);
 }
 
-const DEMO_STORE_FILE = path.resolve(process.cwd(), ".staging/demo-store.json");
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const DEMO_STORE_FILE = path.resolve(
+  __dirname,
+  "../../.staging/demo-store.json",
+);
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
