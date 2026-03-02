@@ -21,24 +21,25 @@ const selectChain = (value: unknown, options: { groupBy?: unknown } = {}) => {
 
 // Tx mock for the updateExecutionStatus inner transaction:
 // updates execution status and tenant's currentImageTag.
-const buildUpdateTx = () => ({
-  update: vi.fn().mockReturnValue({
-    set: vi.fn().mockReturnValue({
-      where: vi.fn().mockResolvedValue([]),
-    }),
-  }),
-  select: vi.fn().mockReturnValue({
-    from: vi.fn().mockReturnValue({
-      innerJoin: vi.fn().mockReturnValue({
-        where: vi
-          .fn()
-          .mockResolvedValue([
-            { tenantId: "tenant-1", targetImageTag: "v2.0.0" },
-          ]),
+const buildUpdateTx = (): Pick<Database, "update" | "select"> =>
+  ({
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
       }),
     }),
-  }),
-});
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        innerJoin: vi.fn().mockReturnValue({
+          where: vi
+            .fn()
+            .mockResolvedValue([
+              { tenantId: "tenant-1", targetImageTag: "v2.0.0" },
+            ]),
+        }),
+      }),
+    }),
+  }) as unknown as Pick<Database, "update" | "select">;
 
 // Tx mock for the checkCampaignCompletion transaction.
 // Select call sequence:
@@ -58,13 +59,13 @@ const buildCompletionTx = (
     pendingCount?: number;
     failedExecutionCount?: number;
     totalExecutionCount?: number;
-    completedRows?: unknown[];
+    completedRows?: Array<{ id: string }>;
     channelRow?: {
       autoPromote: boolean;
       nextChannelId: string | null;
     } | null;
   } = {},
-) => {
+): Pick<Database, "select" | "update"> => {
   const {
     executionRow = {
       campaignId: "camp-1",
@@ -154,7 +155,7 @@ const buildCompletionTx = (
         }),
       };
     }),
-  };
+  } as unknown as Pick<Database, "select" | "update">;
 };
 
 describe("UpgradeService", () => {

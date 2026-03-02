@@ -16,10 +16,22 @@ import { type Logger } from "../../utils/logger";
 // Defined once to avoid recreating Sets/arrays on every method invocation.
 // ---------------------------------------------------------------------------
 
-const TERMINAL_CAMPAIGN_STATES = new Set<string>(["completed", "failed"]);
+type CampaignStatus = (typeof upgradeCampaignStatusEnum.enumValues)[number];
+type ExecutionStatus = (typeof upgradeExecutionStatusEnum.enumValues)[number];
 
-const TERMINAL_EXECUTION_STATES = new Set<string>([
+const TERMINAL_CAMPAIGN_STATES = new Set<CampaignStatus>([
   "completed",
+  "failed",
+]);
+
+const TERMINAL_EXECUTION_STATES = new Set<ExecutionStatus>([
+  "completed",
+  "failed",
+  "rolled_back",
+]);
+
+/** Execution statuses that count against the failure threshold. */
+const FAILED_EXECUTION_STATES = new Set<ExecutionStatus>([
   "failed",
   "rolled_back",
 ]);
@@ -310,10 +322,7 @@ export class UpgradeService {
       let failedCount = 0;
       for (const stat of executionStats) {
         total += Number(stat.count);
-        if (
-          TERMINAL_EXECUTION_STATES.has(stat.status) &&
-          stat.status !== "completed"
-        ) {
+        if (FAILED_EXECUTION_STATES.has(stat.status)) {
           failedCount += Number(stat.count);
         }
       }
