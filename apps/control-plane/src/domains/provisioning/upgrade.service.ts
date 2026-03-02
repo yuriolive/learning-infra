@@ -6,6 +6,8 @@ import {
   upgradeCampaigns,
   tenantUpgradeExecutions,
   tenants,
+  upgradeCampaignStatusEnum,
+  upgradeExecutionStatusEnum,
 } from "../../database/schema";
 import { type Logger } from "../../utils/logger";
 
@@ -210,18 +212,27 @@ export class UpgradeService {
       }
     });
 
-    if (status === "completed") {
-      await this.checkCampaignCompletion(executionId);
-    }
-
-    // Check campaign failure threshold
+    // Check campaign failure threshold before completion so that a campaign
+    // already marked "failed" by health-check causes the completion check to
+    // bail early, preventing a "completed" → "failed" transition race.
     if (status === "failed") {
       await this.checkCampaignHealth(executionId);
+    }
+
+    if (
+      status === "completed" ||
+      status === "failed" ||
+      status === "rolled_back"
+    ) {
+      await this.checkCampaignCompletion(executionId);
     }
   }
 
   private async checkCampaignCompletion(executionId: string): Promise<void> {
-    await this.database.transaction(async (tx) => {
+    // Returns promotion details if a campaign completes with auto-promote
+    // enabled; null otherwise. createCampaign is called outside the transaction
+    // to avoid nested transactions (which Drizzle does not support).
+    const promotionDetails = await this.database.transaction(async (tx) => {
       const [execution] = await tx
         .select({
           campaignId: tenantUpgradeExecutions.campaignId,
@@ -236,46 +247,54 @@ export class UpgradeService {
         )
         .where(eq(tenantUpgradeExecutions.id, executionId));
 
-      // Bail out if campaign is already in a terminal state
-      if (!execution || execution.campaignStatus !== "running") return;
+      // Only bail for terminal campaign states. Paused campaigns may still
+      // have in-flight executions that complete while paused.
+      const terminalCampaignStates = new Set(["completed", "failed"]);
+      if (!execution || terminalCampaignStates.has(execution.campaignStatus))
+        return null;
 
       const { campaignId, targetImageTag, channelId } = execution;
 
       // Check whether any execution is still in flight
-      const pendingStates = [
-        "queued",
-        "snapshotting",
-        "migrating",
-        "deploying",
-        "verifying",
-      ] as const;
+      const terminalExecutionStates = new Set([
+        "completed",
+        "failed",
+        "rolled_back",
+      ]);
+      const pendingStates = upgradeExecutionStatusEnum.enumValues.filter(
+        (s) => !terminalExecutionStates.has(s),
+      );
       const [pendingResult] = await tx
         .select({ count: sql<number>`count(*)` })
         .from(tenantUpgradeExecutions)
         .where(
           and(
             eq(tenantUpgradeExecutions.campaignId, campaignId),
-            inArray(tenantUpgradeExecutions.status, [...pendingStates]),
+            inArray(tenantUpgradeExecutions.status, pendingStates),
           ),
         );
 
-      if (Number(pendingResult?.count ?? 0) > 0) return;
+      if (Number(pendingResult?.count ?? 0) > 0) return null;
 
       // Atomically transition campaign to completed — only one concurrent caller
       // wins this update; if the campaign was already completed by another
       // execution, .returning() yields an empty array and we bail out.
+      const nonTerminalCampaignStates =
+        upgradeCampaignStatusEnum.enumValues.filter(
+          (s) => !terminalCampaignStates.has(s),
+        );
       const completed = await tx
         .update(upgradeCampaigns)
         .set({ status: "completed", completedAt: new Date() })
         .where(
           and(
             eq(upgradeCampaigns.id, campaignId),
-            inArray(upgradeCampaigns.status, ["pending", "running", "paused"]),
+            inArray(upgradeCampaigns.status, nonTerminalCampaignStates),
           ),
         )
         .returning();
 
-      if (completed.length === 0) return;
+      if (completed.length === 0) return null;
 
       // Set channel's currentImageTag as the single source of truth
       await tx
@@ -302,9 +321,19 @@ export class UpgradeService {
           { from: channelId, to: channel.nextChannelId, targetImageTag },
           "Auto-promoting image to next channel.",
         );
-        await this.createCampaign(targetImageTag, channel.nextChannelId);
+        return { targetImageTag, nextChannelId: channel.nextChannelId };
       }
+
+      return null;
     });
+
+    // createCampaign must be called outside the transaction to avoid nesting.
+    if (promotionDetails) {
+      await this.createCampaign(
+        promotionDetails.targetImageTag,
+        promotionDetails.nextChannelId,
+      );
+    }
   }
 
   private async checkCampaignHealth(executionId: string) {
