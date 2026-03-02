@@ -1,24 +1,18 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const STAGING_CONTROL_PLANE_URL = process.env.STAGING_CONTROL_PLANE_URL;
-const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN; // Required for the API
-const STAGING_BASE_DOMAIN = process.env.STAGING_BASE_DOMAIN;
-
-if (!STAGING_CONTROL_PLANE_URL) {
-  console.error("Missing STAGING_CONTROL_PLANE_URL environment variable.");
-  process.exit(1);
+function getRequiredEnv(varName: string): string {
+  const value = process.env[varName];
+  if (!value) {
+    console.error(`Missing ${varName} environment variable.`);
+    process.exit(1);
+  }
+  return value;
 }
 
-if (!ADMIN_API_TOKEN) {
-  console.error("Missing ADMIN_API_TOKEN environment variable.");
-  process.exit(1);
-}
-
-if (!STAGING_BASE_DOMAIN) {
-  console.error("Missing STAGING_BASE_DOMAIN environment variable.");
-  process.exit(1);
-}
+const STAGING_CONTROL_PLANE_URL = getRequiredEnv("STAGING_CONTROL_PLANE_URL");
+const ADMIN_API_TOKEN = getRequiredEnv("ADMIN_API_TOKEN"); // Required for the API
+const STAGING_BASE_DOMAIN = getRequiredEnv("STAGING_BASE_DOMAIN");
 
 import { fileURLToPath } from "node:url";
 
@@ -53,7 +47,7 @@ async function main() {
   if (!createRes.ok) {
     const errorText = await createRes.text();
     // If it already exists, that's fine, we will just fetch it
-    if (createRes.status === 409 || errorText.includes("already exists")) {
+    if (createRes.status === 409) {
       console.log("Demo store already exists. Fetching details...");
     } else {
       console.error(
