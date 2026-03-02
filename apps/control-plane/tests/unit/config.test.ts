@@ -42,6 +42,7 @@ describe("validateConfiguration", () => {
       "redis://localhost:6379",
       "neon-api-key",
       "neon-project-id",
+      "neon-org-id",
       "gcp-project-id",
       "gcp-region",
       "tenant-image-tag",
@@ -66,6 +67,7 @@ describe("validateConfiguration", () => {
       "redis://localhost:6379",
       "neon-api-key",
       "neon-project-id",
+      "neon-org-id",
       "gcp-project-id",
       "gcp-region",
       "tenant-image-tag",
@@ -94,6 +96,7 @@ describe("validateConfiguration", () => {
       undefined, // upstashRedisUrl missing
       "neon-api-key",
       "neon-project-id",
+      "neon-org-id",
       "gcp-project-id",
       "gcp-region",
       "tenant-image-tag",
@@ -122,6 +125,7 @@ describe("validateConfiguration", () => {
       "redis://localhost:6379",
       "neon-api-key",
       "neon-project-id",
+      "neon-org-id",
       "gcp-project-id",
       "gcp-region",
       "tenant-image-tag",
@@ -158,6 +162,7 @@ describe("validateConfiguration", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       "vendin.store",
       "storefront.vendin.store",
     );
@@ -175,6 +180,7 @@ describe("validateConfiguration", () => {
       "redis://localhost:6379",
       undefined, // neonApiKey missing
       "neon-project-id",
+      "neon-org-id",
       "gcp-project-id",
       "gcp-region",
       "tenant-image-tag",
@@ -206,6 +212,7 @@ describe("validateConfiguration", () => {
       "redis://localhost:6379",
       "neon-api-key",
       undefined, // neonProjectId missing
+      undefined, // neonOrgId missing
       undefined, // gcpProjectId missing
       "gcp-region",
       "tenant-image-tag",
@@ -223,6 +230,7 @@ describe("validateConfiguration", () => {
 
     assertCriticalKeysMissing([
       "NEON_PROJECT_ID",
+      "NEON_ORG_ID",
       "GCP_PROJECT_ID",
       "CLOUDFLARE_API_TOKEN",
       "CLOUDFLARE_ZONE_ID",
@@ -236,6 +244,7 @@ describe("resolveEnvironmentSecrets", () => {
       DATABASE_URL: "postgres://db",
       NEON_API_KEY: "neon-key",
       NEON_PROJECT_ID: "neon-project",
+      NEON_ORG_ID: "neon-org",
       ADMIN_API_KEY: "admin-key",
       POSTHOG_API_KEY: "posthog-key",
       UPSTASH_REDIS_URL: "redis://upstash",
@@ -253,6 +262,7 @@ describe("resolveEnvironmentSecrets", () => {
       databaseUrl: "postgres://db",
       neonApiKey: "neon-key",
       neonProjectId: "neon-project",
+      neonOrgId: "neon-org",
       adminApiKey: "admin-key",
       postHogApiKey: "posthog-key",
       upstashRedisUrl: "redis://upstash",
