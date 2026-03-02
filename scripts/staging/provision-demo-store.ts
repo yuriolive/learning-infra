@@ -28,6 +28,17 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function apiFetch(endpoint: string, options: RequestInit = {}) {
+  return fetch(`${STAGING_CONTROL_PLANE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+      Authorization: `Bearer ${ADMIN_API_TOKEN}`,
+    },
+  });
+}
+
 interface Tenant {
   id: string;
   domain: string;
@@ -41,16 +52,9 @@ async function main() {
   console.log(`Creating demo store at ${STAGING_CONTROL_PLANE_URL}...`);
 
   // 1. Create the tenant
-  const createRes = await fetch(`${STAGING_CONTROL_PLANE_URL}/api/tenants`, {
+  const createRes = await apiFetch("/api/tenants", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ADMIN_API_TOKEN}`,
-    },
-    body: JSON.stringify({
-      name: "Demo Store",
-      domain: "demo-store",
-    }),
+    body: JSON.stringify({ name: "Demo Store", domain: "demo-store" }),
   });
 
   if (!createRes.ok) {
@@ -68,14 +72,7 @@ async function main() {
   }
 
   // 2. Fetch the demo store tenant by subdomain
-  const listRes = await fetch(
-    `${STAGING_CONTROL_PLANE_URL}/api/tenants?subdomain=demo-store`,
-    {
-      headers: {
-        Authorization: `Bearer ${ADMIN_API_TOKEN}`,
-      },
-    },
-  );
+  const listRes = await apiFetch("/api/tenants?subdomain=demo-store");
 
   if (!listRes.ok) {
     console.error("Failed to list tenants.");
@@ -104,14 +101,7 @@ async function main() {
     console.log(`Status is ${currentStatus}. Waiting 10 seconds...`);
     await sleep(10000);
 
-    const getRes = await fetch(
-      `${STAGING_CONTROL_PLANE_URL}/api/tenants/${demoTenant.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${ADMIN_API_TOKEN}`,
-        },
-      },
-    );
+    const getRes = await apiFetch(`/api/tenants/${demoTenant.id}`);
 
     if (getRes.ok) {
       const getData = await getRes.json();
@@ -133,19 +123,10 @@ async function main() {
 
   // 4. Update release channel to "internal"
   console.log("Setting release channel to 'internal'...");
-  const patchRes = await fetch(
-    `${STAGING_CONTROL_PLANE_URL}/api/tenants/${demoTenant.id}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${ADMIN_API_TOKEN}`,
-      },
-      body: JSON.stringify({
-        releaseChannelId: "internal",
-      }),
-    },
-  );
+  const patchRes = await apiFetch(`/api/tenants/${demoTenant.id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ releaseChannelId: "internal" }),
+  });
 
   if (!patchRes.ok) {
     const errorText = await patchRes.text();
