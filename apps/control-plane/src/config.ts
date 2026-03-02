@@ -8,6 +8,7 @@ export interface Environment {
   NODE_ENV?: string;
   NEON_API_KEY?: BoundSecret;
   NEON_PROJECT_ID?: BoundSecret;
+  NEON_ORG_ID?: string;
   ADMIN_API_KEY?: BoundSecret;
   ALLOWED_ORIGINS?: string;
   POSTHOG_API_KEY?: BoundSecret;
@@ -35,6 +36,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     databaseUrl,
     neonApiKey,
     neonProjectId,
+    neonOrgId,
     adminApiKey,
     postHogApiKey,
     upstashRedisUrl,
@@ -52,6 +54,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     resolveSecret(environment.DATABASE_URL),
     resolveSecret(environment.NEON_API_KEY),
     resolveSecret(environment.NEON_PROJECT_ID),
+    resolveSecret(environment.NEON_ORG_ID),
     resolveSecret(environment.ADMIN_API_KEY),
     resolveSecret(environment.POSTHOG_API_KEY),
     resolveSecret(environment.UPSTASH_REDIS_URL),
@@ -84,6 +87,7 @@ export async function resolveEnvironmentSecrets(environment: Environment) {
     databaseUrl,
     neonApiKey,
     neonProjectId,
+    neonOrgId,
     adminApiKey,
     postHogApiKey,
     upstashRedisUrl,
@@ -121,6 +125,7 @@ function validateProductionConfig(
   adminApiKey: string | undefined,
   neonApiKey?: string,
   neonProjectId?: string,
+  neonOrgId?: string,
   gcpProjectId?: string,
   gcpRegion?: string,
   tenantImageTag?: string,
@@ -140,6 +145,7 @@ function validateProductionConfig(
   const requiredVariables = {
     NEON_API_KEY: neonApiKey,
     NEON_PROJECT_ID: neonProjectId,
+    NEON_ORG_ID: neonOrgId,
     GCP_PROJECT_ID: gcpProjectId,
     GCP_REGION: gcpRegion,
     TENANT_IMAGE_TAG: tenantImageTag,
@@ -175,6 +181,7 @@ export function validateConfiguration(
   upstashRedisUrl?: string,
   neonApiKey?: string,
   neonProjectId?: string,
+  neonOrgId?: string,
   gcpProjectId?: string,
   gcpRegion?: string,
   tenantImageTag?: string,
@@ -212,6 +219,7 @@ export function validateConfiguration(
       adminApiKey,
       neonApiKey,
       neonProjectId,
+      neonOrgId,
       gcpProjectId,
       gcpRegion,
       tenantImageTag,
