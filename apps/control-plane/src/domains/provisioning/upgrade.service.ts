@@ -11,6 +11,30 @@ import {
 } from "../../database/schema";
 import { type Logger } from "../../utils/logger";
 
+// ---------------------------------------------------------------------------
+// Module-level constants derived from schema enums.
+// Defined once to avoid recreating Sets/arrays on every method invocation.
+// ---------------------------------------------------------------------------
+
+const TERMINAL_CAMPAIGN_STATES = new Set<string>(["completed", "failed"]);
+
+const TERMINAL_EXECUTION_STATES = new Set<string>([
+  "completed",
+  "failed",
+  "rolled_back",
+]);
+
+/** Execution states that mean "still in flight" — complement of terminal. */
+const PENDING_EXECUTION_STATES = upgradeExecutionStatusEnum.enumValues.filter(
+  (s) => !TERMINAL_EXECUTION_STATES.has(s),
+);
+
+/** Campaign states that can still transition (not yet terminal). */
+const NON_TERMINAL_CAMPAIGN_STATES =
+  upgradeCampaignStatusEnum.enumValues.filter(
+    (s) => !TERMINAL_CAMPAIGN_STATES.has(s),
+  );
+
 export class UpgradeService {
   constructor(
     private database: Database,
@@ -239,6 +263,7 @@ export class UpgradeService {
           targetImageTag: upgradeCampaigns.targetImageTag,
           channelId: upgradeCampaigns.channelId,
           campaignStatus: upgradeCampaigns.status,
+          failureThresholdPercent: upgradeCampaigns.failureThresholdPercent,
         })
         .from(tenantUpgradeExecutions)
         .innerJoin(
@@ -249,47 +274,79 @@ export class UpgradeService {
 
       // Only bail for terminal campaign states. Paused campaigns may still
       // have in-flight executions that complete while paused.
-      const terminalCampaignStates = new Set(["completed", "failed"]);
-      if (!execution || terminalCampaignStates.has(execution.campaignStatus))
+      if (!execution || TERMINAL_CAMPAIGN_STATES.has(execution.campaignStatus))
         return null;
 
-      const { campaignId, targetImageTag, channelId } = execution;
+      const { campaignId, targetImageTag, channelId, failureThresholdPercent } =
+        execution;
 
       // Check whether any execution is still in flight
-      const terminalExecutionStates = new Set([
-        "completed",
-        "failed",
-        "rolled_back",
-      ]);
-      const pendingStates = upgradeExecutionStatusEnum.enumValues.filter(
-        (s) => !terminalExecutionStates.has(s),
-      );
       const [pendingResult] = await tx
         .select({ count: sql<number>`count(*)` })
         .from(tenantUpgradeExecutions)
         .where(
           and(
             eq(tenantUpgradeExecutions.campaignId, campaignId),
-            inArray(tenantUpgradeExecutions.status, pendingStates),
+            inArray(tenantUpgradeExecutions.status, PENDING_EXECUTION_STATES),
           ),
         );
 
       if (Number(pendingResult?.count ?? 0) > 0) return null;
 
+      // All executions are terminal. Compute the final failure rate atomically
+      // inside this transaction to prevent a race where checkCampaignHealth
+      // (called for a concurrent failed execution) could mark the campaign
+      // "failed" after we've already decided to promote it.
+      const executionStats = await tx
+        .select({
+          count: sql<number>`count(*)`,
+          status: tenantUpgradeExecutions.status,
+        })
+        .from(tenantUpgradeExecutions)
+        .where(eq(tenantUpgradeExecutions.campaignId, campaignId))
+        .groupBy(tenantUpgradeExecutions.status);
+
+      let total = 0;
+      let failedCount = 0;
+      for (const stat of executionStats) {
+        total += Number(stat.count);
+        if (
+          TERMINAL_EXECUTION_STATES.has(stat.status) &&
+          stat.status !== "completed"
+        ) {
+          failedCount += Number(stat.count);
+        }
+      }
+
+      const failureRate = total > 0 ? (failedCount / total) * 100 : 0;
+
+      if (failureRate > failureThresholdPercent) {
+        this.logger.warn(
+          { campaignId, failureRate, threshold: failureThresholdPercent },
+          "Campaign failure threshold exceeded at completion. Marking as failed.",
+        );
+        await tx
+          .update(upgradeCampaigns)
+          .set({ status: "failed" })
+          .where(
+            and(
+              eq(upgradeCampaigns.id, campaignId),
+              inArray(upgradeCampaigns.status, NON_TERMINAL_CAMPAIGN_STATES),
+            ),
+          );
+        return null;
+      }
+
       // Atomically transition campaign to completed — only one concurrent caller
       // wins this update; if the campaign was already completed by another
       // execution, .returning() yields an empty array and we bail out.
-      const nonTerminalCampaignStates =
-        upgradeCampaignStatusEnum.enumValues.filter(
-          (s) => !terminalCampaignStates.has(s),
-        );
       const completed = await tx
         .update(upgradeCampaigns)
         .set({ status: "completed", completedAt: new Date() })
         .where(
           and(
             eq(upgradeCampaigns.id, campaignId),
-            inArray(upgradeCampaigns.status, nonTerminalCampaignStates),
+            inArray(upgradeCampaigns.status, NON_TERMINAL_CAMPAIGN_STATES),
           ),
         )
         .returning();
@@ -383,10 +440,17 @@ export class UpgradeService {
         },
         "Campaign failure threshold exceeded. Pausing campaign.",
       );
+      // Guard: only update if the campaign hasn't already reached a terminal
+      // state (e.g. a concurrent completion check may have just completed it).
       await this.database
         .update(upgradeCampaigns)
         .set({ status: "failed" })
-        .where(eq(upgradeCampaigns.id, campaignId));
+        .where(
+          and(
+            eq(upgradeCampaigns.id, campaignId),
+            inArray(upgradeCampaigns.status, NON_TERMINAL_CAMPAIGN_STATES),
+          ),
+        );
     }
   }
 }

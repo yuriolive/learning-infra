@@ -41,6 +41,11 @@ const buildUpdateTx = () => ({
 });
 
 // Tx mock for the checkCampaignCompletion transaction.
+// Select call sequence:
+//   1. execution row (innerJoin with upgradeCampaigns)
+//   2. pending execution count
+//   3. execution stats grouped by status (for failure rate check)
+//   4. channel row for auto-promote check
 const buildCompletionTx = (
   options: {
     executionRow?: {
@@ -48,8 +53,11 @@ const buildCompletionTx = (
       targetImageTag: string;
       channelId: string;
       campaignStatus: string;
+      failureThresholdPercent?: number; // optional — not used when bailing early
     } | null;
     pendingCount?: number;
+    failedExecutionCount?: number;
+    totalExecutionCount?: number;
     completedRows?: unknown[];
     channelRow?: {
       autoPromote: boolean;
@@ -63,8 +71,11 @@ const buildCompletionTx = (
       targetImageTag: "v2.0.0",
       channelId: "stable",
       campaignStatus: "running",
+      failureThresholdPercent: 10,
     },
     pendingCount = 0,
+    failedExecutionCount = 0,
+    totalExecutionCount = 10,
     completedRows = [{ id: "camp-1" }],
     channelRow = { autoPromote: false, nextChannelId: null },
   } = options;
@@ -76,6 +87,7 @@ const buildCompletionTx = (
     select: vi.fn().mockImplementation(() => {
       selectCount++;
       if (selectCount === 1) {
+        // Execution row (innerJoin with upgradeCampaigns)
         return {
           from: vi.fn().mockReturnValue({
             innerJoin: vi.fn().mockReturnValue({
@@ -87,13 +99,33 @@ const buildCompletionTx = (
         };
       }
       if (selectCount === 2) {
+        // Pending execution count
         return {
           from: vi.fn().mockReturnValue({
             where: vi.fn().mockResolvedValue([{ count: pendingCount }]),
           }),
         };
       }
-      // 3rd call: channel auto-promote check
+      if (selectCount === 3) {
+        // Execution stats grouped by status
+        const stats = [
+          ...(failedExecutionCount > 0
+            ? [{ count: failedExecutionCount, status: "failed" }]
+            : []),
+          {
+            count: totalExecutionCount - failedExecutionCount,
+            status: "completed",
+          },
+        ];
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              groupBy: vi.fn().mockResolvedValue(stats),
+            }),
+          }),
+        };
+      }
+      // 4th call: channel auto-promote check
       return {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue(channelRow ? [channelRow] : []),
@@ -103,7 +135,10 @@ const buildCompletionTx = (
     update: vi.fn().mockImplementation(() => {
       updateCount++;
       if (updateCount === 1) {
-        // Atomic campaign completion — must expose .returning()
+        // First update: either "failed" (threshold exceeded) or "completed"
+        // (success). The "completed" path needs .returning(); the "failed" path
+        // does not. Expose .returning() on all first-update calls so both paths
+        // work with the same mock.
         return {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockReturnValue({
@@ -443,6 +478,36 @@ describe("UpgradeService", () => {
       await expect(
         service.updateExecutionStatus("exec-1", "completed"),
       ).resolves.not.toThrow();
+    });
+
+    it("should mark campaign as failed when failure threshold is exceeded at completion", async () => {
+      // 3 out of 10 executions failed = 30%, threshold is 10% → should fail
+      const completionTx = buildCompletionTx({
+        failedExecutionCount: 3,
+        totalExecutionCount: 10,
+        executionRow: {
+          campaignId: "camp-1",
+          targetImageTag: "v2.0.0",
+          channelId: "stable",
+          campaignStatus: "running",
+          failureThresholdPercent: 10,
+        },
+      });
+
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) =>
+          function_(completionTx as never),
+        );
+
+      await service.updateExecutionStatus("exec-1", "completed");
+
+      // Only one update call: marking campaign "failed" (no channel update or promotion)
+      expect(
+        (completionTx.update as ReturnType<typeof vi.fn>).mock.calls,
+      ).toHaveLength(1);
     });
 
     it("should update channel image tag when campaign completes", async () => {
