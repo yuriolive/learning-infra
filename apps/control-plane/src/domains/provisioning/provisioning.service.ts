@@ -161,7 +161,7 @@ export class ProvisioningService {
    *
    * @param tenantId - The unique identifier of the tenant.
    * @returns An object containing the connection string for the new database.
-   * @throws If the Neon provider is not initialized.
+   * @throws If the Neon provider is not initialized, or if database provisioning or updating the tenant record fails.
    */
   async provisionDatabase(tenantId: string): Promise<{ databaseUrl: string }> {
     if (!this.neonProvider) {
@@ -189,7 +189,7 @@ export class ProvisioningService {
    * @param tenantId - The unique identifier of the tenant.
    * @param snapshotName - The name to assign to the new snapshot.
    * @returns An object containing the ID of the created snapshot.
-   * @throws If the Neon provider is not initialized or the tenant has no project ID.
+   * @throws If the Neon provider is not initialized, the tenant has no project ID, or snapshot creation fails.
    */
   async createDatabaseSnapshot(
     tenantId: string,
@@ -218,7 +218,7 @@ export class ProvisioningService {
    *
    * @param tenantId - The unique identifier of the tenant.
    * @param snapshotName - The name of the snapshot to restore from.
-   * @throws If the Neon provider is not initialized or the tenant has no project ID.
+   * @throws If the Neon provider is not initialized, the tenant has no project ID, or snapshot restoration fails.
    */
   async restoreDatabaseSnapshot(
     tenantId: string,
@@ -246,7 +246,7 @@ export class ProvisioningService {
    * @param tenantId - The unique identifier of the tenant.
    * @param imageTag - Optional override for the container image tag to use.
    * @returns An object containing the Google Cloud operation name, if an operation was started.
-   * @throws If required provisioning prerequisites are missing.
+   * @throws If required provisioning prerequisites are missing or if ensuring the migration job fails.
    */
   async ensureMigrationJob(
     tenantId: string,
@@ -281,7 +281,7 @@ export class ProvisioningService {
    *
    * @param tenantId - The unique identifier of the tenant.
    * @returns An object containing the Google Cloud operation name for the job execution.
-   * @throws If required provisioning prerequisites are missing.
+   * @throws If required provisioning prerequisites are missing or if triggering the migration job fails.
    */
   async triggerMigrationJob(
     tenantId: string,
@@ -302,7 +302,7 @@ export class ProvisioningService {
    *
    * @param executionName - The full resource name of the job execution.
    * @returns A promise that resolves to the status and any associated error message.
-   * @throws If the Cloud Run provider is not initialized.
+   * @throws If the Cloud Run provider is not initialized or if fetching the job status fails.
    */
   getMigrationStatus(executionName: string): Promise<{
     status: MigrationStatus;
@@ -318,7 +318,7 @@ export class ProvisioningService {
    * Deletes the Cloud Run job used for database migrations for the specified tenant.
    *
    * @param tenantId - The unique identifier of the tenant.
-   * @throws If the Cloud Run provider is not initialized.
+   * @throws If the Cloud Run provider is not initialized or if deleting the migration job fails.
    */
   async deleteMigrationJob(tenantId: string): Promise<void> {
     if (!this.cloudRunProvider) {
@@ -332,7 +332,7 @@ export class ProvisioningService {
    *
    * @param operationName - The full resource name of the operation.
    * @returns An object indicating whether the operation is done, along with any error or response data.
-   * @throws If the Cloud Run provider is not initialized.
+   * @throws If the Cloud Run provider is not initialized or if fetching the operation status fails.
    */
   async getOperationStatus(
     operationName: string,
@@ -350,7 +350,7 @@ export class ProvisioningService {
    * @param tenantId - The unique identifier of the tenant.
    * @param imageTag - Optional override for the container image tag to deploy.
    * @returns An object containing the Google Cloud operation name for the deployment.
-   * @throws If required provisioning prerequisites are missing or subdomain is not set.
+   * @throws If required provisioning prerequisites are missing, the subdomain is not set, or if starting the service deployment fails.
    */
   async startDeployService(
     tenantId: string,
@@ -391,7 +391,7 @@ export class ProvisioningService {
    *
    * @param tenantId - The unique identifier of the tenant.
    * @returns An object containing the final API URL for the deployed service.
-   * @throws If required provisioning prerequisites are missing.
+   * @throws If required provisioning prerequisites are missing or if finalizing the deployment fails.
    */
   async finalizeDeployment(tenantId: string): Promise<{ apiUrl: string }> {
     const { cloudRunProvider } = await this.validateProvisioningPrerequisites(
@@ -410,6 +410,7 @@ export class ProvisioningService {
    * Configures the custom or default domain routing for the tenant using Cloudflare.
    *
    * @param tenantId - The unique identifier of the tenant.
+   * @throws If domain configuration fails.
    */
   async configureDomain(tenantId: string): Promise<void> {
     if (!this.domainProvisioningService) {
@@ -484,6 +485,7 @@ export class ProvisioningService {
    * Marks a tenant as active after successful provisioning.
    *
    * @param tenantId - The unique identifier of the tenant.
+   * @throws If updating the tenant status fails.
    */
   async activateTenant(tenantId: string): Promise<void> {
     this.logger.info({ tenantId }, "Activating tenant");
@@ -497,6 +499,7 @@ export class ProvisioningService {
    * @param tenantId - The unique identifier of the tenant.
    * @param reason - An optional reason describing why the rollback was initiated.
    * @returns An object containing the Google Cloud operation name for the instance deletion, if applicable.
+   * @throws If fetching the tenant, rolling back resources, or updating the tenant status fails.
    */
   async rollbackResources(
     tenantId: string,

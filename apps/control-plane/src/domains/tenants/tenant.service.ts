@@ -48,6 +48,9 @@ export class TenantService {
    * @param input - The data needed to create the tenant.
    * @param baseUrl - The base URL of the control plane API for workflow callbacks.
    * @returns The newly created tenant record.
+   * @throws \{SubdomainInUseError\} If the subdomain is already taken.
+   * @throws \{SubdomainRequiredError\} If a subdomain is not provided.
+   * @throws If tenant creation or workflow triggering fails.
    */
   async createTenant(
     input: CreateTenantInput,
@@ -123,7 +126,8 @@ export class TenantService {
    * @param id - The unique identifier of the tenant to update.
    * @param input - The data to update on the tenant.
    * @returns The updated tenant record.
-   * @throws If the tenant is not found.
+   * @throws \{TenantNotFoundError\} If the tenant is not found.
+   * @throws \{SubdomainInUseError\} If the new subdomain is already in use by another tenant.
    */
   async updateTenant(id: string, input: UpdateTenantInput): Promise<Tenant> {
     if (input.subdomain) {
@@ -168,6 +172,7 @@ export class TenantService {
    *
    * @param filters - Optional filters to apply to the query.
    * @returns An array of tenant records.
+   * @throws If fetching tenants from the database fails.
    */
   async listTenants(filters?: ListTenantsFilters): Promise<Tenant[]> {
     if (filters?.subdomain) {

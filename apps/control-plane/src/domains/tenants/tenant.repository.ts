@@ -52,6 +52,7 @@ export class TenantRepository {
    *
    * @param input - The data needed to create the tenant.
    * @returns The newly created tenant record.
+   * @throws If the tenant record could not be created in the database.
    */
   async create(input: CreateTenantInput): Promise<Tenant> {
     const id = randomUUID();
