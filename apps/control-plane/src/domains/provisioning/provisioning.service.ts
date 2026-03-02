@@ -499,7 +499,7 @@ export class ProvisioningService {
    * @param tenantId - The unique identifier of the tenant.
    * @param reason - An optional reason describing why the rollback was initiated.
    * @returns An object containing the Google Cloud operation name for the instance deletion, if applicable.
-   * @throws If fetching the tenant, rolling back resources, or updating the tenant status fails.
+   * @throws If fetching the tenant or updating the tenant status fails.
    */
   async rollbackResources(
     tenantId: string,
