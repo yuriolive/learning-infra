@@ -9,6 +9,7 @@ export interface Environment {
   NEON_API_KEY?: BoundSecret;
   NEON_PROJECT_ID?: BoundSecret;
   NEON_ORG_ID?: string;
+  NEON_REGION?: string;
   ADMIN_API_KEY?: BoundSecret;
   ALLOWED_ORIGINS?: string;
   POSTHOG_API_KEY?: BoundSecret;
@@ -126,6 +127,7 @@ function validateProductionConfig(
   neonApiKey?: string,
   neonProjectId?: string,
   neonOrgId?: string,
+  neonRegion?: string,
   gcpProjectId?: string,
   gcpRegion?: string,
   tenantImageTag?: string,
@@ -146,6 +148,7 @@ function validateProductionConfig(
     NEON_API_KEY: neonApiKey,
     NEON_PROJECT_ID: neonProjectId,
     NEON_ORG_ID: neonOrgId,
+    NEON_REGION: neonRegion,
     GCP_PROJECT_ID: gcpProjectId,
     GCP_REGION: gcpRegion,
     TENANT_IMAGE_TAG: tenantImageTag,
@@ -182,6 +185,7 @@ export function validateConfiguration(
   neonApiKey?: string,
   neonProjectId?: string,
   neonOrgId?: string,
+  neonRegion?: string,
   gcpProjectId?: string,
   gcpRegion?: string,
   tenantImageTag?: string,
@@ -220,6 +224,7 @@ export function validateConfiguration(
       neonApiKey,
       neonProjectId,
       neonOrgId,
+      neonRegion,
       gcpProjectId,
       gcpRegion,
       tenantImageTag,
