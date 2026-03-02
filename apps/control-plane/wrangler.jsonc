@@ -81,6 +81,7 @@
         }
       ],
       "vars": {
+        "NEON_ORG_ID": "org-plain-bread-01925261",
         "ALLOWED_ORIGINS": "https://vendin.store,https://www.vendin.store",
         "LOG_LEVEL": "info",
         "NODE_ENV": "production",
