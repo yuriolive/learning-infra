@@ -255,11 +255,7 @@ export class UpgradeService {
       await this.checkCampaignHealth(executionId);
     }
 
-    if (
-      status === "completed" ||
-      status === "failed" ||
-      status === "rolled_back"
-    ) {
+    if (TERMINAL_EXECUTION_STATES.has(status)) {
       await this.checkCampaignCompletion(executionId);
     }
   }
