@@ -19,6 +19,145 @@ const selectChain = (value: unknown, options: { groupBy?: unknown } = {}) => {
   };
 };
 
+// Tx mock for the updateExecutionStatus inner transaction:
+// updates execution status and tenant's currentImageTag.
+const buildUpdateTx = (): Pick<Database, "update" | "select"> =>
+  ({
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    }),
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        innerJoin: vi.fn().mockReturnValue({
+          where: vi
+            .fn()
+            .mockResolvedValue([
+              { tenantId: "tenant-1", targetImageTag: "v2.0.0" },
+            ]),
+        }),
+      }),
+    }),
+  }) as unknown as Pick<Database, "update" | "select">;
+
+// Tx mock for the checkCampaignCompletion transaction.
+// Select call sequence:
+//   1. execution row (innerJoin with upgradeCampaigns)
+//   2. pending execution count
+//   3. execution stats grouped by status (for failure rate check)
+//   4. channel row for auto-promote check
+const buildCompletionTx = (
+  options: {
+    executionRow?: {
+      campaignId: string;
+      targetImageTag: string;
+      channelId: string;
+      campaignStatus: string;
+      failureThresholdPercent?: number; // optional — not used when bailing early
+    } | null;
+    pendingCount?: number;
+    failedExecutionCount?: number;
+    totalExecutionCount?: number;
+    completedRows?: Array<{ id: string }>;
+    channelRow?: {
+      autoPromote: boolean;
+      nextChannelId: string | null;
+    } | null;
+  } = {},
+): Pick<Database, "select" | "update"> => {
+  const {
+    executionRow = {
+      campaignId: "camp-1",
+      targetImageTag: "v2.0.0",
+      channelId: "stable",
+      campaignStatus: "running",
+      failureThresholdPercent: 10,
+    },
+    pendingCount = 0,
+    failedExecutionCount = 0,
+    totalExecutionCount = 10,
+    completedRows = [{ id: "camp-1" }],
+    channelRow = { autoPromote: false, nextChannelId: null },
+  } = options;
+
+  let selectCount = 0;
+  let updateCount = 0;
+
+  return {
+    select: vi.fn().mockImplementation(() => {
+      selectCount++;
+      if (selectCount === 1) {
+        // Execution row (innerJoin with upgradeCampaigns)
+        return {
+          from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+              where: vi
+                .fn()
+                .mockResolvedValue(executionRow ? [executionRow] : []),
+            }),
+          }),
+        };
+      }
+      if (selectCount === 2) {
+        // Pending execution count
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([{ count: pendingCount }]),
+          }),
+        };
+      }
+      if (selectCount === 3) {
+        // Execution stats grouped by status
+        const stats = [
+          ...(failedExecutionCount > 0
+            ? [{ count: failedExecutionCount, status: "failed" }]
+            : []),
+          {
+            count: totalExecutionCount - failedExecutionCount,
+            status: "completed",
+          },
+        ];
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              groupBy: vi.fn().mockResolvedValue(stats),
+            }),
+          }),
+        };
+      }
+      // 4th call: channel auto-promote check
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(channelRow ? [channelRow] : []),
+        }),
+      };
+    }),
+    update: vi.fn().mockImplementation(() => {
+      updateCount++;
+      if (updateCount === 1) {
+        // First update: either "failed" (threshold exceeded) or "completed"
+        // (success). The "completed" path needs .returning(); the "failed" path
+        // does not. Expose .returning() on all first-update calls so both paths
+        // work with the same mock.
+        return {
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue(completedRows),
+            }),
+          }),
+        };
+      }
+      // 2nd call: update release channel's currentImageTag
+      return {
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      };
+    }),
+  } as unknown as Pick<Database, "select" | "update">;
+};
+
 describe("UpgradeService", () => {
   let service: UpgradeService;
   let mockDatabase: Database;
@@ -200,27 +339,14 @@ describe("UpgradeService", () => {
   // -------------------------------------------------------------------------
   describe("updateExecutionStatus", () => {
     it("should update status and tenant image tag on completion", async () => {
-      vi.mocked(mockDatabase.transaction).mockImplementation((function_) => {
-        const tx = {
-          update: vi.fn().mockReturnValue({
-            set: vi.fn().mockReturnValue({
-              where: vi.fn().mockResolvedValue([]),
-            }),
-          }),
-          select: vi.fn().mockReturnValue({
-            from: vi.fn().mockReturnValue({
-              innerJoin: vi.fn().mockReturnValue({
-                where: vi
-                  .fn()
-                  .mockResolvedValue([
-                    { tenantId: "tenant-1", targetImageTag: "v2.0.0" },
-                  ]),
-              }),
-            }),
-          }),
-        };
-        return function_(tx as unknown as never);
-      });
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        // checkCampaignCompletion tx — bail early (another process already won)
+        .mockImplementationOnce((function_) =>
+          function_(buildCompletionTx({ completedRows: [] }) as never),
+        );
 
       await expect(
         service.updateExecutionStatus("exec-1", "completed"),
@@ -245,16 +371,32 @@ describe("UpgradeService", () => {
     });
 
     it("should run campaign health check on failure status", async () => {
-      vi.mocked(mockDatabase.transaction).mockImplementation((function_) => {
-        const tx = {
-          update: vi.fn().mockReturnValue({
-            set: vi.fn().mockReturnValue({
-              where: vi.fn().mockResolvedValue([]),
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) => {
+          // updateExecutionStatus tx — only needs update (no select for "failed")
+          const tx = {
+            update: vi.fn().mockReturnValue({
+              set: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([]),
+              }),
             }),
-          }),
-        };
-        return function_(tx as unknown as never);
-      });
+          };
+          return function_(tx as never);
+        })
+        // checkCampaignCompletion tx — campaign already "failed" by health check,
+        // so bail early after the first select.
+        .mockImplementationOnce((function_) =>
+          function_(
+            buildCompletionTx({
+              executionRow: {
+                campaignId: "camp-1",
+                targetImageTag: "v2.0.0",
+                channelId: "stable",
+                campaignStatus: "failed",
+              },
+            }) as never,
+          ),
+        );
 
       // checkCampaignHealth issues 3 selects:
       //   1. execution → campaignId
@@ -283,6 +425,141 @@ describe("UpgradeService", () => {
       await expect(
         service.updateExecutionStatus("exec-1", "failed"),
       ).resolves.not.toThrow();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe("checkCampaignCompletion (via updateExecutionStatus)", () => {
+    it("should bail early when campaign is already in a terminal state", async () => {
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) =>
+          function_(
+            buildCompletionTx({
+              executionRow: {
+                campaignId: "camp-1",
+                targetImageTag: "v2.0.0",
+                channelId: "stable",
+                campaignStatus: "completed",
+              },
+            }) as never,
+          ),
+        );
+
+      await expect(
+        service.updateExecutionStatus("exec-1", "completed"),
+      ).resolves.not.toThrow();
+    });
+
+    it("should bail early when there are still pending executions", async () => {
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) =>
+          function_(buildCompletionTx({ pendingCount: 3 }) as never),
+        );
+
+      await expect(
+        service.updateExecutionStatus("exec-1", "completed"),
+      ).resolves.not.toThrow();
+    });
+
+    it("should bail early when another process already completed the campaign", async () => {
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) =>
+          function_(buildCompletionTx({ completedRows: [] }) as never),
+        );
+
+      await expect(
+        service.updateExecutionStatus("exec-1", "completed"),
+      ).resolves.not.toThrow();
+    });
+
+    it("should mark campaign as failed when failure threshold is exceeded at completion", async () => {
+      // 3 out of 10 executions failed = 30%, threshold is 10% → should fail
+      const completionTx = buildCompletionTx({
+        failedExecutionCount: 3,
+        totalExecutionCount: 10,
+        executionRow: {
+          campaignId: "camp-1",
+          targetImageTag: "v2.0.0",
+          channelId: "stable",
+          campaignStatus: "running",
+          failureThresholdPercent: 10,
+        },
+      });
+
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) =>
+          function_(completionTx as never),
+        );
+
+      await service.updateExecutionStatus("exec-1", "completed");
+
+      // Only one update call: marking campaign "failed" (no channel update or promotion)
+      expect(
+        (completionTx.update as ReturnType<typeof vi.fn>).mock.calls,
+      ).toHaveLength(1);
+    });
+
+    it("should update channel image tag when campaign completes", async () => {
+      const completionTx = buildCompletionTx();
+
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) =>
+          function_(completionTx as never),
+        );
+
+      await service.updateExecutionStatus("exec-1", "completed");
+
+      // Two update calls: (1) atomic campaign status, (2) channel currentImageTag
+      expect(
+        (completionTx.update as ReturnType<typeof vi.fn>).mock.calls,
+      ).toHaveLength(2);
+    });
+
+    it("should trigger auto-promotion when autoPromote is enabled on the channel", async () => {
+      const completionTx = buildCompletionTx({
+        channelRow: { autoPromote: true, nextChannelId: "canary" },
+      });
+
+      // createCampaign (auto-promote) also runs a transaction
+      const promotionTx = {
+        insert: vi.fn().mockReturnValue({
+          values: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([{ id: "camp-promoted" }]),
+          }),
+        }),
+        select: vi.fn().mockReturnValue({
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+
+      vi.mocked(mockDatabase.transaction)
+        .mockImplementationOnce((function_) =>
+          function_(buildUpdateTx() as never),
+        )
+        .mockImplementationOnce((function_) => function_(completionTx as never))
+        .mockImplementationOnce((function_) => function_(promotionTx as never));
+
+      await service.updateExecutionStatus("exec-1", "completed");
+
+      // Three transaction calls: updateExecutionStatus, checkCampaignCompletion, createCampaign
+      expect(mockDatabase.transaction).toHaveBeenCalledTimes(3);
     });
   });
 });
