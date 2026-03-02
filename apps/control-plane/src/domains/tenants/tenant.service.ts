@@ -148,7 +148,7 @@ export class TenantService {
    * Soft deletes a tenant record.
    *
    * @param id - The unique identifier of the tenant to delete.
-   * @throws If the tenant is not found.
+   * @throws {TenantNotFoundError} If the tenant is not found.
    */
   async deleteTenant(id: string): Promise<void> {
     const deleted = await this.repository.softDelete(id);
