@@ -9,12 +9,12 @@ import {
 import {
   createTenantSchema,
   tenantIdSchema,
-  updateTenantSchema,
+  adminUpdateTenantSchema,
 } from "./tenant.schemas";
 
 import type { Logger } from "../../utils/logger";
 import type { TenantService } from "./tenant.service";
-import type { CreateTenantInput, UpdateTenantInput } from "./tenant.types";
+import type { CreateTenantInput, AdminUpdateTenantInput } from "./tenant.types";
 
 export interface RouteContext {
   logger: Logger;
@@ -270,11 +270,11 @@ async function handleUpdateTenant(
     tenantIdSchema.parse({ tenantId });
 
     const body = await request.json();
-    const validated = updateTenantSchema.parse(body);
+    const validated = adminUpdateTenantSchema.parse(body);
 
     const tenant = await service.updateTenant(
       tenantId,
-      validated as UpdateTenantInput,
+      validated as AdminUpdateTenantInput,
     );
 
     return new Response(JSON.stringify(tenant), {

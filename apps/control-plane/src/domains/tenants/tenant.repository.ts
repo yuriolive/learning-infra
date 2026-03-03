@@ -9,7 +9,7 @@ import { tenants, tenantProvisioningEvents } from "../../database/schema";
 import type {
   CreateTenantInput,
   Tenant,
-  UpdateTenantInput,
+  AdminUpdateTenantInput,
 } from "./tenant.types";
 
 type DatabaseTenant = typeof tenants.$inferSelect;
@@ -122,7 +122,10 @@ export class TenantRepository {
    * @param input - Data to update the tenant with
    * @returns The updated tenant if found and active, otherwise null
    */
-  async update(id: string, input: UpdateTenantInput): Promise<Tenant | null> {
+  async update(
+    id: string,
+    input: AdminUpdateTenantInput,
+  ): Promise<Tenant | null> {
     const updateData = this.prepareUpdateData(input);
 
     const [updated] = await this.db
@@ -142,7 +145,9 @@ export class TenantRepository {
    * @param input - Data to update the tenant with
    * @returns Cleaned partial database tenant payload
    */
-  private prepareUpdateData(input: UpdateTenantInput): Partial<DatabaseTenant> {
+  private prepareUpdateData(
+    input: AdminUpdateTenantInput,
+  ): Partial<DatabaseTenant> {
     const updateData: Partial<DatabaseTenant> = { updatedAt: new Date() };
 
     for (const [key, value] of Object.entries(input)) {

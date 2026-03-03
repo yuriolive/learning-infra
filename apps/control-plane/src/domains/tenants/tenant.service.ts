@@ -12,7 +12,7 @@ import type {
   CreateTenantInput,
   ListTenantsFilters,
   Tenant,
-  UpdateTenantInput,
+  AdminUpdateTenantInput,
 } from "./tenant.types";
 
 interface TenantServiceConfig {
@@ -100,7 +100,10 @@ export class TenantService {
     return tenant;
   }
 
-  async updateTenant(id: string, input: UpdateTenantInput): Promise<Tenant> {
+  async updateTenant(
+    id: string,
+    input: AdminUpdateTenantInput,
+  ): Promise<Tenant> {
     if (input.subdomain) {
       const existing = await this.repository.findBySubdomain(input.subdomain);
       if (existing && existing.id !== id) {
