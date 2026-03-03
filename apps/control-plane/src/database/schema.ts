@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -58,6 +59,13 @@ export const upgradeExecutionStatusEnum = pgEnum("upgrade_execution_status", [
 export const releaseChannels = pgTable("release_channels", {
   id: text("id").primaryKey(), // e.g., 'canary', 'internal', 'stable'
   autoPromote: boolean("auto_promote").default(false).notNull(),
+  // The image tag currently live on this channel (updated when a campaign completes)
+  currentImageTag: text("current_image_tag"),
+  // Next channel in the promotion chain (e.g. internal → canary → stable)
+  nextChannelId: text("next_channel_id").references(
+    (): AnyPgColumn => releaseChannels.id,
+    { onDelete: "set null" },
+  ),
 });
 
 export const upgradeCampaigns = pgTable(
@@ -180,6 +188,17 @@ export const tenantProvisioningEvents = pgTable(
     tenantIdIdx: index("tenant_provisioning_events_tenant_id_idx").on(
       table.tenantId,
     ),
+  }),
+);
+
+export const releaseChannelsRelations = relations(
+  releaseChannels,
+  ({ one }) => ({
+    nextChannel: one(releaseChannels, {
+      fields: [releaseChannels.nextChannelId],
+      references: [releaseChannels.id],
+      relationName: "channel_promotion_chain",
+    }),
   }),
 );
 

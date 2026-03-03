@@ -25,6 +25,9 @@
     "dev:infra:reset": "docker compose down -v && docker compose up -d postgres redis",
     "db:migrate": "turbo run db:migrate",
     "db:seed": "turbo run db:seed",
+    "staging:demo:provision": "tsx scripts/staging/provision-demo-store.ts",
+    "staging:demo:seed": "tsx scripts/staging/seed-demo-store.ts",
+    "staging:demo:reset": "tsx scripts/staging/seed-demo-store.ts --reset",
     "db:reset": "turbo run db:reset",
     "db:generate": "turbo run db:generate"
   },
