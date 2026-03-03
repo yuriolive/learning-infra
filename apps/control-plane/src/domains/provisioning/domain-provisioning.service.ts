@@ -8,6 +8,9 @@ interface AcmeValidationRecord {
   http_body?: string;
 }
 
+/**
+ * Configuration options for the DomainProvisioningService.
+ */
 export interface DomainProvisioningServiceConfig {
   tenantRepository: TenantRepository;
   cloudflareProvider: CloudflareProvider;
@@ -16,6 +19,9 @@ export interface DomainProvisioningServiceConfig {
   storefrontHostname: string;
 }
 
+/**
+ * Service responsible for orchestrating the domain configuration of tenant resources using Cloudflare.
+ */
 export class DomainProvisioningService {
   private tenantRepository: TenantRepository;
   private cloudflareProvider: CloudflareProvider;
@@ -31,6 +37,12 @@ export class DomainProvisioningService {
     this.storefrontHostname = config.storefrontHostname;
   }
 
+  /**
+   * Configures the custom or default domain routing for the tenant using Cloudflare.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @throws If the tenant or its subdomain is missing.
+   */
   async configureDomain(tenantId: string): Promise<void> {
     const tenant = await this.tenantRepository.findById(tenantId);
     if (!tenant || !tenant.subdomain) throw new Error("Subdomain missing");
@@ -58,6 +70,13 @@ export class DomainProvisioningService {
       : this.configureCustomDomain(tenantId, hostname, tenant.metadata));
   }
 
+  /**
+   * Configures the default flattened domain for a tenant.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param hostname - The default hostname for the tenant.
+   * @throws If creating the CNAME record fails.
+   */
   private async configureDefaultDomain(
     tenantId: string,
     hostname: string,
@@ -109,6 +128,14 @@ export class DomainProvisioningService {
     }
   }
 
+  /**
+   * Configures a custom domain for a tenant.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param hostname - The custom hostname for the tenant.
+   * @param tenantMetadata - The tenant's metadata to update with ACME challenge details.
+   * @throws If creating the custom hostname or handling ACME validation fails.
+   */
   private async configureCustomDomain(
     tenantId: string,
     hostname: string,
@@ -127,6 +154,15 @@ export class DomainProvisioningService {
     await this.handleAcmeValidation(tenantId, result, hostname, tenantMetadata);
   }
 
+  /**
+   * Handles the ACME validation process for a custom domain.
+   *
+   * @param tenantId - The unique identifier of the tenant.
+   * @param result - The result from creating the custom hostname in Cloudflare.
+   * @param hostname - The custom hostname for the tenant.
+   * @param tenantMetadata - The tenant's metadata to update with ACME challenge details.
+   * @throws If updating the tenant record with ACME challenge details fails.
+   */
   private async handleAcmeValidation(
     tenantId: string,
     result: unknown,
