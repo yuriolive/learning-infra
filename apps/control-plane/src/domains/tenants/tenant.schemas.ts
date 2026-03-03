@@ -32,6 +32,7 @@ export const updateTenantSchema = z.object({
   whatsappPhoneNumber: z.string().nullable().optional(),
   whatsappPhoneId: z.string().nullable().optional(),
   whatsappProvider: z.enum(["facebook", "twilio"]).nullable().optional(),
+  releaseChannelId: z.string().nullable().optional(),
   whatsappVerifiedAt: z.coerce.date().nullable().optional(),
 });
 
