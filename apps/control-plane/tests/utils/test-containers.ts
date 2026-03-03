@@ -22,9 +22,7 @@ export class TestEnvironment {
   private dbClient?: postgres.Sql;
 
   async startPostgres() {
-    this.pgContainer = await new PostgreSqlContainer(
-      "public.ecr.aws/docker/library/postgres:15-alpine",
-    )
+    this.pgContainer = await new PostgreSqlContainer("postgres:15-alpine")
       .withDatabase("vendin_test")
       .withUsername("postgres")
       .withPassword("postgres")
@@ -56,9 +54,7 @@ export class TestEnvironment {
   }
 
   async startRedis() {
-    this.redisContainer = await new RedisContainer(
-      "public.ecr.aws/docker/library/redis:7-alpine",
-    ).start();
+    this.redisContainer = await new RedisContainer("redis:7-alpine").start();
     return {
       url: this.redisContainer.getConnectionUrl(),
     };
