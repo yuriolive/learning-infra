@@ -9,6 +9,7 @@ interface NeonProviderConfig {
   /** @deprecated Used for shared project strategy. */
   projectId?: string;
   orgId?: string;
+  regionId?: string;
   defaultDatabase?: string;
   logger: Logger;
 }
@@ -22,6 +23,7 @@ export class NeonProvider {
   private client: Api<unknown>;
   private logger: Logger;
   private orgId: string | undefined;
+  private regionId: string | undefined;
 
   constructor(config: NeonProviderConfig) {
     this.logger = config.logger;
@@ -29,6 +31,7 @@ export class NeonProvider {
       apiKey: config.apiKey,
     });
     this.orgId = config.orgId;
+    this.regionId = config.regionId ?? "aws-sa-east-1"; // Default to Sao Paulo
   }
 
   /**
@@ -42,6 +45,7 @@ export class NeonProvider {
       const response = await this.client.createProject({
         project: {
           name: `tenant-${tenantId}`,
+          ...(this.regionId ? { region_id: this.regionId } : {}),
           ...(this.orgId ? { org_id: this.orgId } : {}),
         },
       });
